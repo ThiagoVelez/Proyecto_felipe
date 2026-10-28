@@ -1,208 +1,262 @@
-# Proyecto Felipe
+# SaludConecta IPS v2.4
 
-Sistema web modular con arquitectura desacoplada, compuesto por un backend desarrollado en Go, un frontend en React y una base de datos relacional MySQL.
+Sistema clinico hospitalario de alta disponibilidad y tolerancia a fallos, disenado bajo una **Arquitectura Hexagonal Estricta (Puertos y Adaptadores / Clean Architecture)** y evaluado bajo el estandar internacional de calidad **ISO/IEC 25010** y la normatividad sanitaria colombiana (Resoluciones MinSalud 1995 de 1999 y 2275 de 2023).
 
 ---
 
 ## 1. Stack Tecnologico
 
-- **Backend:** Go (con Fiber como framework HTTP de alto rendimiento / soporte para `net/http` estandar).
-- **Frontend:** React (SPA moderna construida con Vite y TypeScript).
-- **Base de Datos:** MySQL 8.0+ (driver nativo `go-sql-driver/mysql` o ORM GORM / sqlc).
-- **Arquitectura:** Diseno por capas limpias (Presentacion, Control/Handlers, Dominio/Servicios, Persistencia/Repositorios).
+- **Lenguaje:** Go (Golang) 1.22+
+- **Framework Web:** GoFiber (v2) (`github.com/gofiber/fiber/v2`)
+- **Motores de Persistencia Soportados (Intercambiables):**
+  - **MySQL 8.0+:** Driver oficial `github.com/go-sql-driver/mysql`
+  - **PostgreSQL 14+:** Driver `github.com/lib/pq`
+  - **In-Memory Mock:** Adaptador volatil thread-safe para pruebas unitarias y operacion en modo desconectado
+- **Frontend:** React (SPA con Vite y TypeScript, en directorio `frontend/`)
+- **Seguridad Criptografica:** SHA-256 encadenado inmutable, TOTP RFC 6238 nativo, JWT HS256, Bcrypt
+- **Interoperabilidad Sanitaria:** Generador RIPS JSON (Res. 2275) y Mapeador HL7 FHIR Release 4
 
 ---
 
-## 2. Prerrequisitos de Entorno
+## 2. Filosofia de Diseno y Arquitectura Hexagonal
 
-Asegurate de contar con las siguientes herramientas instaladas en tu sistema:
+El nucleo de la aplicacion (`internal/core/`) es completamente agnostico a frameworks web, drivers y motores de bases de datos:
 
-- **Go:** Version 1.22 o superior ([golang.org](https://golang.org/dl/))
-- **Node.js:** Version 18.0 o superior con `npm` ([nodejs.org](https://nodejs.org/))
-- **MySQL Server:** Version 8.0 o superior ([mysql.com](https://www.mysql.com/)) o contenedor Docker
-- **Git:** Version 2.30 o superior ([git-scm.com](https://git-scm.com/))
-
----
-
-## 3. Estructura del Proyecto
-
-El repositorio esta organizado siguiendo una separacion estricta de responsabilidades:
-
-```text
-Proyecto_felipe/
-├── backend/                  # Codigo fuente de la API REST en Go
-│   ├── cmd/
-│   │   └── api/
-│   │       └── main.go       # Punto de entrada de la aplicacion
-│   ├── internal/
-│   │   ├── config/           # Carga de variables de entorno y configuracion
-│   │   ├── database/         # Conexion y migraciones a MySQL
-│   │   ├── domain/           # Entidades y contratos de interfaz (modelos)
-│   │   ├── handler/          # Controladores HTTP (Fiber / net/http)
-│   │   ├── repository/       # Implementacion de persistencia SQL (MySQL)
-│   │   └── service/          # Reglas de negocio y casos de uso
-│   ├── go.mod                # Dependencias de modulos Go
-│   └── go.sum
-├── frontend/                 # Aplicacion cliente en React
-│   ├── src/
-│   │   ├── assets/           # Recursos estaticos y vectores SVG
-│   │   ├── components/       # Componentes visuales reutilizables
-│   │   ├── hooks/            # Hooks personalizados para logica de estado
-│   │   ├── pages/            # Vistas principales de navegacion
-│   │   ├── services/         # Clientes HTTP y llamadas a la API
-│   │   ├── types/            # Definiciones e interfaces TypeScript
-│   │   ├── App.tsx           # Componente raiz y rutas
-│   │   └── main.tsx          # Punto de montaje React
-│   ├── package.json          # Dependencias y scripts de Node.js
-│   ├── tsconfig.json         # Configuracion estricta de TypeScript
-│   └── vite.config.ts        # Configuracion del empaquetador Vite
-├── docs/                     # Diagramas de arquitectura y documentacion tecnica
-│   ├── architecture.mmd      # Fuente del diagrama en Mermaid
-│   ├── architecture.png      # Diagrama compilado en alta resolucion
-│   └── architecture.svg      # Diagrama vectorial escalable
-├── .env.example              # Plantilla base de variables de entorno
-└── README.md                 # Documentacion tecnica del proyecto
-```
-
----
-
-## 4. Arquitectura del Sistema
-
-La comunicacion entre capas se realiza a traves de interfaces de dominio, garantizando bajo acoplamiento e independencia del motor HTTP y de la base de datos:
+- **Regla de Oro:** El dominio (`core/domain`) no contiene etiquetas de bases de datos (`db:`, `gorm:`, `bson:`) ni dependencias de terceros.
+- **Inversion de Dependencias (DIP):** Los servicios de negocio consumen contratos de interfaz (Puertos en `core/ports`). La persistencia y el servidor web son adaptadores perifericos reemplazables.
+- **Reemplazabilidad de Motor (ISO/IEC 25010):** Conmutar entre MySQL, PostgreSQL o Memoria se realiza unicamente cambiando la variable `DB_DRIVER` en el archivo `.env`, sin modificar una sola linea de la logica de negocio.
 
 ```mermaid
 flowchart TD
-    subgraph Cliente ["Capa de Presentacion (Frontend)"]
-        ReactApp["Cliente Web (React + Vite / TypeScript)"]
+    subgraph AdaptadoresPrimarios ["Adaptadores Primarios (Entrada REST)"]
+        FiberServer["Servidor HTTP GoFiber v2"]
+        Handlers["Controladores (Auth, Triage, HCE, Prescripcion, Sync)"]
+        Middlewares["Middlewares (Correlation-ID, JWT, RBAC, RateLimit, AuditLog)"]
     end
 
-    subgraph Backend ["Capa de Backend (Go / Fiber)"]
-        Router["Enrutador & Middlewares (CORS, Logger, Recover)"]
-        Handler["Controladores HTTP (Handlers)"]
-        Service["Servicios de Dominio (Logica de Negocio)"]
-        Repo["Capa de Repositorio (Acceso a Datos)"]
+    subgraph NucleoHexagonal ["Nucleo del Sistema (Agnostico)"]
+        PortsServices["Puertos de Entrada (ports/services.go)"]
+        Services["Servicios de Negocio (Logica Asistencial Pura)"]
+        Domain["Entidades de Dominio (User, Patient, Triage, HCE, Prescripcion)"]
+        PortsRepo["Puertos de Salida (ports/repositories.go)"]
     end
 
-    subgraph BaseDatos ["Capa de Persistencia"]
-        MySQL[(Base de Datos MySQL)]
+    subgraph AdaptadoresSecundarios ["Adaptadores Secundarios (Persistencia & Salida)"]
+        Factory["Fabrica de Almacenamiento (storage/factory.go)"]
+        MySQLAdapter["Adaptador MySQL 8.0+"]
+        PostgresAdapter["Adaptador PostgreSQL"]
+        MemoryAdapter["Adaptador en Memoria (Mock)"]
+        Interoperability["Interoperabilidad (RIPS Res. 2275 & HL7 FHIR R4)"]
     end
 
-    ReactApp -->|Peticiones HTTP / JSON| Router
-    Router --> Handler
-    Handler --> Service
-    Service --> Repo
-    Repo -->|Consultas SQL| MySQL
+    FiberServer --> Middlewares
+    Middlewares --> Handlers
+    Handlers --> PortsServices
+    PortsServices --> Services
+    Services --> Domain
+    Services --> PortsRepo
+    PortsRepo --> Factory
+    Factory --> MySQLAdapter
+    Factory --> PostgresAdapter
+    Factory --> MemoryAdapter
+    Services --> Interoperability
 ```
-
-> Nota: Los diagramas renderizados estan disponibles en formato de imagen en [docs/architecture.png](file:///c:/Users/santi/Desktop/Proyecto_felipe/docs/architecture.png) y [docs/architecture.svg](file:///c:/Users/santi/Desktop/Proyecto_felipe/docs/architecture.svg).
 
 ---
 
-## 5. Variables de Entorno
+## 3. Jerarquia del Proyecto
 
-Copia el archivo `.env.example` en la raiz o en el directorio correspondiente antes de iniciar la aplicacion:
+```text
+Proyecto_felipe/
+├── backend/
+│   ├── cmd/
+│   │   └── api/
+│   │       └── main.go                  # Punto de entrada e inyeccion de dependencias
+│   ├── internal/
+│   │   ├── core/
+│   │   │   ├── domain/                  # Entidades y tipos de dominio puros (sin tags)
+│   │   │   │   ├── user.go              # Usuarios, credenciales y roles RBAC
+│   │   │   │   ├── patient.go           # Pacientes y catalogo de alergias
+│   │   │   │   ├── triage.go            # Signos vitales y clasificacion Manchester
+│   │   │   │   ├── clinical_record.go   # Folios HCE e inmutabilidad criptografica
+│   │   │   │   ├── prescription.go      # Medicamentos CUM y cruce de contraindicaciones
+│   │   │   │   └── audit.go             # Trazas forenses y transacciones RIPS
+│   │   │   ├── ports/                   # Contratos de interfaz (Puertos)
+│   │   │   │   ├── repositories.go      # Contratos de acceso a datos
+│   │   │   │   └── services.go          # Contratos de casos de uso e interoperabilidad
+│   │   │   └── services/                # Reglas de negocio asistenciales puras
+│   │   │       ├── auth_service.go      # Autenticacion, control de roles y MFA
+│   │   │       ├── triage_service.go    # Priorizacion segun constantes vitales
+│   │   │       ├── clinical_record_service.go # Sellado criptografico y cadena SHA-256
+│   │   │       ├── prescription_service.go    # Validacion de alergias y stock
+│   │   │       └── sync_service.go      # Sincronizacion por lotes para zonas rurales
+│   │   └── adapters/
+│   │       ├── http/                    # Adaptador Primario (Entrada REST Fiber)
+│   │       │   ├── server.go            # Configuracion y apagado elegante
+│   │       │   ├── router.go            # Definicion de endpoints y politicas RBAC
+│   │       │   ├── middlewares/         # Correlation-ID, JWT, RBAC, RateLimit, Audit
+│   │       │   └── handlers/            # Parseo de peticiones y llamada a servicios
+│   │       ├── storage/                 # Adaptadores Secundarios de Persistencia
+│   │       │   ├── factory.go           # Resolutor dinamico de motor de base de datos
+│   │       │   ├── mysql/               # Implementacion nativa MySQL 8.0+
+│   │       │   ├── postgres/            # Implementacion nativa PostgreSQL
+│   │       │   └── memory/              # Implementacion thread-safe en RAM
+│   │       └── interoperability/        # Adaptador Normativo Nacional
+│   │           ├── rips_generator.go    # Generador JSON segun Res. 2275 de 2023
+│   │           └── fhir_mapper.go       # Transformador a HL7 FHIR Release 4
+│   ├── pkg/
+│   │   ├── crypto/                      # SHA-256 encadenado, JWT y TOTP RFC 6238
+│   │   └── logger/                      # Logger estructurado JSON con Correlation-ID
+│   ├── database/
+│   │   └── schema.sql                   # DDL relacional, indices y triggers de seguridad
+│   ├── .env.example                     # Plantilla de variables de entorno del backend
+│   ├── go.mod                           # Modulo Go principal
+│   └── go.sum
+├── frontend/                            # Aplicacion cliente SPA (React + TypeScript)
+│   └── README.md
+├── docs/                                # Diagramas arquitectonicos compilados
+│   ├── architecture.mmd
+│   ├── architecture.png
+│   └── architecture.svg
+├── .env.example                         # Plantilla transversal de variables de entorno
+└── README.md                            # Documentacion global del sistema
+```
+
+---
+
+## 4. Modulos Funcionales Asistenciales
+
+### 4.1. Triaje Manchester
+Clasificacion de pacientes de urgencias segun discriminadores vitales de alerta temprana (Escala Glasgow, SaO2, Presion Arterial Sistolica/Diastolica, Frecuencia Cardiaca y Temperatura):
+- **Nivel I (Rojo):** Resucitacion / Inmediato
+- **Nivel II (Naranja):** Muy urgente (10-15 minutos)
+- **Nivel III (Amarillo):** Urgente (hasta 60 minutos)
+- **Nivel IV (Verde):** Estandar / Menos urgente (hasta 120 minutos)
+- **Nivel V (Azul):** No urgente (hasta 240 minutos)
+
+### 4.2. Historia Clinica Electronica (HCE) e Inmutabilidad (Res. 1995)
+- **Cadena Criptografica:** Cada folio cerrado calcula un hash SHA-256 encadenado que incorpora el hash del folio previo del paciente, garantizando trazabilidad y no repudio.
+- **Sellado a Nivel de Motor:** El script DDL [schema.sql](file:///c:/Users/santi/Desktop/Proyecto_felipe/backend/database/schema.sql) implementa triggers (`trg_prevent_update_closed_record` y `trg_prevent_delete_clinical_record`) que bloquean modificaciones o borrado fisico sobre folios cerrados.
+- **Notas Aclaratorias:** Mecanismo legal exclusivo para anexar precisiones a registros cerrados sin alterar el contenido original.
+
+### 4.3. Prescripcion Farmacologica y Cruce de Alergias
+Validacion en tiempo real que cruza el principio activo del catalogo CUM del medicamento prescrito contra el registro de hipersensibilidades conocidas del paciente. En caso de conflicto, la API rechaza la emision con codigo HTTP `422 Unprocessable Entity` y el detalle de la severidad alergica.
+
+### 4.4. Sincronizacion Offline Rural
+Mecanismo para brigadas medicas en zonas sin conectividad. Procesa lotes (`batch_id`) de folios registrados en dispositivos de campo, manteniendo la validez del sellado criptografico.
+
+### 4.5. Interoperabilidad Normativa
+- **RIPS JSON:** Generacion de la estructura obligatoria segun la Resolucion 2275 de 2023 de MinSalud (datos del obligado, usuario, consultas, codigos CUPS y diagnosticos CIE-11).
+- **HL7 FHIR R4:** Mapeo de atenciones medicas a un recurso contenedor `Bundle` de tipo `document` con recursos integrados `Patient`, `Encounter`, `Condition` y `MedicationRequest`.
+
+---
+
+## 5. Matriz de Endpoints de la API REST (`/api/v1`)
+
+| Metodo | Endpoint | Roles Permitidos | Descripcion |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/health` | Publico | Verificacion de estado operativo y estandar ISO |
+| `POST` | `/auth/login` | Publico | Inicio de sesion (retorna JWT y valida TOTP si aplica) |
+| `POST` | `/auth/register` | Publico / Admin | Registro de profesionales y personal administrativo |
+| `POST` | `/auth/mfa/setup` | Autenticado | Generacion de semilla secreta TOTP en Base32 |
+| `POST` | `/auth/mfa/enable` | Autenticado | Activacion definitiva de autenticacion multifactor |
+| `POST` | `/triage` | ENFERMERO, MEDICO, ADMIN | Registro y clasificacion Manchester de paciente |
+| `GET` | `/triage` | Autenticado | Consulta de cola de urgencias ordenada por severidad |
+| `GET` | `/triage/:id` | Autenticado | Consulta de signos vitales de un triaje especifico |
+| `PATCH`| `/triage/:id/status` | ENFERMERO, MEDICO, ADMIN | Cambio de estado de atencion (`PENDIENTE`, `EN_ATENCION`, `FINALIZADO`) |
+| `POST` | `/clinical-records` | MEDICO, ADMIN | Apertura de borrador de historia clinica |
+| `POST` | `/clinical-records/:id/close` | MEDICO, ADMIN | Firma digital y sellado criptografico inmutable |
+| `POST` | `/clinical-records/:id/clarifications` | MEDICO, ADMIN | Registro de nota aclaratoria legal sobre folio cerrado |
+| `GET` | `/clinical-records/:id` | Autenticado | Consulta completa de folio con sus notas aclaratorias |
+| `GET` | `/clinical-records/patient/:patient_id` | Autenticado | Historial cronologico de folios de un paciente |
+| `GET` | `/clinical-records/:id/verify` | Autenticado | Verificacion matematica de integridad de la cadena SHA-256 |
+| `GET` | `/clinical-records/:id/rips` | MEDICO, AUDITOR, ADMIN | Exportacion del folio a JSON normativo MinSalud (Res. 2275) |
+| `GET` | `/clinical-records/:id/fhir` | MEDICO, AUDITOR, ADMIN | Exportacion a HL7 FHIR Release 4 Bundle |
+| `POST` | `/prescriptions` | MEDICO, ADMIN | Emision de receta con cruce obligatorio de alergias |
+| `GET` | `/prescriptions/:id` | Autenticado | Detalle de prescripcion medica y posologia |
+| `GET` | `/prescriptions/record/:record_id` | Autenticado | Prescripcion vinculada a un folio clinico especifico |
+| `POST` | `/sync/batch` | MEDICO, ADMIN | Sincronizacion de lote clinico capturado en campo sin conexion |
+
+---
+
+## 6. Variables de Entorno
+
+Configuracion transversal disponible en `.env.example`:
+
+| Variable | Descripcion | Opciones / Ejemplo |
+| :--- | :--- | :--- |
+| `PORT` | Puerto de escucha HTTP | `8080` |
+| `DB_DRIVER` | Motor de base de datos a instanciar | `mysql`, `postgres`, `memory` |
+| `DB_HOST` | Host del servidor de base de datos | `127.0.0.1` |
+| `DB_PORT` | Puerto del motor de base de datos | `3306` (MySQL) / `5432` (PostgreSQL) |
+| `DB_USER` | Usuario con privilegios de lectura/escritura | `root` / `postgres` |
+| `DB_PASSWORD` | Contrasena de conexion | *(vacia en dev o configurada)* |
+| `DB_NAME` | Nombre de la base de datos | `saludconecta_db` |
+| `JWT_SECRET` | Clave secreta para firma HMAC de tokens de sesion | Cadena de alta entropia |
+| `CORS_ALLOWED_ORIGINS` | Origenes habilitados para navegadores web | `http://localhost:5173,http://localhost:3000` |
+| `IPS_NIT` | Identificacion tributaria de la IPS para RIPS | `900123456` |
+| `COD_PRESTADOR` | Codigo de habilitacion REPS ante el Ministerio | `110010999901` |
+| `VITE_API_BASE_URL` | Endpoint consumido por la SPA cliente | `http://localhost:8080/api/v1` |
+
+---
+
+## 7. Puesta en Marcha
+
+### 7.1. Opcion A: Ejecucion Inmediata en Memoria (Zero-Database Setup)
+Ideal para pruebas de endpoints y verificacion rapida sin necesidad de un motor de base de datos activo:
 
 ```powershell
-Copy-Item .env.example .env
+cd backend
+$env:DB_DRIVER="memory"
+go run cmd/api/main.go
 ```
 
-| Variable | Descripcion | Valor por Defecto |
-| :--- | :--- | :--- |
-| `PORT` | Puerto de escucha del servidor Go | `8080` |
-| `APP_ENV` | Entorno de ejecucion (`development` / `production`) | `development` |
-| `APP_NAME` | Nombre identificador de la aplicacion | `ProyectoFelipe` |
-| `DB_HOST` | Host o direccion del servidor MySQL | `127.0.0.1` |
-| `DB_PORT` | Puerto de conexion MySQL | `3306` |
-| `DB_USER` | Usuario con privilegios en la base de datos | `root` |
-| `DB_PASSWORD` | Contrasena del usuario de base de datos | `secret` |
-| `DB_NAME` | Nombre de la base de datos relacional | `proyecto_felipe_db` |
-| `CORS_ALLOWED_ORIGINS` | Origenes permitidos para solicitudes cross-origin | `http://localhost:5173` |
-| `VITE_API_BASE_URL` | URL base de la API consumida por el frontend React | `http://localhost:8080/api/v1` |
-
----
-
-## 6. Instalacion y Puesta en Marcha
-
-### 6.1. Configuracion de la Base de Datos (MySQL)
-
-Crea la base de datos en tu servidor local de MySQL:
-
-```sql
-CREATE DATABASE proyecto_felipe_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-```
-
-### 6.2. Backend (Go)
-
-1. Ingresa al directorio del backend:
+### 7.2. Opcion B: Ejecucion con MySQL 8.0+
+1. Crear la base de datos e importar la estructura relacional DDL (sin datos quemados):
+   ```sql
+   CREATE DATABASE saludconecta_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+   USE saludconecta_db;
+   SOURCE backend/database/schema.sql;
+   ```
+2. Configurar variables en `backend/.env`:
+   ```env
+   DB_DRIVER=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_USER=root
+   DB_PASSWORD=
+   DB_NAME=saludconecta_db
+   ```
+3. Iniciar el servidor:
    ```powershell
    cd backend
-   ```
-2. Descarga las dependencias:
-   ```powershell
-   go mod download
-   ```
-3. Ejecuta el servidor en modo desarrollo:
-   ```powershell
    go run cmd/api/main.go
    ```
-   El servidor estara disponible en `http://localhost:8080`.
 
-### 6.3. Frontend (React)
-
-1. Ingresa al directorio del frontend:
-   ```powershell
-   cd frontend
+### 7.3. Opcion C: Ejecucion con PostgreSQL
+1. Configurar variables en `backend/.env`:
+   ```env
+   DB_DRIVER=postgres
+   DB_HOST=127.0.0.1
+   DB_PORT=5432
+   DB_USER=postgres
+   DB_PASSWORD=tu_password
+   DB_NAME=saludconecta_db
    ```
-2. Instala las dependencias del proyecto:
+2. Iniciar el servidor:
    ```powershell
-   npm install
+   cd backend
+   go run cmd/api/main.go
    ```
-3. Inicia el servidor de desarrollo local:
-   ```powershell
-   npm run dev
-   ```
-   La aplicacion web estara disponible en `http://localhost:5173`.
 
 ---
 
-## 7. Contratos de API Principales
+## 8. Verificacion de Calidad y Pruebas Unitarias
 
-Todos los endpoints responden en formato JSON y siguen los codigos de estado HTTP estandar:
+Para ejecutar el banco de pruebas de integridad criptografica, calculo de discriminadores de triaje y seguridad:
 
-| Metodo | Endpoint | Descripcion | Codigo Exito | Codigo Error |
-| :--- | :--- | :--- | :--- | :--- |
-| `GET` | `/api/v1/health` | Verificacion de estado del servicio y conexion a BD | `200 OK` | `503 Service Unavailable` |
-| `GET` | `/api/v1/recursos` | Listado paginado de registros | `200 OK` | `500 Internal Server Error` |
-| `GET` | `/api/v1/recursos/:id` | Consulta detallada de un registro especifico | `200 OK` | `404 Not Found` |
-| `POST` | `/api/v1/recursos` | Creacion de un nuevo recurso | `201 Created` | `400 Bad Request` |
-| `PUT` | `/api/v1/recursos/:id` | Actualizacion total de un recurso existente | `200 OK` | `400 / 404` |
-| `DELETE` | `/api/v1/recursos/:id` | Eliminacion logica o fisica de un registro | `204 No Content` | `404 Not Found` |
-
----
-
-## 8. Calidad y Verificacion
-
-Antes de confirmar cambios o abrir revisiones de codigo, ejecuta las suites de validacion:
-
-- **Backend (Go):**
-  ```powershell
-  go test -v -race ./...
-  go vet ./...
-  ```
-- **Frontend (React):**
-  ```powershell
-  npm run lint
-  npm run build
-  ```
-
----
-
-## 9. Convencion de Commits
-
-Los mensajes de confirmacion en Git deben seguir la especificacion de Conventional Commits en idioma espanol, en minusculas y sin emojis:
-
-- `feat: agregar controlador para gestion de usuarios`
-- `fix: corregir conexion del pool a mysql en arranque`
-- `refactor: desacoplar capa de servicio del router http`
-- `docs: actualizar contratos de api en el readme`
-- `chore: configurar variables de entorno en docker-compose`
+```powershell
+cd backend
+go test -v ./...
+go vet ./...
+```

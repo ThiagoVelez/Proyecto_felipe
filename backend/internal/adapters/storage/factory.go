@@ -7,6 +7,7 @@ import (
 
 	"saludconecta-backend/internal/adapters/storage/memory"
 	"saludconecta-backend/internal/adapters/storage/mysql"
+	"saludconecta-backend/internal/adapters/storage/postgres"
 	"saludconecta-backend/internal/core/ports"
 	"saludconecta-backend/pkg/logger"
 )
@@ -97,9 +98,41 @@ func NewRepositoryBundle(cfg Config, log *logger.Logger) (*RepositoryBundle, err
 		}, nil
 
 	case "postgres":
-		// Punto de extension para PostgreSQL:
-		// Se crearia internal/adapters/storage/postgres y se retornaria con la misma firma de interfaces.
-		return nil, fmt.Errorf("adaptador de postgres no compilado en esta version; agregue la carpeta internal/adapters/storage/postgres e instancie los repositorios")
+		log.Info("Activando Adaptador de Persistencia PostgreSQL", map[string]interface{}{
+			"host": cfg.Host,
+			"port": cfg.Port,
+			"db":   cfg.DBName,
+		})
+
+		pgCfg := postgres.Config{
+			Host:            cfg.Host,
+			Port:            cfg.Port,
+			User:            cfg.User,
+			Password:        cfg.Password,
+			DBName:          cfg.DBName,
+			SSLMode:         "disable",
+			MaxOpenConns:    cfg.MaxOpenConns,
+			MaxIdleConns:    cfg.MaxIdleConns,
+			ConnMaxLifetime: cfg.ConnMaxLifetime,
+			ConnMaxIdleTime: cfg.ConnMaxIdleTime,
+		}
+
+		db, err := postgres.NewConnection(pgCfg)
+		if err != nil {
+			return nil, fmt.Errorf("fallo conexion al adaptador postgresql: %w", err)
+		}
+
+		return &RepositoryBundle{
+			User:           postgres.NewUserRepository(db),
+			Patient:        postgres.NewPatientRepository(db),
+			Triage:         postgres.NewTriageRepository(db),
+			ClinicalRecord: postgres.NewClinicalRecordRepository(db),
+			Prescription:   postgres.NewPrescriptionRepository(db),
+			Audit:          postgres.NewAuditRepository(db),
+			Close: func() error {
+				return db.Close()
+			},
+		}, nil
 
 	default:
 		return nil, fmt.Errorf("motor de persistencia no soportado: %s", driver)
