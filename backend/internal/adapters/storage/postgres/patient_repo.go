@@ -166,3 +166,4 @@ func (r *patientRepo) AddPatientAllergy(ctx context.Context, allergy *domain.Pat
 	err := r.db.QueryRowContext(ctx, query, allergy.PatientID, allergy.ActiveIngredient, allergy.Severity, allergy.Notes).Scan(&allergy.ID)
 	return err
 }
+

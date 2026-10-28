@@ -71,3 +71,4 @@ func NewConnection(cfg Config) (*sql.DB, error) {
 
 	return db, nil
 }
+

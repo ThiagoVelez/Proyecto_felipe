@@ -94,3 +94,4 @@ func (r *userRepo) UpdateMFA(ctx context.Context, userID string, secret string, 
 	_, err := r.db.ExecContext(ctx, query, secret, enabled, userID)
 	return err
 }
+

@@ -227,3 +227,4 @@ func (r *prescriptionRepo) DeductStock(ctx context.Context, medicationID int, qu
 	}
 	return nil
 }
+

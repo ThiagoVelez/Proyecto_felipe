@@ -88,3 +88,4 @@ func (r *auditRepo) GetRIPSTransactionByID(ctx context.Context, id string) (*dom
 	}
 	return &tx, nil
 }
+
