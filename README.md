@@ -127,7 +127,9 @@ Proyecto_felipe/
 ## 4. Modulos Funcionales Asistenciales
 
 ### 4.1. Triaje Manchester
+
 Clasificacion de pacientes de urgencias segun discriminadores vitales de alerta temprana (Escala Glasgow, SaO2, Presion Arterial Sistolica/Diastolica, Frecuencia Cardiaca y Temperatura):
+
 - **Nivel I (Rojo):** Resucitacion / Inmediato
 - **Nivel II (Naranja):** Muy urgente (10-15 minutos)
 - **Nivel III (Amarillo):** Urgente (hasta 60 minutos)
@@ -135,17 +137,21 @@ Clasificacion de pacientes de urgencias segun discriminadores vitales de alerta 
 - **Nivel V (Azul):** No urgente (hasta 240 minutos)
 
 ### 4.2. Historia Clinica Electronica (HCE) e Inmutabilidad (Res. 1995)
+
 - **Cadena Criptografica:** Cada folio cerrado calcula un hash SHA-256 encadenado que incorpora el hash del folio previo del paciente, garantizando trazabilidad y no repudio.
 - **Sellado a Nivel de Motor:** El script DDL [schema.sql](file:///c:/Users/santi/Desktop/Proyecto_felipe/backend/database/schema.sql) implementa triggers (`trg_prevent_update_closed_record` y `trg_prevent_delete_clinical_record`) que bloquean modificaciones o borrado fisico sobre folios cerrados.
 - **Notas Aclaratorias:** Mecanismo legal exclusivo para anexar precisiones a registros cerrados sin alterar el contenido original.
 
 ### 4.3. Prescripcion Farmacologica y Cruce de Alergias
+
 Validacion en tiempo real que cruza el principio activo del catalogo CUM del medicamento prescrito contra el registro de hipersensibilidades conocidas del paciente. En caso de conflicto, la API rechaza la emision con codigo HTTP `422 Unprocessable Entity` y el detalle de la severidad alergica.
 
 ### 4.4. Sincronizacion Offline Rural
+
 Mecanismo para brigadas medicas en zonas sin conectividad. Procesa lotes (`batch_id`) de folios registrados en dispositivos de campo, manteniendo la validez del sellado criptografico.
 
 ### 4.5. Interoperabilidad Normativa
+
 - **RIPS JSON:** Generacion de la estructura obligatoria segun la Resolucion 2275 de 2023 de MinSalud (datos del obligado, usuario, consultas, codigos CUPS y diagnosticos CIE-11).
 - **HL7 FHIR R4:** Mapeo de atenciones medicas a un recurso contenedor `Bundle` de tipo `document` con recursos integrados `Patient`, `Encounter`, `Condition` y `MedicationRequest`.
 
@@ -153,29 +159,29 @@ Mecanismo para brigadas medicas en zonas sin conectividad. Procesa lotes (`batch
 
 ## 5. Matriz de Endpoints de la API REST (`/api/v1`)
 
-| Metodo | Endpoint | Roles Permitidos | Descripcion |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/health` | Publico | Verificacion de estado operativo y estandar ISO |
-| `POST` | `/auth/login` | Publico | Inicio de sesion (retorna JWT y valida TOTP si aplica) |
-| `POST` | `/auth/register` | Publico / Admin | Registro de profesionales y personal administrativo |
-| `POST` | `/auth/mfa/setup` | Autenticado | Generacion de semilla secreta TOTP en Base32 |
-| `POST` | `/auth/mfa/enable` | Autenticado | Activacion definitiva de autenticacion multifactor |
-| `POST` | `/triage` | ENFERMERO, MEDICO, ADMIN | Registro y clasificacion Manchester de paciente |
-| `GET` | `/triage` | Autenticado | Consulta de cola de urgencias ordenada por severidad |
-| `GET` | `/triage/:id` | Autenticado | Consulta de signos vitales de un triaje especifico |
-| `PATCH`| `/triage/:id/status` | ENFERMERO, MEDICO, ADMIN | Cambio de estado de atencion (`PENDIENTE`, `EN_ATENCION`, `FINALIZADO`) |
-| `POST` | `/clinical-records` | MEDICO, ADMIN | Apertura de borrador de historia clinica |
-| `POST` | `/clinical-records/:id/close` | MEDICO, ADMIN | Firma digital y sellado criptografico inmutable |
-| `POST` | `/clinical-records/:id/clarifications` | MEDICO, ADMIN | Registro de nota aclaratoria legal sobre folio cerrado |
-| `GET` | `/clinical-records/:id` | Autenticado | Consulta completa de folio con sus notas aclaratorias |
-| `GET` | `/clinical-records/patient/:patient_id` | Autenticado | Historial cronologico de folios de un paciente |
-| `GET` | `/clinical-records/:id/verify` | Autenticado | Verificacion matematica de integridad de la cadena SHA-256 |
-| `GET` | `/clinical-records/:id/rips` | MEDICO, AUDITOR, ADMIN | Exportacion del folio a JSON normativo MinSalud (Res. 2275) |
-| `GET` | `/clinical-records/:id/fhir` | MEDICO, AUDITOR, ADMIN | Exportacion a HL7 FHIR Release 4 Bundle |
-| `POST` | `/prescriptions` | MEDICO, ADMIN | Emision de receta con cruce obligatorio de alergias |
-| `GET` | `/prescriptions/:id` | Autenticado | Detalle de prescripcion medica y posologia |
-| `GET` | `/prescriptions/record/:record_id` | Autenticado | Prescripcion vinculada a un folio clinico especifico |
-| `POST` | `/sync/batch` | MEDICO, ADMIN | Sincronizacion de lote clinico capturado en campo sin conexion |
+| Metodo  | Endpoint                                | Roles Permitidos         | Descripcion                                                             |
+| :------ | :-------------------------------------- | :----------------------- | :---------------------------------------------------------------------- |
+| `GET`   | `/health`                               | Publico                  | Verificacion de estado operativo y estandar ISO                         |
+| `POST`  | `/auth/login`                           | Publico                  | Inicio de sesion (retorna JWT y valida TOTP si aplica)                  |
+| `POST`  | `/auth/register`                        | Publico / Admin          | Registro de profesionales y personal administrativo                     |
+| `POST`  | `/auth/mfa/setup`                       | Autenticado              | Generacion de semilla secreta TOTP en Base32                            |
+| `POST`  | `/auth/mfa/enable`                      | Autenticado              | Activacion definitiva de autenticacion multifactor                      |
+| `POST`  | `/triage`                               | ENFERMERO, MEDICO, ADMIN | Registro y clasificacion Manchester de paciente                         |
+| `GET`   | `/triage`                               | Autenticado              | Consulta de cola de urgencias ordenada por severidad                    |
+| `GET`   | `/triage/:id`                           | Autenticado              | Consulta de signos vitales de un triaje especifico                      |
+| `PATCH` | `/triage/:id/status`                    | ENFERMERO, MEDICO, ADMIN | Cambio de estado de atencion (`PENDIENTE`, `EN_ATENCION`, `FINALIZADO`) |
+| `POST`  | `/clinical-records`                     | MEDICO, ADMIN            | Apertura de borrador de historia clinica                                |
+| `POST`  | `/clinical-records/:id/close`           | MEDICO, ADMIN            | Firma digital y sellado criptografico inmutable                         |
+| `POST`  | `/clinical-records/:id/clarifications`  | MEDICO, ADMIN            | Registro de nota aclaratoria legal sobre folio cerrado                  |
+| `GET`   | `/clinical-records/:id`                 | Autenticado              | Consulta completa de folio con sus notas aclaratorias                   |
+| `GET`   | `/clinical-records/patient/:patient_id` | Autenticado              | Historial cronologico de folios de un paciente                          |
+| `GET`   | `/clinical-records/:id/verify`          | Autenticado              | Verificacion matematica de integridad de la cadena SHA-256              |
+| `GET`   | `/clinical-records/:id/rips`            | MEDICO, AUDITOR, ADMIN   | Exportacion del folio a JSON normativo MinSalud (Res. 2275)             |
+| `GET`   | `/clinical-records/:id/fhir`            | MEDICO, AUDITOR, ADMIN   | Exportacion a HL7 FHIR Release 4 Bundle                                 |
+| `POST`  | `/prescriptions`                        | MEDICO, ADMIN            | Emision de receta con cruce obligatorio de alergias                     |
+| `GET`   | `/prescriptions/:id`                    | Autenticado              | Detalle de prescripcion medica y posologia                              |
+| `GET`   | `/prescriptions/record/:record_id`      | Autenticado              | Prescripcion vinculada a un folio clinico especifico                    |
+| `POST`  | `/sync/batch`                           | MEDICO, ADMIN            | Sincronizacion de lote clinico capturado en campo sin conexion          |
 
 ---
 
@@ -183,26 +189,27 @@ Mecanismo para brigadas medicas en zonas sin conectividad. Procesa lotes (`batch
 
 Configuracion transversal disponible en `.env.example`:
 
-| Variable | Descripcion | Opciones / Ejemplo |
-| :--- | :--- | :--- |
-| `PORT` | Puerto de escucha HTTP | `8080` |
-| `DB_DRIVER` | Motor de base de datos a instanciar | `mysql`, `postgres`, `memory` |
-| `DB_HOST` | Host del servidor de base de datos | `127.0.0.1` |
-| `DB_PORT` | Puerto del motor de base de datos | `3306` (MySQL) / `5432` (PostgreSQL) |
-| `DB_USER` | Usuario con privilegios de lectura/escritura | `root` / `postgres` |
-| `DB_PASSWORD` | Contrasena de conexion | *(vacia en dev o configurada)* |
-| `DB_NAME` | Nombre de la base de datos | `saludconecta_db` |
-| `JWT_SECRET` | Clave secreta para firma HMAC de tokens de sesion | Cadena de alta entropia |
-| `CORS_ALLOWED_ORIGINS` | Origenes habilitados para navegadores web | `http://localhost:5173,http://localhost:3000` |
-| `IPS_NIT` | Identificacion tributaria de la IPS para RIPS | `900123456` |
-| `COD_PRESTADOR` | Codigo de habilitacion REPS ante el Ministerio | `110010999901` |
-| `VITE_API_BASE_URL` | Endpoint consumido por la SPA cliente | `http://localhost:8080/api/v1` |
+| Variable               | Descripcion                                       | Opciones / Ejemplo                            |
+| :--------------------- | :------------------------------------------------ | :-------------------------------------------- |
+| `PORT`                 | Puerto de escucha HTTP                            | `8080`                                        |
+| `DB_DRIVER`            | Motor de base de datos a instanciar               | `mysql`, `postgres`, `memory`                 |
+| `DB_HOST`              | Host del servidor de base de datos                | `127.0.0.1`                                   |
+| `DB_PORT`              | Puerto del motor de base de datos                 | `3306` (MySQL) / `5432` (PostgreSQL)          |
+| `DB_USER`              | Usuario con privilegios de lectura/escritura      | `root` / `postgres`                           |
+| `DB_PASSWORD`          | Contrasena de conexion                            | _(vacia en dev o configurada)_                |
+| `DB_NAME`              | Nombre de la base de datos                        | `saludconecta_db`                             |
+| `JWT_SECRET`           | Clave secreta para firma HMAC de tokens de sesion | Cadena de alta entropia                       |
+| `CORS_ALLOWED_ORIGINS` | Origenes habilitados para navegadores web         | `http://localhost:5173,http://localhost:3000` |
+| `IPS_NIT`              | Identificacion tributaria de la IPS para RIPS     | `900123456`                                   |
+| `COD_PRESTADOR`        | Codigo de habilitacion REPS ante el Ministerio    | `110010999901`                                |
+| `VITE_API_BASE_URL`    | Endpoint consumido por la SPA cliente             | `http://localhost:8080/api/v1`                |
 
 ---
 
 ## 7. Puesta en Marcha
 
 ### 7.1. Opcion A: Ejecucion Inmediata en Memoria (Zero-Database Setup)
+
 Ideal para pruebas de endpoints y verificacion rapida sin necesidad de un motor de base de datos activo ni configuracion de credenciales:
 
 ```powershell
@@ -212,6 +219,7 @@ go run cmd/api/main.go
 ```
 
 ### 7.2. Opcion B: Ejecucion con MySQL 8.0+
+
 1. Crear la base de datos e importar la estructura relacional DDL (sin datos quemados):
    ```sql
    CREATE DATABASE saludconecta_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -238,6 +246,7 @@ go run cmd/api/main.go
    ```
 
 ### 7.3. Opcion C: Ejecucion con PostgreSQL
+
 1. Crear el archivo local `.env` a partir de la plantilla:
    ```powershell
    Copy-Item .env.example .env
