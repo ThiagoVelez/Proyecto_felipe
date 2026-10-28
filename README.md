@@ -203,7 +203,7 @@ Configuracion transversal disponible en `.env.example`:
 ## 7. Puesta en Marcha
 
 ### 7.1. Opcion A: Ejecucion Inmediata en Memoria (Zero-Database Setup)
-Ideal para pruebas de endpoints y verificacion rapida sin necesidad de un motor de base de datos activo:
+Ideal para pruebas de endpoints y verificacion rapida sin necesidad de un motor de base de datos activo ni configuracion de credenciales:
 
 ```powershell
 cd backend
@@ -218,32 +218,40 @@ go run cmd/api/main.go
    USE saludconecta_db;
    SOURCE backend/database/schema.sql;
    ```
-2. Configurar variables en `backend/.env`:
+2. Crear el archivo local `.env` a partir de la plantilla:
+   ```powershell
+   Copy-Item .env.example .env
+   ```
+3. Configurar en `.env` los parametros de conexion correspondientes a tu entorno local:
    ```env
    DB_DRIVER=mysql
-   DB_HOST=127.0.0.1
-   DB_PORT=3306
-   DB_USER=root
-   DB_PASSWORD=
+   DB_HOST=<tu_host_mysql>
+   DB_PORT=<tu_puerto_mysql>
+   DB_USER=<tu_usuario_mysql>
+   DB_PASSWORD=<tu_password_mysql>
    DB_NAME=saludconecta_db
    ```
-3. Iniciar el servidor:
+4. Iniciar el servidor:
    ```powershell
    cd backend
    go run cmd/api/main.go
    ```
 
 ### 7.3. Opcion C: Ejecucion con PostgreSQL
-1. Configurar variables en `backend/.env`:
+1. Crear el archivo local `.env` a partir de la plantilla:
+   ```powershell
+   Copy-Item .env.example .env
+   ```
+2. Configurar en `.env` los parametros de conexion correspondientes a tu entorno local:
    ```env
    DB_DRIVER=postgres
-   DB_HOST=127.0.0.1
-   DB_PORT=5432
-   DB_USER=postgres
-   DB_PASSWORD=tu_password
+   DB_HOST=<tu_host_postgres>
+   DB_PORT=<tu_puerto_postgres>
+   DB_USER=<tu_usuario_postgres>
+   DB_PASSWORD=<tu_password_postgres>
    DB_NAME=saludconecta_db
    ```
-2. Iniciar el servidor:
+3. Iniciar el servidor:
    ```powershell
    cd backend
    go run cmd/api/main.go
