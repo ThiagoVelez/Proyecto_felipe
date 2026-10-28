@@ -91,3 +91,4 @@ describe('AllergyAlertModal - Intercepcion Visual de Seguridad Farmacologica', (
     expect(container.firstChild).toBeNull();
   });
 });
+

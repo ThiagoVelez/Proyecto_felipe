@@ -50,3 +50,4 @@ La evaluacion integral del producto software «SaludConecta IPS v2.4» se rige p
 3. **Proteccion contra Fugas de Informacion Sensible:**
    - Se configuro `.gitignore` integral para impedir el rastreo de archivos `.env`.
    - Se anonimizaron todos los ejemplos en la documentacion publica con marcadores genericos de posicion.
+

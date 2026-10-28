@@ -89,3 +89,4 @@ Caracteristica: Prevencion de Eventos Adversos por Hipersensibilidad Farmacologi
     Y el cuerpo de respuesta debe contener la alerta "alerta critica de seguridad: el paciente registra alergia conocida (BETALACTAMICOS - severidad: SEVERA)"
     Y no se debe descontar stock del catalogo de medicamentos.
 ```
+

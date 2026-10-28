@@ -63,3 +63,4 @@ El aseguramiento de calidad de «SaludConecta IPS v2.4» se fundamenta en la nor
 | **RF04: Cadena Criptografica SHA-256** | `TC-HCE-05`, `TestChainedSHA256Integrity` | 100% | **PASS** |
 | **RF05: Intercepcion de Alergias** | `TC-RX-01`, `TC-RX-02`, `TC-UI-01` | 100% | **PASS** |
 | **RF06: Sincronizacion Offline Rural** | `SaveBatch` / Batch Synchronization Integrity Unit Suite | 100% | **PASS** |
+
