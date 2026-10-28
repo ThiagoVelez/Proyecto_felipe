@@ -1,0 +1,21 @@
+flowchart TD
+    subgraph Cliente ["Capa de Presentacion (Frontend)"]
+        ReactApp["Cliente Web (React + Vite / TypeScript)"]
+    end
+
+    subgraph Backend ["Capa de Backend (Go / Fiber)"]
+        Router["Enrutador & Middlewares (CORS, Logger, Recover)"]
+        Handler["Controladores HTTP (Handlers)"]
+        Service["Servicios de Dominio (Logica de Negocio)"]
+        Repo["Capa de Repositorio (Acceso a Datos)"]
+    end
+
+    subgraph BaseDatos ["Capa de Persistencia"]
+        MySQL[(Base de Datos MySQL)]
+    end
+
+    ReactApp -->|Peticiones HTTP / JSON| Router
+    Router --> Handler
+    Handler --> Service
+    Service --> Repo
+    Repo -->|Consultas SQL| MySQL
