@@ -60,3 +60,4 @@ type AuditRepository interface {
 	SaveRIPSTransaction(ctx context.Context, tx *domain.RIPSTransaction) error
 	GetRIPSTransactionByID(ctx context.Context, id string) (*domain.RIPSTransaction, error)
 }
+

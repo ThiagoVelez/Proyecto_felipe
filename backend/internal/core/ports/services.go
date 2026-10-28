@@ -53,3 +53,4 @@ type RIPSGeneratorPort interface {
 type FHIRMapperPort interface {
 	MapToFHIRBundle(ctx context.Context, record *domain.ClinicalRecord, patient *domain.Patient, prescription *domain.Prescription) (map[string]interface{}, error)
 }
+

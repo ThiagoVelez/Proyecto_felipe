@@ -106,3 +106,4 @@ func (p *Patient) IsAllergicToIngredient(ingredient string) (bool, *PatientAller
 	}
 	return false, nil
 }
+

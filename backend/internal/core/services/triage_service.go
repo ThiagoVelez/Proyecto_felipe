@@ -73,3 +73,4 @@ func (s *triageService) UpdateTriageStatus(ctx context.Context, id string, statu
 
 	return s.triageRepo.UpdateStatus(ctx, id, status)
 }
+

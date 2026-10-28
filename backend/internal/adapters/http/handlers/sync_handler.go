@@ -46,3 +46,4 @@ func (h *SyncHandler) ProcessBatch(c *fiber.Ctx) error {
 		"synced_count": syncedCount,
 	})
 }
+

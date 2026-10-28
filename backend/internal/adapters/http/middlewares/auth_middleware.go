@@ -41,3 +41,4 @@ func AuthMiddleware(jwtSecret string) fiber.Handler {
 		return c.Next()
 	}
 }
+

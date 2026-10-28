@@ -123,3 +123,4 @@ func (h *TriageHandler) UpdateStatus(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{"message": "Estado de triaje actualizado exitosamente"})
 }
+

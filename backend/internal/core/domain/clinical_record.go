@@ -50,3 +50,4 @@ type ClinicalRecord struct {
 func (c *ClinicalRecord) CanModify() bool {
 	return !c.IsClosed
 }
+

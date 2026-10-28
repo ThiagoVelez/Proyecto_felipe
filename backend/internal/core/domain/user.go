@@ -43,3 +43,4 @@ type User struct {
 func (u *User) HasMedicalLicense() bool {
 	return u.ProfessionalCard != nil && *u.ProfessionalCard != ""
 }
+

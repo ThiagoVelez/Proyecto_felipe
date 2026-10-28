@@ -124,3 +124,4 @@ func (h *PrescriptionHandler) GetByClinicalRecord(c *fiber.Ctx) error {
 	}
 	return c.JSON(presc)
 }
+

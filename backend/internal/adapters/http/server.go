@@ -90,3 +90,4 @@ func (s *Server) Listen(address string) error {
 func (s *Server) Shutdown() error {
 	return s.app.Shutdown()
 }
+

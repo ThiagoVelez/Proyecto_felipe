@@ -162,3 +162,4 @@ func (m *FHIRMapper) MapToFHIRBundle(
 
 	return bundle, nil
 }
+

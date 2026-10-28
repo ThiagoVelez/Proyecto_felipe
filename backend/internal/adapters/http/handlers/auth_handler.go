@@ -161,3 +161,4 @@ func (h *AuthHandler) EnableMFA(c *fiber.Ctx) error {
 		"message": "Autenticacion de dos factores habilitada con exito",
 	})
 }
+

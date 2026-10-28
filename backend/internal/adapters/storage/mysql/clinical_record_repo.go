@@ -254,3 +254,4 @@ func (r *clinicalRecordRepo) SaveBatch(ctx context.Context, records []domain.Cli
 
 	return tx.Commit()
 }
+

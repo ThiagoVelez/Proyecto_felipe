@@ -68,3 +68,4 @@ func SetupRoutes(app *fiber.App, cfg RouterConfig) {
 	syncGroup := protected.Group("/sync")
 	syncGroup.Post("/batch", middlewares.RequireRoles("MEDICO", "ADMIN"), cfg.SyncHandler.ProcessBatch)
 }
+

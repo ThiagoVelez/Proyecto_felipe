@@ -105,3 +105,4 @@ func (l *Logger) Debug(message string, fields ...map[string]interface{}) {
 	}
 	l.log(LevelDebug, message, f)
 }
+

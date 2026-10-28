@@ -225,3 +225,4 @@ func (h *ClinicalRecordHandler) ExportFHIR(c *fiber.Ctx) error {
 
 	return c.JSON(bundle)
 }
+

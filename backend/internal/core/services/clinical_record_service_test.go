@@ -78,3 +78,4 @@ func TestManchesterPriorityCalculation(t *testing.T) {
 		t.Fatalf("Esperado %s, obtenido %s", domain.ManchesterLevelIV, mildPriority)
 	}
 }
+

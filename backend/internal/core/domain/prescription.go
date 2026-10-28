@@ -61,3 +61,4 @@ type Prescription struct {
 	CreatedAt        time.Time
 	Items            []PrescriptionItem
 }
+

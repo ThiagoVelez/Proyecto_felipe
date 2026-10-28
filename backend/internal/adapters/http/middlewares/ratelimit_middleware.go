@@ -30,3 +30,4 @@ func RateLimitMiddleware(maxRequests int, window time.Duration) fiber.Handler {
 		},
 	})
 }
+

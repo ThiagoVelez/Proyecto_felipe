@@ -86,3 +86,4 @@ func (t *TriageRecord) SuggestManchesterPriority() ManchesterLevel {
 	// Nivel V (No urgente)
 	return ManchesterLevelV
 }
+

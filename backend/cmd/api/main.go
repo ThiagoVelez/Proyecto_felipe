@@ -11,7 +11,7 @@ import (
 	"saludconecta-backend/internal/adapters/http"
 	"saludconecta-backend/internal/adapters/http/handlers"
 	"saludconecta-backend/internal/adapters/interoperability"
-	"saludconecta-backend/internal/adapters/storage/mysql"
+	"saludconecta-backend/internal/adapters/storage"
 	"saludconecta-backend/internal/core/services"
 	"saludconecta-backend/pkg/logger"
 )
@@ -30,6 +30,7 @@ func main() {
 
 	// 2. Carga de configuracion de entorno
 	port := getEnv("PORT", "8080")
+	dbDriver := getEnv("DB_DRIVER", "mysql")
 	dbHost := getEnv("DB_HOST", "127.0.0.1")
 	dbPort := getEnv("DB_PORT", "3306")
 	dbUser := getEnv("DB_USER", "root")
@@ -40,8 +41,10 @@ func main() {
 	ipsNIT := getEnv("IPS_NIT", "900123456")
 	codPrestador := getEnv("COD_PRESTADOR", "110010999901")
 
-	// 3. Conexion y configuracion del pool de almacenamiento secundario (MySQL)
-	dbCfg := mysql.Config{
+	// 3. Resolucion del Adaptador de Persistencia (Inyeccion Hexagonal de Puertos)
+	// Permite intercambiar el motor (MySQL, PostgreSQL, MongoDB, Memoria) mediante configuracion
+	storageCfg := storage.Config{
+		Driver:          dbDriver,
 		Host:            dbHost,
 		Port:            dbPort,
 		User:            dbUser,
@@ -53,56 +56,46 @@ func main() {
 		ConnMaxIdleTime: 2 * time.Minute,
 	}
 
-	db, err := mysql.NewConnection(dbCfg)
+	repos, err := storage.NewRepositoryBundle(storageCfg, log)
 	if err != nil {
-		log.Error("No fue posible establecer conexion con la base de datos MySQL", map[string]interface{}{
-			"host":  dbHost,
-			"port":  dbPort,
-			"db":    dbName,
-			"error": err.Error(),
+		log.Error("No fue posible inicializar el adaptador principal configurado", map[string]interface{}{
+			"driver": dbDriver,
+			"error":  err.Error(),
 		})
-		log.Warn("El servidor iniciara en modo degradado o verificacion estatica")
-	} else {
-		defer db.Close()
-		log.Info("Conexion a MySQL 8.0+ establecida y verificada exitosamente", map[string]interface{}{
-			"database": dbName,
-		})
+		log.Warn("Conmutando a Adaptador en Memoria para permitir pruebas inmediatas sin motor activo")
+		storageCfg.Driver = "memory"
+		repos, _ = storage.NewRepositoryBundle(storageCfg, log)
 	}
+	defer repos.Close()
 
-	// 4. Instanciacion de Adaptadores de Persistencia (Secundarios)
-	userRepo := mysql.NewUserRepository(db)
-	patientRepo := mysql.NewPatientRepository(db)
-	triageRepo := mysql.NewTriageRepository(db)
-	recordRepo := mysql.NewClinicalRecordRepository(db)
-	prescRepo := mysql.NewPrescriptionRepository(db)
-	auditRepo := mysql.NewAuditRepository(db)
-
-	// 5. Instanciacion de Servicios de Dominio (Casos de Uso Puros)
+	// 4. Instanciacion de Servicios de Dominio (Casos de Uso Puros)
+	// Notese que los servicios dependen estrictamente de los Puertos (interfaces ports.*),
+	// por lo que desconocen si los datos residen en MySQL, PostgreSQL o Memoria.
 	jwtTTL := 8 * time.Hour
-	authService := services.NewAuthService(userRepo, jwtSecret, jwtTTL)
-	triageService := services.NewTriageService(triageRepo, patientRepo)
-	recordService := services.NewClinicalRecordService(recordRepo, patientRepo, userRepo)
-	prescService := services.NewPrescriptionService(prescRepo, recordRepo, patientRepo)
-	syncService := services.NewSyncService(recordRepo, patientRepo)
+	authService := services.NewAuthService(repos.User, jwtSecret, jwtTTL)
+	triageService := services.NewTriageService(repos.Triage, repos.Patient)
+	recordService := services.NewClinicalRecordService(repos.ClinicalRecord, repos.Patient, repos.User)
+	prescService := services.NewPrescriptionService(repos.Prescription, repos.ClinicalRecord, repos.Patient)
+	syncService := services.NewSyncService(repos.ClinicalRecord, repos.Patient)
 
-	// 6. Adaptadores de Interoperabilidad Normativa (MinSalud & HL7)
+	// 5. Adaptadores de Interoperabilidad Normativa (MinSalud & HL7)
 	ripsGen := interoperability.NewRIPSGenerator(ipsNIT, codPrestador)
 	fhirMap := interoperability.NewFHIRMapper()
 
-	// 7. Instanciacion de Controladores HTTP (Adaptadores Primarios)
+	// 6. Instanciacion de Controladores HTTP (Adaptadores Primarios)
 	authHandler := handlers.NewAuthHandler(authService)
 	triageHandler := handlers.NewTriageHandler(triageService)
-	recordHandler := handlers.NewClinicalRecordHandler(recordService, patientRepo, prescRepo, ripsGen, fhirMap)
+	recordHandler := handlers.NewClinicalRecordHandler(recordService, repos.Patient, repos.Prescription, ripsGen, fhirMap)
 	prescHandler := handlers.NewPrescriptionHandler(prescService)
 	syncHandler := handlers.NewSyncHandler(syncService)
 
-	// 8. Configuracion del Servidor HTTP Fiber v2
+	// 7. Configuracion del Servidor HTTP Fiber v2
 	serverCfg := http.ServerConfig{
 		AllowedOrigins: corsOrigins,
 		RateLimitMax:   120,
 		RateLimitTime:  1 * time.Minute,
 		JWTSecret:      jwtSecret,
-		AuditRepo:      auditRepo,
+		AuditRepo:      repos.Audit,
 		Logger:         log,
 		RouterConfig: http.RouterConfig{
 			AuthHandler:           authHandler,
@@ -146,3 +139,4 @@ func main() {
 	_ = ctx
 	log.Info("SaludConecta IPS v2.4 finalizado de forma controlada.")
 }
+

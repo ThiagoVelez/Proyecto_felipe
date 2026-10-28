@@ -57,3 +57,4 @@ type RIPSTransaction struct {
 	SentToMinSaludAt  *time.Time
 	CreatedAt         time.Time
 }
+

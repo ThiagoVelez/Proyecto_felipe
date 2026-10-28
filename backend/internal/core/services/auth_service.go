@@ -104,3 +104,4 @@ func (s *authService) EnableMFA(ctx context.Context, userID, totpCode string) er
 
 	return s.userRepo.UpdateMFA(ctx, user.ID, *user.MFASecret, true)
 }
+

@@ -79,3 +79,4 @@ func (s *syncService) ProcessOfflineBatch(ctx context.Context, batchID string, r
 
 	return len(validRecords), nil
 }
+

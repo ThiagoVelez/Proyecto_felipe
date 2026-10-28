@@ -87,3 +87,4 @@ func AuditMiddleware(log *logger.Logger, auditRepo ports.AuditRepository) fiber.
 		return err
 	}
 }
+

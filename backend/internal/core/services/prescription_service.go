@@ -98,3 +98,4 @@ func (s *prescriptionService) GetPrescriptionByID(ctx context.Context, id string
 func (s *prescriptionService) GetByClinicalRecord(ctx context.Context, recordID string) (*domain.Prescription, error) {
 	return s.prescRepo.GetByClinicalRecordID(ctx, recordID)
 }
+

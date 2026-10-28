@@ -168,3 +168,4 @@ func (s *clinicalRecordService) VerifyIntegrity(ctx context.Context, recordID st
 
 	return recalculated == *record.HashSHA256, nil
 }
+
