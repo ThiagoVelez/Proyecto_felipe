@@ -703,3 +703,4 @@ export const ProfileScreen = ({ user, onUpdateUser, onNavigate }) => {
 };
 
 export default ProfileScreen;
+

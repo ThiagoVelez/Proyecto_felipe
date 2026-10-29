@@ -11,7 +11,6 @@ import {
   RefreshCw,
   User,
 } from 'lucide-react';
-import UserProfileModal from './UserProfileModal';
 
 export const Header = ({ onLogout, onSearch, currentView, isOffline, setIsOffline, user, onUpdateUser, onNavigate }) => {
   const [docType, setDocType] = useState('CC');

@@ -869,49 +869,8 @@ _El servidor de desarrollo Vite servirá la aplicación en `http://localhost:517
 
 ---
 
-## 8. Instrucciones para Ejecutar las Pruebas Automatizadas
 
-> **Política de Protección de Credenciales (Regla 27 & Ley 1581 de 2012):**
-> Por motivos de seguridad, prevención de reconocimiento y no divulgación de credenciales institucionales, las cuentas de laboratorio, tarjetas ReTHUS y claves de acceso para el equipo de desarrollo se encuentran desacopladas en el documento interno y privado [`CREDENCIALES_EQUIPO.md`](CREDENCIALES_EQUIPO.md).
-
-### 8.1. Pruebas Automatizadas del Backend (Go)
-
-Las pruebas automatizadas de caja blanca y de integración lógica se ejecutan con la herramienta nativa de Go:
-
-1. **Desde la raíz del proyecto (utilizando el workspace de pruebas):**
-
-   ```powershell
-   go test ./tests/backend/... -v
-   ```
-
-2. **O ingresando directamente al módulo de pruebas de backend:**
-
-   ```powershell
-   cd tests/backend
-   go test -v ./...
-   ```
-
-_Cobertura evaluada:_ Triaje Manchester (valores límite y partición de equivalencia), HCE (inmutabilidad y cadena de hashes), Prescripción (intercepción de betalactámicos < 150 ms), Sincronización rural (idempotencia por lotes) y Gobernanza ReTHUS (`TestStaffGovernanceAndReTHUSVerification`).
-
-### 8.2. Pruebas Automatizadas del Frontend (React)
-
-```powershell
-cd src/frontend
-npm test -- --run
-```
-
-_Ejecuta la suite con Vitest, validando el modal de intercepción de alergias, el algoritmo criptográfico TOTP RFC 6238 contra el vector oficial internacional, la suite de Gobernanza y Habilitación ReTHUS (`AdminGovernance.test.jsx`) y el perfil asistencial con colección de 5 banners._
-
-### 8.3. Compilación de Producción (Zero Warnings)
-
-```powershell
-cd src/frontend
-npm run build
-```
-
----
-
-## 9. Variables de Entorno de Muestra (`.env.example`)
+## 8. Variables de Entorno de Muestra (`.env.example`)
 
 Siguiendo la política de protección de infraestructura sensible (Regla 27), todas las credenciales y puertos reales se mantienen confidenciales mediante máscaras genéricas:
 
@@ -933,7 +892,7 @@ Siguiendo la política de protección de infraestructura sensible (Regla 27), to
 
 ---
 
-## 10. Documentación Técnica Complementaria
+## 9. Documentación Técnica Complementaria
 
 Para consultar el detalle extendido de la ingeniería del proyecto, accede a los documentos técnicos en el directorio `docs/`:
 

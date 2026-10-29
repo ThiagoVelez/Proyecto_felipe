@@ -7,6 +7,7 @@ import {
   ShieldCheck,
   CheckCircle2,
   Lock,
+  UserCheck,
 } from 'lucide-react';
 
 export const Sidebar = ({ currentView, setCurrentView }) => {
