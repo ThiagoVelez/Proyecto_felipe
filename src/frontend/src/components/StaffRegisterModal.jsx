@@ -371,3 +371,4 @@ export const StaffRegisterModal = ({ isOpen, onClose, onRegisterSuccess }) => {
 };
 
 export default StaffRegisterModal;
+

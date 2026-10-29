@@ -32,13 +32,19 @@ erDiagram
         uuid id PK
         int role_id FK
         string full_name
+        string document_type
+        string document_number
         string email UK
         string password_hash
-        string professional_card
+        string phone
+        string professional_card "ReTHUS Mandatorio"
+        string specialty
+        string branch
         string mfa_secret
         boolean mfa_enabled
-        boolean is_active
+        boolean is_active "Gobernanza"
         timestamp created_at
+        timestamp updated_at
     }
 
     PATIENTS {
@@ -55,6 +61,7 @@ erDiagram
         string phone
         boolean is_rural_zone
         timestamp created_at
+        timestamp updated_at
     }
 
     PATIENT_ALLERGIES {
@@ -85,20 +92,20 @@ erDiagram
         int diastolic_bp
         int heart_rate
         int respiratory_rate
-        int oxygen_saturation
-        decimal body_temperature
-        int glasgow_score
-        string manchester_level
-        text reason_for_consultation
+        decimal temperature
+        decimal oxygen_saturation
+        int glasgow_coma_scale
+        string pain_scale
+        int manchester_level
+        string discriminator
+        timestamp evaluated_at
         string status
-        timestamp created_at
     }
 
     CLINICAL_RECORDS {
         uuid id PK
         uuid patient_id FK
         uuid doctor_id FK
-        uuid triage_id FK
         text anamnesis
         text physical_exam
         string cie11_code
@@ -107,11 +114,9 @@ erDiagram
         boolean is_closed
         string signature_token
         string previous_hash
-        string hash_sha256
-        boolean is_offline_sync
-        uuid sync_batch_id
+        string hash_sha256 UK
+        datetime closed_at
         timestamp created_at
-        timestamp closed_at
     }
 
     CLINICAL_RECORD_CLARIFICATIONS {
@@ -119,18 +124,7 @@ erDiagram
         uuid clinical_record_id FK
         uuid doctor_id FK
         text note
-        timestamp created_at
-    }
-
-    MEDICATIONS_CATALOG {
-        int id PK
-        string cum_code UK
-        string commercial_name
-        string generic_name
-        string active_ingredient
-        string concentration
-        string pharmaceutical_form
-        int stock_quantity
+        datetime clarification_at
     }
 
     PRESCRIPTIONS {
@@ -138,7 +132,7 @@ erDiagram
         uuid clinical_record_id FK
         uuid patient_id FK
         uuid doctor_id FK
-        text observations
+        string dispensation_status
         timestamp created_at
     }
 
@@ -147,10 +141,20 @@ erDiagram
         uuid prescription_id FK
         int medication_id FK
         string dosage
-        int frequency_hours
+        string frequency
         int duration_days
-        int total_quantity
-        string indication_notes
+        int quantity_prescribed
+    }
+
+    MEDICATIONS_CATALOG {
+        int id PK
+        string cum_code UK
+        string generic_name
+        string commercial_name
+        string active_ingredient
+        string pharmaceutical_form
+        string concentration
+        int stock_quantity
     }
 
     AUDIT_LOGS {
@@ -162,16 +166,5 @@ erDiagram
         string ip_address
         string correlation_id
         json details
-        timestamp timestamp
-    }
-
-    RIPS_TRANSACTIONS {
-        uuid id PK
-        string invoice_number
-        string package_type
-        json payload_json
-        string validation_status
-        timestamp sent_to_minsalud_at
         timestamp created_at
     }
-

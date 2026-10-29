@@ -1,0 +1,69 @@
+flowchart TB
+    subgraph Usuarios ["Usuarios del Sistema (RBAC)"]
+        UserAdmin["Usuario con Rol ADMIN (role_id = 1)"]
+        UserMedico["Facultativo Médico: Dr. Santiago Vélez (role_id = 2)"]
+        UserEnfermero["Personal de Enfermería (role_id = 3)"]
+    end
+
+    subgraph FrontendApp ["Frontend React 18 PWA (App.jsx Dispatcher)"]
+        AuthFilter{"Evaluación de Rol de Sesión"}
+
+        subgraph AdminScope ["Entorno Exclusivo Administrativo (AdminLayout)"]
+            AdminDash["AdminDashboardScreen"]
+            ModGobernanza["Gobernanza de Personal (Cotejo ReTHUS & Habilitación)"]
+            ModAuditoria["Bitácora Forense Inmutable (Trazas SHA-256)"]
+            ModSedes["Gestión de Red Asistencial (Cartago, La Unión, Tuluá, Rural)"]
+            ModCatalogo["Catálogo Farmacológico CUM / INVIMA"]
+            AdminDash --> ModGobernanza
+            AdminDash --> ModAuditoria
+            AdminDash --> ModSedes
+            AdminDash --> ModCatalogo
+        end
+
+        subgraph ClinicalScope ["Entorno Clínico Asistencial Protegido (Clinical Layout)"]
+            ClinicalDash["Dashboard y Sala de Espera de Urgencias"]
+            ModTriage["Triaje Manchester (Niveles I-V & Constantes Vitales)"]
+            ModHCE["Historia Clínica Electrónica Unificada (Folios Inmutables)"]
+            ModPresc["Prescripción Médica con Cruce de Alergias"]
+            ModMFA["Centro de Seguridad Criptográfica y TOTP QR"]
+        end
+    end
+
+    subgraph BackendGateway ["API Gateway GoFiber v2 (Control RBAC Estricto)"]
+        AuthMiddleware["AuthMiddleware: Verificación JWT Bearer"]
+        RBACCheck{"RequireRoles Middleware"}
+
+        subgraph EndpointsAdmin ["Rutas Administrativas (/api/v1/admin/*)"]
+            RouteUsers["GET /api/v1/admin/users"]
+            RouteStatus["PATCH /api/v1/admin/users/:id/status"]
+            RouteLogs["GET /api/v1/admin/audit-logs"]
+        end
+
+        subgraph EndpointsClinicos ["Rutas Clínicas Asistenciales Protegidas"]
+            RouteTriage["/api/v1/triage/*"]
+            RouteHCE["/api/v1/clinical-records/*"]
+            RoutePresc["/api/v1/prescriptions/*"]
+            RouteSync["/api/v1/sync/*"]
+        end
+    end
+
+    %% Enrutamiento Frontend
+    UserAdmin --> AuthFilter
+    UserMedico --> AuthFilter
+    UserEnfermero --> AuthFilter
+
+    AuthFilter -->|Rol ADMIN| AdminScope
+    AuthFilter -->|Rol Asistencial MEDICO o ENFERMERO| ClinicalScope
+
+    %% Llamadas de Red Seguras
+    AdminScope -->|Token JWT ADMIN| AuthMiddleware
+    ClinicalScope -->|Token JWT Asistencial| AuthMiddleware
+
+    AuthMiddleware --> RBACCheck
+
+    RBACCheck -->|Permitido ADMIN| EndpointsAdmin
+    RBACCheck -->|Permitido MEDICO y ENFERMERO| EndpointsClinicos
+
+    %% Restricciones de Ley y Bloqueos
+    RBACCheck -.->|403 Forbidden: ADMIN bloqueado de datos clínicos| EndpointsClinicos
+    RBACCheck -.->|403 Forbidden: MEDICO bloqueado de gobernanza TI| EndpointsAdmin

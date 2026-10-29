@@ -1,15 +1,18 @@
 flowchart TD
-    subgraph Frontend ["Capa de Presentacion - Cliente Web React 18 PWA"]
+    subgraph Frontend ["Capa de Presentación - Cliente Web React 18 PWA"]
         UI["Componentes UI & Pantallas (Tailwind CSS + Lucide)"]
+        AdminUI["AdminLayout & AdminDashboardScreen (Gobernanza ReTHUS)"]
         State["Estado React, Hooks & Offline Storage (IndexedDB/Local)"]
         APIClient["Cliente API Fetch REST (src/services/api.js)"]
         UI --> State
+        AdminUI --> State
         State --> APIClient
     end
 
     subgraph PrimaryAdapters ["Adaptadores Primarios (Driving / Entrada)"]
         FiberServer["Servidor HTTP GoFiber v2 (Puerto :8080)"]
-        AuthHandler["AuthHandler & MFA Controller"]
+        AuthHandler["AuthHandler & MFA Controller (Autorregistro ReTHUS)"]
+        AdminHandler["AdminHandler (Gobernanza de Personal & Auditoría)"]
         TriageHandler["TriageHandler"]
         RecordHandler["ClinicalRecordHandler"]
         PrescHandler["PrescriptionHandler"]
@@ -17,10 +20,11 @@ flowchart TD
         Middlewares["Middlewares: JWT, RBAC, RateLimit, Audit & CorrelationID"]
     end
 
-    subgraph CoreHexagon ["Nucleo de Negocio (Core Domain & Puertos)"]
+    subgraph CoreHexagon ["Núcleo de Negocio (Core Domain & Puertos)"]
         direction TB
         subgraph InPorts ["Puertos de Entrada (Driving Interfaces)"]
             AuthServicePort["AuthService Port"]
+            AdminServicePort["AdminService Port"]
             TriageServicePort["TriageService Port"]
             RecordServicePort["ClinicalRecordService Port"]
             PrescServicePort["PrescriptionService Port"]
@@ -28,8 +32,9 @@ flowchart TD
         end
 
         subgraph DomainServices ["Servicios de Dominio (Casos de Uso Puros)"]
-            AuthLogic["Logica de Autenticacion & TOTP"]
-            ManchesterEngine["Motor Triaje Manchester & Validacion Fisiologica"]
+            AuthLogic["Lógica de Autenticación, TOTP & Inactividad Obligatoria"]
+            AdminLogic["Gobernanza ReTHUS, Activación & Auditoría Forense"]
+            ManchesterEngine["Motor Triaje Manchester & Validación Fisiológica"]
             HCEImmutability["Reglas de Inmutabilidad HCE & Cadena SHA-256"]
             AllergyInterceptor["Motor Interceptor de Alergias (< 150 ms)"]
             SyncIdempotency["Consolidador de Lotes e Idempotencia"]
@@ -49,34 +54,54 @@ flowchart TD
 
     subgraph SecondaryAdapters ["Adaptadores Secundarios (Driven / Salida)"]
         direction TB
-        MySQLAdapter["MySQL 8.0 Repository (InnoDB + Triggers SQL)"]
+        MySQLAdapter["MySQL 8.0 Repository (InnoDB + Seeder Idempotente)"]
         PostgresAdapter["PostgreSQL Repository (Opcional)"]
-        MemoryAdapter["In-Memory Repository (Test Mode / Volatil)"]
+        MemoryAdapter["In-Memory Repository (Test Mode / Volátil)"]
         RIPSJsonAdapter["RIPS JSON Generator (Res. 2275 de 2023)"]
         HL7FHIRAdapter["HL7 FHIR R4 Mapper (Interoperabilidad Internacional)"]
-        CryptoAdapter["Crypto Package (Argon2, SHA-256, HMAC-SHA1 TOTP)"]
+        CryptoAdapter["Crypto Package (Bcrypt Cost 12, SHA-256, HMAC-SHA1 TOTP)"]
     end
 
     APIClient -->|JSON / HTTPS| FiberServer
     FiberServer --> Middlewares
-    Middlewares --> AuthHandler & TriageHandler & RecordHandler & PrescHandler & SyncHandler
+    Middlewares --> AuthHandler
+    Middlewares --> AdminHandler
+    Middlewares --> TriageHandler
+    Middlewares --> RecordHandler
+    Middlewares --> PrescHandler
+    Middlewares --> SyncHandler
 
     AuthHandler --> AuthServicePort
+    AdminHandler --> AdminServicePort
     TriageHandler --> TriageServicePort
     RecordHandler --> RecordServicePort
     PrescHandler --> PrescServicePort
     SyncHandler --> SyncServicePort
 
-    InPorts --> DomainServices
+    AuthServicePort --> AuthLogic
+    AdminServicePort --> AdminLogic
+    TriageServicePort --> ManchesterEngine
+    RecordServicePort --> HCEImmutability
+    PrescServicePort --> AllergyInterceptor
+    SyncServicePort --> SyncIdempotency
+
     DomainServices --> OutPorts
 
-    UserRepoPort -.-> MySQLAdapter & MemoryAdapter
-    PatientRepoPort -.-> MySQLAdapter & MemoryAdapter
-    TriageRepoPort -.-> MySQLAdapter & MemoryAdapter
-    RecordRepoPort -.-> MySQLAdapter & MemoryAdapter
-    PrescRepoPort -.-> MySQLAdapter & MemoryAdapter
-    AuditRepoPort -.-> MySQLAdapter & MemoryAdapter
-    RIPSGenPort -.-> RIPSJsonAdapter
-    FHIRMapPort -.-> HL7FHIRAdapter
-    DomainServices -.-> CryptoAdapter
+    UserRepoPort --> MySQLAdapter
+    PatientRepoPort --> MySQLAdapter
+    TriageRepoPort --> MySQLAdapter
+    RecordRepoPort --> MySQLAdapter
+    PrescRepoPort --> MySQLAdapter
+    AuditRepoPort --> MySQLAdapter
 
+    UserRepoPort -.-> MemoryAdapter
+    PatientRepoPort -.-> MemoryAdapter
+    TriageRepoPort -.-> MemoryAdapter
+    RecordRepoPort -.-> MemoryAdapter
+    PrescRepoPort -.-> MemoryAdapter
+    AuditRepoPort -.-> MemoryAdapter
+
+    RIPSGenPort --> RIPSJsonAdapter
+    FHIRMapPort --> HL7FHIRAdapter
+    AuthLogic --> CryptoAdapter
+    HCEImmutability --> CryptoAdapter

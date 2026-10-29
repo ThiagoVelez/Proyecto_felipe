@@ -1,23 +1,29 @@
 flowchart LR
     subgraph Actores ["Actores del Sistema"]
-        Medico["Medico Tratante"]
-        Enfermero["Enfermero / Triage"]
-        Admision["Admisionista"]
-        Auditor["Auditor Clinico"]
+        Medico["Médico Tratante (Dr. Santiago Vélez)"]
+        Enfermero["Enfermero / Triaje"]
+        Postulante["Personal en Autorregistro"]
+        Auditor["Auditor Clínico"]
         Admin["Administrador del Sistema"]
     end
 
-    subgraph Sistema ["SaludConecta IPS v2.4 - Limite del Sistema"]
-        CU01(["CU01: Autenticacion con MFA TOTP y ReTHUS"])
-        CU02(["CU02: Valoracion y Triaje Manchester (Niveles I-V)"])
+    subgraph Sistema ["SaludConecta IPS v2.4 - Límite del Sistema"]
+        CU01(["CU01: Autenticación con MFA TOTP y ReTHUS"])
+        CU02(["CU02: Valoración y Triaje Manchester (Niveles I-V)"])
         CU03(["CU03: Apertura y Diligenciamiento de HCE"])
         CU04(["CU04: Firma Digital y Cierre Inmutable de Folio HCE"])
         CU05(["CU05: Anexo de Notas Aclaratorias (Res. 1995)"])
-        CU06(["CU06: Prescripcion con Intercepcion de Alergias"])
-        CU07(["CU07: Sincronizacion Offline-First Rural por Lotes"])
-        CU08(["CU08: Exportacion Interoperable RIPS JSON y HL7 FHIR"])
-        CU09(["CU09: Auditoria Forense y Trazabilidad de Hashes"])
+        CU06(["CU06: Prescripción con Intercepción de Alergias"])
+        CU07(["CU07: Sincronización Offline-First Rural por Lotes"])
+        CU08(["CU08: Exportación Interoperable RIPS JSON y HL7 FHIR"])
+        CU09(["CU09: Auditoría Forense y Trazabilidad de Hashes"])
+        CU10(["CU10: Autorregistro con Inactividad Mandatoria (Res. 1995)"])
+        CU11(["CU11: Gobernanza ReTHUS, Habilitación y Suspensión"])
+        CU12(["CU12: Gestión de Sedes y Catálogo Farmacéutico CUM"])
     end
+
+    Postulante --> CU10
+    CU10 -.->|"<<include>>"| CU09
 
     Medico --> CU01
     Medico --> CU03
@@ -31,16 +37,16 @@ flowchart LR
     Enfermero --> CU02
     Enfermero --> CU07
 
-    Admision --> CU01
-
     Auditor --> CU01
     Auditor --> CU08
     Auditor --> CU09
 
     Admin --> CU01
     Admin --> CU09
+    Admin --> CU11
+    Admin --> CU12
 
+    CU11 -.->|"<<include>>"| CU09
     CU04 -.->|"<<include>>"| CU09
     CU06 -.->|"<<include>>"| CU09
     CU03 -.->|"<<include>>"| CU04
-

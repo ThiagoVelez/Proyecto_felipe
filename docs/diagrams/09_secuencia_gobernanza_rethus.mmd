@@ -1,0 +1,69 @@
+sequenceDiagram
+    autonumber
+    actor Personal as Personal Asistencial
+    participant PWA as Cliente React PWA (Stitch)
+    participant API as GoFiber v2 (Auth & Admin)
+    participant Core as Dominio Hexagonal (Auth & Admin Service)
+    participant DB as MySQL 8.0 (Users & Audit)
+    actor Admin as Administrador TI (ReTHUS)
+
+    %% Fase 1: Autorregistro Seguro de Personal
+    Note over Personal,DB: FASE 1: Autorregistro con Inactividad Mandatoria (Res. 1995/1999)
+    Personal->>PWA: Diligencia formulario en StaffRegisterModal (Nombre, CC, ReTHUS, Especialidad)
+    PWA->>API: POST /api/v1/auth/register-staff (payload asistencial)
+    API->>Core: RegisterStaff(user, password)
+    alt Tarjeta Profesional vacía para Médico o Enfermero
+        Core-->>API: ErrMissingProfessionalCard
+        API-->>PWA: 400 Bad Request ("Tarjeta Profesional obligatoria según Res. 1995")
+    else Tarjeta Profesional válida
+        Core->>Core: Forzar user.IsActive = FALSE (No repudio)
+        Core->>DB: INSERT INTO users (is_active=FALSE, professional_card, role_id)
+        DB-->>Core: OK (Registro almacenado inactivo)
+        Core-->>API: Usuario registrado en espera
+        API-->>PWA: 201 Created ("Pendiente de verificación ReTHUS por Administrador")
+        PWA-->>Personal: Muestra confirmación de cuenta bloqueada preventivamente
+    end
+
+    %% Fase 2: Bloqueo de Acceso No Habilitado
+    Note over Personal,API: FASE 2: Intento de Acceso Preventivo Bloqueado
+    Personal->>PWA: Intenta iniciar sesión con credenciales
+    PWA->>API: POST /api/v1/auth/login { email, password, totp }
+    API->>Core: Login(email, password, totp)
+    Core->>DB: SELECT * FROM users WHERE email = ?
+    DB-->>Core: Usuario encontrado con is_active = FALSE
+    Core-->>API: ErrUserInactive
+    API-->>PWA: 403 Forbidden ("Cuenta pendiente de validación ReTHUS")
+    PWA-->>Personal: Alerta: Requiere aprobación administrativa antes de expedir token
+
+    %% Fase 3: Gobernanza y Habilitación por el Administrador
+    Note over Admin,DB: FASE 3: Gobernanza, Cotejo y Activación ReTHUS
+    Admin->>PWA: Ingresa al AdminLayout (Módulo Gobernanza)
+    PWA->>API: GET /api/v1/admin/users?is_active=false (JWT Admin)
+    API->>Core: ListUsers(roleID=nil, isActive=false)
+    Core->>DB: SELECT * FROM users WHERE is_active = FALSE
+    DB-->>Core: Lista de profesionales en espera
+    Core-->>API: Usuarios pendientes
+    API-->>PWA: 200 OK con solicitudes ReTHUS
+    PWA-->>Admin: Renderiza tabla con botón "Aprobar ReTHUS"
+
+    Admin->>PWA: Click "Aprobar ReTHUS" tras cotejo formal
+    PWA->>API: PATCH /api/v1/admin/users/:id/status { is_active: true }
+    API->>Core: ActivateUser(userID)
+    Core->>Core: Validar presencia inmutable de professional_card
+    Core->>DB: UPDATE users SET is_active = TRUE WHERE id = ?
+    Core->>DB: INSERT INTO audit_logs (action="USER_ACTIVATION", resource="rethus_registry", sha256)
+    DB-->>Core: OK (Transacción confirmada)
+    Core-->>API: Usuario habilitado
+    API-->>PWA: 200 OK ("Usuario habilitado y verificado ante ReTHUS")
+    PWA-->>Admin: Actualización optimista de estado en tabla asistencial
+
+    %% Fase 4: Sesión Habilitada
+    Note over Personal,DB: FASE 4: Ingreso Asistencial Habilitado
+    Personal->>PWA: Reintenta login con TOTP RFC 6238
+    PWA->>API: POST /api/v1/auth/login
+    API->>Core: Login(email, password, totp)
+    Core->>DB: SELECT * FROM users WHERE is_active = TRUE
+    DB-->>Core: Usuario activo y habilitado
+    Core-->>API: Genera JWT (role: MEDICO, license: RM-XXXXX)
+    API-->>PWA: 200 OK { token, user }
+    PWA-->>Personal: Acceso concedido al Portal Clínico Asistencial
