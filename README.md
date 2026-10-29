@@ -1,6 +1,9 @@
 # Corporacion de Estudios Tecnologicos del Norte del Valle (COTECNOVA)
+
 ## Ingenieria de Sistemas - Ingenieria de Software II
+
 ### Periodo Academico: 2026-2 | Docente: Felipe Gutierrez Isaza
+
 ### Proyecto Final: Sistema Clinico Hospitalario «SaludConecta IPS v2.4»
 
 ---
@@ -10,6 +13,7 @@
 «SaludConecta IPS v2.4» es una plataforma de software hospitalario de mision critica disenada para gestionar procesos clinicos asistenciales bajo altos estandares de fiabilidad, seguridad y rendimiento: admision hospitalaria, triaje estructurado bajo el protocolo internacional de Manchester, Historia Clinica Electronica (HCE) con sellado criptografico inmutable (Resolucion 1995 de 1999 de MinSalud), prescripcion medica con intercepcion de alergias farmacologicas en tiempo real (< 150 ms ante Betalactamicos) e interoperabilidad normativa mediante RIPS JSON (Resolucion 2275 de 2023) y HL7 FHIR Release 4.
 
 ### Stack Tecnologico
+
 - **Backend:** Go 1.22+ estructurado bajo **Arquitectura Hexagonal Estricta (Puertos y Adaptadores)** utilizando el framework web de alto desempeno **GoFiber (v2)**.
 - **Frontend:** React 18 (Vite 5, Tailwind CSS 3, Lucide Icons, arquitectura modular de componentes accesibles y soporte PWA para atencion offline en brigadas rurales). Disenado bajo el sistema de diseno asistencial oficial de Stitch (Proyecto ID: `3409750822053339349`).
 - **Persistencia de Datos:** MySQL 8.0+ relacional con motor InnoDB, integridad referencial estricta, triggers de inmutabilidad y compatibilidad para adaptadores PostgreSQL y almacenamiento volatil en memoria.
@@ -19,12 +23,12 @@
 
 ## 2. Integrantes y Asignacion de Roles del Equipo
 
-| Nombre del Integrante | Rol Asignado | Responsabilidades Principales |
-| :--- | :--- | :--- |
-| **Santiago Velez** | Lider Tecnico / Arquitecto de Software | Diseno de arquitectura hexagonal, definicion de puertos y adaptadores, coordinacion tecnica del stack Go/Fiber y persistencia. |
-| **Santiago Arcos** | Responsable de Pruebas (QA / Testing) | Diseno de casos de prueba aplicando particion de equivalencia y valores limite, automatizacion de suites en Go y React. |
-| **Juan Jose Sanchez** | Responsable de Calidad (ISO/IEC 25010) | Evaluacion de caracteristicas de calidad ISO 25010, bitacora de defectos (DEF-01 a DEF-04) y verificacion de seguridad. |
-| **Santiago Velez, Santiago Arcos y Juan Jose Sanchez** | Responsables de Documentacion | Elaboracion de especificaciones formales de requisitos, marco normativo (Res. 1995 / 2275), criterios BDD y manuales tecnicos. |
+| Nombre del Integrante                                  | Rol Asignado                           | Responsabilidades Principales                                                                                                  |
+| :----------------------------------------------------- | :------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------- |
+| **Santiago Velez**                                     | Lider Tecnico / Arquitecto de Software | Diseno de arquitectura hexagonal, definicion de puertos y adaptadores, coordinacion tecnica del stack Go/Fiber y persistencia. |
+| **Santiago Arcos**                                     | Responsable de Pruebas (QA / Testing)  | Diseno de casos de prueba aplicando particion de equivalencia y valores limite, automatizacion de suites en Go y React.        |
+| **Juan Jose Sanchez**                                  | Responsable de Calidad (ISO/IEC 25010) | Evaluacion de caracteristicas de calidad ISO 25010, bitacora de defectos (DEF-01 a DEF-04) y verificacion de seguridad.        |
+| **Santiago Velez, Santiago Arcos y Juan Jose Sanchez** | Responsables de Documentacion          | Elaboracion de especificaciones formales de requisitos, marco normativo (Res. 1995 / 2275), criterios BDD y manuales tecnicos. |
 
 ---
 
@@ -35,6 +39,7 @@ El flujo de trabajo, la priorizacion de requisitos y el ciclo de vida del desarr
 - [Tablero de Trello del Equipo](https://trello.com/b/HUUP8uyu/proyecto-de-felipe)
 
 ### Organizacion de las Listas Operativas:
+
 1. **Por hacer (Backlog):** Requisitos funcionales (RF01 a RF06) priorizados mediante tecnica MoSCoW, diseno de modelos de dominio y contratos de interfaces.
 2. **En curso (In Progress):** Modulos y adaptadores en desarrollo activo (handlers HTTP, repositorios MySQL/Postgres y componentes de interfaz de usuario).
 3. **En revision (In Review / Code Review):** Inspeccion de codigo estricta, analisis estatico con `go vet` y verificacion de desacoplamiento de capas segun la Arquitectura Hexagonal.
@@ -46,24 +51,24 @@ El flujo de trabajo, la priorizacion de requisitos y el ciclo de vida del desarr
 
 ### 4.1. Requisitos Funcionales (Priorizacion MoSCoW)
 
-| Codigo | Nombre del Requisito | Descripcion Detallada | Prioridad MoSCoW |
-| :--- | :--- | :--- | :--- |
-| **RF01** | Autenticacion, MFA y Roles RBAC | Control de acceso basado en roles asistenciales (MEDICO, ENFERMERO, ADMISION, AUDITOR, ADMIN) con tokens JWT (HS256) y autenticacion multifactor obligatoria mediante algoritmo TOTP (RFC 6238) con generador y validador de codigo QR escaneable en Google Authenticator, Authy y Microsoft Authenticator. | **Must Have** |
-| **RF02** | Triaje Manchester y Guardia Fisiologica | Valoracion en urgencias con semaforizacion automatica en 5 niveles (Nivel I Rojo a Nivel V Azul) segun constantes vitales e intercepcion preventiva de rangos fisiologicos incompatibles (Escala de Glasgow < 3 o > 15, Frecuencia Cardiaca <= 0 o > 300 lpm, etc.). | **Must Have** |
-| **RF03** | HCE e Inmutabilidad Absoluta | Registro de atencion clinica con bloqueo de modificacion post-cierre. Una vez firmado electronicamente el folio, cualquier peticion de mutacion es rechazada con HTTP 403 Forbidden y protegida por triggers a nivel de base de datos (Resolucion 1995 de 1999). | **Must Have** |
-| **RF04** | Cadena Criptografica SHA-256 | Calculo determinista de hash SHA-256 encadenado que incorpora el hash del folio previo del paciente, asegurando custodia legal, no repudio y trazabilidad inalterable ante auditorias forenses. | **Must Have** |
-| **RF05** | Intercepcion Farmacologica de Alergias | Cruce de seguridad en tiempo real entre el principio activo del catalogo CUM recetado y los antecedentes alergicos del paciente. Respuesta en < 150 ms bloqueando prescripciones conflictivas (ej. Betalactamicos / Penicilinas). | **Must Have** |
-| **RF06** | Sincronizacion Offline-First Rural | Consolidacion por lotes idempotentes con identificadores UUID v4 de folios y triajes capturados en brigadas rurales desconectadas, garantizando validacion de firmas y continuidad de la cadena criptografica. | **Should Have** |
+| Codigo   | Nombre del Requisito                    | Descripcion Detallada                                                                                                                                                                                                                                                                                       | Prioridad MoSCoW |
+| :------- | :-------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------- |
+| **RF01** | Autenticacion, MFA y Roles RBAC         | Control de acceso basado en roles asistenciales (MEDICO, ENFERMERO, ADMISION, AUDITOR, ADMIN) con tokens JWT (HS256) y autenticacion multifactor obligatoria mediante algoritmo TOTP (RFC 6238) con generador y validador de codigo QR escaneable en Google Authenticator, Authy y Microsoft Authenticator. | **Must Have**    |
+| **RF02** | Triaje Manchester y Guardia Fisiologica | Valoracion en urgencias con semaforizacion automatica en 5 niveles (Nivel I Rojo a Nivel V Azul) segun constantes vitales e intercepcion preventiva de rangos fisiologicos incompatibles (Escala de Glasgow < 3 o > 15, Frecuencia Cardiaca <= 0 o > 300 lpm, etc.).                                        | **Must Have**    |
+| **RF03** | HCE e Inmutabilidad Absoluta            | Registro de atencion clinica con bloqueo de modificacion post-cierre. Una vez firmado electronicamente el folio, cualquier peticion de mutacion es rechazada con HTTP 403 Forbidden y protegida por triggers a nivel de base de datos (Resolucion 1995 de 1999).                                            | **Must Have**    |
+| **RF04** | Cadena Criptografica SHA-256            | Calculo determinista de hash SHA-256 encadenado que incorpora el hash del folio previo del paciente, asegurando custodia legal, no repudio y trazabilidad inalterable ante auditorias forenses.                                                                                                             | **Must Have**    |
+| **RF05** | Intercepcion Farmacologica de Alergias  | Cruce de seguridad en tiempo real entre el principio activo del catalogo CUM recetado y los antecedentes alergicos del paciente. Respuesta en < 150 ms bloqueando prescripciones conflictivas (ej. Betalactamicos / Penicilinas).                                                                           | **Must Have**    |
+| **RF06** | Sincronizacion Offline-First Rural      | Consolidacion por lotes idempotentes con identificadores UUID v4 de folios y triajes capturados en brigadas rurales desconectadas, garantizando validacion de firmas y continuidad de la cadena criptografica.                                                                                              | **Should Have**  |
 
 ### 4.2. Requisitos No Funcionales (RNF)
 
-| Codigo | Criterio de Calidad | Descripcion y Metrica de Aceptacion |
-| :--- | :--- | :--- |
-| **RNF01** | Latencia de Respuesta (Eficiencia) | El percentil 95 (p95) de la latencia en operaciones de lectura y emision de prescripciones debe ser inferior a 400 ms bajo concurrencia asistencial estandar. |
-| **RNF02** | Trazabilidad y Auditoria Forense | Cada peticion debe portar y propagar un encabezado `X-Correlation-ID` unico (UUID v4). Las operaciones de mutacion quedan persistidas en bitacora inalterable con IP, marca de tiempo UTC y actor institucional (ISO/IEC 27001). |
+| Codigo    | Criterio de Calidad                            | Descripcion y Metrica de Aceptacion                                                                                                                                                                                                      |
+| :-------- | :--------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **RNF01** | Latencia de Respuesta (Eficiencia)             | El percentil 95 (p95) de la latencia en operaciones de lectura y emision de prescripciones debe ser inferior a 400 ms bajo concurrencia asistencial estandar.                                                                            |
+| **RNF02** | Trazabilidad y Auditoria Forense               | Cada peticion debe portar y propagar un encabezado `X-Correlation-ID` unico (UUID v4). Las operaciones de mutacion quedan persistidas en bitacora inalterable con IP, marca de tiempo UTC y actor institucional (ISO/IEC 27001).         |
 | **RNF03** | Seguridad en Aplicaciones (OWASP ASVS Nivel 2) | Proteccion contra inyeccion SQL mediante sentencias preparadas, hashing de contrasenas mediante Argon2id/Bcrypt (coste 12), expiracion de tokens JWT, limitacion de tasa de peticiones (Rate Limiting) y sanitizacion de cabeceras CORS. |
-| **RNF04** | Inmutabilidad Criptografica de Datos | Toda modificacion fisica a folios cerrados debe ser prevenida tanto en la capa de aplicacion como en el motor de base de datos relacional mediante disparadores `BEFORE UPDATE` y `BEFORE DELETE`. |
-| **RNF05** | Resiliencia y Disponibilidad en Zonas Rurales | Operacion asistencial autonoma en ausencia de conexion a internet mediante almacenamiento local PWA y resolucion determinista de duplicados al sincronizar con la sede central. |
+| **RNF04** | Inmutabilidad Criptografica de Datos           | Toda modificacion fisica a folios cerrados debe ser prevenida tanto en la capa de aplicacion como en el motor de base de datos relacional mediante disparadores `BEFORE UPDATE` y `BEFORE DELETE`.                                       |
+| **RNF05** | Resiliencia y Disponibilidad en Zonas Rurales  | Operacion asistencial autonoma en ausencia de conexion a internet mediante almacenamiento local PWA y resolucion determinista de duplicados al sincronizar con la sede central.                                                          |
 
 ---
 
@@ -418,6 +423,7 @@ erDiagram
 ### 5.4. Diagramas de Secuencia UML (Procesos Asistenciales Clave)
 
 #### A. Triaje Manchester y Deteccion de Rangos Fisiologicos Invalidos
+
 Describe la captura de constantes vitales, el analisis de valores limite y la clasificacion automatica segun el protocolo internacional de 5 niveles:
 
 ![Secuencia Triaje Manchester](docs/diagrams/04_secuencia_triaje.png)
@@ -426,6 +432,7 @@ Describe la captura de constantes vitales, el analisis de valores limite y la cl
 - Imagen de alta resolucion: [`docs/diagrams/04_secuencia_triaje.png`](docs/diagrams/04_secuencia_triaje.png) | Vectorial: [`docs/diagrams/04_secuencia_triaje.svg`](docs/diagrams/04_secuencia_triaje.svg)
 
 #### B. Inmutabilidad de Historia Clinica, Cierre Criptografico y Notas Aclaratorias
+
 Detalla el cierre de folio, la generacion del hash SHA-256 encadenado, el rechazo con HTTP 403 Forbidden ante intentos ilegales de mutacion y el anexo normativo de notas aclaratorias segun la Resolucion 1995 de 1999:
 
 ![Secuencia Inmutabilidad HCE](docs/diagrams/05_secuencia_hce_inmutabilidad.png)
@@ -434,6 +441,7 @@ Detalla el cierre de folio, la generacion del hash SHA-256 encadenado, el rechaz
 - Imagen de alta resolucion: [`docs/diagrams/05_secuencia_hce_inmutabilidad.png`](docs/diagrams/05_secuencia_hce_inmutabilidad.png) | Vectorial: [`docs/diagrams/05_secuencia_hce_inmutabilidad.svg`](docs/diagrams/05_secuencia_hce_inmutabilidad.svg)
 
 #### C. Intercepcion de Alergias Farmacologicas Cruzadas (< 150 ms)
+
 Muestra el cruce entre medicamentos formulados del catalogo CUM y los antecedentes alergicos del paciente, deteniendo la emision ante riesgo de anafilaxia por Betalactamicos:
 
 ![Secuencia Prescripcion Alergias](docs/diagrams/06_secuencia_prescripcion_alergias.png)
@@ -646,6 +654,7 @@ proyecto-final/
 ### 7.1. Configuracion de la Base de Datos (MySQL)
 
 1. Conectate a tu motor local de MySQL e importa el esquema DDL y los disparadores de auditoria:
+
    ```sql
    CREATE DATABASE IF NOT EXISTS saludconecta_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
    USE saludconecta_db;
@@ -657,11 +666,13 @@ proyecto-final/
 ### 7.2. Puesta en Marcha del Backend (Go)
 
 Desde la terminal en la raiz del proyecto:
+
 ```powershell
 cd src/backend
 go run cmd/api/main.go
 ```
-*El servicio HTTP de GoFiber iniciara escuchando en el puerto configurado (por defecto `http://localhost:8080`).*
+
+_El servicio HTTP de GoFiber iniciara escuchando en el puerto configurado (por defecto `http://localhost:8080`)._
 
 > **Nota para pruebas en memoria:** Si deseas ejecutar el backend sin depender de MySQL o PostgreSQL activo, define la variable de entorno antes de ejecutar: `$env:DB_DRIVER="memory"; go run cmd/api/main.go`.
 
@@ -672,7 +683,8 @@ cd src/frontend
 npm install
 npm run dev
 ```
-*El servidor de desarrollo Vite servira la aplicacion web asistencial en `http://localhost:5173` o `http://localhost:5174` con proxy inverso automatico `/api` hacia el backend.*
+
+_El servidor de desarrollo Vite servira la aplicacion web asistencial en `http://localhost:5173` o `http://localhost:5174` con proxy inverso automatico `/api` hacia el backend._
 
 ---
 
@@ -683,11 +695,13 @@ npm run dev
 Las pruebas automatizadas de caja blanca y de integracion logica se ejecutan con la herramienta nativa de Go:
 
 1. **Desde la raiz del proyecto (utilizando el workspace de pruebas):**
+
    ```powershell
    go test ./tests/backend/... -v
    ```
 
 2. **O ingresando directamente al modulo de pruebas de backend:**
+
    ```powershell
    cd tests/backend
    go test -v ./...
@@ -705,7 +719,8 @@ Las pruebas automatizadas de caja blanca y de integracion logica se ejecutan con
 cd src/frontend
 npm test
 ```
-*Ejecuta la suite con Vitest, validando el modal de intercepcion de alergias y el algoritmo criptografico TOTP RFC 6238 contra el vector oficial internacional.*
+
+_Ejecuta la suite con Vitest, validando el modal de intercepcion de alergias y el algoritmo criptografico TOTP RFC 6238 contra el vector oficial internacional._
 
 ---
 
@@ -713,19 +728,19 @@ npm test
 
 Siguiendo la politica de proteccion de infraestructura sensible (Regla 27), todas las credenciales y puertos reales se mantienen confidenciales mediante mascaras genericas:
 
-| Variable | Descripcion | Valor de Muestra |
-| :--- | :--- | :--- |
-| `PORT` | Puerto de escucha del servicio HTTP GoFiber | `8080` |
-| `DB_DRIVER` | Adaptador de persistencia (`mysql`, `postgres`, `memory`) | `mysql` |
-| `DB_HOST` | Host del motor de base de datos relacional | `localhost` |
-| `DB_PORT` | Puerto del motor de base de datos | `3306` |
-| `DB_USER` | Usuario de conexion con permisos DDL/DML | `root` |
-| `DB_PASSWORD` | Clave de acceso a la base de datos | `secret_password` |
-| `DB_NAME` | Nombre de la base de datos clinica | `saludconecta_db` |
-| `JWT_SECRET` | Semilla secreta para la firma de tokens HS256 | `super_secret_seed_key` |
-| `CORS_ALLOWED_ORIGINS` | Origenes web autorizados para consumo de la API | `http://localhost:5173,http://localhost:5174` |
-| `IPS_NIT` | NIT de la institucion prestadora de salud | `900123456` |
-| `COD_PRESTADOR` | Codigo de habilitacion MinSalud (12 digitos) | `110010999901` |
+| Variable               | Descripcion                                               | Valor de Muestra                              |
+| :--------------------- | :-------------------------------------------------------- | :-------------------------------------------- |
+| `PORT`                 | Puerto de escucha del servicio HTTP GoFiber               | `8080`                                        |
+| `DB_DRIVER`            | Adaptador de persistencia (`mysql`, `postgres`, `memory`) | `mysql`                                       |
+| `DB_HOST`              | Host del motor de base de datos relacional                | `localhost`                                   |
+| `DB_PORT`              | Puerto del motor de base de datos                         | `3306`                                        |
+| `DB_USER`              | Usuario de conexion con permisos DDL/DML                  | `root`                                        |
+| `DB_PASSWORD`          | Clave de acceso a la base de datos                        | `secret_password`                             |
+| `DB_NAME`              | Nombre de la base de datos clinica                        | `saludconecta_db`                             |
+| `JWT_SECRET`           | Semilla secreta para la firma de tokens HS256             | `super_secret_seed_key`                       |
+| `CORS_ALLOWED_ORIGINS` | Origenes web autorizados para consumo de la API           | `http://localhost:5173,http://localhost:5174` |
+| `IPS_NIT`              | NIT de la institucion prestadora de salud                 | `900123456`                                   |
+| `COD_PRESTADOR`        | Codigo de habilitacion MinSalud (12 digitos)              | `110010999901`                                |
 
 ---
 

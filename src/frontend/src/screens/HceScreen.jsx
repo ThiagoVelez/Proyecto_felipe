@@ -23,7 +23,7 @@ export const HceScreen = ({ onNavigate }) => {
   const [clarifications, setClarifications] = useState([
     {
       id: 1,
-      author: 'Dra. Sofia Ramirez C. (RM-76001-VALLE)',
+      author: 'Dr. Santiago Vélez (RM-94821-VALLE)',
       date: '2026-10-29 09:45 COT',
       text: 'Se precisa que el paciente refiere iniciar cuadro doloroso tras esfuerzo fisico moderado. Se solicita troponina I seriada de control.',
       hash: 'sha256-adenda-001-e941b2',
@@ -62,7 +62,7 @@ export const HceScreen = ({ onNavigate }) => {
       ...clarifications,
       {
         id: Date.now(),
-        author: 'Dra. Sofia Ramirez C. (RM-76001-VALLE)',
+        author: 'Dr. Santiago Vélez (RM-94821-VALLE)',
         date: new Date().toISOString().replace('T', ' ').substring(0, 19) + ' COT',
         text: newClarificationText,
         hash: 'sha256-adenda-' + Math.random().toString(36).substring(2, 8),
@@ -367,7 +367,7 @@ export const HceScreen = ({ onNavigate }) => {
                 </div>
 
                 <div className="pt-2 text-xs text-on-surface-variant border-t border-outline-variant/30 flex flex-wrap items-center justify-between gap-2">
-                  <span>Firma Digital: Dra. Sofia Ramirez C. (ReTHUS: 760012345)</span>
+                  <span>Firma Digital: Dr. Santiago Vélez (ReTHUS: RM-94821-VALLE)</span>
                   <span className="font-mono">Fecha Cierre: 2026-10-29 09:30:14 COT</span>
                 </div>
               </div>

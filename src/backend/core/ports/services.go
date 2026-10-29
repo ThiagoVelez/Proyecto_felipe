@@ -10,8 +10,17 @@ import (
 type AuthService interface {
 	Login(ctx context.Context, email, password, totpCode string) (token string, user *domain.User, err error)
 	Register(ctx context.Context, user *domain.User, plainPassword string) error
+	RegisterStaff(ctx context.Context, user *domain.User, plainPassword string) error
 	SetupMFA(ctx context.Context, userID string) (secret string, err error)
 	EnableMFA(ctx context.Context, userID, totpCode string) error
+}
+
+// AdminService define los casos de uso administrativos y de gobernanza ReTHUS.
+type AdminService interface {
+	ListUsers(ctx context.Context, roleID *int, isActive *bool) ([]*domain.User, error)
+	ActivateUser(ctx context.Context, userID string) error
+	DeactivateUser(ctx context.Context, userID string) error
+	GetAuditLogs(ctx context.Context, limit int) ([]*domain.AuditLog, error)
 }
 
 // TriageService define los casos de uso para clasificacion y priorizacion clinica.
@@ -53,4 +62,3 @@ type RIPSGeneratorPort interface {
 type FHIRMapperPort interface {
 	MapToFHIRBundle(ctx context.Context, record *domain.ClinicalRecord, patient *domain.Patient, prescription *domain.Prescription) (map[string]interface{}, error)
 }
-

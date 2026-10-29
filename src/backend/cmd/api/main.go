@@ -37,12 +37,11 @@ func main() {
 	dbPassword := getEnv("DB_PASSWORD", "")
 	dbName := getEnv("DB_NAME", "saludconecta_db")
 	jwtSecret := getEnv("JWT_SECRET", "super-secret-key-saludconecta-ips-v24-2026")
-	corsOrigins := getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000")
+	corsOrigins := getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000,http://localhost:5174")
 	ipsNIT := getEnv("IPS_NIT", "900123456")
 	codPrestador := getEnv("COD_PRESTADOR", "110010999901")
 
 	// 3. Resolucion del Adaptador de Persistencia (Inyeccion Hexagonal de Puertos)
-	// Permite intercambiar el motor (MySQL, PostgreSQL, MongoDB, Memoria) mediante configuracion
 	storageCfg := storage.Config{
 		Driver:          dbDriver,
 		Host:            dbHost,
@@ -62,17 +61,16 @@ func main() {
 			"driver": dbDriver,
 			"error":  err.Error(),
 		})
-		log.Warn("Conmutando a Adaptador en Memoria para permitir pruebas inmediatas sin motor activo")
+		log.Warn("Conmutando a Adaptador en Memoria para permitir pruebas inmediatas con gobernanza")
 		storageCfg.Driver = "memory"
 		repos, _ = storage.NewRepositoryBundle(storageCfg, log)
 	}
 	defer repos.Close()
 
 	// 4. Instanciacion de Servicios de Dominio (Casos de Uso Puros)
-	// Notese que los servicios dependen estrictamente de los Puertos (interfaces ports.*),
-	// por lo que desconocen si los datos residen en MySQL, PostgreSQL o Memoria.
 	jwtTTL := 8 * time.Hour
 	authService := services.NewAuthService(repos.User, jwtSecret, jwtTTL)
+	adminService := services.NewAdminService(repos.User, repos.Audit)
 	triageService := services.NewTriageService(repos.Triage, repos.Patient)
 	recordService := services.NewClinicalRecordService(repos.ClinicalRecord, repos.Patient, repos.User)
 	prescService := services.NewPrescriptionService(repos.Prescription, repos.ClinicalRecord, repos.Patient)
@@ -84,6 +82,7 @@ func main() {
 
 	// 6. Instanciacion de Controladores HTTP (Adaptadores Primarios)
 	authHandler := handlers.NewAuthHandler(authService)
+	adminHandler := handlers.NewAdminHandler(adminService)
 	triageHandler := handlers.NewTriageHandler(triageService)
 	recordHandler := handlers.NewClinicalRecordHandler(recordService, repos.Patient, repos.Prescription, ripsGen, fhirMap)
 	prescHandler := handlers.NewPrescriptionHandler(prescService)
@@ -99,6 +98,7 @@ func main() {
 		Logger:         log,
 		RouterConfig: http.RouterConfig{
 			AuthHandler:           authHandler,
+			AdminHandler:          adminHandler,
 			TriageHandler:         triageHandler,
 			ClinicalRecordHandler: recordHandler,
 			PrescriptionHandler:   prescHandler,
@@ -109,7 +109,7 @@ func main() {
 
 	server := http.NewServer(serverCfg)
 
-	// 9. Inicio del servidor en segundo plano y captura de senales para apagado elegante
+	// 8. Inicio del servidor en segundo plano y captura de senales para apagado elegante
 	shutdownChan := make(chan os.Signal, 1)
 	signal.Notify(shutdownChan, os.Interrupt, syscall.SIGTERM)
 
@@ -139,4 +139,3 @@ func main() {
 	_ = ctx
 	log.Info("SaludConecta IPS v2.4 finalizado de forma controlada.")
 }
-

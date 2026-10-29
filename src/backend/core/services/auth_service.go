@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"saludconecta-backend/core/domain"
@@ -25,7 +26,7 @@ func NewAuthService(userRepo ports.UserRepository, jwtSecret string, jwtTTL time
 }
 
 func (s *authService) Login(ctx context.Context, email, password, totpCode string) (string, *domain.User, error) {
-	user, err := s.userRepo.GetByEmail(ctx, email)
+	user, err := s.userRepo.GetByEmail(ctx, strings.ToLower(strings.TrimSpace(email)))
 	if err != nil {
 		return "", nil, domain.ErrInvalidCredentials
 	}
@@ -70,6 +71,19 @@ func (s *authService) Register(ctx context.Context, user *domain.User, plainPass
 	return s.userRepo.Create(ctx, user)
 }
 
+// RegisterStaff implementa el registro seguro de personal de salud con estado inactivo obligatorio (is_active = false)
+// y validacion de tarjeta profesional ReTHUS para roles asistenciales segun Res. 1995/1999 y Ley 1581/2012.
+func (s *authService) RegisterStaff(ctx context.Context, user *domain.User, plainPassword string) error {
+	if (user.RoleID == 2 || user.RoleID == 3) && strings.TrimSpace(user.ProfessionalCard) == "" {
+		return domain.ErrMissingProfessionalCard
+	}
+
+	// Todo autorregistro ingresa bloqueado hasta verificacion administrativa
+	user.IsActive = false
+
+	return s.Register(ctx, user, plainPassword)
+}
+
 func (s *authService) SetupMFA(ctx context.Context, userID string) (string, error) {
 	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
@@ -104,4 +118,3 @@ func (s *authService) EnableMFA(ctx context.Context, userID, totpCode string) er
 
 	return s.userRepo.UpdateMFA(ctx, user.ID, *user.MFASecret, true)
 }
-

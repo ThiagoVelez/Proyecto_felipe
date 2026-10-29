@@ -13,6 +13,9 @@ type UserRepository interface {
 	GetByEmail(ctx context.Context, email string) (*domain.User, error)
 	Create(ctx context.Context, user *domain.User) error
 	UpdateMFA(ctx context.Context, userID string, secret string, enabled bool) error
+	List(ctx context.Context, roleID *int, isActive *bool) ([]*domain.User, error)
+	UpdateStatus(ctx context.Context, userID string, isActive bool) error
+	CountAdmins(ctx context.Context) (int, error)
 }
 
 // PatientRepository define el contrato para gestion de pacientes y sus alergias.
@@ -57,7 +60,7 @@ type PrescriptionRepository interface {
 // AuditRepository define el contrato para la bitacora forense y transacciones RIPS.
 type AuditRepository interface {
 	CreateLog(ctx context.Context, log *domain.AuditLog) error
+	ListLogs(ctx context.Context, limit int) ([]*domain.AuditLog, error)
 	SaveRIPSTransaction(ctx context.Context, tx *domain.RIPSTransaction) error
 	GetRIPSTransactionByID(ctx context.Context, id string) (*domain.RIPSTransaction, error)
 }
-

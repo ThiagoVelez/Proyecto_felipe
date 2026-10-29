@@ -8,6 +8,7 @@ import (
 
 	"saludconecta-backend/core/domain"
 	"saludconecta-backend/core/ports"
+	"saludconecta-backend/pkg/crypto"
 )
 
 // DataStore almacena la informacion en memoria de manera centralizada y sincronizada.
@@ -28,7 +29,7 @@ type DataStore struct {
 }
 
 func NewDataStore() *DataStore {
-	return &DataStore{
+	ds := &DataStore{
 		users:           make(map[string]*domain.User),
 		usersByEmail:    make(map[string]*domain.User),
 		patients:        make(map[string]*domain.Patient),
@@ -42,6 +43,76 @@ func NewDataStore() *DataStore {
 		auditLogs:       make([]*domain.AuditLog, 0),
 		rips:            make(map[string]*domain.RIPSTransaction),
 	}
+
+	// Semillas iniciales en memoria para administracion, atencion clinica y gobernanza
+	adminPass, _ := crypto.HashPassword("AdminSalud2026*")
+	medPass, _ := crypto.HashPassword("MedicoSalud2026*")
+	totpSecret := "JBSWY3DPEHPK3PXP"
+
+	admin := &domain.User{
+		ID:               "usr-admin-0001",
+		RoleID:           1,
+		RoleName:         "ADMIN",
+		FullName:         "Administrador del Sistema",
+		DocumentType:     "CC",
+		DocumentNumber:   "1000000001",
+		Email:            "admin@saludconecta.ips.gov.co",
+		PasswordHash:     adminPass,
+		Phone:            "3100000001",
+		ProfessionalCard: "TI-ADMIN-001",
+		Specialty:        "Seguridad y Gobernanza Hospitalaria",
+		Branch:           "Sede Cartago - Hospital Central",
+		IsActive:         true,
+		MFAEnabled:       false,
+		CreatedAt:        time.Now().UTC(),
+		UpdatedAt:        time.Now().UTC(),
+	}
+
+	medico := &domain.User{
+		ID:               "usr-med-0002",
+		RoleID:           2,
+		RoleName:         "MEDICO",
+		FullName:         "Dr. Santiago Vélez",
+		DocumentType:     "CC",
+		DocumentNumber:   "1118234567",
+		Email:            "svelez@saludconecta.ips.gov.co",
+		PasswordHash:     medPass,
+		Phone:            "3123456789",
+		ProfessionalCard: "RM-94821-VALLE",
+		Specialty:        "Medicina de Urgencias",
+		Branch:           "Sede Cartago - Hospital Central (Nivel II)",
+		IsActive:         true,
+		MFAEnabled:       true,
+		MFASecret:        &totpSecret,
+		CreatedAt:        time.Now().UTC(),
+		UpdatedAt:        time.Now().UTC(),
+	}
+
+	pendingDoctor := &domain.User{
+		ID:               "usr-med-0003",
+		RoleID:           2,
+		RoleName:         "MEDICO",
+		FullName:         "Dra. Camila Yaima",
+		DocumentType:     "CC",
+		DocumentNumber:   "1117654321",
+		Email:            "cyaima@saludconecta.ips.gov.co",
+		PasswordHash:     medPass,
+		Phone:            "3159876543",
+		ProfessionalCard: "RM-88310-VALLE",
+		Specialty:        "Pediatría",
+		Branch:           "Sede La Unión (Urgencias)",
+		IsActive:         false,
+		MFAEnabled:       false,
+		CreatedAt:        time.Now().UTC(),
+		UpdatedAt:        time.Now().UTC(),
+	}
+
+	for _, u := range []*domain.User{admin, medico, pendingDoctor} {
+		ds.users[u.ID] = u
+		ds.usersByEmail[strings.ToLower(u.Email)] = u
+	}
+
+	return ds
 }
 
 // SeedMedication registra o actualiza un medicamento en el catalogo en memoria (util para tests y demos).
@@ -102,6 +173,47 @@ func (r *UserMemoryRepo) UpdateMFA(_ context.Context, userID string, secret stri
 	u.MFASecret = &secret
 	u.MFAEnabled = enabled
 	return nil
+}
+
+func (r *UserMemoryRepo) List(_ context.Context, roleID *int, isActive *bool) ([]*domain.User, error) {
+	r.ds.mu.RLock()
+	defer r.ds.mu.RUnlock()
+	var list []*domain.User
+	for _, u := range r.ds.users {
+		if roleID != nil && u.RoleID != *roleID {
+			continue
+		}
+		if isActive != nil && u.IsActive != *isActive {
+			continue
+		}
+		userCopy := *u
+		list = append(list, &userCopy)
+	}
+	return list, nil
+}
+
+func (r *UserMemoryRepo) UpdateStatus(_ context.Context, userID string, isActive bool) error {
+	r.ds.mu.Lock()
+	defer r.ds.mu.Unlock()
+	u, ok := r.ds.users[userID]
+	if !ok {
+		return domain.ErrUserNotFound
+	}
+	u.IsActive = isActive
+	u.UpdatedAt = time.Now().UTC()
+	return nil
+}
+
+func (r *UserMemoryRepo) CountAdmins(_ context.Context) (int, error) {
+	r.ds.mu.RLock()
+	defer r.ds.mu.RUnlock()
+	count := 0
+	for _, u := range r.ds.users {
+		if u.RoleID == 1 {
+			count++
+		}
+	}
+	return count, nil
 }
 
 // PatientMemoryRepo implementa ports.PatientRepository en memoria.
@@ -410,6 +522,20 @@ func (r *AuditMemoryRepo) CreateLog(_ context.Context, log *domain.AuditLog) err
 	log.ID = int64(len(r.ds.auditLogs) + 1)
 	r.ds.auditLogs = append(r.ds.auditLogs, log)
 	return nil
+}
+
+func (r *AuditMemoryRepo) ListLogs(_ context.Context, limit int) ([]*domain.AuditLog, error) {
+	r.ds.mu.RLock()
+	defer r.ds.mu.RUnlock()
+	if limit <= 0 || limit > len(r.ds.auditLogs) {
+		limit = len(r.ds.auditLogs)
+	}
+	var logs []*domain.AuditLog
+	for i := len(r.ds.auditLogs) - 1; i >= 0 && len(logs) < limit; i-- {
+		logCopy := *r.ds.auditLogs[i]
+		logs = append(logs, &logCopy)
+	}
+	return logs, nil
 }
 
 func (r *AuditMemoryRepo) SaveRIPSTransaction(_ context.Context, tx *domain.RIPSTransaction) error {

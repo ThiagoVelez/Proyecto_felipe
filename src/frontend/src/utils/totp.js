@@ -101,7 +101,7 @@ export async function calculateTotpCode(secretBase32, epochMs = Date.now()) {
 /**
  * Construye la URL estandar otpauth:// para escanear en apps autenticadoras
  */
-export function buildOtpAuthUri(secret, email = 'sramirez@saludconecta.ips.gov.co', issuer = 'SaludConecta IPS') {
+export function buildOtpAuthUri(secret, email = 'svelez@saludconecta.ips.gov.co', issuer = 'SaludConecta IPS') {
   const encIssuer = encodeURIComponent(issuer);
   const encEmail = encodeURIComponent(email);
   return `otpauth://totp/${encIssuer}:${encEmail}?secret=${secret}&issuer=${encIssuer}&algorithm=SHA1&digits=6&period=30`;

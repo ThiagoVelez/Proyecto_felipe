@@ -17,7 +17,7 @@ import {
   getRemainingSeconds,
 } from '../utils/totp';
 
-export const MfaQrModal = ({ isOpen, onClose, secret = 'JBSWY3DPEHPK3PXP', email = 'sramirez@saludconecta.ips.gov.co' }) => {
+export const MfaQrModal = ({ isOpen, onClose, secret = 'JBSWY3DPEHPK3PXP', email = 'svelez@saludconecta.ips.gov.co' }) => {
   const [qrUrl, setQrUrl] = useState('');
   const [currentCode, setCurrentCode] = useState('------');
   const [remaining, setRemaining] = useState(getRemainingSeconds());

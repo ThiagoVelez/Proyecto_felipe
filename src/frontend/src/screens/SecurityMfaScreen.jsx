@@ -43,7 +43,7 @@ export const SecurityMfaScreen = ({ onLogout }) => {
       const code = await calculateTotpCode(secret);
       setTotpCode(code.split(''));
 
-      const uri = buildOtpAuthUri(secret, 'sramirez@saludconecta.ips.gov.co', 'SaludConecta IPS');
+      const uri = buildOtpAuthUri(secret, 'svelez@saludconecta.ips.gov.co', 'SaludConecta IPS');
       const dataUrl = await generateQrDataUrl(uri);
       if (dataUrl) setQrUrl(dataUrl);
 
@@ -153,15 +153,15 @@ export const SecurityMfaScreen = ({ onLogout }) => {
       <div className="p-4 rounded-2xl bg-white border border-surface-container-high shadow-xs grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl bg-primary text-white flex items-center justify-center font-bold text-base shrink-0">
-            SR
+            SV
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <span className="text-sm font-bold text-on-surface truncate">Dra. Sofia Ramirez C.</span>
+              <span className="text-sm font-bold text-on-surface truncate">Dr. Santiago Vélez</span>
               <UserCheck className="w-4 h-4 text-primary shrink-0" />
             </div>
-            <p className="text-xs text-on-surface-variant truncate">sramirez@saludconecta.ips.gov.co</p>
-            <p className="text-[11px] font-mono text-outline">RM-76001-VALLE • Cirugia General</p>
+            <p className="text-xs text-on-surface-variant truncate">svelez@saludconecta.ips.gov.co</p>
+            <p className="text-[11px] font-mono text-outline">RM-94821-VALLE • Medicina de Urgencias</p>
           </div>
         </div>
 
@@ -280,7 +280,7 @@ export const SecurityMfaScreen = ({ onLogout }) => {
               </div>
               <div className="flex items-center justify-between text-[11px] text-on-surface-variant">
                 <span>Cuenta URI:</span>
-                <span className="font-mono text-outline">SaludConecta:sramirez@saludconecta.ips.gov.co</span>
+                <span className="font-mono text-outline">SaludConecta:svelez@saludconecta.ips.gov.co</span>
               </div>
             </div>
           </div>
@@ -395,7 +395,7 @@ export const SecurityMfaScreen = ({ onLogout }) => {
         isOpen={showQrModal}
         onClose={() => setShowQrModal(false)}
         secret={mfaSecret}
-        email="sramirez@saludconecta.ips.gov.co"
+        email="svelez@saludconecta.ips.gov.co"
       />
     </div>
   );

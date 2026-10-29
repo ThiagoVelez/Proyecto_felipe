@@ -45,6 +45,51 @@ func (r *auditRepo) CreateLog(ctx context.Context, log *domain.AuditLog) error {
 	).Scan(&log.ID)
 }
 
+func (r *auditRepo) ListLogs(ctx context.Context, limit int) ([]*domain.AuditLog, error) {
+	if limit <= 0 {
+		limit = 100
+	}
+	query := `
+		SELECT id, user_id, role, action, resource, ip_address, correlation_id, details, created_at
+		FROM audit_logs
+		ORDER BY created_at DESC
+		LIMIT $1
+	`
+	rows, err := r.db.QueryContext(ctx, query, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var logs []*domain.AuditLog
+	for rows.Next() {
+		var log domain.AuditLog
+		var detailsStr *string
+		if err := rows.Scan(
+			&log.ID,
+			&log.UserID,
+			&log.Role,
+			&log.Action,
+			&log.Resource,
+			&log.IPAddress,
+			&log.CorrelationID,
+			&detailsStr,
+			&log.Timestamp,
+		); err != nil {
+			return nil, err
+		}
+		if detailsStr != nil && *detailsStr != "" {
+			var detailsMap map[string]interface{}
+			if err := json.Unmarshal([]byte(*detailsStr), &detailsMap); err == nil {
+				log.Details = detailsMap
+			}
+		}
+		logs = append(logs, &log)
+	}
+
+	return logs, rows.Err()
+}
+
 func (r *auditRepo) SaveRIPSTransaction(ctx context.Context, tx *domain.RIPSTransaction) error {
 	query := `
 		INSERT INTO rips_transactions (id, invoice_number, package_type, payload_json, validation_status, sent_to_minsalud_at, created_at)
@@ -88,4 +133,3 @@ func (r *auditRepo) GetRIPSTransactionByID(ctx context.Context, id string) (*dom
 	}
 	return &tx, nil
 }
-

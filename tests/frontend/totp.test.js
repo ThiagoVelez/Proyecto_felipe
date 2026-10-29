@@ -11,8 +11,8 @@ describe('TOTP RFC 6238 & QR Generator', () => {
   });
 
   it('debe construir la URI estandar otpauth:// compatible con Google Authenticator', () => {
-    const uri = buildOtpAuthUri(secret, 'sramirez@saludconecta.ips.gov.co', 'SaludConecta IPS');
-    expect(uri).toContain('otpauth://totp/SaludConecta%20IPS:sramirez%40saludconecta.ips.gov.co');
+    const uri = buildOtpAuthUri(secret, 'svelez@saludconecta.ips.gov.co', 'SaludConecta IPS');
+    expect(uri).toContain('otpauth://totp/SaludConecta%20IPS:svelez%40saludconecta.ips.gov.co');
     expect(uri).toContain(`secret=${secret}`);
     expect(uri).toContain('period=30');
   });

@@ -47,7 +47,7 @@ func NewRepositoryBundle(cfg Config, log *logger.Logger) (*RepositoryBundle, err
 
 	switch driver {
 	case "memory":
-		log.Info("Activando Adaptador de Persistencia en Memoria (In-Memory Mock)")
+		log.Info("Activando Adaptador de Persistencia en Memoria (In-Memory Mock con Gobernanza ReTHUS)")
 		ds := memory.NewDataStore()
 		return &RepositoryBundle{
 			User:           memory.NewUserMemoryRepo(ds),
@@ -83,6 +83,13 @@ func NewRepositoryBundle(cfg Config, log *logger.Logger) (*RepositoryBundle, err
 		db, err := mysql.NewConnection(dbCfg)
 		if err != nil {
 			return nil, fmt.Errorf("fallo conexion al adaptador mysql: %w", err)
+		}
+
+		// Ejecucion automatica del seeder institucional idempotente
+		if err := mysql.SeedInitialAdmin(db); err != nil {
+			log.Warn("Advertencia ejecutando seeder de inicializacion MySQL", map[string]interface{}{
+				"error": err.Error(),
+			})
 		}
 
 		return &RepositoryBundle{

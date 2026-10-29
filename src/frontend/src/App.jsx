@@ -7,38 +7,45 @@ import TriageScreen from './screens/TriageScreen';
 import HceScreen from './screens/HceScreen';
 import PrescriptionScreen from './screens/PrescriptionScreen';
 import SecurityMfaScreen from './screens/SecurityMfaScreen';
+import AdminLayout from './screens/admin/AdminLayout';
+import { apiClient } from './services/api';
 
 export function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [currentUser, setCurrentUser] = useState(apiClient.user);
   const [currentView, setCurrentView] = useState('dashboard');
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [isOffline, setIsOffline] = useState(false);
 
   const handleLoginSuccess = (data) => {
     setIsAuthenticated(true);
+    if (data && data.user) {
+      setCurrentUser(data.user);
+    }
     setCurrentView('dashboard');
   };
 
   const handleLogout = () => {
+    apiClient.setAuth('', null);
     setIsAuthenticated(false);
   };
 
   // Si no esta autenticado, mostrar pantalla de Login / AuthScreen
   if (!isAuthenticated) {
-    return (
-      <AuthScreen
-        onLoginSuccess={(data) => {
-          setIsAuthenticated(true);
-          setCurrentView('dashboard');
-        }}
-      />
-    );
+    return <AuthScreen onLoginSuccess={handleLoginSuccess} />;
+  }
+
+  // REGLA RBAC ESTRICTA (ISO/IEC 25010): El usuario con rol ADMIN dispone de su propio entorno
+  // desacoplado (AdminLayout) y NO tiene acceso a historias clinicas ni consulta asistencial
+  if (currentUser && (currentUser.role === 'ADMIN' || Number(currentUser.role_id) === 1)) {
+    return <AdminLayout user={currentUser} onLogout={handleLogout} />;
   }
 
   return (
     <div className="min-h-screen bg-surface font-body-md text-on-surface antialiased flex flex-col">
       {/* CABECERA GLOBAL ASISTENCIAL */}
       <Header
+        user={currentUser}
         onLogout={handleLogout}
         currentView={currentView}
         isOffline={isOffline}
