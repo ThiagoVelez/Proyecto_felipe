@@ -158,10 +158,10 @@ export const AuthScreen = ({ onLoginSuccess }) => {
   return (
     <div
       className={`relative min-h-screen w-full flex items-center justify-center p-2 sm:p-4 overflow-y-auto ${
-        highContrast ? 'bg-black text-white' : 'bg-surface'
+        highContrast ? 'bg-black text-white' : 'bg-slate-950'
       }`}
     >
-      {/* Video institucional de fondo en bucle continuo */}
+      {/* Video institucional de fondo en bucle continuo y perpetuo */}
       {!highContrast && (
         <>
           <video
@@ -169,16 +169,16 @@ export const AuthScreen = ({ onLoginSuccess }) => {
             loop
             muted
             playsInline
-            className="fixed inset-0 w-full h-full object-cover -z-20 brightness-[0.65] contrast-[1.05]"
+            className="fixed inset-0 w-full h-full object-cover z-0 pointer-events-none brightness-[0.70] contrast-[1.05]"
           >
             <source src="/videos/medicina.mp4" type="video/mp4" />
           </video>
           {/* Capa de contraste y difuminado estetico hospitalario */}
-          <div className="fixed inset-0 bg-slate-950/45 backdrop-blur-[2px] -z-10" />
+          <div className="fixed inset-0 bg-slate-950/45 backdrop-blur-[1.5px] z-0 pointer-events-none" />
         </>
       )}
 
-      <div className="w-full max-w-5xl my-auto shadow-2xl rounded-2xl overflow-hidden bg-white/95 backdrop-blur-md grid grid-cols-1 lg:grid-cols-12 border border-white/20">
+      <div className="relative z-10 w-full max-w-5xl my-auto shadow-2xl rounded-2xl overflow-hidden bg-white/95 backdrop-blur-md grid grid-cols-1 lg:grid-cols-12 border border-white/20">
         {/* PANEL IZQUIERDO: Identidad Institucional & Gobernanza Clinica */}
         <div className="lg:col-span-5 bg-gradient-to-b from-[#0F172A] via-[#132338] to-[#005c55] p-4 lg:p-6 text-white flex flex-col justify-between relative overflow-y-auto">
           <div className="relative z-10 space-y-3">

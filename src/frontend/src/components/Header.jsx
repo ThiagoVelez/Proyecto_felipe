@@ -13,11 +13,10 @@ import {
 } from 'lucide-react';
 import UserProfileModal from './UserProfileModal';
 
-export const Header = ({ onLogout, onSearch, currentView, isOffline, setIsOffline, user, onUpdateUser }) => {
+export const Header = ({ onLogout, onSearch, currentView, isOffline, setIsOffline, user, onUpdateUser, onNavigate }) => {
   const [docType, setDocType] = useState('CC');
   const [searchQuery, setSearchQuery] = useState('');
   const [sessionSeconds, setSessionSeconds] = useState(14 * 60 + 32);
-  const [showProfileModal, setShowProfileModal] = useState(false);
 
   const currentUser = user || {
     name: 'Dr. Santiago Vélez',
@@ -145,12 +144,12 @@ export const Header = ({ onLogout, onSearch, currentView, isOffline, setIsOfflin
             </button>
           </div>
 
-          {/* Perfil del Usuario Asistencial o Administrador (Estilo Red Social) */}
+          {/* Perfil del Usuario Asistencial o Administrador (Navega a la Pantalla de Perfil) */}
           <button
             type="button"
-            onClick={() => setShowProfileModal(true)}
+            onClick={() => onNavigate && onNavigate('profile')}
             className="flex items-center gap-2.5 pl-2 border-l border-surface-container-high hover:opacity-85 transition-opacity cursor-pointer text-left"
-            title="Ver y editar perfil asistencial / cambiar banner"
+            title="Abrir pantalla de perfil asistencial y portadas"
           >
             {currentUser.avatar ? (
               <img
@@ -208,14 +207,6 @@ export const Header = ({ onLogout, onSearch, currentView, isOffline, setIsOfflin
           </button>
         </div>
       </div>
-
-      {/* MODAL DE PERFIL TIPO RED SOCIAL CON LOS 5 BANNERS */}
-      <UserProfileModal
-        isOpen={showProfileModal}
-        onClose={() => setShowProfileModal(false)}
-        user={currentUser}
-        onUpdateUser={onUpdateUser}
-      />
     </header>
   );
 };

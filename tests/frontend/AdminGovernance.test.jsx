@@ -4,6 +4,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import StaffRegisterModal from '../../src/frontend/src/components/StaffRegisterModal';
 import AdminDashboardScreen from '../../src/frontend/src/screens/admin/AdminDashboardScreen';
 import UserProfileModal, { MEDICAL_BANNERS } from '../../src/frontend/src/components/UserProfileModal';
+import ProfileScreen from '../../src/frontend/src/screens/ProfileScreen';
 
 describe('StaffRegisterModal - Autorregistro y Gobernanza ReTHUS', () => {
   it('renderiza todos los campos obligatorios del registro asistencial', () => {
@@ -108,6 +109,40 @@ describe('UserProfileModal - Perfil Asistencial Tipo Red Social con 5 Banners', 
 
     expect(await screen.findByText(/Pediatría & Salud Infantil/i)).toBeInTheDocument();
     expect(screen.getByText(/Farmacología & Farmacia Hospitalaria/i)).toBeInTheDocument();
+    expect(screen.getByText(/Cirugía & Quirófano Especializado/i)).toBeInTheDocument();
+    expect(screen.getByText(/Cardiología & Medicina Interna/i)).toBeInTheDocument();
+  });
+});
+
+describe('ProfileScreen - Pantalla Completa Desacoplada sin Ventana Flotante', () => {
+  const mockUser = {
+    id: 'usr-med-0002',
+    name: 'Dr. Santiago Vélez',
+    full_name: 'Dr. Santiago Vélez',
+    role: 'MEDICO',
+    professional_card: 'RM-94821-VALLE',
+    specialty: 'Medicina de Urgencias',
+    branch: 'Sede Cartago - Hospital Central (Nivel II)',
+  };
+
+  it('renderiza la pantalla completa de perfil con botón de retorno y portadas médicas', () => {
+    render(<ProfileScreen user={mockUser} onUpdateUser={() => {}} onNavigate={() => {}} />);
+
+    expect(screen.getByText(/Volver al Panel Principal/i)).toBeInTheDocument();
+    expect(screen.getByText(/Trayectoria & Perfil Asistencial/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Cambiar Portada \(5 Banners\)/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Editar Perfil/i })).toBeInTheDocument();
+  });
+
+  it('permite navegar a la pestaña de banners y ver los 5 diseños en pantalla completa', async () => {
+    render(<ProfileScreen user={mockUser} onUpdateUser={() => {}} onNavigate={() => {}} />);
+
+    const bannersBtn = screen.getByRole('button', { name: /Colección de Banners \(5\)/i });
+    fireEvent.click(bannersBtn);
+
+    expect(await screen.findByText(/Pediatría & Salud Infantil/i)).toBeInTheDocument();
+    expect(screen.getByText(/Farmacología & Farmacia Hospitalaria/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Urgencias & Cuidados Críticos/i).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/Cirugía & Quirófano Especializado/i)).toBeInTheDocument();
     expect(screen.getByText(/Cardiología & Medicina Interna/i)).toBeInTheDocument();
   });

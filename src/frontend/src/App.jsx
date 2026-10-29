@@ -7,12 +7,13 @@ import TriageScreen from './screens/TriageScreen';
 import HceScreen from './screens/HceScreen';
 import PrescriptionScreen from './screens/PrescriptionScreen';
 import SecurityMfaScreen from './screens/SecurityMfaScreen';
+import ProfileScreen from './screens/ProfileScreen';
 import AdminLayout from './screens/admin/AdminLayout';
 import { apiClient } from './services/api';
 
 export function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
-  const [currentUser, setCurrentUser] = useState(apiClient.user);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   const [currentView, setCurrentView] = useState('dashboard');
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [isOffline, setIsOffline] = useState(false);
@@ -57,6 +58,7 @@ export function App() {
         isOffline={isOffline}
         setIsOffline={setIsOffline}
         onUpdateUser={(updated) => setCurrentUser(updated)}
+        onNavigate={(view) => setCurrentView(view)}
       />
 
       <div className="flex flex-1 pt-20">
@@ -81,6 +83,14 @@ export function App() {
           )}
 
           {currentView === 'prescription' && <PrescriptionScreen />}
+
+          {currentView === 'profile' && (
+            <ProfileScreen
+              user={currentUser}
+              onUpdateUser={(updated) => setCurrentUser(updated)}
+              onNavigate={(view) => setCurrentView(view)}
+            />
+          )}
 
           {(currentView === 'security' || currentView === 'auth') && (
             <SecurityMfaScreen onLogout={handleLogout} />

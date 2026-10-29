@@ -783,3 +783,4 @@ export const UserProfileModal = ({ isOpen, onClose, user, onUpdateUser }) => {
 };
 
 export default UserProfileModal;
+

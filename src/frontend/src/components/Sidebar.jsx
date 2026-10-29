@@ -36,6 +36,12 @@ export const Sidebar = ({ currentView, setCurrentView }) => {
       badge: 'Seguridad',
     },
     {
+      id: 'profile',
+      label: 'Mi Perfil Asistencial',
+      icon: UserCheck,
+      badge: 'ReTHUS',
+    },
+    {
       id: 'security',
       label: 'Seguridad & MFA',
       icon: ShieldCheck,

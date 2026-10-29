@@ -869,22 +869,12 @@ _El servidor de desarrollo Vite servirá la aplicación en `http://localhost:517
 
 ---
 
-## 8. Cuentas y Credenciales de Prueba (Selector Rápido)
+## 8. Instrucciones para Ejecutar las Pruebas Automatizadas
 
-La pantalla de inicio de sesión (`AuthScreen.jsx`) incluye botones de alternancia rápida para validar los perfiles del sistema:
+> **Política de Protección de Credenciales (Regla 27 & Ley 1581 de 2012):**
+> Por motivos de seguridad, prevención de reconocimiento y no divulgación de credenciales institucionales, las cuentas de laboratorio, tarjetas ReTHUS y claves de acceso para el equipo de desarrollo se encuentran desacopladas en el documento interno y privado [`CREDENCIALES_EQUIPO.md`](CREDENCIALES_EQUIPO.md).
 
-| Perfil de Usuario | Nombre Completo | Correo Institucional | Contraseña | Rol / Tarjeta ReTHUS | Entorno al Ingresar |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **Médico Asistencial** | Dr. Santiago Vélez | `svelez@saludconecta.ips.gov.co` | `MedicoSalud2026*` | `MEDICO` (RM-94821-VALLE) | Portal Clínico Asistencial (Dashboard, Triaje, HCE, Prescripción) |
-| **Administrador del Sistema** | Administrador del Sistema | `admin@saludconecta.ips.gov.co` | `AdminSalud2026*` | `ADMIN` (TI-ADMIN-001) | `AdminLayout` (Gobernanza ReTHUS, Auditoría Forense, Sedes, CUM) |
-
-> **Nota MFA TOTP:** La semilla de prueba configurada para el Dr. Santiago Vélez es `JBSWY3DPEHPK3PXP`. El código QR escaneable se presenta directamente en el formulario de acceso y puede ser leído por Google Authenticator, Authy o Microsoft Authenticator. El botón *"Pegar código de prueba"* permite autocompletar el token de la ventana activa para agilizar pruebas de laboratorio.
-
----
-
-## 9. Instrucciones para Ejecutar las Pruebas Automatizadas
-
-### 9.1. Pruebas Automatizadas del Backend (Go)
+### 8.1. Pruebas Automatizadas del Backend (Go)
 
 Las pruebas automatizadas de caja blanca y de integración lógica se ejecutan con la herramienta nativa de Go:
 
@@ -903,16 +893,16 @@ Las pruebas automatizadas de caja blanca y de integración lógica se ejecutan c
 
 _Cobertura evaluada:_ Triaje Manchester (valores límite y partición de equivalencia), HCE (inmutabilidad y cadena de hashes), Prescripción (intercepción de betalactámicos < 150 ms), Sincronización rural (idempotencia por lotes) y Gobernanza ReTHUS (`TestStaffGovernanceAndReTHUSVerification`).
 
-### 9.2. Pruebas Automatizadas del Frontend (React)
+### 8.2. Pruebas Automatizadas del Frontend (React)
 
 ```powershell
 cd src/frontend
 npm test -- --run
 ```
 
-_Ejecuta la suite con Vitest, validando el modal de intercepción de alergias, el algoritmo criptográfico TOTP RFC 6238 contra el vector oficial internacional, y el módulo de Gobernanza y Habilitación ReTHUS (`AdminGovernance.test.jsx`)._
+_Ejecuta la suite con Vitest, validando el modal de intercepción de alergias, el algoritmo criptográfico TOTP RFC 6238 contra el vector oficial internacional, la suite de Gobernanza y Habilitación ReTHUS (`AdminGovernance.test.jsx`) y el perfil asistencial con colección de 5 banners._
 
-### 9.3. Compilación de Producción (Zero Warnings)
+### 8.3. Compilación de Producción (Zero Warnings)
 
 ```powershell
 cd src/frontend
@@ -921,7 +911,7 @@ npm run build
 
 ---
 
-## 10. Variables de Entorno de Muestra (`.env.example`)
+## 9. Variables de Entorno de Muestra (`.env.example`)
 
 Siguiendo la política de protección de infraestructura sensible (Regla 27), todas las credenciales y puertos reales se mantienen confidenciales mediante máscaras genéricas:
 
@@ -943,7 +933,7 @@ Siguiendo la política de protección de infraestructura sensible (Regla 27), to
 
 ---
 
-## 11. Documentación Técnica Complementaria
+## 10. Documentación Técnica Complementaria
 
 Para consultar el detalle extendido de la ingeniería del proyecto, accede a los documentos técnicos en el directorio `docs/`:
 

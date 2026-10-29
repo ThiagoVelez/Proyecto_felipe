@@ -9,12 +9,13 @@ import {
   Clock,
   ShieldCheck,
   Server,
+  ArrowLeft,
 } from 'lucide-react';
 import AdminDashboardScreen from './AdminDashboardScreen';
-import UserProfileModal from '../../components/UserProfileModal';
+import ProfileScreen from '../ProfileScreen';
 
 export const AdminLayout = ({ user, onLogout, onUpdateUser }) => {
-  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [adminView, setAdminView] = useState('dashboard'); // 'dashboard' | 'profile'
   const currentUser = user || {
     full_name: 'Administrador del Sistema',
     name: 'Administrador del Sistema',
@@ -52,12 +53,12 @@ export const AdminLayout = ({ user, onLogout, onUpdateUser }) => {
             <span className="font-semibold text-emerald-800">Servidor Go/Fiber En Línea</span>
           </div>
 
-          {/* Perfil del Administrador (Clickable para abrir Perfil tipo Red Social) */}
+          {/* Perfil del Administrador (Navega a la Pantalla Completa de Perfil) */}
           <button
             type="button"
-            onClick={() => setShowProfileModal(true)}
+            onClick={() => setAdminView(adminView === 'profile' ? 'dashboard' : 'profile')}
             className="flex items-center gap-2.5 pl-3 border-l border-surface-container-high hover:opacity-85 transition-opacity cursor-pointer text-left"
-            title="Ver perfil de administrador y cambiar banner"
+            title="Ver pantalla de perfil de administrador y cambiar banner"
           >
             {currentUser.avatar ? (
               <img
@@ -98,33 +99,35 @@ export const AdminLayout = ({ user, onLogout, onUpdateUser }) => {
         </div>
       </header>
 
-      {/* MODAL DE PERFIL TIPO RED SOCIAL */}
-      <UserProfileModal
-        isOpen={showProfileModal}
-        onClose={() => setShowProfileModal(false)}
-        user={currentUser}
-        onUpdateUser={onUpdateUser}
-      />
-
-      {/* CUERPO PRINCIPAL CON AVISO DE AISLAMIENTO RBAC */}
+      {/* CUERPO PRINCIPAL */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-5">
-        {/* Banner de Cumplimiento Legal y Separación de Capas */}
-        <div className="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200/80 flex items-start justify-between gap-3 text-amber-950">
-          <div className="flex items-start gap-2.5">
-            <ShieldCheck className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
-            <div className="space-y-0.5 text-xs">
-              <strong className="font-bold text-amber-900">
-                Aislamiento Estricto de Rol Administrativo (Reglas RBAC e ISO/IEC 25010):
-              </strong>
-              <p className="text-[11px] text-amber-900/90 leading-relaxed">
-                El usuario con rol <code>ADMIN</code> dispone de un entorno desacoplado enfocado exclusivamente en gobernanza de personal, auditoría forense inmutable y gestión de sedes. Por mandato de la Ley 1581 de 2012 y la Resolución 1995 de 1999, el Administrador TI no posee acceso a historias clínicas protegidas ni a la consulta asistencial.
-              </p>
+        {adminView === 'profile' ? (
+          <ProfileScreen
+            user={currentUser}
+            onUpdateUser={onUpdateUser}
+            onNavigate={() => setAdminView('dashboard')}
+          />
+        ) : (
+          <>
+            {/* Banner de Cumplimiento Legal y Separación de Capas */}
+            <div className="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200/80 flex items-start justify-between gap-3 text-amber-950">
+              <div className="flex items-start gap-2.5">
+                <ShieldCheck className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+                <div className="space-y-0.5 text-xs">
+                  <strong className="font-bold text-amber-900">
+                    Aislamiento Estricto de Rol Administrativo (Reglas RBAC e ISO/IEC 25010):
+                  </strong>
+                  <p className="text-[11px] text-amber-900/90 leading-relaxed">
+                    El usuario con rol <code>ADMIN</code> dispone de un entorno desacoplado enfocado exclusivamente en gobernanza de personal, auditoría forense inmutable y gestión de sedes. Por mandato de la Ley 1581 de 2012 y la Resolución 1995 de 1999, el Administrador TI no posee acceso a historias clínicas protegidas ni a la consulta asistencial.
+                  </p>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
-        {/* Dashboard Administrativo */}
-        <AdminDashboardScreen />
+            {/* Dashboard Administrativo */}
+            <AdminDashboardScreen />
+          </>
+        )}
       </main>
 
       {/* FOOTER */}
