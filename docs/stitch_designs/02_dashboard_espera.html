@@ -1,0 +1,792 @@
+﻿<!DOCTYPE html>
+
+<html lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Inter:wght@100..900&display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"on-secondary-fixed":"#001d31","primary":"#005c55","tertiary":"#445266","tertiary-fixed":"#d5e3fc","outline-variant":"#bdc9c6","on-primary-fixed":"#00201d","surface-container-highest":"#dae2fd","secondary":"#006398","secondary-fixed":"#cce5ff","surface-tint":"#006a63","on-primary":"#ffffff","on-tertiary-fixed":"#0d1c2e","inverse-surface":"#283044","error":"#ba1a1a","on-error":"#ffffff","surface-bright":"#faf8ff","surface-container-low":"#f2f3ff","on-surface-variant":"#3e4947","surface-dim":"#d2d9f4","primary-container":"#0f766e","inverse-primary":"#80d5cb","primary-fixed-dim":"#80d5cb","on-secondary-container":"#00476e","outline":"#6e7977","surface-container-lowest":"#ffffff","surface-container-high":"#e2e7ff","on-tertiary":"#ffffff","secondary-container":"#5bb8fe","secondary-fixed-dim":"#93ccff","error-container":"#ffdad6","background":"#faf8ff","surface-variant":"#dae2fd","on-surface":"#131b2e","on-tertiary-container":"#dfeaff","on-primary-container":"#a3faef","tertiary-fixed-dim":"#b9c7df","on-primary-fixed-variant":"#00504a","inverse-on-surface":"#eef0ff","surface-container":"#eaedff","tertiary-container":"#5c6a7f","surface":"#faf8ff","on-secondary-fixed-variant":"#004b73","on-tertiary-fixed-variant":"#3a485b","on-error-container":"#93000a","on-secondary":"#ffffff","primary-fixed":"#9cf2e8","on-background":"#131b2e"},"borderRadius":{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},"spacing":{"space-lg":"1.5rem","margin":"1rem","margin-desktop":"2rem","space-sm":"0.5rem","space-xs":"0.25rem","space-md":"1rem","margin-tablet":"1.5rem","space-xl":"2rem","gutter-desktop":"1.5rem","gutter":"1rem"},"fontFamily":{"label-badge":["Geist"],"body-md":["Inter"],"headline-xl":["Inter"],"headline-sm":["Inter"],"label-mono-forensic":["Geist"],"headline-xl-mobile":["Inter"],"body-lg":["Inter"],"label-clinical-bold":["Geist"],"body-sm":["Inter"],"headline-lg":["Inter"],"headline-md":["Inter"],"headline-lg-mobile":["Inter"]},"fontSize":{"label-badge":["11px",{"lineHeight":"14px","fontWeight":"700"}],"body-md":["14px",{"lineHeight":"20px","fontWeight":"400"}],"headline-xl":["36px",{"lineHeight":"44px","fontWeight":"700"}],"headline-sm":["18px",{"lineHeight":"24px","fontWeight":"600"}],"label-mono-forensic":["12px",{"lineHeight":"16px","fontWeight":"500"}],"headline-xl-mobile":["28px",{"lineHeight":"36px","fontWeight":"700"}],"body-lg":["16px",{"lineHeight":"24px","fontWeight":"400"}],"label-clinical-bold":["13px",{"lineHeight":"16px","fontWeight":"600"}],"body-sm":["12px",{"lineHeight":"18px","fontWeight":"400"}],"headline-lg":["30px",{"lineHeight":"38px","fontWeight":"600"}],"headline-md":["22px",{"lineHeight":"28px","fontWeight":"600"}],"headline-lg-mobile":["24px",{"lineHeight":"32px","fontWeight":"600"}]}}}}</script></head><body class="bg-surface font-body-md text-on-surface antialiased"><header class="fixed top-0 left-0 right-0 z-50 bg-surface-container-lowest/95 backdrop-blur-md shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-20 w-full px-margin-desktop flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-md shrink-0"><img alt="SaludConecta IPS Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1UfJEV08LefMd7kFqpK-pH1-cP9Es2dh2cNtCII-IxICldYCRg3bKxAoNnNRdxTJOYDNByJfl6Zl3aS2XLluS6nJQD4QKbBVSWcgz99Fp6nrDUmco2jFSIYRoARrrkCbBB1l1rv2bT-LLnCfNAr9ISeiIt3L-M3g9J_HrJ2t3wVdAB3j6PrhC9pLSfYtQk8807Trai5iaQi76-JabaPcLAFCgLVSEQJ3xaB24u3oXBh"/><div class="flex flex-col"><div class="flex items-center gap-space-xs"><span class="font-headline-sm text-headline-sm text-primary leading-none">SaludConecta IPS</span><span class="px-space-xs py-0.5 rounded-DEFAULT bg-primary-fixed text-on-primary-fixed-variant font-label-badge text-label-badge uppercase tracking-wider">v2.4 PWA</span></div><span class="font-body-sm text-body-sm text-on-surface-variant font-medium">Red Norte del Valle â€¢ MÃ³dulo Asistencial</span></div></div><div class="flex-1 max-w-xl mx-space-md"><div class="flex items-center h-12 rounded-xl bg-surface-container-low px-space-sm shadow-[0_1px_2px_0_rgba(15,23,42,0.05)] focus-within:ring-2 focus-within:ring-primary"><span class="material-symbols-outlined text-outline mr-space-xs text-xl">search</span><select class="bg-transparent text-on-surface font-label-clinical-bold text-label-clinical-bold border-none outline-none pr-space-xs cursor-pointer focus:ring-0"><option value="CC">CC</option><option value="TI">TI</option><option value="CE">CE</option><option value="RC">RC</option><option value="RU">RU</option></select><div class="h-5 w-px bg-outline-variant mx-space-xs"></div><input class="w-full bg-transparent font-body-md text-body-md text-on-surface placeholder:text-outline outline-none border-none focus:ring-0" placeholder="Buscar paciente por CC / TI / Registro Ãšnico... [Atajo: Ctrl + K]" type="text"/></div></div><div class="flex items-center gap-space-md shrink-0"><div class="flex items-center gap-space-xs px-space-sm py-1.5 rounded-full bg-surface-container-low cursor-pointer hover:bg-surface-container transition-colors"><span class="relative flex h-2.5 w-2.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span><span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span></span><span class="font-label-clinical-bold text-label-clinical-bold text-primary">â— Conectado (En LÃ­nea)</span><span class="font-label-mono-forensic text-label-mono-forensic text-outline">24ms</span></div><div class="flex items-center gap-space-xs px-space-sm py-1.5 rounded-full bg-surface-container-low"><span class="material-symbols-outlined text-on-surface-variant text-base">lock_clock</span><span class="font-label-mono-forensic text-label-mono-forensic text-on-surface-variant">SesiÃ³n: <strong class="text-error">14:32 min</strong></span><button class="font-label-badge text-label-badge text-primary hover:text-on-primary-fixed-variant transition-colors underline ml-space-xs cursor-pointer" type="button">Extender</button></div><div class="flex items-center gap-space-sm pl-space-xs"><img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-2 ring-primary/20" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwsE3WPJ9qqGa40auY7XFpbX-X5aThoGRICUpbg_f6d-8xEAqklkkzgSteEEhZT5Ez4Kc8fbiYfXMJNvRR0hRSWt3tTmYF-PkmPLih6mw1VB5T6n3OsE9Tz5TjL1kcr0oj2OMyGcHxN-LBLgrujGlQ21DyXIJqPXrI2iQWBXUPwzvvZk3-Y07AESVk5uHOJuXw0OhxhqW0UitZht0J3SsKpbKy6NRgsd2hVZcD5A0"/><div class="flex flex-col text-left"><div class="flex items-center gap-space-xs"><span class="font-label-clinical-bold text-label-clinical-bold text-on-surface">Dra. SofÃ­a RamÃ­rez C.</span><span class="px-1.5 py-0.5 rounded-DEFAULT bg-primary-fixed text-on-primary-fixed-variant font-label-badge text-label-badge">MÃ‰DICO GENERAL</span></div><div class="flex items-center gap-space-xs font-label-mono-forensic text-label-mono-forensic text-on-surface-variant"><span>RM-76001-VALLE</span><span>â€¢</span><span>Cartago - Central</span></div></div></div><a class="h-10 px-space-sm rounded-xl flex items-center gap-space-xs text-error hover:bg-error-container hover:text-on-error-container transition-colors cursor-pointer" data-path="autenticacion-mfa" href="#" title="Cierre Seguro de SesiÃ³n con AuditorÃ­a SHA-256"><span class="material-symbols-outlined text-xl">lock_reset</span><span class="font-label-clinical-bold text-label-clinical-bold hidden xl:inline">Salir Seguro</span></a></div></div></header><aside class="fixed left-0 top-20 bottom-0 w-64 bg-surface-container-lowest z-40 flex flex-col justify-between py-space-md shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex flex-col gap-space-md px-space-md"><div class="px-space-xs flex flex-col"><span class="font-label-badge text-label-badge uppercase tracking-wider text-outline">NAVEGACIÃ“N CLÃNICA</span><span class="font-body-sm text-body-sm text-on-surface-variant">Valle del Cauca Norte</span></div><nav class="flex flex-col gap-1" data-active-classes="bg-primary-container text-on-primary font-label-clinical-bold rounded-xl shadow-sm"><a class="flex items-center gap-space-sm px-space-md py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="sala-de-espera-dashboard" href="#"><span class="material-symbols-outlined text-xl">dashboard</span><span class="font-body-md text-body-md">Sala de Espera & Dashboard</span></a><a class="flex items-center gap-space-sm px-space-md py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="triaje-manchester" href="#"><span class="material-symbols-outlined text-xl">traffic</span><span class="font-body-md text-body-md">Triaje Manchester</span></a><a class="flex items-center gap-space-sm px-space-md py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="historia-clinica-hce" href="#"><span class="material-symbols-outlined text-xl">clinical_notes</span><span class="font-body-md text-body-md">Historia ClÃ­nica (HCE)</span></a><a class="flex items-center gap-space-sm px-space-md py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="prescripcion-farmacia" href="#"><span class="material-symbols-outlined text-xl">medication</span><span class="font-body-md text-body-md">PrescripciÃ³n & Farmacia</span></a><a class="flex items-center gap-space-sm px-space-md py-3 rounded-xl text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="autenticacion-mfa" href="#"><span class="material-symbols-outlined text-xl">verified_user</span><span class="font-body-md text-body-md">AutenticaciÃ³n / MFA</span></a></nav></div><div class="px-space-md flex flex-col gap-space-xs"><div class="p-space-sm rounded-xl bg-surface-container-low flex flex-col gap-space-xs"><div class="flex items-center justify-between text-on-surface-variant"><span class="font-label-badge text-label-badge text-outline">SHA-256 AUDIT LOG</span><span class="material-symbols-outlined text-xs text-primary">verified</span></div><div class="font-label-mono-forensic text-label-mono-forensic text-on-surface truncate">#HASH-7a9f...e412</div><div class="font-body-sm text-body-sm text-on-surface-variant text-[10px] leading-tight">Firma Forense activa Ley 527/1999</div></div></div></aside><div class="pl-64"><main class="relative w-full pt-20 bg-surface min-h-screen"><div class="flex flex-col w-full">
+<!-- BANNER DE CONTEXTO ASISTENCIAL -->
+<div class="px-margin-desktop py-space-md bg-surface-container-lowest shadow-sm flex flex-col xl:flex-row xl:items-center justify-between gap-space-md">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-space-sm flex-wrap">
+<span class="px-2 py-0.5 rounded bg-primary-fixed text-on-primary-fixed-variant font-label-badge text-label-badge uppercase tracking-wider">
+          MÃ³dulo de Flujo Continuo
+        </span>
+<span class="text-outline font-label-mono-forensic text-label-mono-forensic">â€¢</span>
+<span class="text-secondary font-label-clinical-bold text-label-clinical-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">local_hospital</span>
+          Sede Cartago - Central
+        </span>
+<span class="text-outline font-label-mono-forensic text-label-mono-forensic">â€¢</span>
+<span class="text-on-surface-variant font-body-sm text-body-sm">
+          Servicio de Urgencias & Consulta Prioritaria
+        </span>
+</div>
+<div class="flex items-baseline gap-space-sm">
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">
+          Sala de Espera y Control de Demanda Asistencial
+        </h1>
+<span class="font-label-mono-forensic text-label-mono-forensic text-on-surface-variant hidden md:inline">
+          Turno MaÃ±ana [07:00 - 13:00 COT]
+        </span>
+</div>
+</div>
+<!-- Acciones RÃ¡pidas y Controles de Demanda -->
+<div class="flex items-center gap-space-sm flex-wrap">
+<div class="flex items-center bg-surface-container-low rounded-xl px-space-sm h-12 shadow-sm">
+<span class="material-symbols-outlined text-outline text-lg mr-1.5">filter_alt</span>
+<select class="bg-transparent font-label-clinical-bold text-label-clinical-bold text-on-surface outline-none cursor-pointer pr-space-xs">
+<option value="all">Todos los servicios (Urg + Pri)</option>
+<option value="triage">Triage Urgencias</option>
+<option value="gen">Medicina General</option>
+<option value="ped">PediatrÃ­a Urgencias</option>
+</select>
+</div>
+<div class="flex items-center bg-surface-container-low rounded-xl px-space-sm h-12 shadow-sm w-56 lg:w-64">
+<span class="material-symbols-outlined text-outline text-lg mr-1.5">person_search</span>
+<input class="w-full bg-transparent font-body-sm text-body-sm text-on-surface outline-none placeholder:text-outline" id="patientFilter" placeholder="Filtrar paciente o CC..." type="text"/>
+</div>
+<button class="h-12 px-space-md rounded-xl bg-primary text-on-primary font-label-clinical-bold text-label-clinical-bold flex items-center gap-space-xs shadow-sm hover:bg-primary-container transition-all cursor-pointer" id="refreshQueueBtn" type="button">
+<span class="material-symbols-outlined text-lg transition-transform" id="refreshIcon">sync</span>
+<span>Refrescar Cola</span>
+</button>
+</div>
+</div>
+<!-- CONTENIDO PRINCIPAL: DASHBOARD ASISTENCIAL -->
+<div class="p-margin-desktop flex flex-col gap-space-lg">
+<!-- 4 TARJETAS KPI EN TIEMPO REAL -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-gutter-desktop">
+<!-- KPI 1: ESPERA TRIAGE -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm relative overflow-hidden flex flex-col justify-between">
+<div class="absolute -right-3 -top-3 w-16 h-16 rounded-full bg-primary/5 pointer-events-none"></div>
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-label-badge text-label-badge uppercase tracking-wider text-outline">Demanda Inicial</span>
+<span class="font-headline-sm text-headline-sm text-on-surface mt-0.5">En Espera de Triage</span>
+</div>
+<span class="p-2 rounded-xl bg-surface-container-low text-primary material-symbols-outlined text-2xl">hourglass_top</span>
+</div>
+<div class="mt-space-md flex items-baseline justify-between">
+<div class="flex items-baseline gap-1.5">
+<span class="font-headline-xl text-headline-xl text-on-surface leading-none">14</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant font-medium">pacientes</span>
+</div>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-primary-fixed text-on-primary-fixed-variant font-label-badge text-label-badge">
+<span class="material-symbols-outlined text-xs">check_circle</span>
+            8.2 min prom. (Ã“PTIMO)
+          </span>
+</div>
+<div class="w-full bg-surface-container-low h-1.5 rounded-full mt-3 overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 58%;"></div>
+</div>
+</div>
+<!-- KPI 2: CONSULTORIOS ACTIVOS -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm relative overflow-hidden flex flex-col justify-between">
+<div class="absolute -right-3 -top-3 w-16 h-16 rounded-full bg-secondary/5 pointer-events-none"></div>
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-label-badge text-label-badge uppercase tracking-wider text-outline">Capacidad Operativa</span>
+<span class="font-headline-sm text-headline-sm text-on-surface mt-0.5">Consultorios Activos</span>
+</div>
+<span class="p-2 rounded-xl bg-secondary-fixed text-secondary material-symbols-outlined text-2xl">meeting_room</span>
+</div>
+<div class="mt-space-md flex items-baseline justify-between">
+<div class="flex items-baseline gap-1.5">
+<span class="font-headline-xl text-headline-xl text-on-surface leading-none">6<span class="text-outline text-headline-sm">/8</span></span>
+<span class="font-body-sm text-body-sm text-on-surface-variant font-medium">en atenciÃ³n</span>
+</div>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-surface-container-high text-on-surface font-label-badge text-label-badge">
+<span class="inline-block w-1.5 h-1.5 rounded-full bg-secondary"></span>
+            75% OcupaciÃ³n
+          </span>
+</div>
+<div class="w-full bg-surface-container-low h-1.5 rounded-full mt-3 overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 75%;"></div>
+</div>
+</div>
+<!-- KPI 3: ALERTA CRÃTICA NIVEL I / II -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm relative overflow-hidden flex flex-col justify-between">
+<div class="absolute -right-3 -top-3 w-16 h-16 rounded-full bg-error/10 pointer-events-none"></div>
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-label-badge text-label-badge uppercase tracking-wider text-error">Alerta Roja Inmediata</span>
+<span class="font-headline-sm text-headline-sm text-error mt-0.5">Triage Manchester I / II</span>
+</div>
+<span class="p-2 rounded-xl bg-error-container text-on-error-container material-symbols-outlined text-2xl">e911_emergency</span>
+</div>
+<div class="mt-space-md flex items-baseline justify-between">
+<div class="flex items-baseline gap-1.5">
+<span class="font-headline-xl text-headline-xl text-error leading-none">03</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant font-medium">crÃ­ticos en sala</span>
+</div>
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-error text-on-error font-label-badge text-label-badge">
+<span class="inline-block w-2 h-2 rounded-full bg-on-error animate-ping"></span>
+            REANIMACIÃ“N ACTIVA
+          </span>
+</div>
+<div class="w-full bg-surface-container-low h-1.5 rounded-full mt-3 overflow-hidden">
+<div class="bg-error h-full rounded-full" style="width: 100%;"></div>
+</div>
+</div>
+<!-- KPI 4: FÃ“RMULAS & AUDITORÃA SHA-256 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm relative overflow-hidden flex flex-col justify-between">
+<div class="absolute -right-3 -top-3 w-16 h-16 rounded-full bg-tertiary/10 pointer-events-none"></div>
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-label-badge text-label-badge uppercase tracking-wider text-outline">Seguridad FarmacolÃ³gica</span>
+<span class="font-headline-sm text-headline-sm text-on-surface mt-0.5">FÃ³rmulas & Ã“rdenes</span>
+</div>
+<span class="p-2 rounded-xl bg-surface-container text-tertiary material-symbols-outlined text-2xl">prescriptions</span>
+</div>
+<div class="mt-space-md flex items-baseline justify-between">
+<div class="flex items-baseline gap-1.5">
+<span class="font-headline-xl text-headline-xl text-on-surface leading-none">48</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant font-medium">despachos</span>
+</div>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-primary-fixed text-on-primary-fixed-variant font-label-badge text-label-badge">
+<span class="material-symbols-outlined text-xs">verified</span>
+            100% Firma Digital
+          </span>
+</div>
+<div class="w-full bg-surface-container-low h-1.5 rounded-full mt-3 overflow-hidden">
+<div class="bg-primary-container h-full rounded-full" style="width: 92%;"></div>
+</div>
+</div>
+</div>
+<!-- LAYOUT PRINCIPAL: TABLA DE DEMANDA ASISTENCIAL + PANEL LATERAL -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-gutter-desktop">
+<!-- COLUMNA PRINCIPAL: GESTIÃ“N DE PACIENTES (8 cols en desktop grande) -->
+<div class="xl:col-span-8 flex flex-col gap-space-md">
+<!-- CONTENEDOR DE LA TABLA CON PESTAÃ‘AS -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+<!-- PestaÃ±as de Filtrado de Estado -->
+<div class="px-space-md pt-space-md bg-surface-container-low/50 flex items-center gap-space-xs overflow-x-auto">
+<button class="h-10 px-space-md rounded-t-lg bg-surface-container-lowest font-label-clinical-bold text-label-clinical-bold text-primary shadow-sm flex items-center gap-1.5 shrink-0 cursor-pointer">
+<span>Todos</span>
+<span class="px-1.5 py-0.2 rounded-full bg-primary-fixed text-on-primary-fixed-variant text-[10px]">24</span>
+</button>
+<button class="h-10 px-space-md rounded-t-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-lowest/60 font-label-clinical-bold text-label-clinical-bold flex items-center gap-1.5 shrink-0 transition-colors cursor-pointer">
+<span>En Espera Triage</span>
+<span class="px-1.5 py-0.2 rounded-full bg-surface-container-high text-on-surface text-[10px]">14</span>
+</button>
+<button class="h-10 px-space-md rounded-t-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-lowest/60 font-label-clinical-bold text-label-clinical-bold flex items-center gap-1.5 shrink-0 transition-colors cursor-pointer">
+<span>Clasificados Pendientes</span>
+<span class="px-1.5 py-0.2 rounded-full bg-secondary-fixed text-on-secondary-fixed text-[10px]">7</span>
+</button>
+<button class="h-10 px-space-md rounded-t-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-lowest/60 font-label-clinical-bold text-label-clinical-bold flex items-center gap-1.5 shrink-0 transition-colors cursor-pointer">
+<span>En Consulta MÃ©dica</span>
+<span class="px-1.5 py-0.2 rounded-full bg-surface-container-high text-on-surface text-[10px]">3</span>
+</button>
+<button class="h-10 px-space-md rounded-t-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-lowest/60 font-label-clinical-bold text-label-clinical-bold flex items-center gap-1.5 shrink-0 transition-colors cursor-pointer">
+<span>Egresados Hoy</span>
+<span class="px-1.5 py-0.2 rounded-full bg-surface-container text-on-surface-variant text-[10px]">12</span>
+</button>
+</div>
+<!-- TABLA CLÃNICA DE ALTO CONTRASTE -->
+<div class="w-full overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-label-badge text-label-badge uppercase tracking-wider">
+<th class="py-3 px-space-md w-36">Manchester Triaje</th>
+<th class="py-3 px-space-md">Paciente / IdentificaciÃ³n</th>
+<th class="py-3 px-space-md">Aseguradora / EPS</th>
+<th class="py-3 px-space-md">Ingreso / Espera</th>
+<th class="py-3 px-space-md">Motivo Principal & Alertas</th>
+<th class="py-3 px-space-md text-right">AcciÃ³n MÃ©dica</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md text-on-surface divide-y-0" id="patientTableBody">
+<!-- PACIENTE 1: MANCHESTER I (ROJO REANIMACIÃ“N) -->
+<tr class="hover:bg-error-container/20 transition-colors bg-surface-container-lowest">
+<td class="py-3.5 px-space-md">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-10 rounded-full bg-error shrink-0"></span>
+<div class="flex flex-col">
+<span class="px-2 py-0.5 rounded bg-error text-on-error font-label-badge text-label-badge uppercase font-bold tracking-tight inline-block text-center">
+                          Nivel I - ReanimaciÃ³n
+                        </span>
+<span class="font-label-mono-forensic text-[10px] text-error font-semibold mt-0.5">INMEDIATO (0 min)</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="flex flex-col">
+<span class="font-label-clinical-bold text-label-clinical-bold text-on-surface">Hernando GÃ³mez Caicedo</span>
+<div class="flex items-center gap-1 font-label-mono-forensic text-label-mono-forensic text-on-surface-variant">
+<span>CC 16.482.991</span>
+<span>â€¢</span>
+<span>M / 64 aÃ±os</span>
+<span>â€¢</span>
+<span class="font-bold text-error">O+</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="flex flex-col gap-1 items-start">
+<span class="font-label-clinical-bold text-xs text-on-surface">Nueva EPS</span>
+<span class="px-2 py-0.5 rounded bg-primary-fixed text-on-primary-fixed-variant font-label-badge text-[10px]">
+                        ACTIVO â€¢ CONTRIBUTIVO
+                      </span>
+</div>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="flex flex-col">
+<span class="font-label-mono-forensic text-label-mono-forensic text-on-surface font-semibold">08:14 AM</span>
+<span class="text-error font-label-clinical-bold text-xs flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">timer</span>
+                        Espera: 3 min (CrÃ­tico)
+                      </span>
+</div>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="flex flex-col gap-0.5">
+<span class="font-label-clinical-bold text-on-surface text-sm">Dolor torÃ¡cico opresivo + Diaforesis profusa</span>
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-error-container text-on-error-container font-label-badge text-[10px] w-fit">
+<span class="material-symbols-outlined text-[12px]">warning</span>
+                        Sospecha IAM / SatO2 88%
+                      </span>
+</div>
+</td>
+<td class="py-3.5 px-space-md text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="h-10 px-3 rounded-xl bg-error text-on-error font-label-clinical-bold text-xs flex items-center gap-1 hover:bg-on-error-container transition-colors shadow-sm cursor-pointer" title="Llamar a Sala de ReanimaciÃ³n Inmediata">
+<span class="material-symbols-outlined text-base">campaign</span>
+<span>ReanimaciÃ³n</span>
+</button>
+<button class="h-10 w-10 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface-variant flex items-center justify-center transition-colors cursor-pointer" title="Historial ClÃ­nico">
+<span class="material-symbols-outlined text-lg">medical_information</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- PACIENTE 2: MANCHESTER II (NARANJA EMERGENCIA) -->
+<tr class="hover:bg-surface-container-low transition-colors bg-surface-container-lowest">
+<td class="py-3.5 px-space-md">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-10 rounded-full bg-secondary-container shrink-0"></span>
+<div class="flex flex-col">
+<span class="px-2 py-0.5 rounded bg-secondary text-on-secondary font-label-badge text-label-badge uppercase font-bold tracking-tight inline-block text-center">
+                          Nivel II - Emergencia
+                        </span>
+<span class="font-label-mono-forensic text-[10px] text-secondary font-semibold mt-0.5">MÃXIMO 10-15 MIN</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="flex flex-col">
+<span class="font-label-clinical-bold text-label-clinical-bold text-on-surface">Valeria Restrepo Montoya</span>
+<div class="flex items-center gap-1 font-label-mono-forensic text-label-mono-forensic text-on-surface-variant">
+<span>TI 1.112.490.812</span>
+<span>â€¢</span>
+<span>F / 14 aÃ±os</span>
+<span>â€¢</span>
+<span class="font-bold text-on-surface">A+</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="flex flex-col gap-1 items-start">
+<span class="font-label-clinical-bold text-xs text-on-surface">Sura EPS</span>
+<span class="px-2 py-0.5 rounded bg-primary-fixed text-on-primary-fixed-variant font-label-badge text-[10px]">
+                        ACTIVO â€¢ CONTRIBUTIVO
+                      </span>
+</div>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="flex flex-col">
+<span class="font-label-mono-forensic text-label-mono-forensic text-on-surface font-semibold">08:08 AM</span>
+<span class="text-on-surface-variant font-label-clinical-bold text-xs flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">schedule</span>
+                        Espera: 9 min (En Rango)
+                      </span>
+</div>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="flex flex-col gap-0.5">
+<span class="font-label-clinical-bold text-on-surface text-sm">Crisis asmÃ¡tica severa + Tirajes intercostales</span>
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-error-container text-on-error-container font-label-badge text-[10px] w-fit">
+<span class="material-symbols-outlined text-[12px]">air</span>
+                        FR: 34 rpm â€¢ Sibilancias bilaterales
+                      </span>
+</div>
+</td>
+<td class="py-3.5 px-space-md text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="h-10 px-3 rounded-xl bg-primary text-on-primary font-label-clinical-bold text-xs flex items-center gap-1 hover:bg-primary-container transition-colors shadow-sm cursor-pointer" title="Llamar a Consultorio de Respiratorio">
+<span class="material-symbols-outlined text-base">volume_up</span>
+<span>Llamar C-2</span>
+</button>
+<button class="h-10 w-10 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface-variant flex items-center justify-center transition-colors cursor-pointer" title="Historial ClÃ­nico">
+<span class="material-symbols-outlined text-lg">medical_information</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- PACIENTE 3: MANCHESTER III (AMARILLO URGENCIA) -->
+<tr class="hover:bg-surface-container-low transition-colors bg-surface-container-lowest">
+<td class="py-3.5 px-space-md">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-10 rounded-full bg-secondary-fixed-dim shrink-0"></span>
+<div class="flex flex-col">
+<span class="px-2 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed font-label-badge text-label-badge uppercase font-bold tracking-tight inline-block text-center">
+                          Nivel III - Urgencia
+                        </span>
+<span class="font-label-mono-forensic text-[10px] text-tertiary font-semibold mt-0.5">MÃXIMO 60 MIN</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="flex flex-col">
+<span class="font-label-clinical-bold text-label-clinical-bold text-on-surface">Carlos Alberto Osorio</span>
+<div class="flex items-center gap-1 font-label-mono-forensic text-label-mono-forensic text-on-surface-variant">
+<span>CC 94.391.204</span>
+<span>â€¢</span>
+<span>M / 42 aÃ±os</span>
+<span>â€¢</span>
+<span class="font-bold text-on-surface">B+</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="flex flex-col gap-1 items-start">
+<span class="font-label-clinical-bold text-xs text-on-surface">Asmet Salud</span>
+<span class="px-2 py-0.5 rounded bg-error-container text-on-error-container font-label-badge text-[10px]">
+                        SUSPENDIDO â€¢ VÃA TUTELA
+                      </span>
+</div>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="flex flex-col">
+<span class="font-label-mono-forensic text-label-mono-forensic text-on-surface font-semibold">07:42 AM</span>
+<span class="text-error font-label-clinical-bold text-xs flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">notification_important</span>
+                        Espera: 35 min (AtenciÃ³n pronta)
+                      </span>
+</div>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="flex flex-col gap-0.5">
+<span class="font-label-clinical-bold text-on-surface text-sm">Dolor en fosa ilÃ­aca derecha + Fiebre 38.6Â°C</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">
+                        Blumberg positivo leve â€¢ VÃ³mito x 2 episodios
+                      </span>
+</div>
+</td>
+<td class="py-3.5 px-space-md text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="h-10 px-3 rounded-xl bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-clinical-bold text-xs flex items-center gap-1 transition-colors cursor-pointer" title="Llamar a Consultorio de Urgencias">
+<span class="material-symbols-outlined text-base">volume_up</span>
+<span>Llamar C-4</span>
+</button>
+<button class="h-10 w-10 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface-variant flex items-center justify-center transition-colors cursor-pointer" title="Historial ClÃ­nico">
+<span class="material-symbols-outlined text-lg">medical_information</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- PACIENTE 4: MANCHESTER IV (VERDE PRIORITARIA) -->
+<tr class="hover:bg-surface-container-low transition-colors bg-surface-container-lowest">
+<td class="py-3.5 px-space-md">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-10 rounded-full bg-primary-fixed shrink-0"></span>
+<div class="flex flex-col">
+<span class="px-2 py-0.5 rounded bg-primary-fixed text-on-primary-fixed-variant font-label-badge text-label-badge uppercase font-bold tracking-tight inline-block text-center">
+                          Nivel IV - Menor
+                        </span>
+<span class="font-label-mono-forensic text-[10px] text-primary font-semibold mt-0.5">MÃXIMO 120 MIN</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="flex flex-col">
+<span class="font-label-clinical-bold text-label-clinical-bold text-on-surface">Esperanza Morales de RiaÃ±o</span>
+<div class="flex items-center gap-1 font-label-mono-forensic text-label-mono-forensic text-on-surface-variant">
+<span>CC 31.982.502</span>
+<span>â€¢</span>
+<span>F / 71 aÃ±os</span>
+<span>â€¢</span>
+<span class="font-bold text-on-surface">O+</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="flex flex-col gap-1 items-start">
+<span class="font-label-clinical-bold text-xs text-on-surface">Sanitas EPS</span>
+<span class="px-2 py-0.5 rounded bg-primary-fixed text-on-primary-fixed-variant font-label-badge text-[10px]">
+                        ACTIVO â€¢ CONTRIBUTIVO
+                      </span>
+</div>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="flex flex-col">
+<span class="font-label-mono-forensic text-label-mono-forensic text-on-surface font-semibold">07:55 AM</span>
+<span class="text-on-surface-variant font-label-clinical-bold text-xs flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">schedule</span>
+                        Espera: 22 min
+                      </span>
+</div>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="flex flex-col gap-0.5">
+<span class="font-label-clinical-bold text-on-surface text-sm">Trauma menor en muÃ±eca derecha sin deformidad</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">
+                        Movilidad conservada â€¢ Dolor EVA 4/10
+                      </span>
+</div>
+</td>
+<td class="py-3.5 px-space-md text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="h-10 px-3 rounded-xl bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-clinical-bold text-xs flex items-center gap-1 transition-colors cursor-pointer" title="Llamar a Consulta Prioritaria">
+<span class="material-symbols-outlined text-base">volume_up</span>
+<span>Llamar C-6</span>
+</button>
+<button class="h-10 w-10 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface-variant flex items-center justify-center transition-colors cursor-pointer" title="Historial ClÃ­nico">
+<span class="material-symbols-outlined text-lg">medical_information</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- PACIENTE 5: MANCHESTER V (AZUL NO URGENTE) -->
+<tr class="hover:bg-surface-container-low transition-colors bg-surface-container-lowest">
+<td class="py-3.5 px-space-md">
+<div class="flex items-center gap-2">
+<span class="w-1.5 h-10 rounded-full bg-secondary-fixed shrink-0"></span>
+<div class="flex flex-col">
+<span class="px-2 py-0.5 rounded bg-surface-container-high text-tertiary font-label-badge text-label-badge uppercase font-bold tracking-tight inline-block text-center">
+                          Nivel V - No Urgente
+                        </span>
+<span class="font-label-mono-forensic text-[10px] text-tertiary font-semibold mt-0.5">MÃXIMO 240 MIN</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="flex flex-col">
+<span class="font-label-clinical-bold text-label-clinical-bold text-on-surface">JuliÃ¡n David Varela</span>
+<div class="flex items-center gap-1 font-label-mono-forensic text-label-mono-forensic text-on-surface-variant">
+<span>TI 1.006.512.980</span>
+<span>â€¢</span>
+<span>M / 17 aÃ±os</span>
+<span>â€¢</span>
+<span class="font-bold text-on-surface">AB+</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="flex flex-col gap-1 items-start">
+<span class="font-label-clinical-bold text-xs text-on-surface">Emssanar EPS</span>
+<span class="px-2 py-0.5 rounded bg-primary-fixed text-on-primary-fixed-variant font-label-badge text-[10px]">
+                        ACTIVO â€¢ SUBSIDIADO
+                      </span>
+</div>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="flex flex-col">
+<span class="font-label-mono-forensic text-label-mono-forensic text-on-surface font-semibold">07:30 AM</span>
+<span class="text-on-surface-variant font-label-clinical-bold text-xs flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">schedule</span>
+                        Espera: 47 min
+                      </span>
+</div>
+</td>
+<td class="py-3.5 px-space-md">
+<div class="flex flex-col gap-0.5">
+<span class="font-label-clinical-bold text-on-surface text-sm">Lectura de paraclÃ­nicos + RenovaciÃ³n de orden</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">
+                        Paciente estable â€¢ AsintomÃ¡tico actual
+                      </span>
+</div>
+</td>
+<td class="py-3.5 px-space-md text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="h-10 px-3 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface font-label-clinical-bold text-xs flex items-center gap-1 transition-colors cursor-pointer" title="Reclasificar Triaje">
+<span class="material-symbols-outlined text-base">published_with_changes</span>
+<span>Reclasificar</span>
+</button>
+<button class="h-10 w-10 rounded-xl bg-surface-container hover:bg-surface-container-high text-on-surface-variant flex items-center justify-center transition-colors cursor-pointer" title="Historial ClÃ­nico">
+<span class="material-symbols-outlined text-lg">medical_information</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- FOOTER DE TABLA CON FORENSIC AUDIT HASH LEY 527 -->
+<div class="p-space-md bg-surface-container-low flex flex-col md:flex-row items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-primary text-lg">verified_user</span>
+<span class="font-label-mono-forensic text-label-mono-forensic text-on-surface">
+                Registro de Cola Inmutable: SHA-256 <span class="font-bold">#d5c8...19b0</span>
+</span>
+<span class="text-outline text-xs">â€¢</span>
+<span class="font-body-sm text-[11px] text-outline">Ley 527/1999 â€¢ Firma Digital y Estampado CronolÃ³gico Certificado</span>
+</div>
+<div class="flex items-center gap-2">
+<button class="h-9 px-3 rounded-xl bg-surface-container-lowest text-on-surface font-label-clinical-bold text-xs hover:bg-surface-container transition-colors shadow-sm cursor-pointer flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">print</span>
+<span>Exportar RIPS Diario</span>
+</button>
+<button class="h-9 px-3 rounded-xl bg-surface-container-lowest text-primary font-label-clinical-bold text-xs hover:bg-surface-container transition-colors shadow-sm cursor-pointer flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">send_to_mobile</span>
+<span>Alerta a MÃ©dicos de Turno</span>
+</button>
+</div>
+</div>
+</div>
+<!-- GRÃFICO ASISTENCIAL DE DISTRIBUCIÃ“N POR NIVELES MANCHESTER -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm text-on-surface">DistribuciÃ³n de Oportunidad Manchester (Minutos Transcurridos)</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">MÃ©tricas en comparaciÃ³n con el estÃ¡ndar de la ResoluciÃ³n 5596 del Minsalud</span>
+</div>
+<span class="px-2.5 py-1 rounded bg-surface-container-low text-primary font-label-mono-forensic text-xs font-semibold">
+              Valle del Cauca â€¢ Tiempo Real
+            </span>
+</div>
+<!-- Mini Barras de Rendimiento ClÃ­nico Manchester -->
+<div class="grid grid-cols-1 md:grid-cols-5 gap-space-sm pt-2">
+<div class="p-3 rounded-xl bg-error-container/30 flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<span class="font-label-badge text-label-badge text-error uppercase font-bold">Nivel I</span>
+<span class="font-label-mono-forensic text-xs font-bold text-error">1 pte</span>
+</div>
+<span class="font-body-sm text-[11px] text-on-surface-variant">0 min meta â€¢ Real: 2.1 min</span>
+<div class="w-full bg-surface-container-low h-2 rounded-full overflow-hidden mt-1">
+<div class="bg-error h-full rounded-full" style="width: 90%;"></div>
+</div>
+</div>
+<div class="p-3 rounded-xl bg-secondary-fixed/40 flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<span class="font-label-badge text-label-badge text-secondary uppercase font-bold">Nivel II</span>
+<span class="font-label-mono-forensic text-xs font-bold text-secondary">2 ptes</span>
+</div>
+<span class="font-body-sm text-[11px] text-on-surface-variant">15 min meta â€¢ Real: 9.4 min</span>
+<div class="w-full bg-surface-container-low h-2 rounded-full overflow-hidden mt-1">
+<div class="bg-secondary h-full rounded-full" style="width: 62%;"></div>
+</div>
+</div>
+<div class="p-3 rounded-xl bg-surface-container flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<span class="font-label-badge text-label-badge text-on-surface uppercase font-bold">Nivel III</span>
+<span class="font-label-mono-forensic text-xs font-bold text-on-surface">5 ptes</span>
+</div>
+<span class="font-body-sm text-[11px] text-on-surface-variant">60 min meta â€¢ Real: 34 min</span>
+<div class="w-full bg-surface-container-low h-2 rounded-full overflow-hidden mt-1">
+<div class="bg-secondary-container h-full rounded-full" style="width: 55%;"></div>
+</div>
+</div>
+<div class="p-3 rounded-xl bg-primary-fixed/30 flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<span class="font-label-badge text-label-badge text-primary uppercase font-bold">Nivel IV</span>
+<span class="font-label-mono-forensic text-xs font-bold text-primary">10 ptes</span>
+</div>
+<span class="font-body-sm text-[11px] text-on-surface-variant">120 min meta â€¢ Real: 48 min</span>
+<div class="w-full bg-surface-container-low h-2 rounded-full overflow-hidden mt-1">
+<div class="bg-primary h-full rounded-full" style="width: 40%;"></div>
+</div>
+</div>
+<div class="p-3 rounded-xl bg-surface-container-low flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<span class="font-label-badge text-label-badge text-outline uppercase font-bold">Nivel V</span>
+<span class="font-label-mono-forensic text-xs font-bold text-on-surface">6 ptes</span>
+</div>
+<span class="font-body-sm text-[11px] text-on-surface-variant">240 min meta â€¢ Real: 52 min</span>
+<div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden mt-1">
+<div class="bg-tertiary h-full rounded-full" style="width: 21%;"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- PANEL LATERAL / DRAWER DE RESUMEN Y GESTIÃ“N DE CAMILLAS (4 cols en desktop grande) -->
+<div class="xl:col-span-4 flex flex-col gap-space-md">
+<!-- CARD 1: DISPONIBILIDAD DE CAMILLAS DE OBSERVACIÃ“N & UCI -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xl">bed</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Censo de Camas & Camillas</span>
+</div>
+<span class="px-2 py-0.5 rounded bg-surface-container-high text-on-surface font-label-badge text-label-badge uppercase">
+              SEDE CARTAGO
+            </span>
+</div>
+<!-- Matrices de Camillas -->
+<div class="flex flex-col gap-space-sm">
+<!-- ObservaciÃ³n Adultos Urgencias -->
+<div class="p-space-sm rounded-xl bg-surface-container-low flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<span class="font-label-clinical-bold text-label-clinical-bold text-on-surface">ObservaciÃ³n Adultos</span>
+<span class="font-label-mono-forensic text-xs font-bold text-error">9 / 10 Camillas Ocupadas (90%)</span>
+</div>
+<!-- Rejilla visual de camillas -->
+<div class="grid grid-cols-5 gap-1.5">
+<span class="h-7 rounded bg-error text-on-error font-label-mono-forensic text-[10px] flex items-center justify-center font-bold" title="C-01 Ocupada [GÃ³mez H.]">C-01</span>
+<span class="h-7 rounded bg-error text-on-error font-label-mono-forensic text-[10px] flex items-center justify-center font-bold" title="C-02 Ocupada [PÃ©rez J.]">C-02</span>
+<span class="h-7 rounded bg-error text-on-error font-label-mono-forensic text-[10px] flex items-center justify-center font-bold" title="C-03 Ocupada [LÃ³pez M.]">C-03</span>
+<span class="h-7 rounded bg-error text-on-error font-label-mono-forensic text-[10px] flex items-center justify-center font-bold" title="C-04 Ocupada [RÃ­os D.]">C-04</span>
+<span class="h-7 rounded bg-error text-on-error font-label-mono-forensic text-[10px] flex items-center justify-center font-bold" title="C-05 Ocupada [Torres A.]">C-05</span>
+<span class="h-7 rounded bg-error text-on-error font-label-mono-forensic text-[10px] flex items-center justify-center font-bold" title="C-06 Ocupada [MejÃ­a R.]">C-06</span>
+<span class="h-7 rounded bg-error text-on-error font-label-mono-forensic text-[10px] flex items-center justify-center font-bold" title="C-07 Ocupada [Vargas C.]">C-07</span>
+<span class="h-7 rounded bg-error text-on-error font-label-mono-forensic text-[10px] flex items-center justify-center font-bold" title="C-08 Ocupada [Zuluaga S.]">C-08</span>
+<span class="h-7 rounded bg-error text-on-error font-label-mono-forensic text-[10px] flex items-center justify-center font-bold" title="C-09 Ocupada [MuÃ±oz L.]">C-09</span>
+<span class="h-7 rounded bg-primary-fixed text-on-primary-fixed-variant font-label-mono-forensic text-[10px] flex items-center justify-center font-bold" title="C-10 DISPONIBLE">C-10</span>
+</div>
+</div>
+<!-- Camillas de ReanimaciÃ³n / Trauma Shock -->
+<div class="p-space-sm rounded-xl bg-surface-container-low flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<span class="font-label-clinical-bold text-label-clinical-bold text-on-surface">Shock Trauma / ReanimaciÃ³n</span>
+<span class="font-label-mono-forensic text-xs font-bold text-secondary">1 / 2 Disponible</span>
+</div>
+<div class="grid grid-cols-2 gap-2">
+<div class="p-2 rounded-lg bg-error-container text-on-error-container flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm">emergency</span>
+<span class="font-label-clinical-bold text-xs">BOX 1: OCUPADO</span>
+</div>
+<span class="font-label-mono-forensic text-[10px]">CÃ³digo Azul</span>
+</div>
+<div class="p-2 rounded-lg bg-primary-fixed text-on-primary-fixed-variant flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm">check</span>
+<span class="font-label-clinical-bold text-xs">BOX 2: LIBRE</span>
+</div>
+<span class="font-label-mono-forensic text-[10px]">Esterilizado</span>
+</div>
+</div>
+</div>
+<!-- Camas RemisiÃ³n UCI / Red Departamental Valle -->
+<div class="p-space-sm rounded-xl bg-surface-container-low flex flex-col gap-1.5">
+<div class="flex items-center justify-between">
+<span class="font-label-clinical-bold text-label-clinical-bold text-on-surface">Red de RemisiÃ³n CRUE Valle</span>
+<span class="px-2 py-0.5 rounded bg-primary-fixed text-on-primary-fixed-variant font-label-badge text-[10px]">CANAL ABIERTO</span>
+</div>
+<div class="flex items-center justify-between font-body-sm text-body-sm text-on-surface-variant">
+<span>Cupos UCI Cali / Buga:</span>
+<span class="font-label-mono-forensic font-bold text-on-surface">04 cupos asignables</span>
+</div>
+<div class="flex items-center justify-between font-body-sm text-body-sm text-on-surface-variant">
+<span>Ambulancia TAB MÃ³vil 3:</span>
+<span class="font-label-mono-forensic font-bold text-primary">En Base (Lista)</span>
+</div>
+</div>
+</div>
+</div>
+<!-- CARD 2: AUDITORÃA DE LLAMADAS & REGISTRO DE EVENTOS EN TIEMPO REAL -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-xl">history</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Log de Llamadas Asistenciales</span>
+</div>
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span>
+</span>
+</div>
+<!-- Lista de eventos recientes -->
+<div class="flex flex-col gap-3" id="auditEventsList">
+<!-- Evento 1 -->
+<div class="p-2.5 rounded-xl bg-surface-container-low flex items-start gap-2.5">
+<span class="p-1 rounded-lg bg-surface-container text-secondary material-symbols-outlined text-base shrink-0 mt-0.5">volume_up</span>
+<div class="flex flex-col flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<span class="font-label-clinical-bold text-xs text-on-surface truncate">Llamado a Consultorio 2</span>
+<span class="font-label-mono-forensic text-[10px] text-outline">08:16 AM</span>
+</div>
+<span class="font-body-sm text-[11px] text-on-surface-variant truncate">Paciente Valeria Restrepo â€¢ Altavoz Sala A</span>
+<span class="font-label-mono-forensic text-[9px] text-primary mt-0.5">Firma: Dra. S. RamÃ­rez (RM-76001)</span>
+</div>
+</div>
+<!-- Evento 2 -->
+<div class="p-2.5 rounded-xl bg-surface-container-low flex items-start gap-2.5">
+<span class="p-1 rounded-lg bg-error-container text-on-error-container material-symbols-outlined text-base shrink-0 mt-0.5">notification_important</span>
+<div class="flex flex-col flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<span class="font-label-clinical-bold text-xs text-error truncate">Ingreso Nivel I - Shock</span>
+<span class="font-label-mono-forensic text-[10px] text-outline">08:14 AM</span>
+</div>
+<span class="font-body-sm text-[11px] text-on-surface-variant truncate">Hernando GÃ³mez C. â€¢ ActivaciÃ³n de CÃ³digo IAM</span>
+<span class="font-label-mono-forensic text-[9px] text-primary mt-0.5">Enfermero Jefe: L. CastaÃ±o (RM-76110)</span>
+</div>
+</div>
+<!-- Evento 3 -->
+<div class="p-2.5 rounded-xl bg-surface-container-low flex items-start gap-2.5">
+<span class="p-1 rounded-lg bg-surface-container text-tertiary material-symbols-outlined text-base shrink-0 mt-0.5">task_alt</span>
+<div class="flex flex-col flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<span class="font-label-clinical-bold text-xs text-on-surface truncate">Egreso por Alta MÃ©dica</span>
+<span class="font-label-mono-forensic text-[10px] text-outline">08:05 AM</span>
+</div>
+<span class="font-body-sm text-[11px] text-on-surface-variant truncate">Marina Duque â€¢ FÃ³rmula digital entregada #9921</span>
+<span class="font-label-mono-forensic text-[9px] text-primary mt-0.5">Firma Digital Verificada SHA-256</span>
+</div>
+</div>
+</div>
+<!-- BotÃ³n de Audio de Sala / MegafonÃ­a General -->
+<button class="h-11 w-full rounded-xl bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-clinical-bold text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer" onclick="alert('MegafonÃ­a Activada: Sistema de voceo IP en Sala de Espera General y Triage habilitado.');" type="button">
+<span class="material-symbols-outlined text-lg text-primary">record_voice_over</span>
+<span>Emitir Anuncio en Sala (Voceo IP)</span>
+</button>
+</div>
+<!-- CARD 3: TIEMPOS NORMATIVOS RESOLUCIÃ“N 5596 -->
+<div class="p-space-md rounded-xl bg-surface-container-low flex flex-col gap-2">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-base">policy</span>
+<span class="font-label-clinical-bold text-xs text-on-surface">Marco Normativo Sistema Triage</span>
+</div>
+<p class="font-body-sm text-[11px] text-on-surface-variant leading-relaxed">
+            Conforme a la <strong>ResoluciÃ³n 5596 de 2015</strong> (Ministerio de Salud y ProtecciÃ³n Social), el triage clasifica por gravedad clÃ­nica y no por orden de llegada. La IPS garantiza trazabilidad forense de cada llamado.
+          </p>
+</div>
+</div>
+</div>
+</div>
+<!-- SCRIPT PARA INTERACTIVIDAD CLÃNICA EN SALA DE ESPERA -->
+<script>
+    // Micro-interacciÃ³n: Refrescar la cola con animaciÃ³n del Ã­cono y feedback
+    const refreshBtn = document.getElementById('refreshQueueBtn');
+    const refreshIcon = document.getElementById('refreshIcon');
+    
+    if (refreshBtn && refreshIcon) {
+      refreshBtn.addEventListener('click', () => {
+        refreshIcon.classList.add('rotate-180');
+        refreshBtn.disabled = true;
+        refreshBtn.classList.add('opacity-75');
+        
+        setTimeout(() => {
+          refreshIcon.classList.remove('rotate-180');
+          refreshBtn.disabled = false;
+          refreshBtn.classList.remove('opacity-75');
+          
+          // Toast sutil en consola o UI
+          const toast = document.createElement('div');
+          toast.className = 'fixed bottom-6 right-6 z-50 bg-inverse-surface text-inverse-on-surface px-4 py-2.5 rounded-xl shadow-lg font-label-clinical-bold text-xs flex items-center gap-2 animate-bounce';
+          toast.innerHTML = '<span class="material-symbols-outlined text-sm text-primary-fixed">done_all</span> Cola asistencial sincronizada con la base de datos central.';
+          document.body.appendChild(toast);
+          setTimeout(() => toast.remove(), 2500);
+        }, 600);
+      });
+    }
+
+    // Filtro instantÃ¡neo de la tabla por Paciente o CÃ©dula
+    const filterInput = document.getElementById('patientFilter');
+    const tableBody = document.getElementById('patientTableBody');
+    
+    if (filterInput && tableBody) {
+      filterInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        const rows = tableBody.querySelectorAll('tr');
+        
+        rows.forEach(row => {
+          const text = row.innerText.toLowerCase();
+          if (text.includes(query)) {
+            row.style.display = '';
+          } else {
+            row.style.display = 'none';
+          }
+        });
+      });
+    }
+  </script>
+</div></main></div></body></html>
