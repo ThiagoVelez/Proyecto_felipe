@@ -9,12 +9,15 @@ import {
   ShieldCheck,
   Building2,
   RefreshCw,
+  User,
 } from 'lucide-react';
+import UserProfileModal from './UserProfileModal';
 
-export const Header = ({ onLogout, onSearch, currentView, isOffline, setIsOffline, user }) => {
+export const Header = ({ onLogout, onSearch, currentView, isOffline, setIsOffline, user, onUpdateUser }) => {
   const [docType, setDocType] = useState('CC');
   const [searchQuery, setSearchQuery] = useState('');
   const [sessionSeconds, setSessionSeconds] = useState(14 * 60 + 32);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   const currentUser = user || {
     name: 'Dr. Santiago Vélez',
@@ -142,25 +145,56 @@ export const Header = ({ onLogout, onSearch, currentView, isOffline, setIsOfflin
             </button>
           </div>
 
-          {/* Perfil del Usuario Asistencial o Administrador */}
-          <div className="flex items-center gap-2.5 pl-2 border-l border-surface-container-high">
-            <div className={`w-9 h-9 rounded-full ${isAdmin ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-primary/10 text-primary border-primary/20'} border-2 flex items-center justify-center font-bold text-xs shrink-0`}>
-              {isAdmin ? 'AD' : 'SV'}
-            </div>
+          {/* Perfil del Usuario Asistencial o Administrador (Estilo Red Social) */}
+          <button
+            type="button"
+            onClick={() => setShowProfileModal(true)}
+            className="flex items-center gap-2.5 pl-2 border-l border-surface-container-high hover:opacity-85 transition-opacity cursor-pointer text-left"
+            title="Ver y editar perfil asistencial / cambiar banner"
+          >
+            {currentUser.avatar ? (
+              <img
+                src={currentUser.avatar}
+                alt={currentUser.full_name || 'Perfil'}
+                className="w-9 h-9 rounded-full object-cover border-2 border-primary/40 shrink-0"
+              />
+            ) : (
+              <div
+                className={`w-9 h-9 rounded-full ${
+                  isAdmin
+                    ? 'bg-amber-100 text-amber-800 border-amber-300'
+                    : 'bg-primary/10 text-primary border-primary/20'
+                } border-2 flex items-center justify-center font-bold text-xs shrink-0`}
+              >
+                {isAdmin
+                  ? 'AD'
+                  : currentUser.full_name
+                  ? currentUser.full_name.slice(0, 2).toUpperCase()
+                  : 'SV'}
+              </div>
+            )}
             <div className="hidden xl:flex flex-col text-left">
               <div className="flex items-center gap-1.5">
-                <span className="font-semibold text-xs text-on-surface">{currentUser.full_name || currentUser.name || (isAdmin ? 'Administrador del Sistema' : 'Dr. Santiago Vélez')}</span>
-                <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${isAdmin ? 'bg-amber-200 text-amber-900' : 'bg-primary-fixed text-on-primary-fixed-variant'}`}>
-                  {isAdmin ? 'ADMIN TI' : (currentUser.role || 'MEDICO')}
+                <span className="font-semibold text-xs text-on-surface">
+                  {currentUser.full_name || currentUser.name || (isAdmin ? 'Administrador del Sistema' : 'Dr. Santiago Vélez')}
+                </span>
+                <span
+                  className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${
+                    isAdmin ? 'bg-amber-200 text-amber-900' : 'bg-primary-fixed text-on-primary-fixed-variant'
+                  }`}
+                >
+                  {isAdmin ? 'ADMIN TI' : currentUser.role || 'MEDICO'}
                 </span>
               </div>
               <div className="flex items-center gap-1 text-[11px] font-mono text-on-surface-variant">
-                <span>{currentUser.professional_card || currentUser.license || (isAdmin ? 'TI-ADMIN-001' : 'RM-94821-VALLE')}</span>
+                <span>
+                  {currentUser.professional_card || currentUser.license || (isAdmin ? 'TI-ADMIN-001' : 'RM-94821-VALLE')}
+                </span>
                 <span>•</span>
                 <span>{currentUser.branch ? currentUser.branch.split(' - ')[0] : 'Cartago'}</span>
               </div>
             </div>
-          </div>
+          </button>
 
           {/* Boton Salir Seguro */}
           <button
@@ -174,6 +208,14 @@ export const Header = ({ onLogout, onSearch, currentView, isOffline, setIsOfflin
           </button>
         </div>
       </div>
+
+      {/* MODAL DE PERFIL TIPO RED SOCIAL CON LOS 5 BANNERS */}
+      <UserProfileModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+        user={currentUser}
+        onUpdateUser={onUpdateUser}
+      />
     </header>
   );
 };

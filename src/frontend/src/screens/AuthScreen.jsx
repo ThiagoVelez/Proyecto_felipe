@@ -32,10 +32,9 @@ import {
 } from '../utils/totp';
 
 export const AuthScreen = ({ onLoginSuccess }) => {
-  const [activePreset, setActivePreset] = useState('doctor'); // 'doctor' | 'admin'
   const [identifier, setIdentifier] = useState('svelez@saludconecta.ips.gov.co');
   const [branch, setBranch] = useState('Sede Cartago - Hospital Central (Nivel II)');
-  const [password, setPassword] = useState('MedicoSalud2026*');
+  const [password, setPassword] = useState('Urgencias2026*');
   const [showPassword, setShowPassword] = useState(false);
   const [mfaSecret, setMfaSecret] = useState('JBSWY3DPEHPK3PXP');
   const [qrDataUrl, setQrDataUrl] = useState('');
@@ -46,21 +45,6 @@ export const AuthScreen = ({ onLoginSuccess }) => {
   const [showQrModal, setShowQrModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Selector de perfiles de prueba rápidos
-  const switchPreset = (preset) => {
-    setActivePreset(preset);
-    setStatusMessage('');
-    if (preset === 'admin') {
-      setIdentifier('admin@saludconecta.ips.gov.co');
-      setPassword('AdminSalud2026*');
-      setBranch('Sede Cartago - Hospital Central');
-    } else {
-      setIdentifier('svelez@saludconecta.ips.gov.co');
-      setPassword('MedicoSalud2026*');
-      setBranch('Sede Cartago - Hospital Central (Nivel II)');
-    }
-  };
 
   // Genera el codigo QR directamente para visualizacion inmediata
   const updateQrCode = async (secret = mfaSecret) => {
@@ -173,11 +157,28 @@ export const AuthScreen = ({ onLoginSuccess }) => {
 
   return (
     <div
-      className={`min-h-screen w-full flex items-center justify-center p-2 sm:p-4 overflow-y-auto ${
+      className={`relative min-h-screen w-full flex items-center justify-center p-2 sm:p-4 overflow-y-auto ${
         highContrast ? 'bg-black text-white' : 'bg-surface'
       }`}
     >
-      <div className="w-full max-w-5xl my-auto shadow-xl rounded-2xl overflow-hidden bg-white grid grid-cols-1 lg:grid-cols-12 border border-surface-container-high">
+      {/* Video institucional de fondo en bucle continuo */}
+      {!highContrast && (
+        <>
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="fixed inset-0 w-full h-full object-cover -z-20 brightness-[0.65] contrast-[1.05]"
+          >
+            <source src="/videos/medicina.mp4" type="video/mp4" />
+          </video>
+          {/* Capa de contraste y difuminado estetico hospitalario */}
+          <div className="fixed inset-0 bg-slate-950/45 backdrop-blur-[2px] -z-10" />
+        </>
+      )}
+
+      <div className="w-full max-w-5xl my-auto shadow-2xl rounded-2xl overflow-hidden bg-white/95 backdrop-blur-md grid grid-cols-1 lg:grid-cols-12 border border-white/20">
         {/* PANEL IZQUIERDO: Identidad Institucional & Gobernanza Clinica */}
         <div className="lg:col-span-5 bg-gradient-to-b from-[#0F172A] via-[#132338] to-[#005c55] p-4 lg:p-6 text-white flex flex-col justify-between relative overflow-y-auto">
           <div className="relative z-10 space-y-3">
@@ -277,7 +278,7 @@ export const AuthScreen = ({ onLoginSuccess }) => {
         {/* PANEL DERECHO: Formulario de Autenticación y Firma Biométrica/TOTP */}
         <div className="lg:col-span-7 p-4 lg:p-6 flex flex-col justify-between bg-surface-container-lowest">
           <div className="space-y-3">
-            {/* Header del Formulario y Selector de Rol Rápido */}
+            {/* Header del Formulario de Autenticación */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-surface-container pb-2.5">
               <div>
                 <h2 className="text-base font-bold text-on-surface">
@@ -288,30 +289,9 @@ export const AuthScreen = ({ onLoginSuccess }) => {
                 </p>
               </div>
 
-              {/* Selector Rápido de Perfil */}
-              <div className="flex items-center gap-1 bg-surface-container-low p-1 rounded-xl border border-outline-variant/30 text-[10px]">
-                <button
-                  type="button"
-                  onClick={() => switchPreset('doctor')}
-                  className={`px-2.5 py-1 rounded-lg font-bold transition-colors cursor-pointer ${
-                    activePreset === 'doctor'
-                      ? 'bg-primary text-white shadow-xs'
-                      : 'text-on-surface-variant hover:text-on-surface'
-                  }`}
-                >
-                  Dr. Santiago Vélez
-                </button>
-                <button
-                  type="button"
-                  onClick={() => switchPreset('admin')}
-                  className={`px-2.5 py-1 rounded-lg font-bold transition-colors cursor-pointer ${
-                    activePreset === 'admin'
-                      ? 'bg-amber-700 text-white shadow-xs'
-                      : 'text-on-surface-variant hover:text-on-surface'
-                  }`}
-                >
-                  Admin TI
-                </button>
+              <div className="flex items-center gap-1.5 text-[11px] text-primary font-semibold bg-primary/5 px-2.5 py-1 rounded-lg border border-primary/10">
+                <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+                <span>Acceso Seguro TLS 1.3</span>
               </div>
             </div>
 
@@ -371,7 +351,7 @@ export const AuthScreen = ({ onLoginSuccess }) => {
                     Contraseña Asistencial ReTHUS
                   </label>
                   <span className="text-[10px] text-primary font-mono font-medium">
-                    {activePreset === 'admin' ? 'Perfil Administrador TI' : 'Fortaleza: Alta (Médica)'}
+                    Fortaleza: Alta (Médica)
                   </span>
                 </div>
                 <div className="relative">
@@ -510,7 +490,7 @@ export const AuthScreen = ({ onLoginSuccess }) => {
                 className="w-full h-10 bg-primary hover:bg-primary-container text-white font-bold text-xs rounded-xl shadow-sm hover:shadow-md flex items-center justify-center space-x-1.5 transition-all cursor-pointer active:scale-[0.99] disabled:opacity-50"
               >
                 <Lock className="w-3.5 h-3.5" />
-                <span>{isSubmitting ? 'Verificando con Servidor...' : (activePreset === 'admin' ? 'Ingresar al Panel de Gobernanza TI' : 'Verificar y Firmar Sesión Clínica')}</span>
+                <span>{isSubmitting ? 'Verificando con Servidor...' : 'Verificar y Firmar Acceso Asistencial'}</span>
               </button>
             </form>
           </div>

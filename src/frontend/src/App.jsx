@@ -38,7 +38,13 @@ export function App() {
   // REGLA RBAC ESTRICTA (ISO/IEC 25010): El usuario con rol ADMIN dispone de su propio entorno
   // desacoplado (AdminLayout) y NO tiene acceso a historias clinicas ni consulta asistencial
   if (currentUser && (currentUser.role === 'ADMIN' || Number(currentUser.role_id) === 1)) {
-    return <AdminLayout user={currentUser} onLogout={handleLogout} />;
+    return (
+      <AdminLayout
+        user={currentUser}
+        onLogout={handleLogout}
+        onUpdateUser={(updated) => setCurrentUser(updated)}
+      />
+    );
   }
 
   return (
@@ -50,6 +56,7 @@ export function App() {
         currentView={currentView}
         isOffline={isOffline}
         setIsOffline={setIsOffline}
+        onUpdateUser={(updated) => setCurrentUser(updated)}
       />
 
       <div className="flex flex-1 pt-20">

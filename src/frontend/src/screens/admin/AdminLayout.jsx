@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ShieldAlert,
   Users,
@@ -11,8 +11,18 @@ import {
   Server,
 } from 'lucide-react';
 import AdminDashboardScreen from './AdminDashboardScreen';
+import UserProfileModal from '../../components/UserProfileModal';
 
-export const AdminLayout = ({ user, onLogout }) => {
+export const AdminLayout = ({ user, onLogout, onUpdateUser }) => {
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const currentUser = user || {
+    full_name: 'Administrador del Sistema',
+    name: 'Administrador del Sistema',
+    role: 'ADMIN',
+    role_id: 1,
+    professional_card: 'TI-ADMIN-001',
+    branch: 'Sede Cartago - Hospital Central',
+  };
   return (
     <div className="min-h-screen bg-surface flex flex-col font-sans">
       {/* HEADER EXCLUSIVO ADMINISTRATIVO */}
@@ -42,23 +52,38 @@ export const AdminLayout = ({ user, onLogout }) => {
             <span className="font-semibold text-emerald-800">Servidor Go/Fiber En Línea</span>
           </div>
 
-          {/* Perfil del Administrador */}
-          <div className="flex items-center gap-2.5 pl-3 border-l border-surface-container-high">
-            <div className="w-9 h-9 rounded-full bg-amber-100 border-2 border-amber-300 text-amber-800 font-bold text-xs flex items-center justify-center shrink-0">
-              AD
-            </div>
+          {/* Perfil del Administrador (Clickable para abrir Perfil tipo Red Social) */}
+          <button
+            type="button"
+            onClick={() => setShowProfileModal(true)}
+            className="flex items-center gap-2.5 pl-3 border-l border-surface-container-high hover:opacity-85 transition-opacity cursor-pointer text-left"
+            title="Ver perfil de administrador y cambiar banner"
+          >
+            {currentUser.avatar ? (
+              <img
+                src={currentUser.avatar}
+                alt="Admin"
+                className="w-9 h-9 rounded-full object-cover border-2 border-amber-300 shrink-0"
+              />
+            ) : (
+              <div className="w-9 h-9 rounded-full bg-amber-100 border-2 border-amber-300 text-amber-800 font-bold text-xs flex items-center justify-center shrink-0">
+                AD
+              </div>
+            )}
             <div className="hidden sm:flex flex-col text-left">
               <div className="flex items-center gap-1.5">
-                <span className="font-semibold text-xs text-on-surface">Administrador del Sistema</span>
+                <span className="font-semibold text-xs text-on-surface">
+                  {currentUser.full_name || currentUser.name || 'Administrador del Sistema'}
+                </span>
                 <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-200 text-amber-900">
                   ADMIN TI
                 </span>
               </div>
               <div className="text-[11px] font-mono text-outline">
-                TI-ADMIN-001 • Sede Cartago
+                {currentUser.professional_card || 'TI-ADMIN-001'} • Sede Cartago
               </div>
             </div>
-          </div>
+          </button>
 
           {/* Boton Salir */}
           <button
@@ -72,6 +97,14 @@ export const AdminLayout = ({ user, onLogout }) => {
           </button>
         </div>
       </header>
+
+      {/* MODAL DE PERFIL TIPO RED SOCIAL */}
+      <UserProfileModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+        user={currentUser}
+        onUpdateUser={onUpdateUser}
+      />
 
       {/* CUERPO PRINCIPAL CON AVISO DE AISLAMIENTO RBAC */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-5">
