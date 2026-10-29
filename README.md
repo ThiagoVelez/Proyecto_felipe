@@ -836,6 +836,33 @@ proyecto-final/
 
 2. Configura las variables de entorno para el backend creando el archivo `.env` en `src/backend/` tomando como base `.env.example`.
 
+### 7.1. Despliegue Rápido con Docker Compose (Recomendado para el Equipo)
+
+Para que cualquier miembro del equipo de desarrollo o evaluación pueda ejecutar la plataforma completa en su máquina sin necesidad de configurar Go, Node ni MySQL de forma manual:
+
+1. **Iniciar la Plataforma Completa:**
+   Desde la raíz del repositorio, ejecuta:
+
+   ```bash
+   docker compose up --build
+   ```
+
+   _Docker construirá y orquestará automáticamente tres contenedores interconectados:_
+   - `saludconecta-mysql`: Base de datos MySQL 8.0 con migración DDL automática (`schema.sql`) y volumen persistente.
+   - `saludconecta-backend`: API en Go 1.22+ (GoFiber v2) compilada en binario estático sobre Alpine Linux con seeder idempotente.
+   - `saludconecta-frontend`: React PWA + Vite servido a través de Nginx Alpine con proxy inverso integrado hacia `/api/`.
+
+2. **Acceso Inmediato al Sistema:**
+   - Abre tu navegador web en: **[http://localhost:5173](http://localhost:5173)** (o alternativamente en `http://localhost`).
+   - La API del backend estará disponible en `http://localhost:8080/api/v1/health`.
+
+3. **Detener el Entorno:**
+   ```bash
+   docker compose down
+   ```
+
+---
+
 ### 7.2. Seeder Automático e Idempotente (`adapters/storage/mysql/seeder.go`)
 
 Al iniciar el servidor en Go, el sistema ejecuta automáticamente la función `SeedInitialAdmin(db *sql.DB)`:

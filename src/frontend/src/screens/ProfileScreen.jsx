@@ -220,15 +220,27 @@ export const ProfileScreen = ({ user, onUpdateUser, onNavigate }) => {
         >
           <BannerArtwork bannerId={bannerId} />
 
-          {/* Badges Superiores */}
-          <div className="relative z-10 flex items-center justify-between gap-2 flex-wrap">
-            <div className="flex items-center gap-2">
-              <span className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-white font-bold text-xs uppercase tracking-wider border border-white/20">
-                SaludConecta IPS v2.4
-              </span>
-              <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${currentBanner.bgBadge}`}>
-                {currentBanner.name}
-              </span>
+          {/* Badges Superiores e Información del Área Médica */}
+          <div className="relative z-10 flex items-start justify-between gap-3 flex-wrap">
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-white font-bold text-xs uppercase tracking-wider border border-white/20">
+                  SaludConecta IPS v2.4
+                </span>
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${currentBanner.bgBadge}`}>
+                  {currentBanner.name}
+                </span>
+              </div>
+
+              {/* Cápsula de Especialidad y Descripción del Banner (Ubicada en la parte superior para evitar cualquier colisión visual con el avatar o el óvalo) */}
+              <div className="max-w-md bg-black/45 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-white/15 text-white/95 shadow-xs">
+                <span className="text-[10px] font-bold text-white uppercase tracking-wider font-mono block">
+                  {currentBanner.category}
+                </span>
+                <p className="text-xs text-white/90 font-medium line-clamp-1 mt-0.5">
+                  {currentBanner.description}
+                </p>
+              </div>
             </div>
 
             {/* Botón selector de banners */}
@@ -240,16 +252,6 @@ export const ProfileScreen = ({ user, onUpdateUser, onNavigate }) => {
               <Sparkles className="w-4 h-4 text-amber-300" />
               <span>Cambiar Portada ({MEDICAL_BANNERS.length} Banners)</span>
             </button>
-          </div>
-
-          {/* Pie del Banner: Información del área médica con cápsula de protección visual */}
-          <div className="relative z-10 text-white/90 sm:max-w-md mt-auto pb-1 sm:pb-2">
-            <span className="inline-block px-2.5 py-0.5 rounded-md bg-black/40 backdrop-blur-md text-[10px] font-bold text-white/95 uppercase tracking-wider font-mono border border-white/10">
-              {currentBanner.category}
-            </span>
-            <p className="text-xs sm:text-sm text-white/90 font-medium drop-shadow-sm line-clamp-1 mt-1">
-              {currentBanner.description}
-            </p>
           </div>
         </div>
 
