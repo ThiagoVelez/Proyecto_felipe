@@ -22,9 +22,9 @@
 | Nombre del Integrante | Rol Asignado | Responsabilidades Principales |
 | :--- | :--- | :--- |
 | **Santiago Velez** | Lider Tecnico / Arquitecto de Software | Diseno de arquitectura hexagonal, definicion de puertos y adaptadores, coordinacion tecnica del stack Go/Fiber y persistencia. |
-| **Integrante 2** | Responsable de Pruebas (QA / Testing) | Diseno de casos de prueba aplicando particion de equivalencia y valores limite, automatizacion de suites en Go y React. |
-| **Integrante 3** | Responsable de Calidad (ISO/IEC 25010) | Evaluacion de caracteristicas de calidad ISO 25010, bitacora de defectos (DEF-01 a DEF-04) y verificacion de seguridad. |
-| **Integrante 4** | Responsable de Documentacion | Elaboracion de especificaciones formales de requisitos, marco normativo (Res. 1995 / 2275), criterios BDD y manuales. |
+| **Santiago Arcos** | Responsable de Pruebas (QA / Testing) | Diseno de casos de prueba aplicando particion de equivalencia y valores limite, automatizacion de suites en Go y React. |
+| **Juan Jose Sanchez** | Responsable de Calidad (ISO/IEC 25010) | Evaluacion de caracteristicas de calidad ISO 25010, bitacora de defectos (DEF-01 a DEF-04) y verificacion de seguridad. |
+| **Santiago Velez, Santiago Arcos y Juan Jose Sanchez** | Responsables de Documentacion | Elaboracion de especificaciones formales de requisitos, marco normativo (Res. 1995 / 2275), criterios BDD y manuales tecnicos. |
 
 ---
 
@@ -32,7 +32,7 @@
 
 El flujo de trabajo, la priorizacion de requerimientos y el ciclo de vida del desarrollo se gestionaron mediante el tablero oficial de Trello:
 
-- [Tablero de Trello del Equipo](URL_DEL_TABLERO)
+- [Tablero de Trello del Equipo](https://trello.com/b/HUUP8uyu/proyecto-de-felipe)
 
 ### Organizacion de las Listas Operativas:
 1. **Por hacer (Backlog):** Requisitos funcionales (RF01 a RF06) priorizados mediante tecnica MoSCoW, diseno de modelos de dominio y contratos de interfaces.
@@ -68,10 +68,11 @@ proyecto-final/
 │   └── frontend/                  # Codigo fuente de React (Vite + Tailwind CSS)
 │       └── README.md              # Guia del cliente web y componentes de interfaz
 └── tests/
-    ├── backend/                   # Pruebas automatizadas en Go (Triage, HCE, Alergias)
+    ├── backend/                   # Pruebas automatizadas en Go (Triage, HCE, Alergias, Sync)
     │   ├── triage_test.go         # Particion de equivalencia y valores limite Manchester
     │   ├── clinical_record_test.go# Verificacion de inmutabilidad y rechazo a modificaciones
     │   ├── prescription_test.go   # Intercepcion de alergias farmacologicas (< 150 ms)
+    │   ├── sync_test.go           # Sincronizacion offline por lotes e idempotencia (UUID v4)
     │   ├── fixtures_test.go       # Generadores de datos de prueba
     │   ├── go.mod                 # Modulo de pruebas de Go
     │   └── go.sum                 # Sumas criptograficas del modulo de pruebas
