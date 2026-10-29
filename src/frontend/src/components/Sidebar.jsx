@@ -36,10 +36,10 @@ export const Sidebar = ({ currentView, setCurrentView }) => {
       badge: 'Seguridad',
     },
     {
-      id: 'auth',
-      label: 'Autenticacion / MFA',
+      id: 'security',
+      label: 'Seguridad & MFA',
       icon: ShieldCheck,
-      badge: null,
+      badge: 'Activo',
     },
   ];
 

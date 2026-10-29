@@ -6,6 +6,7 @@ import DashboardScreen from './screens/DashboardScreen';
 import TriageScreen from './screens/TriageScreen';
 import HceScreen from './screens/HceScreen';
 import PrescriptionScreen from './screens/PrescriptionScreen';
+import SecurityMfaScreen from './screens/SecurityMfaScreen';
 
 export function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(true);
@@ -20,11 +21,10 @@ export function App() {
 
   const handleLogout = () => {
     setIsAuthenticated(false);
-    setCurrentView('auth');
   };
 
-  // Si no esta autenticado o la vista es auth, mostrar AuthScreen
-  if (!isAuthenticated || currentView === 'auth') {
+  // Si no esta autenticado, mostrar pantalla de Login / AuthScreen
+  if (!isAuthenticated) {
     return (
       <AuthScreen
         onLoginSuccess={(data) => {
@@ -49,8 +49,8 @@ export function App() {
         {/* SIDEBAR DE NAVEGACION */}
         <Sidebar currentView={currentView} setCurrentView={setCurrentView} />
 
-        {/* CONTENEDOR PRINCIPAL */}
-        <main className="flex-1 pl-64 p-6 lg:p-8 overflow-y-auto">
+        {/* CONTENEDOR PRINCIPAL: ml-64 garantiza que el contenido nunca sea tapado por el sidebar */}
+        <main className="flex-1 ml-64 p-4 lg:p-8 min-w-0 overflow-y-auto">
           {currentView === 'dashboard' && (
             <DashboardScreen
               onSelectPatient={(p) => setSelectedPatient(p)}
@@ -67,6 +67,10 @@ export function App() {
           )}
 
           {currentView === 'prescription' && <PrescriptionScreen />}
+
+          {(currentView === 'security' || currentView === 'auth') && (
+            <SecurityMfaScreen onLogout={handleLogout} />
+          )}
         </main>
       </div>
     </div>
@@ -74,4 +78,3 @@ export function App() {
 }
 
 export default App;
-
