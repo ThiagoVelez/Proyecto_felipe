@@ -16,60 +16,70 @@ import {
   Contrast,
   CheckCircle2,
   RefreshCw,
+  QrCode,
 } from 'lucide-react';
+import MfaQrModal from '../components/MfaQrModal';
+import {
+  calculateTotpCode,
+  getRemainingSeconds,
+  generateBase32Secret,
+} from '../utils/totp';
 
 export const AuthScreen = ({ onLoginSuccess }) => {
   const [identifier, setIdentifier] = useState('sramirez@saludconecta.ips.gov.co');
   const [branch, setBranch] = useState('Sede Cartago - Hospital Central (Nivel II)');
   const [password, setPassword] = useState('ValleSalud2025*!Clinico');
   const [showPassword, setShowPassword] = useState(false);
-  const [totp, setTotp] = useState(['4', '8', '2', '9', '1', '6']);
-  const [mfaTimer, setMfaTimer] = useState(25);
+  const [mfaSecret, setMfaSecret] = useState('JBSWY3DPEHPK3PXP');
+  const [totp, setTotp] = useState(['', '', '', '', '', '']);
+  const [mfaTimer, setMfaTimer] = useState(getRemainingSeconds());
   const [highContrast, setHighContrast] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [codeRenewed, setCodeRenewed] = useState(false);
+  const [showQrModal, setShowQrModal] = useState(false);
 
-  // Generador criptografico dinamico de token TOTP (RFC 6238)
-  const generateDynamicTotp = () => {
-    const newDigits = Array.from({ length: 6 }, () =>
-      Math.floor(Math.random() * 10).toString()
-    );
-    setTotp(newDigits);
-    setCodeRenewed(true);
-    setTimeout(() => setCodeRenewed(false), 1200);
+  // Sincroniza y calcula el codigo TOTP oficial (RFC 6238)
+  const syncTotp = async (secret = mfaSecret) => {
+    try {
+      const code = await calculateTotpCode(secret);
+      setTotp(code.split(''));
+      setCodeRenewed(true);
+      setTimeout(() => setCodeRenewed(false), 1200);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  // Contador de expiracion de token TOTP (30s de ventana con cambio dinamico real)
+  // Inicializacion y temporizador ciclico de 30 segundos
   useEffect(() => {
+    syncTotp(mfaSecret);
+
     const timer = setInterval(() => {
-      setMfaTimer((prev) => {
-        if (prev <= 1) {
-          generateDynamicTotp();
-          return 30;
-        }
-        return prev - 1;
-      });
+      const rem = getRemainingSeconds();
+      setMfaTimer(rem);
+      if (rem === 30 || rem === 29) {
+        syncTotp(mfaSecret);
+      }
     }, 1000);
+
     return () => clearInterval(timer);
-  }, []);
+  }, [mfaSecret]);
 
   const handleManualRotate = () => {
-    generateDynamicTotp();
-    setMfaTimer(30);
+    const newSecret = generateBase32Secret(16);
+    setMfaSecret(newSecret);
+    syncTotp(newSecret);
   };
 
   const handleDigitChange = (index, value) => {
     const sanitized = value.replace(/\D/g, '');
+    const newTotp = [...totp];
     if (sanitized.length > 1) {
-      const char = sanitized.slice(-1);
-      const newTotp = [...totp];
-      newTotp[index] = char;
-      setTotp(newTotp);
+      newTotp[index] = sanitized.slice(-1);
     } else {
-      const newTotp = [...totp];
       newTotp[index] = sanitized;
-      setTotp(newTotp);
     }
+    setTotp(newTotp);
 
     // Auto-focus al siguiente input
     if (sanitized && index < 5) {
@@ -85,11 +95,18 @@ export const AuthScreen = ({ onLoginSuccess }) => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const code = totp.join('');
     if (code.length < 6) {
       setStatusMessage('Por favor complete los 6 digitos del codigo TOTP.');
+      return;
+    }
+
+    // Validacion de codigo contra el secreto activo
+    const validCode = await calculateTotpCode(mfaSecret);
+    if (code !== validCode) {
+      setStatusMessage(`Codigo TOTP invalido. El token esperado es ${validCode} o el mostrado en su Authenticator.`);
       return;
     }
 
@@ -330,7 +347,7 @@ export const AuthScreen = ({ onLoginSuccess }) => {
                 </div>
               </div>
 
-              {/* PASO 2: MFA / TOTP OBLIGATORIO CON ROTACION DINAMICA */}
+              {/* PASO 2: MFA / TOTP OBLIGATORIO CON QR ESCANEABLE */}
               <div className="p-2.5 rounded-xl bg-surface-container-low border border-primary/25 space-y-2 shadow-xs">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
@@ -372,21 +389,34 @@ export const AuthScreen = ({ onLoginSuccess }) => {
 
                   {codeRenewed && (
                     <div className="text-center text-[10px] text-emerald-700 font-bold mt-1 animate-pulse">
-                      Nuevo token TOTP generado segun algoritmo RFC 6238
+                      Token TOTP sincronizado segun RFC 6238
                     </div>
                   )}
                 </div>
 
-                <div className="pt-1 flex items-center justify-between text-[10px] text-on-surface-variant border-t border-surface-container-high/60">
+                {/* BOTON DE ACCION PARA QR Y ROTACION */}
+                <div className="pt-1 flex items-center justify-between text-[10px] text-on-surface-variant border-t border-surface-container-high/60 gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setShowQrModal(true)}
+                    className="text-primary font-bold hover:underline flex items-center gap-1 cursor-pointer bg-primary/10 px-2.5 py-1 rounded-lg border border-primary/20 transition-all hover:bg-primary/20"
+                  >
+                    <QrCode className="w-3.5 h-3.5" />
+                    <span>Escanear QR con Celular</span>
+                  </button>
+
                   <button
                     type="button"
                     onClick={handleManualRotate}
-                    className="text-primary font-semibold hover:underline flex items-center gap-1 cursor-pointer"
+                    className="text-on-surface-variant hover:text-primary flex items-center gap-1 cursor-pointer px-2 py-0.5 rounded hover:bg-surface-container-high"
                   >
                     <RefreshCw className="w-3 h-3" />
-                    Rotar Token Ahora
+                    <span>Rotar Semilla</span>
                   </button>
-                  <span className="text-[9px] text-outline font-mono">Hash Semilla: SHA256-RTH-994</span>
+
+                  <span className="text-[9px] text-outline font-mono truncate max-w-[120px]">
+                    {mfaSecret}
+                  </span>
                 </div>
               </div>
 
@@ -446,6 +476,14 @@ export const AuthScreen = ({ onLoginSuccess }) => {
           </div>
         </div>
       </div>
+
+      {/* MODAL QR ESCANEABLE */}
+      <MfaQrModal
+        isOpen={showQrModal}
+        onClose={() => setShowQrModal(false)}
+        secret={mfaSecret}
+        email={identifier}
+      />
     </div>
   );
 };

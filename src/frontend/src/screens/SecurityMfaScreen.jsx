@@ -15,43 +15,66 @@ import {
   Laptop,
   Check,
   UserCheck,
+  QrCode,
 } from 'lucide-react';
+import {
+  buildOtpAuthUri,
+  generateQrDataUrl,
+  calculateTotpCode,
+  getRemainingSeconds,
+  generateBase32Secret,
+} from '../utils/totp';
+import MfaQrModal from '../components/MfaQrModal';
 
 export const SecurityMfaScreen = ({ onLogout }) => {
-  const [mfaTimer, setMfaTimer] = useState(25);
-  const [totpCode, setTotpCode] = useState(['5', '9', '1', '3', '8', '4']);
-  const [seedHash, setSeedHash] = useState('SHA256-RTH-9941-VALLE-2026');
+  const [mfaSecret, setMfaSecret] = useState('JBSWY3DPEHPK3PXP');
+  const [mfaTimer, setMfaTimer] = useState(getRemainingSeconds());
+  const [totpCode, setTotpCode] = useState(['-', '-', '-', '-', '-', '-']);
+  const [qrUrl, setQrUrl] = useState('');
   const [testInput, setTestInput] = useState('');
   const [testResult, setTestResult] = useState(null);
   const [copied, setCopied] = useState(false);
-  const [lastRotated, setLastRotated] = useState('Hace unos segundos');
+  const [lastRotated, setLastRotated] = useState('Sincronizado');
+  const [showQrModal, setShowQrModal] = useState(false);
 
-  // Generador criptografico de codigo TOTP (RFC 6238 simulado)
-  const generateNewTotp = () => {
-    const digits = Array.from({ length: 6 }, () =>
-      Math.floor(Math.random() * 10).toString()
-    );
-    setTotpCode(digits);
-    setLastRotated('Recien actualizado');
+  // Sincroniza el codigo TOTP y genera el QR code
+  const syncSecurityTotp = async (secret = mfaSecret) => {
+    try {
+      const code = await calculateTotpCode(secret);
+      setTotpCode(code.split(''));
+
+      const uri = buildOtpAuthUri(secret, 'sramirez@saludconecta.ips.gov.co', 'SaludConecta IPS');
+      const dataUrl = await generateQrDataUrl(uri);
+      if (dataUrl) setQrUrl(dataUrl);
+
+      setLastRotated('Recien actualizado');
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  // Temporizador ciclico de 30 segundos para renovacion automatica
   useEffect(() => {
+    syncSecurityTotp(mfaSecret);
+
     const interval = setInterval(() => {
-      setMfaTimer((prev) => {
-        if (prev <= 1) {
-          generateNewTotp();
-          return 30;
-        }
-        return prev - 1;
-      });
+      const rem = getRemainingSeconds();
+      setMfaTimer(rem);
+      if (rem === 30 || rem === 29) {
+        syncSecurityTotp(mfaSecret);
+      }
     }, 1000);
+
     return () => clearInterval(interval);
-  }, []);
+  }, [mfaSecret]);
 
   const handleManualRefresh = () => {
-    generateNewTotp();
-    setMfaTimer(30);
+    syncSecurityTotp(mfaSecret);
+  };
+
+  const handleRotateSecret = () => {
+    const newSecret = generateBase32Secret(16);
+    setMfaSecret(newSecret);
+    syncSecurityTotp(newSecret);
   };
 
   const handleCopyCode = () => {
@@ -60,10 +83,19 @@ export const SecurityMfaScreen = ({ onLogout }) => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleVerifyTest = (e) => {
+  const handleVerifyTest = async (e) => {
     e.preventDefault();
-    const currentStr = totpCode.join('');
-    if (testInput.trim() === currentStr) {
+    const cleanInput = testInput.trim();
+    if (cleanInput.length < 6) {
+      setTestResult({
+        success: false,
+        message: 'Ingrese los 6 digitos para validar.',
+      });
+      return;
+    }
+
+    const expected = await calculateTotpCode(mfaSecret);
+    if (cleanInput === expected) {
       setTestResult({
         success: true,
         message: 'Token TOTP validado con exito. Firma biometrica sincronizada con el servidor.',
@@ -71,7 +103,7 @@ export const SecurityMfaScreen = ({ onLogout }) => {
     } else {
       setTestResult({
         success: false,
-        message: 'Codigo invalido o expirado. Verifique el reloj de su aplicacion autenticadora.',
+        message: `Codigo invalido. El token esperado era ${expected} o el de su app autenticadora.`,
       });
     }
   };
@@ -98,6 +130,14 @@ export const SecurityMfaScreen = ({ onLogout }) => {
         </div>
 
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowQrModal(true)}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-primary text-white text-xs font-semibold hover:bg-primary-container transition-colors shadow-xs cursor-pointer"
+          >
+            <QrCode className="w-4 h-4" />
+            Escanear QR con Celular
+          </button>
           <button
             type="button"
             onClick={handleManualRefresh}
@@ -147,9 +187,9 @@ export const SecurityMfaScreen = ({ onLogout }) => {
         </div>
       </div>
 
-      {/* GENERADOR EN VIVO DEL CODIGO TOTP DINAMICO */}
+      {/* GENERADOR EN VIVO DEL CODIGO TOTP DINAMICO Y QR INTEGRADO */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* PANEL IZQUIERDO: Token Dinamico en Tiempo Real */}
+        {/* PANEL IZQUIERDO: Token Dinamico + QR Code Escaneable */}
         <div className="lg:col-span-7 bg-white rounded-2xl p-6 border border-primary/20 shadow-xs flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between pb-3 mb-4 border-b border-surface-container-high">
@@ -160,7 +200,7 @@ export const SecurityMfaScreen = ({ onLogout }) => {
                 <div>
                   <h2 className="text-base font-bold text-on-surface">Token Dinamico TOTP (RFC 6238)</h2>
                   <p className="text-xs text-on-surface-variant">
-                    Sincronizado con Google Authenticator, Authy o Microsoft Authenticator
+                    Escanee el QR con Google Authenticator, Microsoft Authenticator o Authy
                   </p>
                 </div>
               </div>
@@ -173,65 +213,95 @@ export const SecurityMfaScreen = ({ onLogout }) => {
               </div>
             </div>
 
-            {/* Visualizador de Digitos Dinamicos */}
-            <div className="py-4">
-              <div className="flex items-center justify-center gap-2 max-w-md mx-auto">
-                {totpCode.map((digit, idx) => (
-                  <React.Fragment key={idx}>
-                    {idx === 3 && <span className="text-xl font-bold text-outline px-1">-</span>}
-                    <div className="w-12 h-14 rounded-xl bg-surface-container-lowest border-2 border-primary flex items-center justify-center text-2xl font-mono font-bold text-primary shadow-xs transition-transform transform active:scale-95">
-                      {digit}
+            {/* SECCION CENTRAL: QR Y DIGITOS */}
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center py-2">
+              {/* QR Escaneable */}
+              <div className="md:col-span-5 flex flex-col items-center">
+                <div className="p-2 bg-white rounded-xl border-2 border-primary/30 shadow-xs">
+                  {qrUrl ? (
+                    <img
+                      src={qrUrl}
+                      alt="Codigo QR TOTP"
+                      className="w-36 h-36 rounded-lg cursor-pointer"
+                      onClick={() => setShowQrModal(true)}
+                      title="Haz clic para ampliar el QR"
+                    />
+                  ) : (
+                    <div className="w-36 h-36 flex items-center justify-center text-xs text-outline">
+                      Generando QR...
                     </div>
-                  </React.Fragment>
-                ))}
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowQrModal(true)}
+                  className="mt-2 text-primary font-bold text-[11px] hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  <QrCode className="w-3.5 h-3.5" />
+                  Ampliar QR
+                </button>
               </div>
 
-              {/* Barra de progreso de expiracion */}
-              <div className="w-full bg-surface-container-high rounded-full h-1.5 mt-5 overflow-hidden">
-                <div
-                  className="bg-primary h-1.5 rounded-full transition-all duration-1000 ease-linear"
-                  style={{ width: `${(mfaTimer / 30) * 100}%` }}
-                ></div>
-              </div>
+              {/* Digitos y Progreso */}
+              <div className="md:col-span-7 flex flex-col justify-center space-y-3">
+                <div className="text-[11px] font-semibold text-on-surface-variant">
+                  Codigo sincronizado con tu movil:
+                </div>
+                <div className="flex items-center gap-1.5">
+                  {totpCode.map((digit, idx) => (
+                    <React.Fragment key={idx}>
+                      {idx === 3 && <span className="text-lg font-bold text-outline">-</span>}
+                      <div className="w-10 h-12 rounded-lg bg-surface-container-lowest border-2 border-primary flex items-center justify-center text-xl font-mono font-bold text-primary shadow-xs">
+                        {digit}
+                      </div>
+                    </React.Fragment>
+                  ))}
+                </div>
 
-              <div className="flex items-center justify-between mt-2 text-[11px] text-on-surface-variant">
-                <span>Renovacion automatica cada 30 segundos</span>
-                <span className="font-mono text-outline">{lastRotated}</span>
+                {/* Barra de expiracion */}
+                <div className="w-full bg-surface-container-high rounded-full h-1.5 overflow-hidden">
+                  <div
+                    className="bg-primary h-1.5 rounded-full transition-all duration-1000 ease-linear"
+                    style={{ width: `${(mfaTimer / 30) * 100}%` }}
+                  ></div>
+                </div>
+                <div className="flex items-center justify-between text-[10px] text-on-surface-variant font-mono">
+                  <span>RFC 6238 (30s)</span>
+                  <span>{lastRotated}</span>
+                </div>
               </div>
             </div>
 
             {/* Metadatos de Semilla Criptografica */}
-            <div className="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/30 space-y-2 mt-2">
+            <div className="p-3 rounded-xl bg-surface-container-low border border-outline-variant/30 space-y-1.5 mt-2">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-on-surface">Semilla Secreta Asignada (SHA-256):</span>
-                <span className="font-mono text-[11px] text-outline truncate max-w-[200px]">
-                  {seedHash}
-                </span>
+                <span className="font-semibold text-on-surface">Semilla Secreta Asignada (Base32):</span>
+                <span className="font-mono text-xs text-primary font-bold">{mfaSecret}</span>
               </div>
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-on-surface">Algoritmo de Hash HMAC:</span>
-                <span className="font-mono text-[11px] text-primary font-bold">HMAC-SHA256 (6 digitos)</span>
+              <div className="flex items-center justify-between text-[11px] text-on-surface-variant">
+                <span>Cuenta URI:</span>
+                <span className="font-mono text-outline">SaludConecta:sramirez@saludconecta.ips.gov.co</span>
               </div>
             </div>
           </div>
 
-          <div className="pt-4 mt-4 border-t border-surface-container-high flex items-center justify-between">
+          <div className="pt-3 mt-3 border-t border-surface-container-high flex items-center justify-between">
             <button
               type="button"
               onClick={handleCopyCode}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface text-xs font-semibold transition-colors cursor-pointer"
             >
               {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-              {copied ? 'Copiado al portapapeles' : 'Copiar Codigo Actual'}
+              {copied ? 'Copiado al portapapeles' : 'Copiar Codigo'}
             </button>
 
             <button
               type="button"
-              onClick={handleManualRefresh}
+              onClick={handleRotateSecret}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-container text-white text-xs font-semibold hover:bg-primary transition-colors cursor-pointer"
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              Forzar Nuevo Token
+              Generar Nueva Semilla QR
             </button>
           </div>
         </div>
@@ -242,10 +312,10 @@ export const SecurityMfaScreen = ({ onLogout }) => {
           <div className="bg-white rounded-2xl p-5 border border-surface-container-high shadow-xs space-y-3">
             <div className="flex items-center gap-2">
               <Lock className="w-4 h-4 text-primary" />
-              <h3 className="text-sm font-bold text-on-surface">Simulador de Validacion de Token</h3>
+              <h3 className="text-sm font-bold text-on-surface">Probar Codigo de tu Celular</h3>
             </div>
             <p className="text-xs text-on-surface-variant">
-              Pruebe la verificacion del codigo actual de 6 digitos para comprobar la respuesta del interceptor de seguridad.
+              Escanea el QR en tu telefono y escribe aqui el codigo que muestra tu aplicacion para comprobar la sincronizacion en tiempo real.
             </p>
 
             <form onSubmit={handleVerifyTest} className="space-y-3">
@@ -319,6 +389,14 @@ export const SecurityMfaScreen = ({ onLogout }) => {
           </div>
         </div>
       </div>
+
+      {/* MODAL QR ESCANEABLE */}
+      <MfaQrModal
+        isOpen={showQrModal}
+        onClose={() => setShowQrModal(false)}
+        secret={mfaSecret}
+        email="sramirez@saludconecta.ips.gov.co"
+      />
     </div>
   );
 };
