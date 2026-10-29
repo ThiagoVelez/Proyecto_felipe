@@ -242,24 +242,35 @@ export const ProfileScreen = ({ user, onUpdateUser, onNavigate }) => {
             </button>
           </div>
 
-          {/* Pie del Banner */}
-          <div className="relative z-10 text-white/90">
-            <div className="text-xs font-semibold text-white/80 uppercase tracking-widest">{currentBanner.category}</div>
-            <p className="text-sm text-white/90 max-w-xl line-clamp-1">{currentBanner.description}</p>
+          {/* Pie del Banner: Información del área médica con cápsula de protección visual */}
+          <div className="relative z-10 text-white/90 sm:max-w-md mt-auto pb-1 sm:pb-2">
+            <span className="inline-block px-2.5 py-0.5 rounded-md bg-black/40 backdrop-blur-md text-[10px] font-bold text-white/95 uppercase tracking-wider font-mono border border-white/10">
+              {currentBanner.category}
+            </span>
+            <p className="text-xs sm:text-sm text-white/90 font-medium drop-shadow-sm line-clamp-1 mt-1">
+              {currentBanner.description}
+            </p>
           </div>
         </div>
 
-        {/* Zona del Avatar Superpuesto y Acciones de Perfil */}
-        <div className="px-6 sm:px-10 pb-6 relative">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 -mt-20 sm:-mt-24">
-            {/* Foto de Perfil / Avatar */}
-            <div className="flex items-end gap-5">
-              <div className="relative group">
-                <div className="w-32 h-32 sm:w-36 sm:h-36 rounded-full border-4 border-white bg-slate-100 shadow-2xl overflow-hidden flex items-center justify-center text-primary font-bold text-4xl">
+        {/* Zona del Avatar Superpuesto y Óvalo Blanco de Identidad Asistencial */}
+        <div className="px-4 sm:px-8 pb-6 relative">
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-5 -mt-16 sm:-mt-20">
+            {/* Foto de Perfil / Avatar y Óvalo Protector de Texto */}
+            <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 min-w-0">
+              {/* Avatar Circular con Borde y Sombra */}
+              <div className="relative group shrink-0">
+                <div className="w-28 h-28 sm:w-34 sm:h-34 rounded-full border-4 border-white bg-slate-100 shadow-2xl overflow-hidden flex items-center justify-center text-primary font-bold text-3xl sm:text-4xl">
                   {avatarUrl ? (
                     <img src={avatarUrl} alt={fullName} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-primary-container to-primary flex items-center justify-center text-white text-4xl font-bold">
+                    <div
+                      className={`w-full h-full ${
+                        roleTitle === 'ADMINISTRADOR TI'
+                          ? 'bg-gradient-to-br from-amber-500 to-amber-700'
+                          : 'bg-gradient-to-br from-primary-container to-primary'
+                      } flex items-center justify-center text-white text-3xl sm:text-4xl font-bold`}
+                    >
                       {fullName.slice(0, 2).toUpperCase()}
                     </div>
                   )}
@@ -283,36 +294,40 @@ export const ProfileScreen = ({ user, onUpdateUser, onNavigate }) => {
                 />
               </div>
 
-              {/* Nombre y Títulos */}
-              <div className="space-y-1.5 mb-2">
+              {/* Óvalo Blanco Protector de Identidad y Tipografía (Máximo Contraste y Legibilidad) */}
+              <div className="bg-white/95 backdrop-blur-md px-6 py-4 rounded-3xl sm:rounded-4xl shadow-xl border border-surface-container-high/80 space-y-1.5 min-w-0">
                 <div className="flex items-center gap-2.5 flex-wrap">
-                  <h1 className="text-2xl sm:text-3xl font-bold text-on-surface leading-tight">
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 leading-tight">
                     {fullName}
                   </h1>
-                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-xs font-bold border border-emerald-300">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-xs font-bold border border-emerald-300 shadow-xs">
                     <ShieldCheck className="w-4 h-4 text-emerald-600" />
                     <span>ReTHUS Verificado</span>
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2.5 text-xs text-on-surface-variant flex-wrap font-medium">
-                  <span className="px-2.5 py-0.5 rounded-lg bg-surface-container-high text-on-surface font-semibold">
+                <div className="flex items-center gap-2 text-xs text-slate-600 flex-wrap font-medium">
+                  <span
+                    className={`px-2.5 py-0.5 rounded-md font-bold text-[10px] uppercase tracking-wider ${
+                      roleTitle === 'ADMINISTRADOR TI'
+                        ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                        : 'bg-primary-fixed text-on-primary-fixed-variant'
+                    }`}
+                  >
                     {roleTitle}
                   </span>
                   <span>•</span>
-                  <span className="font-mono text-primary font-bold">
-                    {professionalCard}
-                  </span>
+                  <span className="font-mono text-primary font-bold">{professionalCard}</span>
                   <span>•</span>
-                  <span className="text-outline">{specialty}</span>
+                  <span className="text-slate-600">{specialty}</span>
                   <span>•</span>
-                  <span className="text-outline">{branch}</span>
+                  <span className="text-slate-500">{branch}</span>
                 </div>
               </div>
             </div>
 
             {/* Botón de Edición */}
-            <div className="flex items-center gap-2.5 self-start sm:self-end mb-2">
+            <div className="flex items-center gap-2.5 self-center lg:self-end mt-2 lg:mt-0 mb-1">
               {isEditing ? (
                 <button
                   type="button"

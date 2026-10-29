@@ -12,23 +12,83 @@ import AdminLayout from './screens/admin/AdminLayout';
 import { apiClient } from './services/api';
 
 export function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [currentView, setCurrentView] = useState('dashboard');
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    try {
+      const active = localStorage.getItem('saludconecta_session_active');
+      const token = localStorage.getItem('saludconecta_token');
+      const storedUser = localStorage.getItem('saludconecta_user');
+      return Boolean((active === 'true' || token) && storedUser);
+    } catch {
+      return false;
+    }
+  });
+
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const stored = localStorage.getItem('saludconecta_user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [currentView, setCurrentView] = useState(() => {
+    try {
+      return localStorage.getItem('saludconecta_current_view') || 'dashboard';
+    } catch {
+      return 'dashboard';
+    }
+  });
+
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem('saludconecta_sidebar_collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [isOffline, setIsOffline] = useState(false);
 
   const handleLoginSuccess = (data) => {
     setIsAuthenticated(true);
+    localStorage.setItem('saludconecta_session_active', 'true');
     if (data && data.user) {
       setCurrentUser(data.user);
+      localStorage.setItem('saludconecta_user', JSON.stringify(data.user));
     }
     setCurrentView('dashboard');
+    localStorage.setItem('saludconecta_current_view', 'dashboard');
   };
 
   const handleLogout = () => {
     apiClient.setAuth('', null);
+    localStorage.removeItem('saludconecta_session_active');
+    localStorage.removeItem('saludconecta_user');
+    localStorage.removeItem('saludconecta_token');
+    localStorage.removeItem('saludconecta_current_view');
     setIsAuthenticated(false);
+    setCurrentUser(null);
+    setCurrentView('dashboard');
+  };
+
+  const handleNavigate = (view) => {
+    setCurrentView(view);
+    localStorage.setItem('saludconecta_current_view', view);
+  };
+
+  const handleToggleSidebar = () => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem('saludconecta_sidebar_collapsed', String(next));
+      return next;
+    });
+  };
+
+  const handleUpdateUser = (updated) => {
+    setCurrentUser(updated);
+    localStorage.setItem('saludconecta_user', JSON.stringify(updated));
   };
 
   // Si no esta autenticado, mostrar pantalla de Login / AuthScreen
@@ -43,7 +103,7 @@ export function App() {
       <AdminLayout
         user={currentUser}
         onLogout={handleLogout}
-        onUpdateUser={(updated) => setCurrentUser(updated)}
+        onUpdateUser={handleUpdateUser}
       />
     );
   }
@@ -57,29 +117,40 @@ export function App() {
         currentView={currentView}
         isOffline={isOffline}
         setIsOffline={setIsOffline}
-        onUpdateUser={(updated) => setCurrentUser(updated)}
-        onNavigate={(view) => setCurrentView(view)}
+        onUpdateUser={handleUpdateUser}
+        onNavigate={handleNavigate}
+        isSidebarCollapsed={isSidebarCollapsed}
+        onToggleSidebar={handleToggleSidebar}
       />
 
       <div className="flex flex-1 pt-20">
-        {/* SIDEBAR DE NAVEGACION */}
-        <Sidebar currentView={currentView} setCurrentView={setCurrentView} />
+        {/* SIDEBAR DE NAVEGACION COLAPSABLE */}
+        <Sidebar
+          currentView={currentView}
+          setCurrentView={handleNavigate}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={handleToggleSidebar}
+        />
 
-        {/* CONTENEDOR PRINCIPAL: ml-64 garantiza que el contenido nunca sea tapado por el sidebar */}
-        <main className="flex-1 ml-64 p-4 lg:p-8 min-w-0 overflow-y-auto">
+        {/* CONTENEDOR PRINCIPAL: Margen dinamico sincronizado con el estado colapsado del sidebar */}
+        <main
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarCollapsed ? 'ml-20' : 'ml-64'
+          } p-4 lg:p-8 min-w-0 overflow-y-auto`}
+        >
           {currentView === 'dashboard' && (
             <DashboardScreen
               onSelectPatient={(p) => setSelectedPatient(p)}
-              onNavigate={(view) => setCurrentView(view)}
+              onNavigate={handleNavigate}
             />
           )}
 
           {currentView === 'triage' && (
-            <TriageScreen onNavigate={(view) => setCurrentView(view)} />
+            <TriageScreen onNavigate={handleNavigate} />
           )}
 
           {currentView === 'hce' && (
-            <HceScreen onNavigate={(view) => setCurrentView(view)} />
+            <HceScreen onNavigate={handleNavigate} />
           )}
 
           {currentView === 'prescription' && <PrescriptionScreen />}
@@ -87,8 +158,8 @@ export function App() {
           {currentView === 'profile' && (
             <ProfileScreen
               user={currentUser}
-              onUpdateUser={(updated) => setCurrentUser(updated)}
-              onNavigate={(view) => setCurrentView(view)}
+              onUpdateUser={handleUpdateUser}
+              onNavigate={handleNavigate}
             />
           )}
 

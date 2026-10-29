@@ -10,9 +10,21 @@ import {
   Building2,
   RefreshCw,
   User,
+  Menu,
 } from 'lucide-react';
 
-export const Header = ({ onLogout, onSearch, currentView, isOffline, setIsOffline, user, onUpdateUser, onNavigate }) => {
+export const Header = ({
+  onLogout,
+  onSearch,
+  currentView,
+  isOffline,
+  setIsOffline,
+  user,
+  onUpdateUser,
+  onNavigate,
+  isSidebarCollapsed,
+  onToggleSidebar,
+}) => {
   const [docType, setDocType] = useState('CC');
   const [searchQuery, setSearchQuery] = useState('');
   const [sessionSeconds, setSessionSeconds] = useState(14 * 60 + 32);
@@ -53,6 +65,16 @@ export const Header = ({ onLogout, onSearch, currentView, isOffline, setIsOfflin
       <div className="h-20 w-full px-6 lg:px-8 flex items-center justify-between gap-4">
         {/* LOGO & TITULO INSTITUCIONAL */}
         <div className="flex items-center gap-3 shrink-0">
+          {onToggleSidebar && (
+            <button
+              type="button"
+              onClick={onToggleSidebar}
+              title={isSidebarCollapsed ? 'Expandir menú lateral asistencial' : 'Ocultar menú lateral asistencial'}
+              className="p-2 rounded-xl text-outline hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+          )}
           <div className="w-10 h-10 rounded-xl bg-primary-container text-white flex items-center justify-center font-bold text-lg shadow-sm">
             SC
           </div>

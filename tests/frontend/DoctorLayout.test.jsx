@@ -76,4 +76,42 @@ describe('Doctor Clinical Layout & Sidebar', () => {
     expect(screen.getAllByText('Dr. Santiago Vélez').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('RM-94821-VALLE').length).toBeGreaterThanOrEqual(1);
   });
+
+  it('permite colapsar y expandir el sidebar mostrando solo iconos en modo colapsado', () => {
+    const handleToggle = vi.fn();
+    const handleSetView = vi.fn();
+
+    // Render en modo colapsado
+    const { rerender } = render(
+      <Sidebar
+        currentView="dashboard"
+        setCurrentView={handleSetView}
+        isCollapsed={true}
+        onToggleCollapse={handleToggle}
+      />
+    );
+
+    // En modo colapsado, las etiquetas textuales no se muestran
+    expect(screen.queryByText('NAVEGACION CLINICA')).not.toBeInTheDocument();
+
+    // Boton para expandir
+    const expandBtn = screen.getByTitle('Expandir menú lateral asistencial');
+    expect(expandBtn).toBeInTheDocument();
+    fireEvent.click(expandBtn);
+    expect(handleToggle).toHaveBeenCalledTimes(1);
+
+    // Rerender en modo expandido
+    rerender(
+      <Sidebar
+        currentView="dashboard"
+        setCurrentView={handleSetView}
+        isCollapsed={false}
+        onToggleCollapse={handleToggle}
+      />
+    );
+
+    expect(screen.getByText('NAVEGACION CLINICA')).toBeInTheDocument();
+    const collapseBtn = screen.getByTitle('Ocultar menú lateral asistencial');
+    expect(collapseBtn).toBeInTheDocument();
+  });
 });
