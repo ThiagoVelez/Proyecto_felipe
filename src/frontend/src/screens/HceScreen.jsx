@@ -473,3 +473,4 @@ export const HceScreen = ({ onNavigate }) => {
 };
 
 export default HceScreen;
+

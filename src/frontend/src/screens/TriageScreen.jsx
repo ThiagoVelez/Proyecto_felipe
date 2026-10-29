@@ -443,3 +443,4 @@ export const TriageScreen = ({ onNavigate }) => {
 };
 
 export default TriageScreen;
+

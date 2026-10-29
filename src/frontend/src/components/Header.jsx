@@ -171,3 +171,4 @@ export const Header = ({ onLogout, onSearch, currentView, isOffline, setIsOfflin
 };
 
 export default Header;
+

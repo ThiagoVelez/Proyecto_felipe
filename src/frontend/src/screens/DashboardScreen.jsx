@@ -404,3 +404,4 @@ export const DashboardScreen = ({ onSelectPatient, onNavigate }) => {
 };
 
 export default DashboardScreen;
+

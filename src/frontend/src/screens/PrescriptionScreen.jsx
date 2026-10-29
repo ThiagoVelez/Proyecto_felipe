@@ -380,3 +380,4 @@ export const PrescriptionScreen = () => {
 };
 
 export default PrescriptionScreen;
+
