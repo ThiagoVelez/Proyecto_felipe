@@ -11,7 +11,7 @@
 
 ### Stack Tecnologico
 - **Backend:** Go 1.22+ estructurado bajo **Arquitectura Hexagonal Estricta (Puertos y Adaptadores)** utilizando el framework web de alto rendimiento **GoFiber (v2)**.
-- **Frontend:** React 18 (Vite, Tailwind CSS, arquitectura modular de componentes accesibles y soporte PWA para atencion offline).
+- **Frontend:** React 18 (Vite 5, Tailwind CSS 3, Lucide Icons, arquitectura modular de componentes accesibles y soporte PWA para atencion offline y brigadas rurales). Disenado bajo el sistema de diseno oficial de Stitch (Proyecto ID: `3409750822053339349`).
 - **Persistencia de Datos:** MySQL 8.0+ relacional con motor InnoDB, integridad referencial estricta, triggers de inmutabilidad y compatibilidad para adaptadores PostgreSQL y almacenamiento volatil en memoria.
 - **Estandar de Calidad:** Evaluado, asegurado y documentado bajo el estandar internacional **ISO/IEC 25010** y lineamientos de seguridad OWASP ASVS Nivel 2.
 
@@ -55,18 +55,52 @@ proyecto-final/
 ├── docs/
 │   ├── especificacion.md          # Alcance, RF (MoSCoW), RNF y Criterios BDD (Gherkin)
 │   ├── plan-de-pruebas.md         # Particion de equivalencia, valores limite y matriz RTM
-│   └── informe-calidad.md         # ISO/IEC 25010, bitacora de defectos y refactorizaciones
+│   ├── informe-calidad.md         # ISO/IEC 25010, bitacora de defectos y refactorizaciones
+│   └── stitch_designs/            # Maquetas visuales y capturas oficiales de Stitch
+│       ├── 01_auth_mfa.html (.png)         # Autenticacion, Sede y MFA TOTP
+│       ├── 02_dashboard_espera.html (.png) # Sala de espera y cola Manchester
+│       ├── 03_historia_clinica_hce.html (.png) # HCE Unificada e inmutabilidad
+│       ├── 04_triaje_manchester.html (.png)    # Constantes vitales y Glasgow
+│       └── 05_prescripcion_alergia.html (.png) # Prescripcion e intercepcion
 ├── src/
 │   ├── backend/                   # Codigo fuente Go + Fiber (Arquitectura Hexagonal)
 │   │   ├── cmd/api/main.go        # Punto de entrada e inyeccion de dependencias
 │   │   ├── core/                  # Dominio, puertos y logica de servicios agnostica
+│   │   │   ├── domain/            # Entidades puras (Patient, Triage, Record, Prescription)
+│   │   │   ├── ports/             # Interfaces de entrada y salida (Driving/Driven)
+│   │   │   └── services/          # Casos de uso y reglas de negocio clinicas
 │   │   ├── adapters/              # Adaptadores HTTP (Fiber), Storage (MySQL/PG/Mem) e Interop
+│   │   │   ├── http/              # Handlers Fiber, DTOs y middlewares
+│   │   │   ├── storage/           # Implementaciones de persistencia relacional y volatil
+│   │   │   └── interop/           # Adaptadores RIPS JSON y HL7 FHIR
 │   │   ├── database/schema.sql    # DDL relacional, indices y triggers de inmutabilidad
 │   │   ├── pkg/                   # Utilidades transversales (crypto, logger)
 │   │   ├── go.mod                 # Modulo de Go del backend
 │   │   └── go.sum                 # Sumas criptograficas del backend
-│   └── frontend/                  # Codigo fuente de React (Vite + Tailwind CSS)
-│       └── README.md              # Guia del cliente web y componentes de interfaz
+│   └── frontend/                  # Codigo fuente de React (Vite 5 + Tailwind CSS 3 + Lucide Icons)
+│       ├── index.html             # Plantilla HTML5 accesible
+│       ├── package.json           # Dependencias, scripts de ejecucion y herramientas
+│       ├── postcss.config.js      # Configuracion de PostCSS
+│       ├── tailwind.config.js     # Tokens de diseno, paleta clinica y extensiones
+│       ├── vite.config.js         # Configuracion de Vite y enrutamiento de tests
+│       ├── README.md              # Guia detallada del cliente web y componentes
+│       └── src/
+│           ├── main.jsx           # Renderizado raiz de React 18
+│           ├── App.jsx            # Enrutador de pantallas y estado de sesion
+│           ├── index.css          # Importaciones de Tailwind y estilos globales
+│           ├── setupTests.js      # Configuracion Jest-DOM para pruebas Vitest
+│           ├── components/        # Componentes UI reutilizables
+│           │   ├── Header.jsx     # Barra superior, busqueda de pacientes y modo offline
+│           │   ├── Sidebar.jsx    # Menu de navegacion lateral y widget SHA-256
+│           │   └── AllergyAlertModal.jsx # Modal critico de intercepcion de contraindicaciones
+│           ├── screens/           # Pantallas del flujo clinico asistencial
+│           │   ├── AuthScreen.jsx # Login asistencial, sede, password ReTHUS y MFA TOTP
+│           │   ├── DashboardScreen.jsx # Indicadores KPI y sala de espera Manchester
+│           │   ├── TriageScreen.jsx    # Captura de constantes vitales y escala Glasgow
+│           │   ├── HceScreen.jsx  # Historia clinica, pestañas y sellado inmutable
+│           │   └── PrescriptionScreen.jsx # Prescripcion e intercepcion farmacologica
+│           └── services/
+│               └── api.js         # Cliente API desacoplado con fallback offline
 └── tests/
     ├── backend/                   # Pruebas automatizadas en Go (Triage, HCE, Alergias, Sync)
     │   ├── triage_test.go         # Particion de equivalencia y valores limite Manchester
@@ -146,13 +180,13 @@ Las pruebas automatizadas de caja blanca y de integracion logica se ejecutan con
 cd src/frontend
 npm test
 ```
-*Ejecuta la suite de pruebas unitarias sobre los componentes asistenciales, validando la reaccion ante alertas criticas de seguridad farmacologica.*
+*Ejecuta la suite de pruebas unitarias sobre los componentes asistenciales con Vitest, validando la intercepcion preventiva ante alertas criticas de seguridad farmacologica.*
 
 ---
 
 ## 7. Documentacion Tecnica y Normativa
 
-Para consultar el detalle formal de la ingenieria del proyecto, accede a los documentos tecnicos en el directorio `docs/`:
+Para consultar el detalle formal de la ingenieria del proyecto, accede a los documentos tecnicos en el directorio `docs/` y guias especificas de modulo:
 
 1. [Especificacion de Requisitos de Software (`docs/especificacion.md`)](docs/especificacion.md):
    - Marco regulatorio: Resolucion 1995 de 1999 (HCE) y Resolucion 2275 de 2023 (RIPS).
@@ -168,3 +202,11 @@ Para consultar el detalle formal de la ingenieria del proyecto, accede a los doc
    - Evaluacion de las 6 caracteristicas esenciales de calidad de software.
    - Bitacora de defectos tecnicos registrados durante el ciclo de vida (DEF-01 a DEF-04).
    - Medidas de mantenimiento preventivo y refactorizacion implementadas.
+
+4. [Guia del Cliente Web y Arquitectura Frontend (`src/frontend/README.md`)](src/frontend/README.md):
+   - Especificaciones de arquitectura del cliente React 18, Vite 5 y Tailwind CSS.
+   - Catalogo de pantallas basado en el diseno Stitch y soporte de operacion offline.
+   - Procedimiento de ejecucion y pruebas unitarias con Vitest.
+
+5. [Disenos y Capturas de Interfaz Stitch (`docs/stitch_designs/`)](docs/stitch_designs/):
+   - Maquetas HTML y capturas PNG oficiales de las 5 pantallas asistenciales implementadas.
