@@ -1,0 +1,37 @@
+flowchart TD
+    subgraph BrigadaRural ["Zona Rural Desconectada (Modo Offline PWA)"]
+        Tablet["Dispositivo Movil / Tablet Asistencial"]
+        LocalCache["Almacenamiento Local PWA (LocalStorage / IndexedDB)"]
+        UUIDGen["Generador de Claves Idempotentes UUID v4"]
+        OfflineQueue["Cola de Transacciones Locales (Triajes y Folios)"]
+
+        Tablet -->|Atencion sin senal de red| UUIDGen
+        UUIDGen --> OfflineQueue
+        OfflineQueue --> LocalCache
+    end
+
+    subgraph RestablecimientoConexion ["Retorno a Sede Central / Deteccion de Red"]
+        NetEvent["Evento navigator.onLine / Conexion Hospitalaria Establecida"]
+        BatchBuilder["Constructor de Lote Cifrado (Batch JSON)"]
+        SyncService["Servicio de Sincronizacion PWA (src/services/api.js)"]
+
+        LocalCache --> NetEvent
+        NetEvent --> BatchBuilder
+        BatchBuilder --> SyncService
+    end
+
+    subgraph BackendGo ["Servidor Central GoFiber & Base de Datos"]
+        SyncEndpoint["Endpoint POST /api/v1/sync/batch"]
+        IdempotencyCheck{"Verifica Idempotencia: ¿UUID ya existe en BD?"}
+        RejectDuplicate["Descarte Silencioso de Duplicados (HTTP 200 OK Idempotente)"]
+        ChainVerify["Verificacion de Continuidad de Cadena Criptografica SHA-256"]
+        PersistBatch["Insercion Transaccional en Base de Datos (is_offline_sync = TRUE)"]
+        AuditBatch["Registro en Bitacora de Auditoria Forense"]
+
+        SyncService -->|Transmision por Lote| SyncEndpoint
+        SyncEndpoint --> IdempotencyCheck
+        IdempotencyCheck -->|Si ya existe| RejectDuplicate
+        IdempotencyCheck -->|No existe| ChainVerify
+        ChainVerify --> PersistBatch
+        PersistBatch --> AuditBatch
+    end

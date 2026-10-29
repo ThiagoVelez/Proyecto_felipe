@@ -1,0 +1,47 @@
+flowchart TD
+    subgraph MFAFlow ["1. Autenticacion Multi-Factor (MFA TOTP - RFC 6238)"]
+        Credentials["Credenciales (Email + Password Argon2id)"]
+        Base32Seed["Semilla Base32 Criptografica (16-20 chars)"]
+        QRURI["URI Estandar: otpauth://totp/SaludConecta..."]
+        QRImage["Codigo QR Escaneable (PNG / Canvas)"]
+        PhoneApp["Google Authenticator / Authy / Microsoft Authenticator"]
+        HMACEngine["Motor HMAC-SHA1 (Ventana 30 segundos)"]
+        UserOTP["Token 6 Digitos ingresado por el profesional"]
+
+        Credentials --> Base32Seed
+        Base32Seed --> QRURI
+        QRURI --> QRImage
+        QRImage -->|Escaneo con Camara| PhoneApp
+        PhoneApp -->|Calcula segun RFC 6238| UserOTP
+        Base32Seed --> HMACEngine
+        HMACEngine -->|Verifica coincidencia con tolerancia +/- 1 intervalo| UserOTP
+    end
+
+    subgraph RBACEngine ["2. Control de Acceso Basado en Roles (RBAC)"]
+        JWTToken["Token JWT Firmado (HS256) con Claims de Rol"]
+        RoleGuard["Middleware de Autorizacion por Ruta"]
+        RoleMedico["Rol MEDICO: HCE, Prescripcion, RIPS, Cierre"]
+        RoleEnfermero["Rol ENFERMERO: Triage Manchester, Consulta"]
+        RoleAdmision["Rol ADMISION: Pacientes, Citas, Identificacion"]
+        RoleAuditor["Rol AUDITOR: Revision RIPS, Logs, Hashes"]
+        RoleAdmin["Rol ADMIN: Parametrizacion, Usuarios, Sistema"]
+
+        UserOTP -->|Aprobado| JWTToken
+        JWTToken --> RoleGuard
+        RoleGuard --> RoleMedico & RoleEnfermero & RoleAdmision & RoleAuditor & RoleAdmin
+    end
+
+    subgraph HashChaining ["3. Cadena Criptografica SHA-256 Inmutable (Custodia HCE)"]
+        FolioPrevio["Folio Clinico N-1: Hash H(N-1)"]
+        FolioActual["Folio Clinico N: Datos de atencion (Anamnesis, CIE-11, Plan)"]
+        HashConcat["Concatenacion Determinista: H(N-1) + Datos(N) + Marca de Tiempo"]
+        EngineSHA256["Funcion Hash Criptografica SHA-256"]
+        FolioFirmado["Folio N Sellado: Hash H(N) = SHA256(...) e is_closed=TRUE"]
+        SQLTrigger["Trigger de Base de Datos: Bloquea UPDATE y DELETE"]
+
+        FolioPrevio --> HashConcat
+        FolioActual --> HashConcat
+        HashConcat --> EngineSHA256
+        EngineSHA256 --> FolioFirmado
+        FolioFirmado --> SQLTrigger
+    end

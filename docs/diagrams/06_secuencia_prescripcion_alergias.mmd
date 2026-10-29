@@ -1,0 +1,36 @@
+sequenceDiagram
+    autonumber
+    actor Medico as Medico Tratante
+    participant Frontend as Cliente React (PrescriptionScreen)
+    participant Modal as AllergyAlertModal (React)
+    participant API as Fiber Router / Middleware
+    participant Service as PrescriptionService
+    participant DB as MySQL Database / Catalogo CUM
+
+    Medico->>+Frontend: Selecciona paciente y medicamento "Amoxicilina 500mg" (CUM)
+    Frontend->>+API: POST /api/v1/prescriptions (Payload: patient_id, items)
+    API->>API: Valida Token JWT, Correlation-ID y Rol "MEDICO"
+    API->>+Service: CreatePrescription(ctx, req)
+
+    rect rgb(255, 235, 235)
+        Note over Service, DB: Intercepcion de Seguridad Farmacologica (< 150 ms)
+        Service->>+DB: SELECT active_ingredient, severity FROM patient_allergies WHERE patient_id = ?
+        DB-->>-Service: Alergias del paciente (ej: "BETALACTAMICOS", severidad: "SEVERA")
+        Service->>+DB: SELECT active_ingredient FROM medications_catalog WHERE id = ?
+        DB-->>-Service: Principio activo: "Amoxicilina" (Familia Betalactamicos)
+        Service->>Service: Interceptor cruza familias farmacologicas (Amoxicilina colisiona con Betalactamicos)
+        Service-->>API: Error domain.ErrAllergyConflict: "Alerta Critica: Alergia a Betalactamicos"
+    end
+
+    API-->>-Frontend: HTTP 422 Unprocessable Entity { error: "Alerta Critica", conflict: "BETALACTAMICOS" }
+    Frontend->>+Modal: Renderiza Modal de Contraindicacion Critica
+    Modal-->>Medico: Muestra advertencia roja de choque anafilactico y bloqueo de emision
+
+    alt Medico cancela prescripcion insegura (Conducta Recomendada)
+        Medico->>Modal: Clic en "Cancelar y seleccionar farmaco alternativo"
+        Modal-->>Frontend: Limpia item conflictivo
+        Frontend-->>Medico: Permite recetar alternativa no betalactamica (ej. Claritromicina)
+    else Medico asume responsabilidad clinica informada
+        Medico->>Modal: Marca casilla obligatoria de confirmacion de riesgo y firma
+        Modal->>Frontend: Habilita excepcion justificada
+    end

@@ -1,0 +1,45 @@
+sequenceDiagram
+    autonumber
+    actor Medico as Medico Tratante
+    participant Frontend as Cliente React (HceScreen)
+    participant API as Fiber Router / Middleware
+    participant Service as ClinicalRecordService
+    participant Crypto as Pkg Crypto (SHA-256)
+    participant DB as MySQL Database / Triggers
+
+    Note over Medico, DB: Flujo 1: Firma Digital y Cierre de Folio Inmutable
+    Medico->>+Frontend: Clic en "Firmar y Cerrar Folio Clinico"
+    Frontend->>+API: POST /api/v1/clinical-records/:id/close
+    API->>API: Valida Rol MEDICO y Sesion JWT
+    API->>+Service: CloseAndSign(recordID, doctorID, token)
+    Service->>+DB: SELECT * FROM clinical_records WHERE id = ?
+    DB-->>-Service: Folio en estado borrador (is_closed = false)
+    Service->>+DB: SELECT hash_sha256 FROM clinical_records WHERE patient_id = ? ORDER BY created_at DESC LIMIT 1
+    DB-->>-Service: previous_hash (Hash del folio previo)
+    Service->>+Crypto: ComputeRecordHash(folioData, previous_hash)
+    Crypto-->>-Service: hash_sha256 (64 hex chars)
+    Service->>+DB: UPDATE clinical_records SET is_closed=TRUE, previous_hash=?, hash_sha256=?
+    DB-->>-Service: Folio cerrado y sellado criptograficamente
+    Service-->>-API: Folio cerrado exitosamente
+    API-->>-Frontend: HTTP 200 OK { is_closed: true, hash_sha256: "7a9f...c412" }
+    Frontend-->>-Medico: Candado verde activado: "Folio Inmutable Cerrado"
+
+    Note over Medico, DB: Flujo 2: Intento Ilegal de Modificacion sobre Folio Cerrado
+    Medico->>+Frontend: Intenta editar anamnesis o conducta
+    Frontend->>Frontend: Bloqueo de inputs en interfaz (Solo Lectura)
+    Frontend->>+API: PUT /api/v1/clinical-records/:id (Intento directo)
+    API->>+Service: UpdateRecord(...)
+    Service->>Service: Verifica is_closed == true
+    Service-->>API: Error domain.ErrRecordIsImmutable
+    API-->>-Frontend: HTTP 403 Forbidden: "La Historia Clinica es inmutable (Res. 1995)"
+    Frontend-->>-Medico: Mensaje de restriccion legal
+
+    Note over Medico, DB: Flujo 3: Anexo Legal de Nota Aclaratoria (Res. 1995/1999)
+    Medico->>+Frontend: Redacta Nota Aclaratoria con justificacion
+    Frontend->>+API: POST /api/v1/clinical-records/:id/clarifications
+    API->>+Service: AddClarification(recordID, doctorID, note)
+    Service->>+DB: INSERT INTO clinical_record_clarifications (clinical_record_id, doctor_id, note)
+    DB-->>-Service: Nota aclaratoria guardada sin alterar el folio original
+    Service-->>-API: Nota registrada
+    API-->>-Frontend: HTTP 201 Created { clarification_id }
+    Frontend-->>-Medico: Confirmacion: Nota incorporada en el historial

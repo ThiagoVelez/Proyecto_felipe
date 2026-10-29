@@ -1,0 +1,81 @@
+flowchart TD
+    subgraph Frontend ["Capa de Presentacion - Cliente Web React 18 PWA"]
+        UI["Componentes UI & Pantallas (Tailwind CSS + Lucide)"]
+        State["Estado React, Hooks & Offline Storage (IndexedDB/Local)"]
+        APIClient["Cliente API Fetch REST (src/services/api.js)"]
+        UI --> State
+        State --> APIClient
+    end
+
+    subgraph PrimaryAdapters ["Adaptadores Primarios (Driving / Entrada)"]
+        FiberServer["Servidor HTTP GoFiber v2 (Puerto :8080)"]
+        AuthHandler["AuthHandler & MFA Controller"]
+        TriageHandler["TriageHandler"]
+        RecordHandler["ClinicalRecordHandler"]
+        PrescHandler["PrescriptionHandler"]
+        SyncHandler["SyncHandler (Lotes Offline UUID v4)"]
+        Middlewares["Middlewares: JWT, RBAC, RateLimit, Audit & CorrelationID"]
+    end
+
+    subgraph CoreHexagon ["Nucleo de Negocio (Core Domain & Puertos)"]
+        direction TB
+        subgraph InPorts ["Puertos de Entrada (Driving Interfaces)"]
+            AuthServicePort["AuthService Port"]
+            TriageServicePort["TriageService Port"]
+            RecordServicePort["ClinicalRecordService Port"]
+            PrescServicePort["PrescriptionService Port"]
+            SyncServicePort["SyncService Port"]
+        end
+
+        subgraph DomainServices ["Servicios de Dominio (Casos de Uso Puros)"]
+            AuthLogic["Logica de Autenticacion & TOTP"]
+            ManchesterEngine["Motor Triaje Manchester & Validacion Fisiologica"]
+            HCEImmutability["Reglas de Inmutabilidad HCE & Cadena SHA-256"]
+            AllergyInterceptor["Motor Interceptor de Alergias (< 150 ms)"]
+            SyncIdempotency["Consolidador de Lotes e Idempotencia"]
+        end
+
+        subgraph OutPorts ["Puertos de Salida (Driven Interfaces)"]
+            UserRepoPort["UserRepository Port"]
+            PatientRepoPort["PatientRepository Port"]
+            TriageRepoPort["TriageRepository Port"]
+            RecordRepoPort["ClinicalRecordRepository Port"]
+            PrescRepoPort["PrescriptionRepository Port"]
+            AuditRepoPort["AuditRepository Port"]
+            RIPSGenPort["RIPSGenerator Port"]
+            FHIRMapPort["FHIRMapper Port"]
+        end
+    end
+
+    subgraph SecondaryAdapters ["Adaptadores Secundarios (Driven / Salida)"]
+        direction TB
+        MySQLAdapter["MySQL 8.0 Repository (InnoDB + Triggers SQL)"]
+        PostgresAdapter["PostgreSQL Repository (Opcional)"]
+        MemoryAdapter["In-Memory Repository (Test Mode / Volatil)"]
+        RIPSJsonAdapter["RIPS JSON Generator (Res. 2275 de 2023)"]
+        HL7FHIRAdapter["HL7 FHIR R4 Mapper (Interoperabilidad Internacional)"]
+        CryptoAdapter["Crypto Package (Argon2, SHA-256, HMAC-SHA1 TOTP)"]
+    end
+
+    APIClient -->|JSON / HTTPS| FiberServer
+    FiberServer --> Middlewares
+    Middlewares --> AuthHandler & TriageHandler & RecordHandler & PrescHandler & SyncHandler
+
+    AuthHandler --> AuthServicePort
+    TriageHandler --> TriageServicePort
+    RecordHandler --> RecordServicePort
+    PrescHandler --> PrescServicePort
+    SyncHandler --> SyncServicePort
+
+    InPorts --> DomainServices
+    DomainServices --> OutPorts
+
+    UserRepoPort -.-> MySQLAdapter & MemoryAdapter
+    PatientRepoPort -.-> MySQLAdapter & MemoryAdapter
+    TriageRepoPort -.-> MySQLAdapter & MemoryAdapter
+    RecordRepoPort -.-> MySQLAdapter & MemoryAdapter
+    PrescRepoPort -.-> MySQLAdapter & MemoryAdapter
+    AuditRepoPort -.-> MySQLAdapter & MemoryAdapter
+    RIPSGenPort -.-> RIPSJsonAdapter
+    FHIRMapPort -.-> HL7FHIRAdapter
+    DomainServices -.-> CryptoAdapter

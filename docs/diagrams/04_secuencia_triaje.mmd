@@ -1,0 +1,39 @@
+sequenceDiagram
+    autonumber
+    actor Enfermero as Enfermero de Triage
+    participant Frontend as Cliente React (TriageScreen)
+    participant API as Fiber Router / Middleware
+    participant Service as TriageService (Dominio)
+    participant DB as Repositorio MySQL / Triggers
+
+    Enfermero->>+Frontend: Ingresa constantes vitales (FC, PA, FR, SpO2, Temp, Glasgow)
+    Frontend->>Frontend: Validacion temprana de formulario (campos requeridos)
+    Frontend->>+API: POST /api/v1/triage (Payload con signos vitales)
+    API->>API: Valida token JWT y Rol ("ENFERMERO" o "MEDICO")
+    API->>+Service: EvaluateAndCreate(ctx, triageDTO)
+
+    rect rgb(255, 240, 240)
+        Note over Service: Guardia Fisiologica y Analisis de Limites
+        alt FC <= 0 o FC > 300 o Glasgow < 3 o Glasgow > 15
+            Service-->>API: Error 422: "Parametros fisiologicos fuera de rango biologico"
+            API-->>Frontend: HTTP 422 Unprocessable Entity { error }
+            Frontend-->>Enfermero: Alerta visual roja: "Rango fisiologico no valido"
+        end
+    end
+
+    rect rgb(240, 255, 240)
+        Note over Service: Clasificacion Protocolo Manchester (Nivel I a V)
+        alt Glasgow <= 8 o SpO2 < 85% o Paro Inminente
+            Service->>Service: Asigna "NIVEL_I" (Rojo - Reanimacion Inmediata 0 min)
+        else Dolor toracico severo o SpO2 < 90%
+            Service->>Service: Asigna "NIVEL_II" (Naranja - Muy Urgente 10-15 min)
+        else Constantes estables sin signos de alarma
+            Service->>Service: Asigna "NIVEL_IV" o "NIVEL_V" (Verde/Azul)
+        end
+    end
+
+    Service->>+DB: INSERT INTO triage_records (manchester_level, status='PENDIENTE')
+    DB-->>-Service: Registro insertado exitosamente (UUID v4)
+    Service-->>-API: Objeto TriageRecord clasificado
+    API-->>-Frontend: HTTP 201 Created { id, manchester_level, tiempo_sugerido }
+    Frontend-->>-Enfermero: Notificacion exitosa y actualizacion en sala de espera
