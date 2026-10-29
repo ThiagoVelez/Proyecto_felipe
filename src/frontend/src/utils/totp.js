@@ -110,11 +110,11 @@ export function buildOtpAuthUri(secret, email = 'sramirez@saludconecta.ips.gov.c
 /**
  * Genera el QR escaneable en base64 PNG
  */
-export async function generateQrDataUrl(uri) {
+export async function generateQrDataUrl(uri, width = 220) {
   try {
     return await QRCode.toDataURL(uri, {
       margin: 1,
-      width: 220,
+      width: width,
       color: {
         dark: '#005c55', // hospital primary color
         light: '#ffffff',
@@ -134,3 +134,4 @@ export function getRemainingSeconds() {
   const epochSec = Math.floor(Date.now() / 1000);
   return 30 - (epochSec % 30);
 }
+

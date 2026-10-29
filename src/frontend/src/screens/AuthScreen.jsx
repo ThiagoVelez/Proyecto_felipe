@@ -17,12 +17,15 @@ import {
   CheckCircle2,
   RefreshCw,
   QrCode,
+  Sparkles,
 } from 'lucide-react';
 import MfaQrModal from '../components/MfaQrModal';
 import {
   calculateTotpCode,
   getRemainingSeconds,
   generateBase32Secret,
+  generateQrDataUrl,
+  buildOtpAuthUri,
 } from '../utils/totp';
 
 export const AuthScreen = ({ onLoginSuccess }) => {
@@ -31,44 +34,42 @@ export const AuthScreen = ({ onLoginSuccess }) => {
   const [password, setPassword] = useState('ValleSalud2025*!Clinico');
   const [showPassword, setShowPassword] = useState(false);
   const [mfaSecret, setMfaSecret] = useState('JBSWY3DPEHPK3PXP');
+  const [qrDataUrl, setQrDataUrl] = useState('');
   const [totp, setTotp] = useState(['', '', '', '', '', '']);
   const [mfaTimer, setMfaTimer] = useState(getRemainingSeconds());
   const [highContrast, setHighContrast] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
-  const [codeRenewed, setCodeRenewed] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
 
-  // Sincroniza y calcula el codigo TOTP oficial (RFC 6238)
-  const syncTotp = async (secret = mfaSecret) => {
+  // Genera el codigo QR directamente para visualizacion inmediata
+  const updateQrCode = async (secret = mfaSecret) => {
     try {
-      const code = await calculateTotpCode(secret);
-      setTotp(code.split(''));
-      setCodeRenewed(true);
-      setTimeout(() => setCodeRenewed(false), 1200);
-    } catch (e) {
-      console.error(e);
+      const uri = buildOtpAuthUri(secret, identifier, 'SaludConecta IPS');
+      const dataUrl = await generateQrDataUrl(uri, 140);
+      if (dataUrl) setQrDataUrl(dataUrl);
+    } catch (err) {
+      console.error('Error generando QR directo:', err);
     }
   };
 
-  // Inicializacion y temporizador ciclico de 30 segundos
+  // Inicializacion y sincronizacion del temporizador TOTP
   useEffect(() => {
-    syncTotp(mfaSecret);
+    updateQrCode(mfaSecret);
 
     const timer = setInterval(() => {
       const rem = getRemainingSeconds();
       setMfaTimer(rem);
-      if (rem === 30 || rem === 29) {
-        syncTotp(mfaSecret);
-      }
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [mfaSecret]);
+  }, [mfaSecret, identifier]);
 
   const handleManualRotate = () => {
     const newSecret = generateBase32Secret(16);
     setMfaSecret(newSecret);
-    syncTotp(newSecret);
+    updateQrCode(newSecret);
+    setTotp(['', '', '', '', '', '']);
+    setStatusMessage('Nueva clave generada. Escanee el nuevo QR en su aplicacion.');
   };
 
   const handleDigitChange = (index, value) => {
@@ -95,22 +96,34 @@ export const AuthScreen = ({ onLoginSuccess }) => {
     }
   };
 
+  // Ayudante de prueba: autocompleta con el codigo actual del segundo
+  const handleAutofillTest = async () => {
+    const currentCode = await calculateTotpCode(mfaSecret);
+    setTotp(currentCode.split(''));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const code = totp.join('');
     if (code.length < 6) {
-      setStatusMessage('Por favor complete los 6 digitos del codigo TOTP.');
+      setStatusMessage('Por favor ingrese los 6 digitos generados por su aplicacion Authenticator.');
       return;
     }
 
-    // Validacion de codigo contra el secreto activo
-    const validCode = await calculateTotpCode(mfaSecret);
-    if (code !== validCode) {
-      setStatusMessage(`Codigo TOTP invalido. El token esperado es ${validCode} o el mostrado en su Authenticator.`);
+    // Validacion con tolerancia de +/- 1 ventana (30s) segun RFC 6238
+    const now = Date.now();
+    const currentCode = await calculateTotpCode(mfaSecret, now);
+    const prevCode = await calculateTotpCode(mfaSecret, now - 30000);
+    const nextCode = await calculateTotpCode(mfaSecret, now + 30000);
+
+    const isValid = code === currentCode || code === prevCode || code === nextCode;
+
+    if (!isValid) {
+      setStatusMessage('Codigo TOTP incorrecto o expirado. Verifique el reloj de su telefono e intentelo de nuevo.');
       return;
     }
 
-    setStatusMessage('Autenticando y verificando firma con el servidor Go/Fiber...');
+    setStatusMessage('Autenticacion TOTP exitosa. Conectando con servidor Go/Fiber...');
     setTimeout(() => {
       if (onLoginSuccess) {
         onLoginSuccess({
@@ -268,7 +281,7 @@ export const AuthScreen = ({ onLoginSuccess }) => {
                 </div>
                 <div className="min-w-0">
                   <div className="font-semibold text-[11px] text-primary truncate">Segundo Factor MFA</div>
-                  <div className="text-[10px] text-primary font-medium">Validacion activa</div>
+                  <div className="text-[10px] text-primary font-medium">Escaneo QR activo</div>
                 </div>
               </div>
             </div>
@@ -347,8 +360,8 @@ export const AuthScreen = ({ onLoginSuccess }) => {
                 </div>
               </div>
 
-              {/* PASO 2: MFA / TOTP OBLIGATORIO CON QR ESCANEABLE */}
-              <div className="p-2.5 rounded-xl bg-surface-container-low border border-primary/25 space-y-2 shadow-xs">
+              {/* PASO 2: QR DIRECTAMENTE VISIBLE PARA ESCANEO + CASILLAS DE ENTRADA VACIAS */}
+              <div className="p-2.5 rounded-xl bg-surface-container-low border border-primary/25 shadow-xs space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <div className="w-6 h-6 rounded-lg bg-primary-container text-white flex items-center justify-center shrink-0">
@@ -356,67 +369,89 @@ export const AuthScreen = ({ onLoginSuccess }) => {
                     </div>
                     <div>
                       <h3 className="text-xs font-bold text-on-surface">Segundo Factor Obligatorio (TOTP)</h3>
-                      <p className="text-[10px] text-on-surface-variant">Google Authenticator, Authy o Microsoft Authenticator</p>
+                      <p className="text-[10px] text-on-surface-variant">Escanee el QR con Google Authenticator o Authy</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-1 px-2 py-0.5 bg-white rounded-full shadow-xs text-primary font-mono text-[11px]">
                     <Timer className="w-3 h-3" />
-                    <span>Expira en <strong>00:{mfaTimer.toString().padStart(2, '0')}s</strong></span>
+                    <span>Ventana: <strong>00:{mfaTimer.toString().padStart(2, '0')}s</strong></span>
                   </div>
                 </div>
 
-                {/* Casillas de 6 Digitos Dinamicas */}
-                <div>
-                  <div className="flex justify-center items-center gap-1.5 max-w-xs mx-auto">
-                    {totp.map((digit, idx) => (
-                      <React.Fragment key={idx}>
-                        {idx === 3 && <span className="text-outline font-bold text-sm">-</span>}
-                        <input
-                          id={`totp-input-${idx}`}
-                          type="text"
-                          inputMode="numeric"
-                          maxLength={1}
-                          value={digit}
-                          onChange={(e) => handleDigitChange(idx, e.target.value)}
-                          onKeyDown={(e) => handleKeyDown(idx, e)}
-                          className={`w-9 h-10 text-center text-base font-bold rounded-lg bg-white border-2 text-primary focus:outline-none focus:ring-1 focus:ring-primary shadow-xs transition-colors ${
-                            codeRenewed ? 'border-emerald-500 bg-emerald-50' : 'border-primary'
-                          }`}
+                {/* FILA PRINCIPAL: QR DIRECTO A LA IZQUIERDA Y CASILLAS VACIAS A LA DERECHA */}
+                <div className="flex items-center justify-between gap-3 pt-1">
+                  {/* CODIGO QR DIRECTAMENTE VISIBLE PARA ESCANEAR CON EL CELULAR */}
+                  <div className="flex flex-col items-center shrink-0">
+                    <div className="p-1 bg-white rounded-xl border-2 border-primary shadow-xs">
+                      {qrDataUrl ? (
+                        <img
+                          src={qrDataUrl}
+                          alt="Codigo QR TOTP SaludConecta"
+                          className="w-24 h-24 rounded cursor-pointer transition-transform hover:scale-105"
+                          title="Haz clic para ver en pantalla completa"
+                          onClick={() => setShowQrModal(true)}
                         />
-                      </React.Fragment>
-                    ))}
+                      ) : (
+                        <div className="w-24 h-24 flex items-center justify-center text-[10px] text-outline">
+                          Generando QR...
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowQrModal(true)}
+                      className="text-[9px] font-bold text-primary hover:underline mt-0.5 flex items-center gap-0.5 cursor-pointer"
+                    >
+                      <QrCode className="w-2.5 h-2.5" />
+                      Ampliar QR
+                    </button>
                   </div>
 
-                  {codeRenewed && (
-                    <div className="text-center text-[10px] text-emerald-700 font-bold mt-1 animate-pulse">
-                      Token TOTP sincronizado segun RFC 6238
+                  {/* CASILLAS VACIAS DONDE EL USUARIO ESCRIBE EL CODIGO QUE LE DA SU CELULAR */}
+                  <div className="flex-1 flex flex-col justify-center space-y-1.5 min-w-0">
+                    <label className="text-[11px] font-semibold text-on-surface leading-tight block">
+                      Escriba el codigo de 6 digitos generado en su celular:
+                    </label>
+
+                    <div className="flex items-center gap-1">
+                      {totp.map((digit, idx) => (
+                        <React.Fragment key={idx}>
+                          {idx === 3 && <span className="text-outline font-bold text-xs">-</span>}
+                          <input
+                            id={`totp-input-${idx}`}
+                            type="text"
+                            inputMode="numeric"
+                            maxLength={1}
+                            value={digit}
+                            onChange={(e) => handleDigitChange(idx, e.target.value)}
+                            onKeyDown={(e) => handleKeyDown(idx, e)}
+                            placeholder="•"
+                            className="w-8 h-9 text-center text-sm font-bold rounded-lg bg-white border border-outline-variant focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-primary shadow-xs"
+                          />
+                        </React.Fragment>
+                      ))}
                     </div>
-                  )}
-                </div>
 
-                {/* BOTON DE ACCION PARA QR Y ROTACION */}
-                <div className="pt-1 flex items-center justify-between text-[10px] text-on-surface-variant border-t border-surface-container-high/60 gap-1">
-                  <button
-                    type="button"
-                    onClick={() => setShowQrModal(true)}
-                    className="text-primary font-bold hover:underline flex items-center gap-1 cursor-pointer bg-primary/10 px-2.5 py-1 rounded-lg border border-primary/20 transition-all hover:bg-primary/20"
-                  >
-                    <QrCode className="w-3.5 h-3.5" />
-                    <span>Escanear QR con Celular</span>
-                  </button>
+                    <div className="flex items-center justify-between text-[10px] text-on-surface-variant pt-0.5">
+                      <button
+                        type="button"
+                        onClick={handleAutofillTest}
+                        className="text-primary hover:underline font-medium text-[10px] cursor-pointer"
+                        title="Opcion de prueba: pega el codigo actual sincronizado"
+                      >
+                        Pegar codigo de prueba
+                      </button>
 
-                  <button
-                    type="button"
-                    onClick={handleManualRotate}
-                    className="text-on-surface-variant hover:text-primary flex items-center gap-1 cursor-pointer px-2 py-0.5 rounded hover:bg-surface-container-high"
-                  >
-                    <RefreshCw className="w-3 h-3" />
-                    <span>Rotar Semilla</span>
-                  </button>
-
-                  <span className="text-[9px] text-outline font-mono truncate max-w-[120px]">
-                    {mfaSecret}
-                  </span>
+                      <button
+                        type="button"
+                        onClick={handleManualRotate}
+                        className="text-on-surface-variant hover:text-primary flex items-center gap-1 cursor-pointer"
+                      >
+                        <RefreshCw className="w-3 h-3" />
+                        <span>Rotar QR</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
 

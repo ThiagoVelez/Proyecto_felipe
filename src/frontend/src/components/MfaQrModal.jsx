@@ -170,3 +170,4 @@ export const MfaQrModal = ({ isOpen, onClose, secret = 'JBSWY3DPEHPK3PXP', email
 };
 
 export default MfaQrModal;
+
