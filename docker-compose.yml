@@ -96,3 +96,4 @@ networks:
   saludconecta-net:
     name: saludconecta_network
     driver: bridge
+

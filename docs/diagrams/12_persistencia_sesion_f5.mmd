@@ -1,0 +1,42 @@
+sequenceDiagram
+    autonumber
+    actor User as Usuario Clínico / Admin
+    participant Browser as Navegador Web (DOM & PWA)
+    participant App as React App (Estado en Memoria)
+    participant Storage as LocalStorage Cripto-Protegido
+    participant API as Backend GoFiber v2
+
+    %% Fase 1: Inicio de Sesion
+    Note over User,Storage: FASE 1: Autenticación Exitosa Inicial
+    User->>Browser: Ingresa credenciales y Token TOTP (6 dígitos)
+    Browser->>API: POST /api/v1/auth/login
+    API-->>Browser: 200 OK { token, user: { role, full_name, professional_card } }
+    Browser->>App: handleLoginSuccess(data)
+    App->>Storage: setItem('saludconecta_session_active', 'true')
+    App->>Storage: setItem('saludconecta_user', JSON.stringify(user))
+    App->>Storage: setItem('saludconecta_token', token)
+    App->>Storage: setItem('saludconecta_current_view', 'dashboard')
+    App-->>Browser: Renderiza Entorno Autorizado (Clínico o AdminLayout)
+
+    %% Fase 2: Recarga de Pagina (F5)
+    Note over User,Storage: FASE 2: Recarga de Página del Navegador (F5 / Refresh)
+    User->>Browser: Presiona F5 / Botón Recargar
+    Browser->>App: Montaje inicial de componentes React
+    Note over App: Inicialización reactiva de estado (useState lazy)
+    App->>Storage: getItem('saludconecta_session_active')
+    App->>Storage: getItem('saludconecta_user')
+    App->>Storage: getItem('saludconecta_current_view')
+    Storage-->>App: Retorna sesión activa, usuario almacenado y vista actual
+    App->>App: setIsAuthenticated(true), setCurrentUser(user), setCurrentView(view)
+    App-->>Browser: Restaura exactamente la pantalla de trabajo previa (Sin ir a Login)
+
+    %% Fase 3: Cierre de Sesion Seguro
+    Note over User,Storage: FASE 3: Finalización Explícita de Sesión
+    User->>Browser: Hace clic en botón 'Salir' / 'Cerrar Sesión'
+    Browser->>App: handleLogout()
+    App->>Storage: removeItem('saludconecta_session_active')
+    App->>Storage: removeItem('saludconecta_user')
+    App->>Storage: removeItem('saludconecta_token')
+    App->>Storage: removeItem('saludconecta_current_view')
+    App->>App: setIsAuthenticated(false), setCurrentUser(null)
+    App-->>Browser: Redirige limpiamente a AuthScreen (Login con Video)

@@ -1,0 +1,52 @@
+flowchart TB
+    subgraph HostEnvironment ["Entorno Host del Desarrollador / Evaluador"]
+        Developer["Navegador Web del Usuario / Equipo"]
+        DockerCLI["Docker CLI: docker compose up --build"]
+    end
+
+    subgraph DockerPlatform ["Plataforma de Contenedores Docker (Orquestación Multi-Servicio)"]
+        subgraph NetBridge ["Red Aislada: saludconecta_network (Bridge Driver)"]
+            
+            subgraph FrontContainer ["Contenedor 1: saludconecta-frontend (React PWA + Nginx Alpine)"]
+                NginxSrv["Servidor Web Nginx (Puerto 80 Interno)"]
+                StaticFiles["Archivos Estáticos SPA: HTML5, CSS3, JS Chunks, Video MP4"]
+                ReverseProxy["Proxy Inverso Integrado (/api/ -> http://backend:8080/api/)"]
+                GzipEngine["Compresión Gzip & Cabeceras de Seguridad (ISO 27001)"]
+            end
+
+            subgraph BackContainer ["Contenedor 2: saludconecta-backend (Go 1.22+ Multi-Stage)"]
+                GoFiberAPI["API REST GoFiber v2 (Puerto 8080 Interno)"]
+                AppUser["Usuario sin privilegios: appuser (Alpine 3.20)"]
+                HealthProbe["Healthcheck Nativo: /api/v1/health"]
+                HexEngine["Arquitectura Hexagonal (Core de Dominio & Seeder)"]
+            end
+
+            subgraph DBContainer ["Contenedor 3: saludconecta-mysql (MySQL 8.0 Motor InnoDB)"]
+                MySQLCore["Motor MySQL 8.0 (Puerto 3306 Interno)"]
+                SchemaInit["Auto-Migración DDL: 01_schema.sql (Triggers & Tablas)"]
+                MySQLHealth["Healthcheck: mysqladmin ping"]
+            end
+
+        end
+
+        subgraph PersistentVolumes ["Almacenamiento Persistente en Host"]
+            VolMySQL[("Volumen Docker: saludconecta_mysql_data")]
+        end
+    end
+
+    Developer -->|Acceso HTTP: http://localhost:5173 o :80| NginxSrv
+    DockerCLI -->|Construye e Inicia el Stack| DockerPlatform
+
+    NginxSrv --> StaticFiles
+    NginxSrv --> GzipEngine
+    NginxSrv -->|Reenvío Transparente de Peticiones API| ReverseProxy
+    ReverseProxy -->|Llamadas HTTP Internas: Puerto 8080| GoFiberAPI
+
+    GoFiberAPI --> AppUser
+    GoFiberAPI --> HexEngine
+    GoFiberAPI --> HealthProbe
+    HexEngine -->|TCP Pool con Reintentos: Puerto 3306| MySQLCore
+
+    DBContainer --> SchemaInit
+    DBContainer --> MySQLHealth
+    MySQLCore --> VolMySQL

@@ -65,6 +65,8 @@ El flujo de trabajo, la priorización de requisitos y el ciclo de vida del desar
 | **RF06** | Sincronización Offline-First Rural                  | Consolidación por lotes idempotentes con identificadores UUID v4 de folios y triajes capturados en brigadas rurales desconectadas, garantizando validación de firmas y continuidad de la cadena criptográfica.                                                                                              | **Should Have**  |
 | **RF07** | Gobernanza de Personal y Habilitación ReTHUS        | Flujo de autorregistro público donde toda cuenta ingresa obligatoriamente inactiva (`is_active = FALSE`). Validación mandatoria de Tarjeta Profesional ReTHUS para roles médicos y de enfermería (Res. 1995/1999). Activación y suspensión controlada mediante auditoría forense inmutable.                 | **Must Have**    |
 | **RF08** | Panel de Control Administrativo Desacoplado         | Entorno exclusivo para rol `ADMIN` (`AdminLayout`) aislado absolutamente de historias clínicas y consultas (Ley 1581 de 2012). Módulos de gobernanza de personal, visor forense de hashes SHA-256, monitoreo de 4 sedes operativas y catálogo farmacológico CUM/INVIMA.                                 | **Must Have**    |
+| **RF09** | Perfil Asistencial y Administrativo con Alto Contraste | Perfil estilo red social con colección de 5 banners temáticos (Pediatría, Farmacia, Urgencias, Cirugía, Cardiología), carga reactiva de foto de perfil y encapsulación de identidad en un óvalo protector de alta luminosidad (`bg-white/95`) que garantiza contraste WCAG AAA sobre cualquier fondo. | **Must Have**    |
+| **RF10** | Menú Lateral Colapsable y Persistencia de Sesión F5 | Sidebar asistencial con modo colapsable (`w-20`) centrado exclusivamente en íconos con tooltips y margen reactivo (`ml-20`/`ml-64`). Persistencia local del estado de autenticación y vista activa que previene el cierre de sesión ante eventos de recarga del navegador (F5).                   | **Must Have**    |
 
 ### 4.2. Requisitos No Funcionales (RNF)
 
@@ -722,11 +724,135 @@ flowchart TB
 
 ---
 
+### 5.9. Diagrama de Arquitectura de Contenedores Docker (Docker Compose Multi-Stage & Networking)
+
+Representa la topología de virtualización ligera basada en contenedores Docker para despliegue ágil del equipo de trabajo. Modela la red puente aislada (`saludconecta_network`), los 3 contenedores multi-stage (`saludconecta-mysql`, `saludconecta-backend` en Go 1.22+ y `saludconecta-frontend` en React + Nginx Alpine), los puntos de enlace, los healthchecks nativos y el volumen persistente:
+
+![Diagrama de Arquitectura Docker](docs/diagrams/11_arquitectura_contenedores_docker.png)
+
+```mermaid
+flowchart TB
+    subgraph HostEnvironment ["Entorno Host del Desarrollador / Evaluador"]
+        Developer["Navegador Web del Usuario / Equipo"]
+        DockerCLI["Docker CLI: docker compose up --build"]
+    end
+
+    subgraph DockerPlatform ["Plataforma de Contenedores Docker (Orquestación Multi-Servicio)"]
+        subgraph NetBridge ["Red Aislada: saludconecta_network (Bridge Driver)"]
+            
+            subgraph FrontContainer ["Contenedor 1: saludconecta-frontend (React PWA + Nginx Alpine)"]
+                NginxSrv["Servidor Web Nginx (Puerto 80 Interno)"]
+                StaticFiles["Archivos Estáticos SPA: HTML5, CSS3, JS Chunks, Video MP4"]
+                ReverseProxy["Proxy Inverso Integrado (/api/ -> http://backend:8080/api/)"]
+                GzipEngine["Compresión Gzip & Cabeceras de Seguridad (ISO 27001)"]
+            end
+
+            subgraph BackContainer ["Contenedor 2: saludconecta-backend (Go 1.22+ Multi-Stage)"]
+                GoFiberAPI["API REST GoFiber v2 (Puerto 8080 Interno)"]
+                AppUser["Usuario sin privilegios: appuser (Alpine 3.20)"]
+                HealthProbe["Healthcheck Nativo: /api/v1/health"]
+                HexEngine["Arquitectura Hexagonal (Core de Dominio & Seeder)"]
+            end
+
+            subgraph DBContainer ["Contenedor 3: saludconecta-mysql (MySQL 8.0 Motor InnoDB)"]
+                MySQLCore["Motor MySQL 8.0 (Puerto 3306 Interno)"]
+                SchemaInit["Auto-Migración DDL: 01_schema.sql (Triggers & Tablas)"]
+                MySQLHealth["Healthcheck: mysqladmin ping"]
+            end
+
+        end
+
+        subgraph PersistentVolumes ["Almacenamiento Persistente en Host"]
+            VolMySQL[("Volumen Docker: saludconecta_mysql_data")]
+        end
+    end
+
+    Developer -->|Acceso HTTP: http://localhost:5173 o :80| NginxSrv
+    DockerCLI -->|Construye e Inicia el Stack| DockerPlatform
+
+    NginxSrv --> StaticFiles
+    NginxSrv --> GzipEngine
+    NginxSrv -->|Reenvío Transparente de Peticiones API| ReverseProxy
+    ReverseProxy -->|Llamadas HTTP Internas: Puerto 8080| GoFiberAPI
+
+    GoFiberAPI --> AppUser
+    GoFiberAPI --> HexEngine
+    GoFiberAPI --> HealthProbe
+    HexEngine -->|TCP Pool con Reintentos: Puerto 3306| MySQLCore
+
+    DBContainer --> SchemaInit
+    DBContainer --> MySQLHealth
+    MySQLCore --> VolMySQL
+```
+
+- Archivo fuente: [`docs/diagrams/11_arquitectura_contenedores_docker.mmd`](docs/diagrams/11_arquitectura_contenedores_docker.mmd)
+- Imagen de alta resolución: [`docs/diagrams/11_arquitectura_contenedores_docker.png`](docs/diagrams/11_arquitectura_contenedores_docker.png) | Vectorial: [`docs/diagrams/11_arquitectura_contenedores_docker.svg`](docs/diagrams/11_arquitectura_contenedores_docker.svg)
+
+---
+
+### 5.10. Diagrama de Secuencia: Ciclo de Vida y Persistencia de Sesión Resistente a Recargas (F5)
+
+Describe la gestión de ciclo de vida de la sesión del usuario médico o administrativo. Demuestra cómo el estado de autenticación y la pantalla activa persisten de forma transparente ante recargas del navegador (F5 / Refresh), manteniendo la sesión activa y aislando el cierre únicamente a la acción explícita del botón de salida:
+
+![Diagrama de Persistencia de Sesión F5](docs/diagrams/12_persistencia_sesion_f5.png)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as Usuario Clínico / Admin
+    participant Browser as Navegador Web (DOM & PWA)
+    participant App as React App (Estado en Memoria)
+    participant Storage as LocalStorage Cripto-Protegido
+    participant API as Backend GoFiber v2
+
+    %% Fase 1: Inicio de Sesion
+    Note over User,Storage: FASE 1: Autenticación Exitosa Inicial
+    User->>Browser: Ingresa credenciales y Token TOTP (6 dígitos)
+    Browser->>API: POST /api/v1/auth/login
+    API-->>Browser: 200 OK { token, user: { role, full_name, professional_card } }
+    Browser->>App: handleLoginSuccess(data)
+    App->>Storage: setItem('saludconecta_session_active', 'true')
+    App->>Storage: setItem('saludconecta_user', JSON.stringify(user))
+    App->>Storage: setItem('saludconecta_token', token)
+    App->>Storage: setItem('saludconecta_current_view', 'dashboard')
+    App-->>Browser: Renderiza Entorno Autorizado (Clínico o AdminLayout)
+
+    %% Fase 2: Recarga de Pagina (F5)
+    Note over User,Storage: FASE 2: Recarga de Página del Navegador (F5 / Refresh)
+    User->>Browser: Presiona F5 / Botón Recargar
+    Browser->>App: Montaje inicial de componentes React
+    Note over App: Inicialización reactiva de estado (useState lazy)
+    App->>Storage: getItem('saludconecta_session_active')
+    App->>Storage: getItem('saludconecta_user')
+    App->>Storage: getItem('saludconecta_current_view')
+    Storage-->>App: Retorna sesión activa, usuario almacenado y vista actual
+    App->>App: setIsAuthenticated(true), setCurrentUser(user), setCurrentView(view)
+    App-->>Browser: Restaura exactamente la pantalla de trabajo previa (Sin ir a Login)
+
+    %% Fase 3: Cierre de Sesion Seguro
+    Note over User,Storage: FASE 3: Finalización Explícita de Sesión
+    User->>Browser: Hace clic en botón 'Salir' / 'Cerrar Sesión'
+    Browser->>App: handleLogout()
+    App->>Storage: removeItem('saludconecta_session_active')
+    App->>Storage: removeItem('saludconecta_user')
+    App->>Storage: removeItem('saludconecta_token')
+    App->>Storage: removeItem('saludconecta_current_view')
+    App->>App: setIsAuthenticated(false), setCurrentUser(null)
+    App-->>Browser: Redirige limpiamente a AuthScreen (Login con Video)
+```
+
+- Archivo fuente: [`docs/diagrams/12_persistencia_sesion_f5.mmd`](docs/diagrams/12_persistencia_sesion_f5.mmd)
+- Imagen de alta resolución: [`docs/diagrams/12_persistencia_sesion_f5.png`](docs/diagrams/12_persistencia_sesion_f5.png) | Vectorial: [`docs/diagrams/12_persistencia_sesion_f5.svg`](docs/diagrams/12_persistencia_sesion_f5.svg)
+
+---
+
 ## 6. Estructura Exacta del Repositorio
 
 ```text
 proyecto-final/
 ├── README.md                      # Presentación institucional, requisitos, arquitectura y diagramas
+├── docker-compose.yml             # Orquestación Multi-Contenedor (MySQL 8, Go API, React + Nginx)
+├── .dockerignore                  # Reglas de exclusión para contextos de construcción Docker
 ├── .gitignore                     # Exclusión estricta de credenciales, binarios y artefactos temporales
 ├── .env.example                   # Variables de entorno plantilla con valores genéricos seguros
 ├── go.work                        # Workspace de Go para coordinación multi-módulo
@@ -744,7 +870,11 @@ proyecto-final/
 │   │   ├── 07_seguridad_mfa_sha256.png (.svg / .mmd)
 │   │   ├── 08_flujo_sync_rural_offline.png (.svg / .mmd)
 │   │   ├── 09_secuencia_gobernanza_rethus.png (.svg / .mmd)
-│   │   └── 10_arquitectura_rbac_aislamiento_admin.png (.svg / .mmd)
+│   │   ├── 10_arquitectura_rbac_aislamiento_admin.png (.svg / .mmd)
+│   │   ├── 11_arquitectura_contenedores_docker.png (.svg / .mmd)
+│   │   └── 12_persistencia_sesion_f5.png (.svg / .mmd)
+│   ├── multimedia/                # Recursos audiovisuales institucionales
+│   │   └── medicina.mp4           # Video de fondo para autenticación clínica en bucle continuo
 │   └── stitch_designs/            # Maquetas visuales y capturas oficiales de Stitch
 │       ├── 01_auth_mfa.html (.png)
 │       ├── 02_dashboard_espera.html (.png)
@@ -753,6 +883,8 @@ proyecto-final/
 │       └── 05_prescripcion_alergia.html (.png)
 ├── src/
 │   ├── backend/                   # Código fuente Go + Fiber (Arquitectura Hexagonal)
+│   │   ├── Dockerfile             # Multi-stage build Go 1.22+ y Alpine Linux de producción
+│   │   ├── .dockerignore          # Exclusiones de contexto para build del backend
 │   │   ├── cmd/api/main.go        # Punto de entrada e inyección de dependencias
 │   │   ├── core/                  # Dominio puro, puertos y lógica de casos de uso
 │   │   │   ├── domain/            # Entidades de negocio (User, Patient, Triage, Record, Prescription, Audit)
@@ -773,6 +905,9 @@ proyecto-final/
 │   │   ├── go.mod                 # Módulo de Go del backend
 │   │   └── go.sum                 # Sumas criptográficas de dependencias Go
 │   └── frontend/                  # Código fuente de React 18 (Vite 5 + Tailwind CSS 3)
+│       ├── Dockerfile             # Multi-stage build Node 20 + Nginx Alpine
+│       ├── nginx.conf             # Servidor Nginx con proxy inverso `/api/` y SPA routing
+│       ├── .dockerignore          # Exclusiones de contexto para build del frontend
 │       ├── index.html             # Plantilla HTML5 accesible
 │       ├── package.json           # Dependencias y scripts de ejecución/pruebas
 │       ├── postcss.config.js      # Configuración de PostCSS
@@ -781,21 +916,22 @@ proyecto-final/
 │       ├── README.md              # Documentación detallada del cliente web
 │       └── src/
 │           ├── main.jsx           # Montaje raíz en el DOM
-│           ├── App.jsx            # Enrutador asistencial/administrativo y estado de sesión
+│           ├── App.jsx            # Enrutador asistencial/administrativo, persistencia F5 y sidebar
 │           ├── index.css          # Estilos globales y capas de Tailwind
 │           ├── setupTests.js      # Extensiones jest-dom para pruebas Vitest
 │           ├── components/        # Componentes reutilizables
-│           │   ├── Header.jsx     # Barra superior, búsqueda de pacientes y perfil dinámico
-│           │   ├── Sidebar.jsx    # Navegación asistencial modular y widget SHA-256
+│           │   ├── Header.jsx     # Barra superior, búsqueda de pacientes, toggle menú y perfil
+│           │   ├── Sidebar.jsx    # Menú asistencial colapsable (`w-20` / `w-64`) y widget SHA-256
 │           │   ├── AllergyAlertModal.jsx # Modal crítico ante contraindicaciones
 │           │   ├── MfaQrModal.jsx # Modal con QR escaneable en Google Authenticator/Authy
 │           │   └── StaffRegisterModal.jsx # Modal de autorregistro con validación ReTHUS
 │           ├── screens/           # Pantallas asistenciales (Stitch Design System)
-│           │   ├── AuthScreen.jsx # Acceso, sede, selector rápido de perfiles y QR directo
+│           │   ├── AuthScreen.jsx # Acceso, sede, video de fondo en bucle y QR directo
 │           │   ├── DashboardScreen.jsx # Indicadores KPI y sala de espera Manchester
 │           │   ├── TriageScreen.jsx    # Captura de constantes y escala Glasgow
 │           │   ├── HceScreen.jsx  # Historia clínica, pestañas y sellado inmutable
 │           │   ├── PrescriptionScreen.jsx # Prescripción e intercepción farmacológica
+│           │   ├── ProfileScreen.jsx   # Perfil asistencial, 5 banners y óvalo de alto contraste
 │           │   ├── SecurityMfaScreen.jsx  # Panel activo de seguridad MFA y auditoría
 │           │   └── admin/         # Entorno administrativo desacoplado
 │           │       ├── AdminLayout.jsx # Layout exclusivo de administración y aislamiento RBAC
@@ -817,30 +953,22 @@ proyecto-final/
     └── frontend/                  # Pruebas automatizadas en React (Vitest + Testing Library)
         ├── AllergyAlertModal.test.jsx # Verificación de componente modal ante alergias
         ├── totp.test.js           # Verificación de algoritmo TOTP RFC 6238 y vector oficial
-        └── AdminGovernance.test.jsx # Verificación de modal ReTHUS y panel de gobernanza
+        ├── AdminGovernance.test.jsx # Verificación de modal ReTHUS y panel de gobernanza
+        └── DoctorLayout.test.jsx  # Verificación de sidebar colapsable, header y perfil
 ```
 
 ---
 
-## 7. Guía de Instalación, Seeder Automático y Ejecución Local
-
-### 7.1. Configuración de la Base de Datos (MySQL)
-
-1. Conéctate a tu motor local de MySQL e importa el esquema DDL y los disparadores de auditoría:
-
-   ```sql
-   CREATE DATABASE IF NOT EXISTS saludconecta_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-   USE saludconecta_db;
-   SOURCE src/backend/database/schema.sql;
-   ```
-
-2. Configura las variables de entorno para el backend creando el archivo `.env` en `src/backend/` tomando como base `.env.example`.
+## 7. Guía de Instalación y Despliegue
 
 ### 7.1. Despliegue Rápido con Docker Compose (Recomendado para el Equipo)
 
 Para que cualquier miembro del equipo de desarrollo o evaluación pueda ejecutar la plataforma completa en su máquina sin necesidad de configurar Go, Node ni MySQL de forma manual:
 
-1. **Iniciar la Plataforma Completa:**
+1. **Requisitos:**
+   - Tener instalado [Docker Desktop](https://www.docker.com/products/docker-desktop/) en ejecución.
+
+2. **Iniciar la Plataforma Completa:**
    Desde la raíz del repositorio, ejecuta:
 
    ```bash
@@ -852,18 +980,34 @@ Para que cualquier miembro del equipo de desarrollo o evaluación pueda ejecutar
    - `saludconecta-backend`: API en Go 1.22+ (GoFiber v2) compilada en binario estático sobre Alpine Linux con seeder idempotente.
    - `saludconecta-frontend`: React PWA + Vite servido a través de Nginx Alpine con proxy inverso integrado hacia `/api/`.
 
-2. **Acceso Inmediato al Sistema:**
+3. **Acceso Inmediato al Sistema:**
    - Abre tu navegador web en: **[http://localhost:5173](http://localhost:5173)** (o alternativamente en `http://localhost`).
    - La API del backend estará disponible en `http://localhost:8080/api/v1/health`.
 
-3. **Detener el Entorno:**
+4. **Detener el Entorno:**
    ```bash
    docker compose down
    ```
 
 ---
 
-### 7.2. Seeder Automático e Idempotente (`adapters/storage/mysql/seeder.go`)
+### 7.2. Puesta en Marcha Local Tradicional (Sin Docker)
+
+Si prefieres ejecutar los componentes de forma nativa en tu entorno de desarrollo local:
+
+#### 7.2.1. Configuración de la Base de Datos (MySQL)
+
+1. Conéctate a tu motor local de MySQL e importa el esquema DDL y los disparadores de auditoría:
+
+   ```sql
+   CREATE DATABASE IF NOT EXISTS saludconecta_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+   USE saludconecta_db;
+   SOURCE src/backend/database/schema.sql;
+   ```
+
+2. Configura las variables de entorno para el backend creando el archivo `.env` en `src/backend/` tomando como base `.env.example`.
+
+#### 7.2.2. Seeder Automático e Idempotente (`adapters/storage/mysql/seeder.go`)
 
 Al iniciar el servidor en Go, el sistema ejecuta automáticamente la función `SeedInitialAdmin(db *sql.DB)`:
 - Comprueba y crea dinámicamente las columnas de habilitación profesional en la tabla `users` (`document_type`, `document_number`, `phone`, `specialty`, `branch`).
@@ -871,7 +1015,7 @@ Al iniciar el servidor en Go, el sistema ejecuta automáticamente la función `S
 - Siembra al facultativo líder **Dr. Santiago Vélez** (`svelez@saludconecta.ips.gov.co`, `RM-94821-VALLE`, activo con MFA).
 - Siembra un registro de prueba de personal pendiente (**Dra. Camila Yaima**, inactiva) para verificación inmediata de la gobernanza ReTHUS.
 
-### 7.3. Puesta en Marcha del Backend (Go)
+#### 7.2.3. Puesta en Marcha del Backend (Go)
 
 Desde la terminal en la raíz del proyecto:
 
@@ -884,7 +1028,7 @@ _El servicio HTTP de GoFiber iniciará escuchando en el puerto configurado (por 
 
 > **Nota para pruebas en memoria:** Si deseas ejecutar el backend sin depender de MySQL activo, define la variable de entorno antes de ejecutar: `$env:DB_DRIVER="memory"; go run cmd/api/main.go`. El adaptador en memoria precarga automáticamente las cuentas del Administrador y del Dr. Santiago Vélez.
 
-### 7.4. Puesta en Marcha del Frontend (React)
+#### 7.2.4. Puesta en Marcha del Frontend (React)
 
 ```powershell
 cd src/frontend
