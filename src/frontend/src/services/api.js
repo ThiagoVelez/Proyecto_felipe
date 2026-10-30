@@ -5,6 +5,7 @@
  */
 
 const API_BASE = '/api/v1';
+const UNAVAILABLE_MESSAGE = 'El servicio no está disponible. Intente nuevamente en unos minutos.';
 
 // Mock de personal para contingencia y demostracion inmediata
 const INITIAL_STAFF_MOCK = [
@@ -76,21 +77,17 @@ const INITIAL_STAFF_MOCK = [
 
 let localStaff = [...INITIAL_STAFF_MOCK];
 
+// Retira sesiones simuladas guardadas por versiones anteriores: el servidor nunca emitio esos tokens
+if (localStorage.getItem('saludconecta_token')?.startsWith('simulated-')) {
+  localStorage.removeItem('saludconecta_token');
+  localStorage.removeItem('saludconecta_user');
+  localStorage.removeItem('saludconecta_session_active');
+}
+
 export const apiClient = {
   // Estado de sesion en memoria / local cache
   token: localStorage.getItem('saludconecta_token') || '',
-  user: JSON.parse(localStorage.getItem('saludconecta_user') || 'null') || {
-    id: 'usr-med-0002',
-    name: 'Dr. Santiago Vélez',
-    full_name: 'Dr. Santiago Vélez',
-    role: 'MEDICO',
-    role_id: 2,
-    email: 'svelez@saludconecta.ips.gov.co',
-    license: 'RM-94821-VALLE',
-    professional_card: 'RM-94821-VALLE',
-    specialty: 'Medicina de Urgencias',
-    branch: 'Sede Cartago - Hospital Central (Nivel II)',
-  },
+  user: JSON.parse(localStorage.getItem('saludconecta_user') || 'null'),
 
   setAuth(token, user) {
     this.token = token;
@@ -104,7 +101,7 @@ export const apiClient = {
     }
   },
 
-  async request(endpoint, options = {}) {
+  async request(endpoint, { strict = false, ...options } = {}) {
     const headers = {
       'Content-Type': 'application/json',
       ...options.headers,
@@ -122,11 +119,15 @@ export const apiClient = {
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || `Error HTTP ${res.status}`);
+        throw new Error(
+          errorData.error || (res.status >= 500 ? UNAVAILABLE_MESSAGE : `Error HTTP ${res.status}`)
+        );
       }
 
       return await res.json();
     } catch (err) {
+      // En modo estricto el error llega a la interfaz: una operacion rechazada no puede simularse como exitosa
+      if (strict) throw err instanceof TypeError ? new Error(UNAVAILABLE_MESSAGE) : err;
       console.warn(`[API Conexión/Fallback] ${endpoint}:`, err.message);
       return null;
     }
@@ -134,81 +135,21 @@ export const apiClient = {
 
   async login(credentials) {
     const res = await this.request('/auth/login', {
+      strict: true,
       method: 'POST',
       body: JSON.stringify(credentials),
     });
 
-    if (res && res.token) {
-      this.setAuth(res.token, res.user);
-      return res;
-    }
-
-    // Simulacion reactiva de contingencia
-    const normEmail = (credentials.email || '').toLowerCase().trim();
-    if (normEmail === 'admin@saludconecta.ips.gov.co') {
-      const adminUser = {
-        id: 'usr-admin-0001',
-        name: 'Administrador del Sistema',
-        full_name: 'Administrador del Sistema',
-        role: 'ADMIN',
-        role_id: 1,
-        email: 'admin@saludconecta.ips.gov.co',
-        license: 'TI-ADMIN-001',
-        professional_card: 'TI-ADMIN-001',
-        specialty: 'Seguridad y Gobernanza Hospitalaria',
-        branch: 'Sede Cartago - Hospital Central',
-      };
-      this.setAuth('simulated-admin-token-2026', adminUser);
-      return { token: 'simulated-admin-token-2026', user: adminUser };
-    }
-
-    const docUser = {
-      id: 'usr-med-0002',
-      name: 'Dr. Santiago Vélez',
-      full_name: 'Dr. Santiago Vélez',
-      role: 'MEDICO',
-      role_id: 2,
-      email: 'svelez@saludconecta.ips.gov.co',
-      license: 'RM-94821-VALLE',
-      professional_card: 'RM-94821-VALLE',
-      specialty: 'Medicina de Urgencias',
-      branch: 'Sede Cartago - Hospital Central (Nivel II)',
-    };
-    this.setAuth('simulated-doctor-token-2026', docUser);
-    return { token: 'simulated-doctor-token-2026', user: docUser };
+    this.setAuth(res.token, res.user);
+    return res;
   },
 
   async registerStaff(staffData) {
-    const res = await this.request('/auth/register-staff', {
+    return this.request('/admin/users', {
+      strict: true,
       method: 'POST',
       body: JSON.stringify(staffData),
     });
-
-    if (res) return res;
-
-    // Contingencia local
-    const newEntry = {
-      id: `usr-reg-${Date.now()}`,
-      role_id: Number(staffData.role_id) || 2,
-      role_name: Number(staffData.role_id) === 3 ? 'ENFERMERO' : 'MEDICO',
-      full_name: staffData.full_name,
-      document_type: staffData.document_type || 'CC',
-      document_number: staffData.document_number,
-      email: staffData.email,
-      phone: staffData.phone,
-      professional_card: staffData.professional_card,
-      specialty: staffData.specialty || 'Medicina General',
-      branch: staffData.branch || 'Sede Cartago - Hospital Central',
-      is_active: false,
-      mfa_enabled: false,
-      created_at: new Date().toISOString(),
-    };
-    localStaff.unshift(newEntry);
-    return {
-      message: 'Registro de personal asistencial enviado correctamente. Estado: Pendiente de Habilitación ReTHUS.',
-      user_id: newEntry.id,
-      is_active: false,
-    };
   },
 
   async adminGetUsers(params = {}) {

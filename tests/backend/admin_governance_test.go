@@ -50,7 +50,7 @@ func TestStaffGovernanceAndReTHUSVerification(t *testing.T) {
 
 	err = authService.RegisterStaff(ctx, validDoctor, "ClaveSegura2026*")
 	if err != nil {
-		t.Fatalf("Fallo inesperado en autorregistro de personal: %v", err)
+		t.Fatalf("Fallo inesperado en registro de personal: %v", err)
 	}
 
 	// 3. Verificar que el usuario no puede iniciar sesion mientras este inactivo

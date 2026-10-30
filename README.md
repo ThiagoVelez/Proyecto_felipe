@@ -63,7 +63,7 @@ El flujo de trabajo, la priorización de requisitos y el ciclo de vida del desar
 | **RF04** | Cadena Criptográfica SHA-256                        | Cálculo determinista de hash SHA-256 encadenado que incorpora el hash del folio previo del paciente, asegurando custodia legal, no repudio y trazabilidad inalterable ante auditorías forenses.                                                                                                             | **Must Have**    |
 | **RF05** | Intercepción Farmacológica de Alergias              | Cruce de seguridad en tiempo real entre el principio activo del catálogo CUM recetado y los antecedentes alérgicos del paciente. Respuesta en < 150 ms bloqueando prescripciones conflictivas (ej. Betalactámicos / Penicilinas).                                                                           | **Must Have**    |
 | **RF06** | Sincronización Offline-First Rural                  | Consolidación por lotes idempotentes con identificadores UUID v4 de folios y triajes capturados en brigadas rurales desconectadas, garantizando validación de firmas y continuidad de la cadena criptográfica.                                                                                              | **Should Have**  |
-| **RF07** | Gobernanza de Personal y Habilitación ReTHUS        | Flujo de autorregistro público donde toda cuenta ingresa obligatoriamente inactiva (`is_active = FALSE`). Validación mandatoria de Tarjeta Profesional ReTHUS para roles médicos y de enfermería (Res. 1995/1999). Activación y suspensión controlada mediante auditoría forense inmutable.                 | **Must Have**    |
+| **RF07** | Gobernanza de Personal y Habilitación ReTHUS        | Registro de personal exclusivo del Administrador, donde toda cuenta ingresa obligatoriamente inactiva (`is_active = FALSE`). Validación mandatoria de Tarjeta Profesional ReTHUS para roles médicos y de enfermería (Res. 1995/1999). Activación y suspensión controlada mediante auditoría forense inmutable.                 | **Must Have**    |
 | **RF08** | Panel de Control Administrativo Desacoplado         | Entorno exclusivo para rol `ADMIN` (`AdminLayout`) aislado absolutamente de historias clínicas y consultas (Ley 1581 de 2012). Módulos de gobernanza de personal, visor forense de hashes SHA-256, monitoreo de 4 sedes operativas y catálogo farmacológico CUM/INVIMA.                                 | **Must Have**    |
 | **RF09** | Perfil Asistencial y Administrativo con Alto Contraste | Perfil estilo red social con colección de 5 banners temáticos (Pediatría, Farmacia, Urgencias, Cirugía, Cardiología), carga reactiva de foto de perfil y encapsulación de identidad en un óvalo protector de alta luminosidad (`bg-white/95`) que garantiza contraste WCAG AAA sobre cualquier fondo. | **Must Have**    |
 | **RF10** | Menú Lateral Colapsable y Persistencia de Sesión F5 | Sidebar asistencial con modo colapsable (`w-20`) centrado exclusivamente en íconos con tooltips y margen reactivo (`ml-20`/`ml-64`). Persistencia local del estado de autenticación y vista activa que previene el cierre de sesión ante eventos de recarga del navegador (F5).                   | **Must Have**    |
@@ -86,7 +86,7 @@ Los diagramas técnicos del sistema han sido modelados en sintaxis Mermaid y pre
 
 ### 5.1. Diagrama de Casos de Uso del Sistema (UML)
 
-Representa los límites del sistema «SaludConecta IPS v2.4», los actores involucrados (Médico Tratante Dr. Santiago Vélez, Enfermero, Postulante, Auditor y Administrador) y los 12 casos de uso esenciales:
+Representa los límites del sistema «SaludConecta IPS v2.4», los actores involucrados (Médico Tratante Dr. Santiago Vélez, Enfermero, Auditor y Administrador) y los 12 casos de uso esenciales:
 
 ![Diagrama de Casos de Uso UML](docs/diagrams/01_casos_de_uso.png)
 
@@ -95,7 +95,6 @@ flowchart LR
     subgraph Actores ["Actores del Sistema"]
         Medico["Médico Tratante (Dr. Santiago Vélez)"]
         Enfermero["Enfermero / Triaje"]
-        Postulante["Personal en Autorregistro"]
         Auditor["Auditor Clínico"]
         Admin["Administrador del Sistema"]
     end
@@ -110,12 +109,12 @@ flowchart LR
         CU07(["CU07: Sincronización Offline-First Rural por Lotes"])
         CU08(["CU08: Exportación Interoperable RIPS JSON y HL7 FHIR"])
         CU09(["CU09: Auditoría Forense y Trazabilidad de Hashes"])
-        CU10(["CU10: Autorregistro con Inactividad Mandatoria (Res. 1995)"])
+        CU10(["CU10: Registro de Personal con Inactividad Mandatoria (Res. 1995)"])
         CU11(["CU11: Gobernanza ReTHUS, Habilitación y Suspensión"])
         CU12(["CU12: Gestión de Sedes y Catálogo Farmacéutico CUM"])
     end
 
-    Postulante --> CU10
+    Admin --> CU10
     CU10 -.->|"<<include>>"| CU09
 
     Medico --> CU01
@@ -170,7 +169,7 @@ flowchart TD
 
     subgraph PrimaryAdapters ["Adaptadores Primarios (Driving / Entrada)"]
         FiberServer["Servidor HTTP GoFiber v2 (Puerto :8080)"]
-        AuthHandler["AuthHandler & MFA Controller (Autorregistro ReTHUS)"]
+        AuthHandler["AuthHandler & MFA Controller (Registro de Personal ReTHUS)"]
         AdminHandler["AdminHandler (Gobernanza de Personal & Auditoría)"]
         TriageHandler["TriageHandler"]
         RecordHandler["ClinicalRecordHandler"]
@@ -558,7 +557,7 @@ Describe la recolección desconectada en dispositivos asistenciales PWA, la gene
 
 ---
 
-### 5.7. Diagrama de Secuencia: Autorregistro y Gobernanza ReTHUS de Personal Asistencial
+### 5.7. Diagrama de Secuencia: Registro y Gobernanza ReTHUS de Personal Asistencial
 
 Detalla el ciclo completo de registro público de personal, imposición de inactividad obligatoria (`is_active = FALSE`), bloqueo preventivo de sesión, inspección y cotejo de habilitación ReTHUS por el Administrador TI en el `AdminLayout`, y activación formal con generación de traza de auditoría forense SHA-256 (Resolución 1995 de 1999 y Ley 1581 de 2012):
 
@@ -574,10 +573,10 @@ sequenceDiagram
     participant DB as MySQL 8.0 (Users & Audit)
     actor Admin as Administrador TI (ReTHUS)
 
-    %% Fase 1: Autorregistro Seguro de Personal
-    Note over Personal,DB: FASE 1: Autorregistro con Inactividad Mandatoria (Res. 1995/1999)
-    Personal->>PWA: Diligencia formulario en StaffRegisterModal (Nombre, CC, ReTHUS, Especialidad)
-    PWA->>API: POST /api/v1/auth/register-staff (payload asistencial)
+    %% Fase 1: Registro Seguro de Personal
+    Note over Personal,DB: FASE 1: Registro desde el Perfil del Administrador con Inactividad Mandatoria (Res. 1995/1999)
+    Admin->>PWA: Diligencia formulario en StaffRegisterModal (Nombre, CC, ReTHUS, Especialidad)
+    PWA->>API: POST /api/v1/admin/users (payload asistencial, JWT rol ADMIN)
     API->>Core: RegisterStaff(user, password)
     alt Tarjeta Profesional vacía para Médico o Enfermero
         Core-->>API: ErrMissingProfessionalCard
@@ -588,7 +587,7 @@ sequenceDiagram
         DB-->>Core: OK (Registro almacenado inactivo)
         Core-->>API: Usuario registrado en espera
         API-->>PWA: 201 Created ("Pendiente de verificación ReTHUS por Administrador")
-        PWA-->>Personal: Muestra confirmación de cuenta bloqueada preventivamente
+        PWA-->>Admin: Muestra confirmación de cuenta bloqueada preventivamente
     end
 
     %% Fase 2: Bloqueo de Acceso No Habilitado
@@ -924,7 +923,7 @@ proyecto-final/
 │           │   ├── Sidebar.jsx    # Menú asistencial colapsable (`w-20` / `w-64`) y widget SHA-256
 │           │   ├── AllergyAlertModal.jsx # Modal crítico ante contraindicaciones
 │           │   ├── MfaQrModal.jsx # Modal con QR escaneable en Google Authenticator/Authy
-│           │   └── StaffRegisterModal.jsx # Modal de autorregistro con validación ReTHUS
+│           │   └── StaffRegisterModal.jsx # Modal de registro de personal (perfil admin) con validación ReTHUS
 │           ├── screens/           # Pantallas asistenciales (Stitch Design System)
 │           │   ├── AuthScreen.jsx # Acceso, sede, video de fondo en bucle y QR directo
 │           │   ├── DashboardScreen.jsx # Indicadores KPI y sala de espera Manchester
@@ -946,7 +945,7 @@ proyecto-final/
     │   ├── clinical_record_test.go# Verificación de inmutabilidad y bloqueo de edición
     │   ├── prescription_test.go   # Intercepción de alergias farmacológicas (< 150 ms)
     │   ├── sync_test.go           # Sincronización offline por lotes e idempotencia
-    │   ├── admin_governance_test.go # Pruebas de autorregistro, inactividad y habilitación ReTHUS
+    │   ├── admin_governance_test.go # Pruebas de registro, inactividad y habilitación ReTHUS
     │   ├── fixtures_test.go       # Generadores de datos de prueba institucionales
     │   ├── go.mod                 # Módulo de pruebas de Go
     │   └── go.sum                 # Sumas criptográficas del módulo de pruebas

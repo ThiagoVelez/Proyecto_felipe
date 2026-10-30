@@ -32,8 +32,6 @@ func SetupRoutes(app *fiber.App, cfg RouterConfig) {
 	// 2. Modulo Autenticacion y Credenciales
 	auth := api.Group("/auth")
 	auth.Post("/login", cfg.AuthHandler.Login)
-	auth.Post("/register", cfg.AuthHandler.Register)
-	auth.Post("/register-staff", cfg.AuthHandler.RegisterStaff) // Autorregistro de personal (entra inactivo)
 
 	authProtected := auth.Use(middlewares.AuthMiddleware(cfg.JWTSecret))
 	authProtected.Post("/mfa/setup", cfg.AuthHandler.SetupMFA)
@@ -46,6 +44,7 @@ func SetupRoutes(app *fiber.App, cfg RouterConfig) {
 	if cfg.AdminHandler != nil {
 		admin := protected.Group("/admin", middlewares.RequireRoles("ADMIN"))
 		admin.Get("/users", cfg.AdminHandler.ListUsers)
+		admin.Post("/users", cfg.AuthHandler.RegisterStaff) // Registro de personal por el administrador (entra inactivo)
 		admin.Patch("/users/:id/status", cfg.AdminHandler.UpdateUserStatus)
 		admin.Get("/audit-logs", cfg.AdminHandler.GetAuditLogs)
 	}

@@ -2,7 +2,6 @@ flowchart LR
     subgraph Actores ["Actores del Sistema"]
         Medico["Médico Tratante (Dr. Santiago Vélez)"]
         Enfermero["Enfermero / Triaje"]
-        Postulante["Personal en Autorregistro"]
         Auditor["Auditor Clínico"]
         Admin["Administrador del Sistema"]
     end
@@ -17,12 +16,12 @@ flowchart LR
         CU07(["CU07: Sincronización Offline-First Rural por Lotes"])
         CU08(["CU08: Exportación Interoperable RIPS JSON y HL7 FHIR"])
         CU09(["CU09: Auditoría Forense y Trazabilidad de Hashes"])
-        CU10(["CU10: Autorregistro con Inactividad Mandatoria (Res. 1995)"])
+        CU10(["CU10: Registro de Personal con Inactividad Mandatoria (Res. 1995)"])
         CU11(["CU11: Gobernanza ReTHUS, Habilitación y Suspensión"])
         CU12(["CU12: Gestión de Sedes y Catálogo Farmacéutico CUM"])
     end
 
-    Postulante --> CU10
+    Admin --> CU10
     CU10 -.->|"<<include>>"| CU09
 
     Medico --> CU01

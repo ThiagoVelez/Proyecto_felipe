@@ -23,8 +23,10 @@ import {
   UserCheck,
   Calendar,
   Share2,
+  UserPlus,
 } from 'lucide-react';
 import { MEDICAL_BANNERS } from '../components/UserProfileModal';
+import StaffRegisterModal from '../components/StaffRegisterModal';
 
 // Ilustración vectorial de cada banner médico
 const BannerArtwork = ({ bannerId }) => {
@@ -113,6 +115,7 @@ export const ProfileScreen = ({ user, onUpdateUser, onNavigate }) => {
   );
   const [shiftHours, setShiftHours] = useState(savedProfile.shiftHours || 'Turno Mañana (07:00 - 13:00 COT)');
   const [saveFeedback, setSaveFeedback] = useState('');
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
 
   const currentBanner = MEDICAL_BANNERS.find((b) => b.id === bannerId) || MEDICAL_BANNERS[2];
   const roleTitle = user?.role === 'ADMIN' || Number(user?.role_id) === 1 ? 'ADMINISTRADOR TI' : (user?.role || 'MEDICO');
@@ -329,7 +332,17 @@ export const ProfileScreen = ({ user, onUpdateUser, onNavigate }) => {
             </div>
 
             {/* Botón de Edición */}
-            <div className="flex items-center gap-2.5 self-center lg:self-end mt-2 lg:mt-0 mb-1">
+            <div className="flex items-center gap-2.5 self-center lg:self-end mt-2 lg:mt-0 mb-1 shrink-0 whitespace-nowrap">
+              {roleTitle === 'ADMINISTRADOR TI' && (
+                <button
+                  type="button"
+                  onClick={() => setShowRegisterModal(true)}
+                  className="px-5 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white font-bold text-xs flex items-center gap-2 shadow-sm transition-all cursor-pointer"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  <span>Registrar Personal</span>
+                </button>
+              )}
               {isEditing ? (
                 <button
                   type="button"
@@ -714,6 +727,11 @@ export const ProfileScreen = ({ user, onUpdateUser, onNavigate }) => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Montaje condicional: cada registro inicia con el formulario limpio, sin la clave del anterior */}
+      {showRegisterModal && (
+        <StaffRegisterModal isOpen={showRegisterModal} onClose={() => setShowRegisterModal(false)} />
       )}
     </div>
   );

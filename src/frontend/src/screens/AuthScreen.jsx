@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   ShieldCheck,
   Lock,
-  Building2,
   Mail,
   KeyRound,
   Eye,
@@ -17,12 +16,12 @@ import {
   CheckCircle2,
   RefreshCw,
   QrCode,
-  UserPlus,
   ShieldAlert,
 } from 'lucide-react';
 import LoginBackground from '../components/LoginBackground';
+import BranchAccordion from '../components/BranchAccordion';
 import MfaQrModal from '../components/MfaQrModal';
-import StaffRegisterModal from '../components/StaffRegisterModal';
+import { loadBranches } from '../services/branches';
 import { apiClient } from '../services/api';
 import {
   calculateTotpCode,
@@ -33,9 +32,10 @@ import {
 } from '../utils/totp';
 
 export const AuthScreen = ({ onLoginSuccess }) => {
-  const [identifier, setIdentifier] = useState('svelez@saludconecta.ips.gov.co');
-  const [branch, setBranch] = useState('Sede Cartago - Hospital Central (Nivel II)');
-  const [password, setPassword] = useState('Urgencias2026*');
+  const [identifier, setIdentifier] = useState('');
+  const [branches] = useState(loadBranches);
+  const [branch, setBranch] = useState(() => branches[0]?.name || '');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [mfaSecret, setMfaSecret] = useState('JBSWY3DPEHPK3PXP');
   const [qrDataUrl, setQrDataUrl] = useState('');
@@ -44,7 +44,6 @@ export const AuthScreen = ({ onLoginSuccess }) => {
   const [highContrast, setHighContrast] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [showQrModal, setShowQrModal] = useState(false);
-  const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Genera el codigo QR directamente para visualizacion inmediata
@@ -247,18 +246,6 @@ export const AuthScreen = ({ onLoginSuccess }) => {
               </div>
             </div>
           </div>
-
-          {/* Botón para abrir el registro de nuevo personal asistencial */}
-          <div className="pt-3 border-t border-white/10 mt-3">
-            <button
-              type="button"
-              onClick={() => setShowRegisterModal(true)}
-              className="w-full h-9 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
-            >
-              <UserPlus className="w-3.5 h-3.5 text-secondary-fixed" />
-              <span>Solicitar Registro Asistencial (ReTHUS)</span>
-            </button>
-          </div>
         </div>
 
         {/* PANEL DERECHO: Formulario de Autenticación y Firma Biométrica/TOTP */}
@@ -295,39 +282,19 @@ export const AuthScreen = ({ onLoginSuccess }) => {
                       value={identifier}
                       onChange={(e) => setIdentifier(e.target.value)}
                       required
-                      placeholder="usuario@saludconecta.ips.gov.co"
+                      placeholder="Ej: usuario@saludconecta.ips.gov.co"
                       className="w-full h-8 pl-8 pr-3 text-xs bg-surface-container-low border border-outline-variant rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-on-surface"
                     />
                     <Mail className="w-3.5 h-3.5 text-outline absolute left-2.5 top-2.5" />
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-[11px] font-semibold text-on-surface mb-1">
-                    Sede Operativa de Turno
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={branch}
-                      onChange={(e) => setBranch(e.target.value)}
-                      className="w-full h-8 pl-8 pr-3 text-xs bg-surface-container-low border border-outline-variant rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-on-surface appearance-none"
-                    >
-                      <option value="Sede Cartago - Hospital Central (Nivel II)">
-                        Sede Cartago - Hospital Central (Nivel II)
-                      </option>
-                      <option value="Sede La Unión (Urgencias)">
-                        Sede La Unión (Urgencias)
-                      </option>
-                      <option value="Sede Tuluá (Ambulatoria)">
-                        Sede Tuluá (Ambulatoria)
-                      </option>
-                      <option value="Brigada Rural (PWA Sync)">
-                        Brigada Rural (PWA Sync)
-                      </option>
-                    </select>
-                    <Building2 className="w-3.5 h-3.5 text-outline absolute left-2.5 top-2.5 pointer-events-none" />
-                  </div>
-                </div>
+                <BranchAccordion
+                  label="Sede Operativa de Turno"
+                  branches={branches}
+                  value={branch}
+                  onChange={setBranch}
+                />
               </div>
 
               {/* Contraseña */}
@@ -346,7 +313,7 @@ export const AuthScreen = ({ onLoginSuccess }) => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    placeholder="••••••••••••"
+                    placeholder="Ej: MiClave2026*"
                     className="w-full h-8 pl-8 pr-9 text-xs bg-surface-container-low border border-outline-variant rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-on-surface"
                   />
                   <KeyRound className="w-3.5 h-3.5 text-outline absolute left-2.5 top-2.5" />
@@ -483,17 +450,7 @@ export const AuthScreen = ({ onLoginSuccess }) => {
 
           {/* Pie de Página */}
           <div className="pt-2 mt-2 border-t border-surface-container-high flex items-center justify-between text-[11px] text-on-surface-variant">
-            <div className="flex items-center space-x-2">
-              <button
-                type="button"
-                onClick={() => setShowRegisterModal(true)}
-                className="text-primary hover:underline font-semibold cursor-pointer text-[11px]"
-              >
-                Registrar Personal
-              </button>
-              <span className="text-outline">•</span>
-              <span className="font-mono text-[9px] text-outline">Build 2026.02-prod</span>
-            </div>
+            <span className="font-mono text-[9px] text-outline">Build 2026.02-prod</span>
 
             {/* Switch Accesibilidad WCAG AAA */}
             <div className="flex items-center space-x-1.5 bg-surface-container-low px-2 py-0.5 rounded-full border border-outline-variant/30">
@@ -523,15 +480,6 @@ export const AuthScreen = ({ onLoginSuccess }) => {
         onClose={() => setShowQrModal(false)}
         secret={mfaSecret}
         email={identifier}
-      />
-
-      {/* MODAL DE AUTORREGISTRO ASISTENCIAL RE-THUS */}
-      <StaffRegisterModal
-        isOpen={showRegisterModal}
-        onClose={() => setShowRegisterModal(false)}
-        onRegisterSuccess={() => {
-          setStatusMessage('Registro enviado. Su cuenta está en cola de aprobación administrativa.');
-        }}
       />
     </div>
   );

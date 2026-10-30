@@ -14,10 +14,9 @@ import { apiClient } from './services/api';
 export function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     try {
-      const active = localStorage.getItem('saludconecta_session_active');
       const token = localStorage.getItem('saludconecta_token');
       const storedUser = localStorage.getItem('saludconecta_user');
-      return Boolean((active === 'true' || token) && storedUser);
+      return Boolean(token && storedUser);
     } catch {
       return false;
     }

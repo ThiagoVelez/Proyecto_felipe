@@ -91,7 +91,7 @@ export const StaffRegisterModal = ({ isOpen, onClose, onRegisterSuccess }) => {
               <UserPlus className="w-4 h-4 text-secondary-fixed" />
             </div>
             <div>
-              <h2 className="text-sm font-bold leading-tight">Autorregistro de Personal Asistencial</h2>
+              <h2 className="text-sm font-bold leading-tight">Registro de Personal Asistencial</h2>
               <p className="text-[11px] text-white/80">Habilitación y Gobernanza ReTHUS • Res. MinSalud 1995 de 1999</p>
             </div>
           </div>
@@ -112,9 +112,9 @@ export const StaffRegisterModal = ({ isOpen, onClose, onRegisterSuccess }) => {
                 <CheckCircle2 className="w-8 h-8" />
               </div>
               <div className="space-y-1.5 max-w-md mx-auto">
-                <h3 className="text-base font-bold text-on-surface">Solicitud de Registro Enviada</h3>
+                <h3 className="text-base font-bold text-on-surface">Personal Registrado</h3>
                 <p className="text-xs text-on-surface-variant leading-relaxed">
-                  Su cuenta institucional ha sido creada exitosamente bajo la política de seguridad estricta RBAC con estado <strong className="text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded">PENDIENTE DE APROBACIÓN</strong>.
+                  La cuenta institucional ha sido creada exitosamente bajo la política de seguridad estricta RBAC con estado <strong className="text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded">PENDIENTE DE APROBACIÓN</strong>.
                 </p>
               </div>
 
@@ -124,7 +124,7 @@ export const StaffRegisterModal = ({ isOpen, onClose, onRegisterSuccess }) => {
                   <span>Protocolo de Validación Legal ReTHUS:</span>
                 </div>
                 <p className="text-[11px] text-on-surface-variant leading-normal">
-                  De acuerdo con la Resolución 1995 de 1999 y la Ley 1581 de 2012, no se expedirá token de sesión clínica hasta que un Administrador del Sistema verifique formalmente su Tarjeta Profesional ante el registro nacional de talento humano en salud (ReTHUS).
+                  De acuerdo con la Resolución 1995 de 1999 y la Ley 1581 de 2012, no se expedirá token de sesión clínica hasta que la Tarjeta Profesional se verifique ante el registro nacional de talento humano en salud (ReTHUS) y la cuenta se habilite en Gobernanza de Personal.
                 </p>
                 <div className="pt-2 border-t border-outline-variant/20 flex items-center justify-between text-[11px] font-mono text-outline">
                   <span>Tarjeta: {formData.professional_card}</span>
@@ -137,7 +137,7 @@ export const StaffRegisterModal = ({ isOpen, onClose, onRegisterSuccess }) => {
                 onClick={resetAndClose}
                 className="h-10 px-6 rounded-xl bg-primary text-white font-semibold hover:bg-primary-hover transition-colors cursor-pointer shadow-sm text-xs"
               >
-                Entendido, volver al Portal de Acceso
+                Entendido, volver al Perfil
               </button>
             </div>
           ) : (
@@ -359,7 +359,7 @@ export const StaffRegisterModal = ({ isOpen, onClose, onRegisterSuccess }) => {
                   className="h-9 px-5 rounded-xl bg-primary text-white font-semibold hover:bg-primary-hover transition-colors cursor-pointer shadow-sm flex items-center gap-2 disabled:opacity-50"
                 >
                   <UserPlus className="w-4 h-4" />
-                  <span>{loading ? 'Procesando...' : 'Enviar Solicitud ReTHUS'}</span>
+                  <span>{loading ? 'Procesando...' : 'Registrar Personal'}</span>
                 </button>
               </div>
             </form>

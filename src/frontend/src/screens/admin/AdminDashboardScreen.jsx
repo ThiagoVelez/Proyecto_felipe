@@ -28,54 +28,7 @@ import {
   ShieldAlert,
 } from 'lucide-react';
 import { apiClient } from '../../services/api';
-
-// Lista inicial de sedes institucionales
-const INITIAL_BRANCHES = [
-  {
-    id: 'br-01',
-    name: 'Sede Cartago - Hospital Central',
-    level: 'Nivel II • Hospitalario',
-    municipality: 'Cartago, Valle del Cauca',
-    capacity: '6/8 Consultorios • 2 Quirófanos',
-    connectivity: '99.9%',
-    staffCount: 12,
-    status: 'Operativo',
-    description: 'Centro de referencia regional. Servicio de Urgencias 24/7, Consulta Especializada y Quirófanos.',
-  },
-  {
-    id: 'br-02',
-    name: 'Sede La Unión - Urgencias',
-    level: 'Nivel I • Trauma',
-    municipality: 'La Unión, Valle del Cauca',
-    capacity: '3/4 Boxes de Triaje',
-    connectivity: '99.7%',
-    staffCount: 6,
-    status: 'Operativo',
-    description: 'Unidad de Atención Rápida y Estabilización de Trauma. Triaje Manchester sincronizado.',
-  },
-  {
-    id: 'br-03',
-    name: 'Sede Tuluá - Ambulatoria',
-    level: 'Ambulatorio • Promoción & Prevención',
-    municipality: 'Tuluá, Valle del Cauca',
-    capacity: '4/4 Consultorios Médicos',
-    connectivity: '99.8%',
-    staffCount: 5,
-    status: 'Operativo',
-    description: 'Centro de Atención Ambulatoria, Promoción de la Salud y Prevención de la Enfermedad.',
-  },
-  {
-    id: 'br-04',
-    name: 'Brigada Rural Desconectada',
-    level: 'PWA Sync • Atención en Terreno',
-    municipality: 'Zonas Rurales Valle Norte',
-    capacity: 'Módulo Móvil • 0 Folios Pendientes',
-    connectivity: 'Offline (Sync)',
-    staffCount: 3,
-    status: 'En Espera',
-    description: 'Módulo de atención rural en veredas del norte del Valle. Almacenamiento IndexedDB y sincronización por lotes.',
-  },
-];
+import { loadBranches, saveBranches } from '../../services/branches';
 
 // Lista inicial de medicamentos catálogo CUM
 const INITIAL_MEDICINES = [
@@ -158,14 +111,7 @@ export const AdminDashboardScreen = () => {
   const [actionMessage, setActionMessage] = useState('');
 
   // Persistencia de Sedes (CRUD)
-  const [branches, setBranches] = useState(() => {
-    try {
-      const saved = localStorage.getItem('saludconecta_admin_branches');
-      return saved ? JSON.parse(saved) : INITIAL_BRANCHES;
-    } catch {
-      return INITIAL_BRANCHES;
-    }
-  });
+  const [branches, setBranches] = useState(loadBranches);
 
   // Persistencia de Medicamentos CUM (CRUD)
   const [medicines, setMedicines] = useState(() => {
@@ -268,7 +214,7 @@ export const AdminDashboardScreen = () => {
 
   // Guardar sedes y medicamentos en localStorage cuando cambien
   useEffect(() => {
-    localStorage.setItem('saludconecta_admin_branches', JSON.stringify(branches));
+    saveBranches(branches);
   }, [branches]);
 
   useEffect(() => {

@@ -7,10 +7,10 @@ sequenceDiagram
     participant DB as MySQL 8.0 (Users & Audit)
     actor Admin as Administrador TI (ReTHUS)
 
-    %% Fase 1: Autorregistro Seguro de Personal
-    Note over Personal,DB: FASE 1: Autorregistro con Inactividad Mandatoria (Res. 1995/1999)
-    Personal->>PWA: Diligencia formulario en StaffRegisterModal (Nombre, CC, ReTHUS, Especialidad)
-    PWA->>API: POST /api/v1/auth/register-staff (payload asistencial)
+    %% Fase 1: Registro Seguro de Personal
+    Note over Personal,DB: FASE 1: Registro desde el Perfil del Administrador con Inactividad Mandatoria (Res. 1995/1999)
+    Admin->>PWA: Diligencia formulario en StaffRegisterModal (Nombre, CC, ReTHUS, Especialidad)
+    PWA->>API: POST /api/v1/admin/users (payload asistencial, JWT rol ADMIN)
     API->>Core: RegisterStaff(user, password)
     alt Tarjeta Profesional vacía para Médico o Enfermero
         Core-->>API: ErrMissingProfessionalCard
@@ -21,7 +21,7 @@ sequenceDiagram
         DB-->>Core: OK (Registro almacenado inactivo)
         Core-->>API: Usuario registrado en espera
         API-->>PWA: 201 Created ("Pendiente de verificación ReTHUS por Administrador")
-        PWA-->>Personal: Muestra confirmación de cuenta bloqueada preventivamente
+        PWA-->>Admin: Muestra confirmación de cuenta bloqueada preventivamente
     end
 
     %% Fase 2: Bloqueo de Acceso No Habilitado

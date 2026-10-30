@@ -101,56 +101,7 @@ type RegisterRequest struct {
 	Branch           string `json:"branch"`
 }
 
-func (h *AuthHandler) Register(c *fiber.Ctx) error {
-	var req RegisterRequest
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Parametros de registro invalidos",
-		})
-	}
-
-	if req.Email == "" || req.Password == "" || req.FullName == "" || req.RoleID <= 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Los campos role_id, full_name, email y password son obligatorios",
-		})
-	}
-
-	if req.DocumentType == "" {
-		req.DocumentType = "CC"
-	}
-
-	user := &domain.User{
-		ID:               uuid.New().String(),
-		RoleID:           req.RoleID,
-		FullName:         req.FullName,
-		DocumentType:     req.DocumentType,
-		DocumentNumber:   req.DocumentNumber,
-		Email:            req.Email,
-		Phone:            req.Phone,
-		ProfessionalCard: req.ProfessionalCard,
-		Specialty:        req.Specialty,
-		Branch:           req.Branch,
-		IsActive:         true,
-	}
-
-	if err := h.authService.Register(c.Context(), user, req.Password); err != nil {
-		if errors.Is(err, domain.ErrEmailAlreadyRegistered) {
-			return c.Status(fiber.StatusConflict).JSON(fiber.Map{
-				"error": err.Error(),
-			})
-		}
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Error interno registrando usuario",
-		})
-	}
-
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"message": "Usuario registrado exitosamente",
-		"user_id": user.ID,
-	})
-}
-
-// RegisterStaff gestiona el registro publico de personal asistencial con validacion ReTHUS y estado inactivo
+// RegisterStaff gestiona el registro de personal asistencial por un administrador con validacion ReTHUS y estado inactivo
 func (h *AuthHandler) RegisterStaff(c *fiber.Ctx) error {
 	var req RegisterRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -201,12 +152,12 @@ func (h *AuthHandler) RegisterStaff(c *fiber.Ctx) error {
 			})
 		}
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Error interno procesando autorregistro asistencial",
+			"error": "Error interno procesando registro asistencial",
 		})
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"message":   "Registro de personal asistencial exitoso. Su cuenta ha sido creada en estado PENDIENTE DE APROBACIÓN y será habilitada tras la verificación ReTHUS por un Administrador.",
+		"message":   "Registro de personal asistencial exitoso. La cuenta ha sido creada en estado PENDIENTE DE APROBACIÓN y será habilitada tras la verificación ReTHUS por un Administrador.",
 		"user_id":   user.ID,
 		"is_active": false,
 	})

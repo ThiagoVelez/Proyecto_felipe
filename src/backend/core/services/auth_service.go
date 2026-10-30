@@ -78,7 +78,7 @@ func (s *authService) RegisterStaff(ctx context.Context, user *domain.User, plai
 		return domain.ErrMissingProfessionalCard
 	}
 
-	// Todo autorregistro ingresa bloqueado hasta verificacion administrativa
+	// Todo registro ingresa bloqueado hasta la verificacion ReTHUS
 	user.IsActive = false
 
 	return s.Register(ctx, user, plainPassword)
