@@ -874,7 +874,7 @@ proyecto-final/
 │   │   ├── 11_arquitectura_contenedores_docker.png (.svg / .mmd)
 │   │   └── 12_persistencia_sesion_f5.png (.svg / .mmd)
 │   ├── multimedia/                # Recursos audiovisuales institucionales
-│   │   └── medicina.mp4           # Video de fondo para autenticación clínica en bucle continuo
+│   │   └── medicina.mp4           # Video institucional de referencia (no se usa en la aplicación)
 │   └── stitch_designs/            # Maquetas visuales y capturas oficiales de Stitch
 │       ├── 01_auth_mfa.html (.png)
 │       ├── 02_dashboard_espera.html (.png)

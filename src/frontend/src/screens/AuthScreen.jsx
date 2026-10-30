@@ -20,6 +20,7 @@ import {
   UserPlus,
   ShieldAlert,
 } from 'lucide-react';
+import LoginBackground from '../components/LoginBackground';
 import MfaQrModal from '../components/MfaQrModal';
 import StaffRegisterModal from '../components/StaffRegisterModal';
 import { apiClient } from '../services/api';
@@ -161,22 +162,7 @@ export const AuthScreen = ({ onLoginSuccess }) => {
         highContrast ? 'bg-black text-white' : 'bg-slate-950'
       }`}
     >
-      {/* Video institucional de fondo en bucle continuo y perpetuo */}
-      {!highContrast && (
-        <>
-          <video
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="fixed inset-0 w-full h-full object-cover z-0 pointer-events-none brightness-[0.70] contrast-[1.05]"
-          >
-            <source src="/videos/medicina.mp4" type="video/mp4" />
-          </video>
-          {/* Capa de contraste y difuminado estetico hospitalario */}
-          <div className="fixed inset-0 bg-slate-950/45 backdrop-blur-[1.5px] z-0 pointer-events-none" />
-        </>
-      )}
+      {!highContrast && <LoginBackground />}
 
       <div className="relative z-10 w-full max-w-5xl my-auto shadow-2xl rounded-2xl overflow-hidden bg-white/95 backdrop-blur-md grid grid-cols-1 lg:grid-cols-12 border border-white/20">
         {/* PANEL IZQUIERDO: Identidad Institucional & Gobernanza Clinica */}
