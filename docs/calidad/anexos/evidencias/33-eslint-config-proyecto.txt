@@ -1,0 +1,6 @@
+$ npx eslint src  (config del proyecto src/frontend/eslint.config.js)
+
+✖ 69 problems (0 errors, 69 warnings)
+
+exit=0
+Por regla: {"no-unused-vars":65,"react-hooks/exhaustive-deps":2,"react/no-unescaped-entities":2}

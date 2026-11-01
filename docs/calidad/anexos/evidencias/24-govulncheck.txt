@@ -1,0 +1,19 @@
+$ govulncheck ./...
+=== Symbol Results ===
+
+Vulnerability #1: GO-2025-3845
+    Fiber Crashes in BodyParser Due to Unvalidated Large Slice Index in Decoder
+    in github.com/gofiber/fiber
+  More info: https://pkg.go.dev/vuln/GO-2025-3845
+  Module: github.com/gofiber/fiber/v2
+    Found in: github.com/gofiber/fiber/v2@v2.52.5
+    Fixed in: github.com/gofiber/fiber/v2@v2.52.9
+    Example traces found:
+      #1: adapters/http/handlers/auth_handler.go:195:24: handlers.AuthHandler.EnableMFA calls fiber.Ctx.BodyParser, which eventually calls schema.Decoder.Decode
+
+Your code is affected by 1 vulnerability from 1 module.
+This scan also found 6 vulnerabilities in packages you import and 23
+vulnerabilities in modules you require, but your code doesn't appear to call
+these vulnerabilities.
+Use '-show verbose' for more details.
+exit=3

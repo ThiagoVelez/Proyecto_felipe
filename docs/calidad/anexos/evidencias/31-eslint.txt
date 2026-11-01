@@ -1,0 +1,106 @@
+$ npx eslint src  (copia de src/frontend/src; config: eslint:recommended + react + react-hooks)
+
+<scratchpad>/eslint\src\App.jsx
+  50:10  error  'selectedPatient' is assigned a value but never used  no-unused-vars
+
+<scratchpad>/eslint\src\components\AllergyAlertModal.jsx
+  2:62  error  'CornerDownRight' is defined but never used  no-unused-vars
+
+<scratchpad>/eslint\src\components\Header.jsx
+   4:3  error  'Wifi' is defined but never used          no-unused-vars
+   8:3  error  'ChevronDown' is defined but never used   no-unused-vars
+   9:3  error  'ShieldCheck' is defined but never used   no-unused-vars
+  10:3  error  'Building2' is defined but never used     no-unused-vars
+  11:3  error  'RefreshCw' is defined but never used     no-unused-vars
+  12:3  error  'User' is defined but never used          no-unused-vars
+  19:3  error  'currentView' is defined but never used   no-unused-vars
+  23:3  error  'onUpdateUser' is defined but never used  no-unused-vars
+
+<scratchpad>/eslint\src\components\MfaQrModal.jsx
+  10:3  error  'ShieldCheck' is defined but never used   no-unused-vars
+  11:3  error  'ExternalLink' is defined but never used  no-unused-vars
+
+<scratchpad>/eslint\src\components\Sidebar.jsx
+  9:3  error  'Lock' is defined but never used  no-unused-vars
+
+<scratchpad>/eslint\src\components\UserProfileModal.jsx
+   1:35  error  'useEffect' is defined but never used    no-unused-vars
+  20:3   error  'Stethoscope' is defined but never used  no-unused-vars
+  23:3   error  'UserCheck' is defined but never used    no-unused-vars
+  24:3   error  'QrCode' is defined but never used       no-unused-vars
+
+<scratchpad>/eslint\src\screens\AuthScreen.jsx
+  13:3  error    'PhoneCall' is defined but never used                                                                            no-unused-vars
+  16:3  error    'CheckCircle2' is defined but never used                                                                         no-unused-vars
+  19:3  error    'ShieldAlert' is defined but never used                                                                          no-unused-vars
+  70:6  warning  React Hook useEffect has a missing dependency: 'updateQrCode'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+<scratchpad>/eslint\src\screens\DashboardScreen.jsx
+  12:3  error  'Activity' is defined but never used      no-unused-vars
+  16:3  error  'CheckCircle2' is defined but never used  no-unused-vars
+
+<scratchpad>/eslint\src\screens\HceScreen.jsx
+  15:3  error  'Clock' is defined but never used     no-unused-vars
+  16:3  error  'Sparkles' is defined but never used  no-unused-vars
+
+<scratchpad>/eslint\src\screens\PrescriptionScreen.jsx
+   4:3  error  'Search' is defined but never used         no-unused-vars
+   5:3  error  'AlertTriangle' is defined but never used  no-unused-vars
+   7:3  error  'Clock' is defined but never used          no-unused-vars
+  13:3  error  'History' is defined but never used        no-unused-vars
+  14:3  error  'FileCheck' is defined but never used      no-unused-vars
+
+<scratchpad>/eslint\src\screens\ProfileScreen.jsx
+  16:3  error  'Activity' is defined but never used    no-unused-vars
+  17:3  error  'HeartPulse' is defined but never used  no-unused-vars
+  18:3  error  'Pill' is defined but never used        no-unused-vars
+  19:3  error  'Baby' is defined but never used        no-unused-vars
+  20:3  error  'Scissors' is defined but never used    no-unused-vars
+  23:3  error  'UserCheck' is defined but never used   no-unused-vars
+  24:3  error  'Calendar' is defined but never used    no-unused-vars
+  25:3  error  'Share2' is defined but never used      no-unused-vars
+
+<scratchpad>/eslint\src\screens\SecurityMfaScreen.jsx
+   3:3   error    'ShieldCheck' is defined but never used                                                                              no-unused-vars
+   6:3   error    'KeyRound' is defined but never used                                                                                 no-unused-vars
+  11:3   error    'FileCheck2' is defined but never used                                                                               no-unused-vars
+  12:3   error    'Fingerprint' is defined but never used                                                                              no-unused-vars
+  14:3   error    'ExternalLink' is defined but never used                                                                             no-unused-vars
+  15:3   error    'Laptop' is defined but never used                                                                                   no-unused-vars
+  29:37  error    'onLogout' is defined but never used                                                                                 no-unused-vars
+  68:6   warning  React Hook useEffect has a missing dependency: 'syncSecurityTotp'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+<scratchpad>/eslint\src\screens\TriageScreen.jsx
+   5:3  error  'AlertTriangle' is defined but never used  no-unused-vars
+  12:3  error  'User' is defined but never used           no-unused-vars
+
+<scratchpad>/eslint\src\screens\admin\AdminDashboardScreen.jsx
+     9:3   error  'XCircle' is defined but never used                              no-unused-vars
+    17:3   error  'Eye' is defined but never used                                  no-unused-vars
+    18:3   error  'Server' is defined but never used                               no-unused-vars
+    23:3   error  'Save' is defined but never used                                 no-unused-vars
+    24:3   error  'Check' is defined but never used                                no-unused-vars
+    26:3   error  'AlertCircle' is defined but never used                          no-unused-vars
+    27:3   error  'HelpCircle' is defined but never used                           no-unused-vars
+    28:3   error  'ShieldAlert' is defined but never used                          no-unused-vars
+   109:22  error  'setFilterRole' is assigned a value but never used               no-unused-vars
+   783:25  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+   783:37  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  1631:18  error  'setStatus' is assigned a value but never used                   no-unused-vars
+
+<scratchpad>/eslint\src\screens\admin\AdminLayout.jsx
+   3:3  error  'ShieldAlert' is defined but never used  no-unused-vars
+   4:3  error  'Users' is defined but never used        no-unused-vars
+   5:3  error  'Activity' is defined but never used     no-unused-vars
+   6:3  error  'Building2' is defined but never used    no-unused-vars
+   7:3  error  'Pill' is defined but never used         no-unused-vars
+   9:3  error  'Clock' is defined but never used        no-unused-vars
+  11:3  error  'Server' is defined but never used       no-unused-vars
+  12:3  error  'ArrowLeft' is defined but never used    no-unused-vars
+
+<scratchpad>/eslint\src\utils\totp.js
+  93:12  error  'err' is defined but never used  no-unused-vars
+
+✖ 69 problems (67 errors, 2 warnings)
+
+exit=1
