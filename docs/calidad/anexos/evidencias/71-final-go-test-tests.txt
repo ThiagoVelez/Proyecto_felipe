@@ -1,0 +1,32 @@
+$ go test -count=1 -v -coverpkg=saludconecta-backend/... -coverprofile=coverage.out ./...  (tests/backend, estado final)
+--- PASS: TestStaffGovernanceAndReTHUSVerification (1.06s)
+--- PASS: TestDEF28AuditoriaConservaDatosTrasFinalizarPeticion (0.00s)
+--- SKIP: TestDEF06CruceAlergiasReactividadCruzadaYTildes (0.00s)
+--- SKIP: TestDEF07SincronizacionNoSobrescribeFolioCerrado (0.00s)
+--- SKIP: TestDEF09HipotermiaSeveraNoEsNoUrgente (0.00s)
+--- SKIP: TestDEF13TokenDeUsuarioDesactivadoEsRechazado (0.00s)
+--- SKIP: TestDEF14SetupMFANoDesactivaSegundoFactor (0.00s)
+--- SKIP: TestDEF16CierreConcurrenteNoBifurcaCadena (0.00s)
+--- SKIP: TestDEF17MedicoNoCierraFolioAjeno (0.00s)
+--- SKIP: TestDEF18SincronizacionUsaMedicoAutenticado (0.00s)
+--- SKIP: TestDEF29HashSinColisionPorDelimitador (0.00s)
+--- SKIP: TestDEF30VerificacionValidaEnlaceConFolioAnterior (0.00s)
+--- SKIP: TestDEF31LoginNoRevelaCuentaInactivaConClaveErronea (0.00s)
+--- SKIP: TestDEF37LecturaConcurrenteDeFolioSinCarrera (0.00s)
+--- PASS: TestClinicalRecordImmutabilityAndClosingPolicy (0.59s)
+--- PASS: TestDEF41CorrelationIDSoloAceptaUUID (0.00s)
+--- PASS: TestDEF05PrescripcionRechazaPacienteDistintoAlFolio (0.55s)
+--- PASS: TestPrescriptionAllergyInterceptor (1.06s)
+--- PASS: TestRBACMatrizRutasPorRol (0.56s)
+--- PASS: TestRNF01LatenciaBajoConcurrencia (0.63s)
+--- PASS: TestStaffRegisterRequiresAdmin (0.85s)
+--- PASS: TestRuralOfflineBatchSynchronization (0.53s)
+--- PASS: TestTriageEquivalencePartitioningAndBoundaryValues (0.55s)
+--- PASS: TestH23LimitesGlasgowNoCubiertos (0.00s)
+--- PASS: TestDEF27FrecuenciaCardiacaLimiteSuperior (0.00s)
+--- PASS: TestDEF08NivelManchesterFueraDelCatalogo (0.57s)
+PASS
+coverage: 60.3% of statements in saludconecta-backend/...
+ok  	saludconecta-tests	6.993s	coverage: 60.3% of statements in saludconecta-backend/...
+exit=0
+total:										(statements)			60.3%

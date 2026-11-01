@@ -1,0 +1,95 @@
+go version go1.27.3 windows/amd64
+windows
+amd64
+0
+v24.21.0
+11.19.0
+go 1.22
+
+use (
+	./src/backend
+	./tests/backend
+)
+
+module saludconecta-backend
+
+go 1.22
+
+require (
+	github.com/go-sql-driver/mysql v1.8.1
+	github.com/gofiber/fiber/v2 v2.52.5
+	github.com/golang-jwt/jwt/v5 v5.3.1
+	github.com/google/uuid v1.6.0
+	github.com/lib/pq v1.12.3
+	golang.org/x/crypto v0.24.0
+)
+
+require (
+	filippo.io/edwards25519 v1.1.0 // indirect
+	github.com/andybalholm/brotli v1.1.0 // indirect
+	github.com/klauspost/compress v1.17.9 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/mattn/go-runewidth v0.0.16 // indirect
+
+module saludconecta-tests
+
+go 1.22
+
+require (
+	github.com/google/uuid v1.6.0
+	saludconecta-backend v0.0.0
+)
+
+require (
+	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
+	golang.org/x/crypto v0.24.0 // indirect
+)
+
+replace saludconecta-backend => ../../src/backend
+
+{
+  "name": "saludconecta-frontend",
+  "private": true,
+  "version": "2.4.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "lucide-react": "^0.460.0",
+    "qrcode": "^1.5.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.0.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "jsdom": "^25.0.1",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.15",
+    "vite": "^5.4.11",
+    "vitest": "^2.1.8"
+  }
+}
+$ npm ls --depth=0
+saludconecta-frontend@2.4.0 src\frontend
++-- @testing-library/jest-dom@6.9.1
++-- @testing-library/react@16.3.3
++-- @vitejs/plugin-react@4.7.0
++-- autoprefixer@10.6.2
++-- jsdom@25.0.1
++-- lucide-react@0.460.0
++-- postcss@8.5.32
++-- qrcode@1.5.4
++-- react-dom@18.3.1
++-- react@18.3.1
++-- tailwindcss@3.4.19
++-- vite@5.4.21
+`-- vitest@2.1.9
+

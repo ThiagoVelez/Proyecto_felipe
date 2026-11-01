@@ -1,0 +1,6 @@
+Concurrencia=20, peticiones por escenario=1000
+| Escenario | p50 (ms) | p95 (ms) | p99 (ms) | max (ms) |
+|---|---|---|---|---|
+| emision de prescripcion | 0.14 | 2.26 | 4.66 | 8.62 |
+| intercepcion de alergia | 0.00 | 1.91 | 5.05 | 9.57 |
+| lectura de historia clinica | 0.00 | 1.81 | 4.66 | 13.59 |

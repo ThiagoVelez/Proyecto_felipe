@@ -1,0 +1,9 @@
+# Binario compilado desde 6492f07 (estado previo). Sin JWT_SECRET; MySQL inaccesible (DB_PORT=1).
+# Token HS256 forjado con el secreto por defecto de cmd/api/main.go:39 (valor no reproducido aqui).
+$ curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer <token-forjado>" http://127.0.0.1:18081/api/v1/clinical-records/patient/cualquiera
+200
+
+# Registro de arranque (extracto):
+{"timestamp":"2026-11-01T21:39:13.9610967Z","level":"ERROR","message":"No fue posible inicializar el adaptador principal configurado","fields":{"driver":"mysql","error":"fallo conexion al adaptador my
+{"timestamp":"2026-11-01T21:39:13.9616218Z","level":"WARN","message":"Conmutando a Adaptador en Memoria para permitir pruebas inmediatas con gobernanza"}
+{"timestamp":"2026-11-01T21:39:14.5390271Z","level":"INFO","message":"Servidor HTTP Fiber v2 en escucha","fields":{"address":":18081","port":"18081"}}

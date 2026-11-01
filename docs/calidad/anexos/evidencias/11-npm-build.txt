@@ -1,0 +1,15 @@
+$ npm run build
+
+> saludconecta-frontend@2.4.0 build
+> vite build
+
+vite v5.4.21 building for production...
+transforming...
+✓ 1671 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.80 kB │ gzip:   0.45 kB
+dist/assets/index-DaUR8dd1.css   48.99 kB │ gzip:   8.83 kB
+dist/assets/index-wF6H60-N.js   424.69 kB │ gzip: 106.74 kB
+✓ built in 7.41s
+exit=0

@@ -1,0 +1,8 @@
+$ go list -f "{{.ImportPath}}: {{join .Imports \" \"}}" ./core/...
+saludconecta-backend/core/domain: errors fmt time
+saludconecta-backend/core/ports: context saludconecta-backend/core/domain time
+saludconecta-backend/core/services: context github.com/google/uuid saludconecta-backend/core/domain saludconecta-backend/core/ports saludconecta-backend/pkg/crypto strings time
+
+$ go list -deps ./core/... | grep -E "adapters|fiber|database/sql|mysql|lib/pq"
+database/sql/internal
+database/sql/driver
