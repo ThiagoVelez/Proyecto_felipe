@@ -1,33 +1,28 @@
-# Informe de Calidad de Software: SaludConecta IPS v2.4
+# Informe de calidad de software: SaludConecta IPS v2.4
 
-## 1. Modelo de Evaluacion de Calidad (ISO/IEC 25010)
+> Versión actualizada por el Responsable de Calidad el 2026-11-01 (rama `calidad/auditoria-iso25010`). El detalle, las mediciones y la evidencia están en el paquete [`docs/calidad/`](calidad/README.md). Este informe resume ese paquete y reemplaza las afirmaciones no verificadas de la versión anterior.
 
-La evaluacion integral del producto software «SaludConecta IPS v2.4» se rige por las ocho caracteristicas de calidad del estandar internacional **ISO/IEC 25010**:
+## 1. Modelo de evaluación de calidad (ISO/IEC 25010:2023)
 
-1. **Adecuacion Funcional (Completitud, Correccion y Pertinencia):**
-   - El sistema cumple con el 100% de las funciones clinicas prescritas por la Resolucion 1995 (HCE) y la Resolucion 2275 (RIPS).
-   - Se valida el calculo estricto del triage Manchester y la intercepcion de colisiones por alergia.
-2. **Eficiencia de Desempeno (Comportamiento Temporal y Utilizacion de Recursos):**
-   - Latencia media en verificacion de alergias: **< 10 ms** en memoria y **< 35 ms** sobre base de datos indexada.
-   - Utilizacion eficiente del pool de conexiones MySQL/PostgreSQL con liberacion automatica y limitacion de consumo maximo.
-3. **Compatibilidad e Interoperabilidad:**
-   - Soporte nativo de transformacion a estandares abiertos internacionales: JSON RIPS MinSalud y HL7 FHIR Release 4.
-4. **Usabilidad y Accesibilidad:**
-   - Diseno centrado en el usuario asistencial con respuesta visual inmediata ante eventos adversos severos en rojo de alta visibilidad.
-5. **Fiabilidad (Madurez, Disponibilidad y Tolerancia a Fallos):**
-   - Recuperacion transparente ante panicos no controlados en controladores mediante middleware `recover`.
-   - Conmutacion automatica a modo degradado en memoria si el motor SQL configurado no responde en el arranque.
-6. **Seguridad (Confidencialidad, Integridad, No Repudio y Autenticidad):**
-   - Sellado SHA-256 encadenado y disparadores de base de datos que impiden fisicamente la eliminacion de registros clinicos.
-   - Autenticacion robusta con Bcrypt, JWT firmado y segundo factor TOTP (RFC 6238).
-7. **Mantenibilidad (Modularidad, Reutilizacion, Modificabilidad y Evaluabilidad):**
-   - Arquitectura Hexagonal pura: el dominio es agnostico a frameworks web y motores de datos. Reemplazar MySQL por PostgreSQL o Memoria toma 0 cambios en el core.
-8. **Portabilidad:**
-   - Compatibilidad multiplataforma en sistemas Linux, Windows y contenedores Docker sin acoplamiento a librerias propietarias del sistema operativo.
+La versión anterior usaba las 8 características de ISO/IEC 25010:2011. La norma vigente es **ISO/IEC 25010:2023**, que define 9 características: incorpora la **Seguridad operacional (*Safety*)**, renombra Usabilidad como **Capacidad de interacción** y Portabilidad como **Flexibilidad**. En un sistema clínico, *Safety* es la característica que agrupa los riesgos de daño al paciente.
 
----
+Métricas, fórmulas y umbrales: [`calidad/02-modelo-calidad-iso25010-2023.md`](calidad/02-modelo-calidad-iso25010-2023.md).
 
-## 2. Bitacora de Defectos Registrados (Bug Log)
+| Característica | Semáforo | Resultado medido | Evidencia |
+|---|---|---|---|
+| 1. Adecuación funcional | Rojo | 5 de 10 RF funcionan de extremo a extremo (API e interfaz); 9 de 10 RF tienen al menos una prueba. La afirmación anterior de «100 % de las funciones clínicas» no tenía medición y es falsa (DEF-21, DEF-26). | `calidad/04-bitacora-defectos.md` |
+| 2. Eficiencia de desempeño | Verde | p95 entre 1,81 y 2,99 ms con 20 clientes concurrentes en proceso y almacén en memoria (emisión de prescripción, intercepción de alergia y lectura de historia). Las cifras anteriores (< 10 ms en memoria y < 35 ms con BD) no tenían registro de medición; la de memoria es compatible con lo medido y la de base de datos queda **No medida** (sin MySQL en el entorno de evaluación). | `calidad/anexos/evidencias/74-rendimiento-corrida*.txt` |
+| 3. Compatibilidad | Amarillo | Existen exportadores RIPS JSON y HL7 FHIR R4, con 10,5 % de cobertura de pruebas; la conformidad con los esquemas oficiales queda **No medida**. | `calidad/anexos/evidencias/72-final-cover-por-paquete.txt` |
+| 4. Capacidad de interacción | Rojo | El contraste mínimo de texto sobre los banners es 1,85:1, frente al 7:1 de WCAG AAA declarado en RF09 (DEF-36); 6 de 8 operaciones del cliente ocultan errores del servidor (DEF-22). | `calidad/anexos/evidencias/40-contraste-banners.txt` |
+| 5. Fiabilidad | Rojo | La conmutación automática a memoria cuando MySQL no responde, que la versión anterior presentaba como fortaleza, provoca pérdida silenciosa de registros (DEF-10). El healthcheck no verifica la base de datos (DEF-32). Densidad de defectos: 2,77 por KLOC. | `calidad/04-bitacora-defectos.md` |
+| 6. Seguridad | Rojo | Cumplimiento estricto de OWASP ASVS 4.0.3 L2 del 34,0 % sobre 53 requisitos. Bcrypt, JWT firmado y TOTP existen, pero con credenciales sembradas (DEF-11), tokens no revocables (DEF-13) y MFA desactivable (DEF-14). La matriz RBAC es correcta en 110 de 110 combinaciones. | `calidad/05-auditoria-owasp-asvs-l2.md`, `calidad/anexos/matriz-rbac.md` |
+| 7. Mantenibilidad | Amarillo | Se verificó la arquitectura hexagonal: el dominio no importa adaptadores. Complejidad ciclomática media de 3,5. Duplicación del 14,46 % entre adaptadores MySQL y PostgreSQL. Cobertura del backend: 60,3 % (38,7 % antes de la auditoría); del frontend: 40,9 %. | `calidad/anexos/analisis-estatico.md` |
+| 8. Flexibilidad | Amarillo | El adaptador de persistencia se reemplaza por configuración, pero los triggers de inmutabilidad solo existen en MySQL (DEF-25). Compila y se ejecuta en Windows; Docker Compose queda **No medido**. | `calidad/anexos/linea-base.md` |
+| 9. Seguridad operacional (*Safety*) | Rojo | El cruce de alergias no detecta reactividad cruzada (DEF-06) y la hipotermia severa se clasifica como no urgente (DEF-09). Se corrigieron en la rama la prescripción con un paciente distinto al del folio (DEF-05), los niveles Manchester inválidos (DEF-08) y la frecuencia cardíaca mayor de 300 lpm (DEF-27). | `calidad/04-bitacora-defectos.md` |
+
+## 2. Bitácora de defectos
+
+La bitácora completa, con DEF-05 a DEF-45 y la verificación de las correcciones históricas, está en [`calidad/04-bitacora-defectos.md`](calidad/04-bitacora-defectos.md). Los registros DEF-01 a DEF-04 se conservan abajo **sin modificar su contenido original**, incluida su ortografía, porque forman parte del historial del proyecto.
 
 | ID Defecto | Modulo Afectado | Severidad | Descripcion | Causa Raiz | Estrategia de Solucion |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -36,18 +31,27 @@ La evaluacion integral del producto software «SaludConecta IPS v2.4» se rige p
 | **DEF-03** | Auditoria / HTTP | **Media** | Panico intermitente en goroutines de registro de auditoria (`runtime error: invalid memory address or nil pointer dereference`). | GoFiber reutiliza los contextos `fiber.Ctx` y buffers subyacentes de `fasthttp` una vez que la peticion HTTP finaliza. La goroutine asincrona leia punteros reciclados. | Aislamiento y clonacion profunda de los datos primitivos de auditoria (`correlationID`, `userID`, `path`, `ip`) antes del despacho de la goroutine, eliminando condiciones de carrera y dependencias del ciclo de vida del contexto web. |
 | **DEF-04** | Triaje de Urgencias | **Media** | Registro indebido de valores fuera de escala en la variable Glasgow (ej. puntuaciones de 0 o 18 ingresadas por digitacion manual erratica). | La entidad `TriageRecord` carecia de una validacion de invariantes en su metodo de creacion en el dominio. | Incorporacion del metodo `Validate()` en la entidad de dominio `TriageRecord` que verifica que la puntuacion de Glasgow este estrictamente en el intervalo cerrado $[3, 15]$, retornando `ErrInvalidGlasgowScore`. |
 
----
+**Verificación de las correcciones históricas (2026-11-01):**
 
-## 3. Acciones de Mantenimiento Preventivo y Refactorizacion Ejecutadas
+- DEF-01: **Parcial**. Trigger solo en MySQL; la guardia de dominio no se invoca.
+- DEF-02: **Parcial**. El índice existe; la caché no se encontró.
+- DEF-03: **Parcial**. Las cadenas no se copiaban; corregido como DEF-28.
+- DEF-04: **Confirmada**.
 
-1. **Desacoplamiento Estricto mediante Puertos e Inversion de Dependencias:**
-   - Se erradico cualquier dependencia directa de MySQL dentro de los servicios. Ahora los casos de uso dependen exclusivamente de interfaces de repositorio (`ports.UserRepository`, `ports.PatientRepository`, etc.), permitiendo que adaptadores como PostgreSQL o el almacen en memoria (`memory.DataStore`) se conecten sin friccion.
-2. **Centralizacion del Manejador de Errores y Estandarizacion de Respuestas:**
-   - Se homologaron los codigos de estado HTTP en el servidor Fiber:
-     * `401 Unauthorized` para tokens invalidos o credenciales incorrectas.
-     * `403 Forbidden` para accesos denegados por RBAC o intentos de mutacion sobre folios clinicos cerrados.
-     * `422 Unprocessable Entity` para datos fisiologicos fuera de rango o alertas de seguridad por alergias farmacologicas.
-3. **Proteccion contra Fugas de Informacion Sensible:**
-   - Se configuro `.gitignore` integral para impedir el rastreo de archivos `.env`.
-   - Se anonimizaron todos los ejemplos en la documentacion publica con marcadores genericos de posicion.
+Detalle en la bitácora.
 
+Resumen de los defectos nuevos: 41, de los cuales 7 son Críticos, 15 Altos, 14 Medios y 5 Bajos; 6 se corrigieron en la rama de auditoría con una prueba de regresión que falla antes y pasa después.
+
+## 3. Acciones de mantenimiento
+
+### 3.1 Acciones ejecutadas antes de la auditoría (verificadas)
+
+1. **Desacoplamiento mediante puertos e inversión de dependencias.** **Verificada:** `core/` depende solo de `ports`, `domain`, `pkg/crypto` y bibliotecas estándar (`calidad/anexos/evidencias/41-arquitectura.txt`).
+2. **Homologación de códigos HTTP (401, 403, 422).** **Parcial:** se cumple en autenticación y RBAC; cerrar un folio ya cerrado devuelve 409 (no 403) y algunos casos de «no encontrado» devuelven 500 (DEF-44).
+3. **Protección contra fugas de información.** **Parcial:** `.gitignore` excluye `.env`. La afirmación de que «se anonimizaron todos los ejemplos» es **falsa**: el README y las semillas contienen credenciales por defecto y datos personales de apariencia real (DEF-11, DEF-43).
+
+### 3.2 Acciones ejecutadas en la auditoría de calidad
+
+- Correcciones con prueba de regresión: DEF-05, DEF-08 (parcial), DEF-12, DEF-27, DEF-28 y DEF-41.
+- Pipeline de calidad [`.github/workflows/calidad.yml`](../.github/workflows/calidad.yml), configuración [`.golangci.yml`](../.golangci.yml), ESLint del frontend y plantillas de PR y de defecto.
+- Plan de mantenimiento ISO/IEC 14764 con 44 acciones priorizadas: [`calidad/06-plan-mantenimiento.md`](calidad/06-plan-mantenimiento.md).
