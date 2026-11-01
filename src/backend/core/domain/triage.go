@@ -62,6 +62,10 @@ func (t *TriageRecord) Validate() error {
 	if t.SystolicBP <= 0 || t.DiastolicBP <= 0 || t.HeartRate <= 0 || t.RespiratoryRate <= 0 || t.BodyTemperature <= 0 {
 		return ErrInvalidVitals
 	}
+	// DEF-27: RF02 declara incompatible una frecuencia cardiaca superior a 300 lpm.
+	if t.HeartRate > 300 {
+		return ErrInvalidVitals
+	}
 	return nil
 }
 
