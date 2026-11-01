@@ -27,6 +27,11 @@ func (s *triageService) RegisterTriage(ctx context.Context, record *domain.Triag
 		return nil, err
 	}
 
+	// DEF-08: un nivel enviado por el cliente fuera del catalogo quedaba persistido sin semaforo valido.
+	if record.ManchesterLevel != "" && !record.ManchesterLevel.IsValid() {
+		return nil, domain.ErrInvalidManchesterLevel
+	}
+
 	// Verificar existencia del paciente
 	if _, err := s.patientRepo.GetByID(ctx, record.PatientID); err != nil {
 		return nil, domain.ErrPatientNotFound

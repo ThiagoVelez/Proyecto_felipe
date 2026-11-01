@@ -58,7 +58,7 @@ func (h *TriageHandler) Create(c *fiber.Ctx) error {
 
 	created, err := h.triageService.RegisterTriage(c.Context(), record)
 	if err != nil {
-		if errors.Is(err, domain.ErrInvalidGlasgowScore) || errors.Is(err, domain.ErrInvalidOxygenSaturation) || errors.Is(err, domain.ErrInvalidVitals) {
+		if errors.Is(err, domain.ErrInvalidGlasgowScore) || errors.Is(err, domain.ErrInvalidOxygenSaturation) || errors.Is(err, domain.ErrInvalidVitals) || errors.Is(err, domain.ErrInvalidManchesterLevel) {
 			return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
 				"error": err.Error(),
 			})
