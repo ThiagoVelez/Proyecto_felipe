@@ -1,0 +1,188 @@
+# Pipeline de aseguramiento de calidad (docs/calidad/01-plan-aseguramiento-calidad.md).
+#
+# Bloqueantes: compilacion, go vet, golangci-lint (solo hallazgos nuevos), pruebas con -race,
+# umbral de cobertura, ESLint (errores), vitest y npm audit de dependencias de produccion.
+# Informativos (continue-on-error): staticcheck, gosec, govulncheck, gocyclo, npm audit completo
+# y la suite de defectos abiertos. Pasan a bloqueantes al cerrar los defectos de la linea base
+# (DEF-11, DEF-24, DEF-44, DEF-45); ver docs/calidad/06-plan-mantenimiento.md.
+name: calidad
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: ['**']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: calidad-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Version verificada en la linea base (docs/calidad/anexos/linea-base.md). go.mod declara go 1.22 como minimo.
+  GO_VERSION: '1.27.3'
+  NODE_VERSION: '20.18.1'
+  # Umbral = cobertura medida al iniciar la auditoria (38,7 %). Meta del plan: 60 %.
+  COBERTURA_MINIMA_BACKEND: ${{ vars.COBERTURA_MINIMA_BACKEND || '38' }}
+  GOLANGCI_LINT_VERSION: v2.15.0
+  STATICCHECK_VERSION: v0.8.2
+  GOSEC_VERSION: v2.30.0
+  GOVULNCHECK_VERSION: v1.9.0
+  GOCYCLO_VERSION: v0.6.0
+
+jobs:
+  backend-analisis-estatico:
+    name: Backend - analisis estatico
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 0 # golangci-lint compara contra el commit de linea base (issues.new-from-rev)
+      - uses: actions/setup-go@v5.2.0
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: |
+            src/backend/go.sum
+            tests/backend/go.sum
+      - name: Instalar herramientas con versiones fijas
+        run: |
+          go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@${GOLANGCI_LINT_VERSION}
+          go install honnef.co/go/tools/cmd/staticcheck@${STATICCHECK_VERSION}
+          go install github.com/securego/gosec/v2/cmd/gosec@${GOSEC_VERSION}
+          go install golang.org/x/vuln/cmd/govulncheck@${GOVULNCHECK_VERSION}
+          go install github.com/fzipp/gocyclo/cmd/gocyclo@${GOCYCLO_VERSION}
+      - name: Compilar
+        working-directory: src/backend
+        run: go build ./...
+      - name: go vet
+        run: |
+          (cd src/backend && go vet ./...)
+          (cd tests/backend && go vet ./...)
+      - name: golangci-lint (hallazgos nuevos)
+        run: |
+          (cd src/backend && golangci-lint run --config ../../.golangci.yml ./...)
+          (cd tests/backend && golangci-lint run --config ../../.golangci.yml ./...)
+      - name: staticcheck (informativo, linea base con SA4006 en DEF-44)
+        continue-on-error: true
+        working-directory: src/backend
+        run: staticcheck ./... | tee ../../staticcheck.txt
+      - name: gosec (informativo hasta cerrar DEF-11)
+        continue-on-error: true
+        working-directory: src/backend
+        run: gosec -exclude=G505,G115 -fmt text -out ../../gosec.txt ./...
+      - name: govulncheck (informativo hasta cerrar DEF-24)
+        continue-on-error: true
+        working-directory: src/backend
+        run: govulncheck ./... | tee ../../govulncheck.txt
+      - name: gocyclo umbral 15 (informativo)
+        continue-on-error: true
+        run: gocyclo -over 15 src/backend tests/backend | tee gocyclo.txt
+      - name: Publicar reportes de analisis estatico
+        if: always()
+        uses: actions/upload-artifact@v4.5.0
+        with:
+          name: reportes-analisis-estatico
+          path: |
+            staticcheck.txt
+            gosec.txt
+            govulncheck.txt
+            gocyclo.txt
+          if-no-files-found: ignore
+
+  backend-pruebas:
+    name: Backend - pruebas con -race y cobertura
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-go@v5.2.0
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: |
+            src/backend/go.sum
+            tests/backend/go.sum
+      - name: Pruebas unitarias de src/backend
+        working-directory: src/backend
+        env:
+          CGO_ENABLED: '1'
+        run: go test -race -count=1 -coverprofile=coverage-src.out ./...
+      - name: Pruebas de integracion de tests/backend (cobertura sobre los paquetes reales)
+        working-directory: tests/backend
+        env:
+          CGO_ENABLED: '1'
+        run: go test -race -count=1 -coverpkg=saludconecta-backend/... -coverprofile=coverage-tests.out ./...
+      - name: Verificar umbral de cobertura
+        working-directory: tests/backend
+        run: |
+          total=$(go tool cover -func=coverage-tests.out | awk '/^total:/ {sub("%","",$3); print $3}')
+          echo "Cobertura total: ${total} % (minimo ${COBERTURA_MINIMA_BACKEND} %)"
+          echo "### Cobertura backend: ${total} % (minimo ${COBERTURA_MINIMA_BACKEND} %)" >> "$GITHUB_STEP_SUMMARY"
+          awk -v t="$total" -v m="$COBERTURA_MINIMA_BACKEND" 'BEGIN { exit (t + 0 < m + 0) }'
+      - name: Publicar cobertura backend
+        if: always()
+        uses: actions/upload-artifact@v4.5.0
+        with:
+          name: cobertura-backend
+          path: |
+            src/backend/coverage-src.out
+            tests/backend/coverage-tests.out
+          if-no-files-found: ignore
+
+  backend-defectos-abiertos:
+    name: Backend - reproduccion de defectos abiertos (informativo)
+    runs-on: ubuntu-24.04
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-go@v5.2.0
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: tests/backend/go.sum
+      - name: Ejecutar pruebas TestDEF con el detector de carreras
+        working-directory: tests/backend
+        env:
+          CGO_ENABLED: '1'
+          CALIDAD_DEFECTOS_ABIERTOS: '1'
+        run: go test -race -count=1 -run 'TestDEF' -v ./... | tee defectos-abiertos.txt
+      - uses: actions/upload-artifact@v4.5.0
+        if: always()
+        with:
+          name: defectos-abiertos
+          path: tests/backend/defectos-abiertos.txt
+          if-no-files-found: ignore
+
+  frontend:
+    name: Frontend - lint, pruebas, build y auditoria
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: src/frontend
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/setup-node@v4.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: src/frontend/package-lock.json
+      - run: npm ci
+      - name: Herramientas de calidad sin modificar package.json
+        run: npm i --no-save eslint@9.17.0 @eslint/js@9.17.0 eslint-plugin-react@7.37.2 eslint-plugin-react-hooks@5.1.0 globals@15.14.0 @vitest/coverage-v8@2.1.9
+      - name: ESLint
+        run: npx eslint src
+      - name: Vitest con cobertura
+        run: npx vitest run --coverage --coverage.reporter=text-summary --coverage.reporter=lcov
+      - name: Build de produccion
+        run: npm run build
+      - name: npm audit de dependencias de produccion (bloqueante)
+        run: npm audit --omit=dev --audit-level=high
+      - name: npm audit completo (informativo hasta cerrar DEF-45)
+        continue-on-error: true
+        run: npm audit --audit-level=high
+      - name: Publicar cobertura frontend
+        if: always()
+        uses: actions/upload-artifact@v4.5.0
+        with:
+          name: cobertura-frontend
+          path: src/frontend/coverage
+          if-no-files-found: ignore

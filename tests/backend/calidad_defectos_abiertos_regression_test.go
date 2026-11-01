@@ -112,6 +112,7 @@ func TestDEF13TokenDeUsuarioDesactivadoEsRechazado(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer res.Body.Close()
 	if res.StatusCode != http.StatusUnauthorized && res.StatusCode != http.StatusForbidden {
 		t.Errorf("Usuario desactivado obtuvo estado %d con su token previo; se esperaba 401/403", res.StatusCode)
 	}
@@ -217,8 +218,12 @@ func TestDEF18SincronizacionUsaMedicoAutenticado(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+calidadToken(t, medicoSemillaID, "MEDICO"))
 	res, err := env.app.Test(req, -1)
-	if err != nil || res.StatusCode != http.StatusOK {
-		t.Fatalf("Lote rechazado: estado=%v err=%v", res.StatusCode, err)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		t.Fatalf("Lote rechazado: estado=%d", res.StatusCode)
 	}
 	rec, _ := memory.NewClinicalRecordMemoryRepo(env.ds).GetByID(context.Background(), "cr-def18")
 	if rec.DoctorID != medicoSemillaID {

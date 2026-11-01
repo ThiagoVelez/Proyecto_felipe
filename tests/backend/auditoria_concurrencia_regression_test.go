@@ -58,9 +58,11 @@ func TestDEF28AuditoriaConservaDatosTrasFinalizarPeticion(t *testing.T) {
 		correlacion := uuid.NewString()
 		req := httptest.NewRequest(http.MethodPost, ruta, nil)
 		req.Header.Set("X-Correlation-ID", correlacion)
-		if _, err := app.Test(req, -1); err != nil {
+		res, err := app.Test(req, -1)
+		if err != nil {
 			t.Fatal(err)
 		}
+		_ = res.Body.Close()
 		select {
 		case e := <-repo.entradas:
 			recibidos = append(recibidos, e)
