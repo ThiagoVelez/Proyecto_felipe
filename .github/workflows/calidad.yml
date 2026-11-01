@@ -24,8 +24,8 @@ env:
   # Version verificada en la linea base (docs/calidad/anexos/linea-base.md). go.mod declara go 1.22 como minimo.
   GO_VERSION: '1.27.3'
   NODE_VERSION: '20.18.1'
-  # Umbral = cobertura medida al iniciar la auditoria (38,7 %). Meta del plan: 60 %.
-  COBERTURA_MINIMA_BACKEND: ${{ vars.COBERTURA_MINIMA_BACKEND || '38' }}
+  # Umbral = cobertura medida al cierre de la auditoria (58,9 %; linea base inicial 38,7 %). Meta del plan: 70 %.
+  COBERTURA_MINIMA_BACKEND: ${{ vars.COBERTURA_MINIMA_BACKEND || '58' }}
   GOLANGCI_LINT_VERSION: v2.15.0
   STATICCHECK_VERSION: v0.8.2
   GOSEC_VERSION: v2.30.0
