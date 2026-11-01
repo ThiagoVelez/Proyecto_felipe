@@ -11,6 +11,7 @@ var (
 	ErrMedicationNotFound          = errors.New("medicamento no hallado en el catalogo institucional")
 	ErrInsufficientMedicationStock = errors.New("cantidad insuficiente en stock hospitalario")
 	ErrEmptyPrescriptionItems      = errors.New("la prescripcion medica debe contener al menos un item farmacologico")
+	ErrPrescriptionPatientMismatch = errors.New("el paciente de la prescripcion no corresponde al paciente del folio clinico")
 )
 
 // AllergyConflictError representa una contraindicacion por hipersensibilidad previa del paciente.
