@@ -6,6 +6,8 @@
 
 ### Proyecto Final: Sistema Clínico Hospitalario «SaludConecta IPS v2.4»
 
+[![calidad](https://github.com/ThiagoVelez/Proyecto_felipe/actions/workflows/calidad.yml/badge.svg)](https://github.com/ThiagoVelez/Proyecto_felipe/actions/workflows/calidad.yml)
+
 ---
 
 ## 1. Descripción del Proyecto y Arquitectura Técnica
@@ -44,10 +46,12 @@ El flujo de trabajo, la priorización de requisitos y el ciclo de vida del desar
 
 ### Organización de las Listas Operativas:
 
-1. **Por hacer (Backlog):** Requisitos funcionales (RF01 a RF08) priorizados mediante técnica MoSCoW, diseño de modelos de dominio y contratos de interfaces.
-2. **En curso (In Progress):** Módulos y adaptadores en desarrollo activo (handlers HTTP, repositorios MySQL/Postgres y componentes de interfaz de usuario).
-3. **En revisión (In Review / Code Review):** Inspección de código estricta, análisis estático con `go vet` y verificación de desacoplamiento de capas según la Arquitectura Hexagonal.
-4. **Hecho (Done):** Incrementos de software con pruebas automatizadas aprobadas (100% pass), sin defectos críticos abiertos y con trazabilidad documental completa.
+1. **Avisos:** Información general del proyecto para el equipo.
+2. **Tareas por realizar:** Requisitos funcionales (RF01 a RF10, priorizados mediante técnica MoSCoW en la sección 4.1) y tareas técnicas pendientes o en desarrollo.
+3. **Tareas realizadas:** Incrementos terminados e integrados al repositorio.
+4. **Bugs encontrados para solucionar:** Defectos registrados en la bitácora de calidad ([`docs/calidad/04-bitacora-defectos.md`](docs/calidad/04-bitacora-defectos.md)), con la tarjeta definida en [`docs/calidad/trello-tarjetas-defectos.md`](docs/calidad/trello-tarjetas-defectos.md).
+
+> Propuesta del Responsable de Calidad: agregar la lista **«En revisión de calidad»** entre «Tareas por realizar» y «Tareas realizadas», para que ninguna tarjeta llegue a «realizada» sin la verificación de calidad (ver [`docs/calidad/trello-tarjetas-defectos.md`](docs/calidad/trello-tarjetas-defectos.md)).
 
 ---
 
@@ -1068,7 +1072,7 @@ Para consultar el detalle extendido de la ingeniería del proyecto, accede a los
 
 1. [Especificación de Requisitos de Software (`docs/especificacion.md`)](docs/especificacion.md):
    - Marco regulatorio: Resolución 1995 de 1999 (HCE), Resolución 2275 de 2023 (RIPS) y Ley 1581 de 2012 (Habeas Data).
-   - Requisitos Funcionales (RF01 a RF08) y No Funcionales (RNF01 a RNF05).
+   - Requisitos Funcionales RF01 a RF06 y No Funcionales RNF01 a RNF03. RF07 a RF10 y RNF04 a RNF05 figuran en las tablas de la sección 4 de este README y están pendientes de incorporarse a la especificación (ver [`docs/calidad/verificacion-documental.md`](docs/calidad/verificacion-documental.md)).
    - Escenarios de aceptación formales en formato BDD (Dado-Cuando-Entonces / Gherkin).
 
 2. [Plan de Pruebas y Técnicas de Diseño (`docs/plan-de-pruebas.md`)](docs/plan-de-pruebas.md):
