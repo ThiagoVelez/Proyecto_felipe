@@ -2,8 +2,12 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
+	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"os/signal"
 	"syscall"
 	"time"
@@ -23,6 +27,34 @@ func getEnv(key, defaultValue string) string {
 	return defaultValue
 }
 
+const minJWTSecretLength = 32
+
+// legacyDefaultJWTSecret es el valor que versiones anteriores usaban por defecto; al estar publicado
+// en el repositorio, cualquiera podia forjar tokens validos (DEF-12). Se conserva solo para rechazarlo.
+const legacyDefaultJWTSecret = "super-secret-key-saludconecta-ips-v24-2026"
+
+// resolveJWTSecret valida el secreto de firma JWT. Con un motor persistente el arranque falla si falta,
+// es corto o es el valor publicado. En modo memoria (solo desarrollo) se genera uno aleatorio y efimero.
+func resolveJWTSecret(raw, driver string) (secret string, ephemeral bool, err error) {
+	if raw == "" && strings.EqualFold(strings.TrimSpace(driver), "memory") {
+		buf := make([]byte, minJWTSecretLength)
+		if _, err := rand.Read(buf); err != nil {
+			return "", false, fmt.Errorf("no fue posible generar un JWT_SECRET efimero: %w", err)
+		}
+		return hex.EncodeToString(buf), true, nil
+	}
+	if raw == "" {
+		return "", false, errors.New("JWT_SECRET es obligatorio con un motor de persistencia real")
+	}
+	if raw == legacyDefaultJWTSecret {
+		return "", false, errors.New("JWT_SECRET usa el valor publicado en el repositorio; genere uno nuevo")
+	}
+	if len(raw) < minJWTSecretLength {
+		return "", false, fmt.Errorf("JWT_SECRET debe tener al menos %d caracteres", minJWTSecretLength)
+	}
+	return raw, false, nil
+}
+
 func main() {
 	// 1. Inicializacion del logger estructurado institucional
 	log := logger.New()
@@ -36,7 +68,16 @@ func main() {
 	dbUser := getEnv("DB_USER", "root")
 	dbPassword := getEnv("DB_PASSWORD", "")
 	dbName := getEnv("DB_NAME", "saludconecta_db")
-	jwtSecret := getEnv("JWT_SECRET", "super-secret-key-saludconecta-ips-v24-2026")
+	jwtSecret, ephemeralSecret, err := resolveJWTSecret(os.Getenv("JWT_SECRET"), dbDriver)
+	if err != nil {
+		log.Error("Configuracion de seguridad invalida; el servidor no arrancara", map[string]interface{}{
+			"error": err.Error(),
+		})
+		os.Exit(1)
+	}
+	if ephemeralSecret {
+		log.Warn("JWT_SECRET no definido en modo memoria: se genero un secreto efimero; los tokens se invalidan al reiniciar")
+	}
 	corsOrigins := getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000,http://localhost:5174")
 	ipsNIT := getEnv("IPS_NIT", "900123456")
 	codPrestador := getEnv("COD_PRESTADOR", "110010999901")

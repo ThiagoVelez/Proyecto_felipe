@@ -83,6 +83,11 @@ func (h *PrescriptionHandler) Create(c *fiber.Ctx) error {
 				"medication":        allergyErr.MedicationName,
 			})
 		}
+		if errors.Is(err, domain.ErrPrescriptionPatientMismatch) {
+			return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
 		if errors.Is(err, domain.ErrInsufficientMedicationStock) {
 			return c.Status(fiber.StatusConflict).JSON(fiber.Map{
 				"error": err.Error(),

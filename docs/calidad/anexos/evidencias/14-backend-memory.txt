@@ -1,0 +1,16 @@
+{"timestamp":"2026-11-01T20:57:50.2431094Z","level":"INFO","message":"Iniciando Sistema Hospitalario SaludConecta IPS v2.4 (ISO/IEC 25010)"}
+{"timestamp":"2026-11-01T20:57:50.243632Z","level":"INFO","message":"Activando Adaptador de Persistencia en Memoria (In-Memory Mock con Gobernanza ReTHUS)"}
+{"timestamp":"2026-11-01T20:57:50.7965811Z","level":"INFO","message":"Servidor HTTP Fiber v2 en escucha","fields":{"address":":18080","port":"18080"}}
+
+ ┌───────────────────────────────────────────────────┐ 
+ │               SaludConecta IPS v2.4               │ 
+ │                   Fiber v2.52.5                   │ 
+ │              http://127.0.0.1:18080               │ 
+ │      (bound on host 0.0.0.0 and port 18080)       │ 
+ │                                                   │ 
+ │ Handlers ............ 69  Processes ........... 1 │ 
+ │ Prefork ....... Disabled  PID ............. 12968 │ 
+ └───────────────────────────────────────────────────┘ 
+
+{"timestamp":"2026-11-01T20:57:51.3587446Z","level":"INFO","message":"Solicitud HTTP procesada","correlation_id":"276af2d5-2ca4-45c4-948c-3ab721e92dc7","fields":{"ip":"127.0.0.1","latency_ms":0,"method":"GET","path":"/api/v1/health","status":200,"user_agent":"curl/8.23.0"}}
+{"timestamp":"2026-11-01T20:57:51.4021622Z","level":"INFO","message":"Solicitud HTTP procesada","correlation_id":"a2cfc85a-178f-463e-905d-ebb019f6e795","fields":{"ip":"127.0.0.1","latency_ms":0,"method":"GET","path":"/api/v1/health","status":200,"user_agent":"curl/8.23.0"}}

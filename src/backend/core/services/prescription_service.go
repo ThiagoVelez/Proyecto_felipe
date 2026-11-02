@@ -35,8 +35,15 @@ func (s *prescriptionService) IssuePrescription(ctx context.Context, prescriptio
 	}
 
 	// Validar folio clinico
-	if _, err := s.recordRepo.GetByID(ctx, prescription.ClinicalRecordID); err != nil {
+	record, err := s.recordRepo.GetByID(ctx, prescription.ClinicalRecordID)
+	if err != nil {
 		return nil, domain.ErrRecordNotFound
+	}
+
+	// DEF-05: el cruce de alergias debe hacerse contra el paciente del folio; aceptar el patient_id
+	// del cliente permitia evadir la alerta indicando un paciente sin antecedentes.
+	if prescription.PatientID != record.PatientID {
+		return nil, domain.ErrPrescriptionPatientMismatch
 	}
 
 	// Obtener historial alergico del paciente

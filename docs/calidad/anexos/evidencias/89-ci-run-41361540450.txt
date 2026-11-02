@@ -1,0 +1,34 @@
+$ gh run view 41361540450 --log-failed  (extractos; PR de la rama calidad/auditoria-iso25010)
+
+## Frontend - vitest
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  ../../tests/frontend/totp.test.js > TOTP RFC 6238 & QR Generator > debe coincidir exactamente con el vector de prueba oficial RFC 6238 (T=59s -> 287082)
+AssertionError: expected '988480' to be '287082' // Object.is equality
+Expected: "287082"
+Received: "988480"
+ Test Files  1 failed | 3 passed (4)
+      Tests  1 failed | 27 passed (28)
+##[error]AssertionError: expected '988480' to be '287082' // Object.is equality
+
+## Backend - go test -race (tests/backend): primera carrera
+WARNING: DATA RACE
+Read at 0x00c00007ae68 by goroutine 241:
+      /home/runner/work/Proyecto_felipe/Proyecto_felipe/src/backend/adapters/http/handlers/prescription_handler.go:106 +0x1704
+Previous write at 0x00c00007ae68 by goroutine 247:
+      /home/runner/work/Proyecto_felipe/Proyecto_felipe/src/backend/adapters/storage/memory/memory_repos.go:506 +0x296
+      /home/runner/work/Proyecto_felipe/Proyecto_felipe/src/backend/core/services/prescription_service.go:95 +0x10f3
+      /home/runner/work/Proyecto_felipe/Proyecto_felipe/src/backend/adapters/http/handlers/prescription_handler.go:74 +0xa91
+      /home/runner/work/Proyecto_felipe/Proyecto_felipe/tests/backend/rendimiento_regression_test.go:61 +0x534
+      /home/runner/work/Proyecto_felipe/Proyecto_felipe/tests/backend/rendimiento_regression_test.go:61 +0x534
+
+## Resultado
+--- FAIL: TestRNF01LatenciaBajoConcurrencia (5.39s)
+    testing.go:1867: race detected during execution of test
+--- FAIL: TestStaffRegisterRequiresAdmin (6.00s)
+    --- FAIL: TestStaffRegisterRequiresAdmin/admin_con_rol_admin (1.00s)
+        staff_register_routes_test.go:68: Fallo ejecutando la solicitud: test: timeout error 1000ms
+    staff_register_routes_test.go:78: El registro del administrador no creo la cuenta: usuario no encontrado
+FAIL
+coverage: 60.3% of statements in saludconecta-backend/...
+FAIL	saludconecta-tests	66.937s
+FAIL

@@ -11,6 +11,7 @@ var (
 	ErrTriageAlreadyProcessed    = errors.New("el triaje ya ha sido procesado o finalizado")
 	ErrInvalidGlasgowScore       = errors.New("la escala de coma de glasgow debe estar entre 3 y 15 puntos")
 	ErrInvalidOxygenSaturation   = errors.New("la saturacion de oxigeno debe estar entre 0 y 100%")
+	ErrInvalidManchesterLevel    = errors.New("el nivel manchester debe ser uno de NIVEL_I a NIVEL_V")
 )
 
 // ManchesterLevel define la prioridad clinica segun el protocolo internacional de Manchester.
@@ -23,6 +24,15 @@ const (
 	ManchesterLevelIV  ManchesterLevel = "NIVEL_IV"  // Verde: Estandar / Menos urgente (hasta 120 minutos)
 	ManchesterLevelV   ManchesterLevel = "NIVEL_V"   // Azul: No urgente (hasta 240 minutos)
 )
+
+// IsValid indica si el nivel pertenece al catalogo de cinco prioridades del protocolo.
+func (l ManchesterLevel) IsValid() bool {
+	switch l {
+	case ManchesterLevelI, ManchesterLevelII, ManchesterLevelIII, ManchesterLevelIV, ManchesterLevelV:
+		return true
+	}
+	return false
+}
 
 // TriageStatus define el flujo de atencion del triaje.
 type TriageStatus string
@@ -60,6 +70,10 @@ func (t *TriageRecord) Validate() error {
 		return ErrInvalidOxygenSaturation
 	}
 	if t.SystolicBP <= 0 || t.DiastolicBP <= 0 || t.HeartRate <= 0 || t.RespiratoryRate <= 0 || t.BodyTemperature <= 0 {
+		return ErrInvalidVitals
+	}
+	// DEF-27: RF02 declara incompatible una frecuencia cardiaca superior a 300 lpm.
+	if t.HeartRate > 300 {
 		return ErrInvalidVitals
 	}
 	return nil

@@ -1,0 +1,26 @@
+# Gate local tras corregir los fallos de CI (2026-11-02T01:13:55Z)
+$ go build ./... && go vet ./... && go test -count=1 ./...  (src/backend)
+ok  	saludconecta-backend/cmd/api	0.022s
+ok  	saludconecta-backend/core/services	0.019s
+ok  	saludconecta-backend/pkg/crypto	1.024s
+exit=0
+$ golangci-lint (src/backend)
+0 issues.
+$ go test -count=1 -skip '^TestStaffRegisterRequiresAdmin$' ./...  (equivalente al paso -race, sin -race)
+ok  	saludconecta-tests	8.589s
+exit=0
+$ go test -count=1 -coverpkg=saludconecta-backend/... -coverprofile=c.out ./...  (paso de cobertura)
+ok  	saludconecta-tests	10.058s	coverage: 60.3% of statements in saludconecta-backend/...
+exit=0
+$ golangci-lint (tests/backend)
+0 issues.
+$ npx eslint src
+✖ 68 problems (0 errors, 68 warnings)
+
+exit=0
+$ npx vitest run
+ Test Files  5 passed (5)
+      Tests  31 passed (31)
+exit=0
+$ actionlint
+exit=0

@@ -1,0 +1,26 @@
+# Gate local tras el control de defectos abiertos (2026-11-02T01:31:43Z)
+$ go build ./... && go vet ./... && go test -count=1 ./...  (src/backend)
+ok  	saludconecta-backend/cmd/api	0.121s
+ok  	saludconecta-backend/core/services	0.085s
+ok  	saludconecta-backend/pkg/crypto	0.953s
+exit=0
+$ go vet ./... && go test -count=1 ./...  (tests/backend, incluye herramientas/controldefectos)
+ok  	saludconecta-tests	10.907s
+ok  	saludconecta-tests/herramientas/controldefectos	0.027s
+exit=0
+$ go test -count=1 -coverpkg=saludconecta-backend/... ./...  (cobertura)
+ok  	saludconecta-tests	9.737s	coverage: 60.3% of statements in saludconecta-backend/...
+exit=0
+$ control de defectos abiertos (sin -race)
+Defectos abiertos reproducidos como se espera: 11 de 12 (1 no evaluables sin -race).
+exit=0
+$ golangci-lint (src/backend)
+0 issues.
+$ golangci-lint (tests/backend)
+0 issues.
+$ npx vitest run
+ Test Files  5 passed (5)
+      Tests  31 passed (31)
+exit=0
+$ actionlint
+exit=0

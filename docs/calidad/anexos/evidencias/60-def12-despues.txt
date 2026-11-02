@@ -1,0 +1,15 @@
+$ go test -count=1 -run TestDEF12 -v ./cmd/api/  (DESPUES)
+=== RUN   TestDEF12ResolveJWTSecret
+--- PASS: TestDEF12ResolveJWTSecret (0.00s)
+PASS
+ok  	saludconecta-backend/cmd/api	0.019s
+exit=0
+
+$ (env -u JWT_SECRET) DB_DRIVER=mysql api  (binario corregido)
+{"timestamp":"2026-11-01T21:39:50.855861Z","level":"INFO","message":"Iniciando Sistema Hospitalario SaludConecta IPS v2.4 (ISO/IEC 25010)"}
+{"timestamp":"2026-11-01T21:39:50.8563783Z","level":"ERROR","message":"Configuracion de seguridad invalida; el servidor no arrancara","fields":{"error":"JWT_SECRET es obligatorio con un motor de persistencia real"}}
+exit=0
+codigo de salida del proceso (mysql sin JWT_SECRET) = 1
+$ (env -u JWT_SECRET) DB_DRIVER=memory api ; curl /api/v1/health
+"message":"JWT_SECRET no definido en modo memoria: se genero un secreto efimero; los tokens se invalidan al reiniciar"
+{"iso_quality":"ISO/IEC 25010 Evaluated","status":"UP","system":"SaludConecta IPS v2.4"} HTTP 200

@@ -1,0 +1,6 @@
+$ go test -count=1 -v -run TestH21 ./...
+=== RUN   TestH21AlergiaRegistradaSeAplicaDeInmediato
+--- PASS: TestH21AlergiaRegistradaSeAplicaDeInmediato (0.58s)
+PASS
+ok  	saludconecta-tests	0.599s
+exit=0

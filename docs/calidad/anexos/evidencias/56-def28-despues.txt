@@ -1,0 +1,8 @@
+$ go test -count=1 -run TestDEF28 -v ./...  (DESPUES)
+=== RUN   TestDEF28AuditoriaConservaDatosTrasFinalizarPeticion
+--- PASS: TestDEF28AuditoriaConservaDatosTrasFinalizarPeticion (0.00s)
+PASS
+ok  	saludconecta-tests	0.023s
+exit=0
+$ go test -count=1 ./...
+ok  	saludconecta-tests	6.752s

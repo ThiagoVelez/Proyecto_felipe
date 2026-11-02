@@ -1,0 +1,21 @@
+$ (simulacion) lista con una prueba que pasa: DEF-41 TestDEF41CorrelationIDSoloAceptaUUID
+::error::Lista de defectos abiertos incoherente: DEF-41 figura como «En verificación (corregido en rama)» en la bitacora pero sigue en la lista de defectos abiertos
+::error::Lista de defectos abiertos incoherente: DEF-41: la prueba TestDEF41CorrelationIDSoloAceptaUUID no existe o no invoca requireDefectoAbierto
+::error::Lista de defectos abiertos incoherente: TestDEF06CruceAlergiasReactividadCruzadaYTildes (DEF-06) usa requireDefectoAbierto pero no esta en la lista
+::error::Lista de defectos abiertos incoherente: TestDEF07SincronizacionNoSobrescribeFolioCerrado (DEF-07) usa requireDefectoAbierto pero no esta en la lista
+::error::Lista de defectos abiertos incoherente: TestDEF09HipotermiaSeveraNoEsNoUrgente (DEF-09) usa requireDefectoAbierto pero no esta en la lista
+::error::Lista de defectos abiertos incoherente: TestDEF13TokenDeUsuarioDesactivadoEsRechazado (DEF-13) usa requireDefectoAbierto pero no esta en la lista
+::error::Lista de defectos abiertos incoherente: TestDEF14SetupMFANoDesactivaSegundoFactor (DEF-14) usa requireDefectoAbierto pero no esta en la lista
+::error::Lista de defectos abiertos incoherente: TestDEF16CierreConcurrenteNoBifurcaCadena (DEF-16) usa requireDefectoAbierto pero no esta en la lista
+::error::Lista de defectos abiertos incoherente: TestDEF17MedicoNoCierraFolioAjeno (DEF-17) usa requireDefectoAbierto pero no esta en la lista
+::error::Lista de defectos abiertos incoherente: TestDEF18SincronizacionUsaMedicoAutenticado (DEF-18) usa requireDefectoAbierto pero no esta en la lista
+::error::Lista de defectos abiertos incoherente: TestDEF29HashSinColisionPorDelimitador (DEF-29) usa requireDefectoAbierto pero no esta en la lista
+::error::Lista de defectos abiertos incoherente: TestDEF30VerificacionValidaEnlaceConFolioAnterior (DEF-30) usa requireDefectoAbierto pero no esta en la lista
+::error::Lista de defectos abiertos incoherente: TestDEF31LoginNoRevelaCuentaInactivaConClaveErronea (DEF-31) usa requireDefectoAbierto pero no esta en la lista
+::error::Lista de defectos abiertos incoherente: TestDEF37LecturaConcurrenteDeFolioSinCarrera (DEF-37) usa requireDefectoAbierto pero no esta en la lista
+| Defecto | Prueba | Resultado | Detalle |
+|---|---|---|---|
+| DEF-41 | TestDEF41CorrelationIDSoloAceptaUUID | corregido? | DEF-41 parece corregido: verifícalo y ciérralo en la bitácora |
+::error title=DEF-41::TestDEF41CorrelationIDSoloAceptaUUID: DEF-41 parece corregido: verifícalo y ciérralo en la bitácora
+exit status 1
+exit=1

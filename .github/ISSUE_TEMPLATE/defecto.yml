@@ -1,0 +1,106 @@
+name: Defecto
+description: Registrar un defecto con los campos de la bitácora de calidad (docs/calidad/04-bitacora-defectos.md).
+title: "[DEF-XX] "
+labels: ["defecto"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use el siguiente identificador libre de la bitácora. Cualquier defecto que pueda causar daño a un paciente
+        (prescripción peligrosa permitida, pérdida de registro clínico, triaje mal clasificado) es **Crítica** por definición.
+  - type: input
+    id: titulo
+    attributes:
+      label: Título
+      description: Una línea, verbo + objeto.
+    validations:
+      required: true
+  - type: dropdown
+    id: modulo
+    attributes:
+      label: Módulo
+      options: [Backend, Frontend, BD, Infra, Documentación]
+    validations:
+      required: true
+  - type: input
+    id: requisito
+    attributes:
+      label: Requisito afectado
+      description: RF/RNF para trazabilidad (p. ej. RF05).
+    validations:
+      required: true
+  - type: input
+    id: caracteristica
+    attributes:
+      label: Característica ISO/IEC 25010:2023
+      description: "Ej.: Seguridad → Integridad; Seguridad operacional (Safety) → Fallo seguro."
+    validations:
+      required: true
+  - type: dropdown
+    id: tipo
+    attributes:
+      label: Tipo (IEEE 1044)
+      options: [Lógica, Datos, Interfaz, Cálculo, Configuración, Documentación, Rendimiento, Seguridad, Otro]
+    validations:
+      required: true
+  - type: dropdown
+    id: severidad
+    attributes:
+      label: Severidad (impacto técnico)
+      options: [Crítica, Alta, Media, Baja]
+    validations:
+      required: true
+  - type: dropdown
+    id: prioridad
+    attributes:
+      label: Prioridad (urgencia de corrección)
+      options: [P1, P2, P3, P4]
+    validations:
+      required: true
+  - type: textarea
+    id: pasos
+    attributes:
+      label: Pasos para reproducir
+      description: Numerados y ejecutables.
+      placeholder: |
+        1. ...
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: esperado
+    attributes:
+      label: Resultado esperado
+    validations:
+      required: true
+  - type: textarea
+    id: obtenido
+    attributes:
+      label: Resultado obtenido
+    validations:
+      required: true
+  - type: textarea
+    id: evidencia
+    attributes:
+      label: Evidencia
+      description: archivo:línea, prueba de regresión, salida de comando. No pegue contraseñas ni tokens.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: causa
+    attributes:
+      label: Causa raíz
+  - type: textarea
+    id: accion
+    attributes:
+      label: Acción propuesta
+      description: Enlace a la acción del plan de mantenimiento (docs/calidad/06-plan-mantenimiento.md).
+  - type: dropdown
+    id: estado
+    attributes:
+      label: Estado
+      options: [Nuevo, Confirmado, En corrección, En verificación, Cerrado, Rechazado]
+      default: 0
+    validations:
+      required: true

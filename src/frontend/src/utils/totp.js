@@ -48,54 +48,138 @@ export function generateBase32Secret(length = 16) {
 }
 
 /**
- * Calcula el codigo TOTP de 6 digitos segun RFC 6238 usando HMAC-SHA1 nativo
+ * SHA-1 (FIPS 180-4) sobre bytes. Respaldo para entornos sin Web Crypto: crypto.subtle solo existe
+ * en contextos seguros (HTTPS o localhost), y el despliegue por HTTP en la red local no lo es (DEF-47).
+ */
+function sha1(bytes) {
+  const ml = bytes.length;
+  const totalLength = (((ml + 8) >> 6) + 1) << 6;
+  const data = new Uint8Array(totalLength);
+  data.set(bytes);
+  data[ml] = 0x80;
+  const view = new DataView(data.buffer);
+  view.setUint32(totalLength - 8, Math.floor((ml * 8) / 0x100000000), false);
+  view.setUint32(totalLength - 4, (ml * 8) >>> 0, false);
+
+  let h0 = 0x67452301;
+  let h1 = 0xefcdab89;
+  let h2 = 0x98badcfe;
+  let h3 = 0x10325476;
+  let h4 = 0xc3d2e1f0;
+  const w = new Uint32Array(80);
+  const rotl = (x, n) => (x << n) | (x >>> (32 - n));
+
+  for (let block = 0; block < totalLength; block += 64) {
+    for (let i = 0; i < 16; i++) w[i] = view.getUint32(block + i * 4, false);
+    for (let i = 16; i < 80; i++) w[i] = rotl(w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16], 1);
+
+    let a = h0;
+    let b = h1;
+    let c = h2;
+    let d = h3;
+    let e = h4;
+    for (let i = 0; i < 80; i++) {
+      let f;
+      let k;
+      if (i < 20) {
+        f = (b & c) | (~b & d);
+        k = 0x5a827999;
+      } else if (i < 40) {
+        f = b ^ c ^ d;
+        k = 0x6ed9eba1;
+      } else if (i < 60) {
+        f = (b & c) | (b & d) | (c & d);
+        k = 0x8f1bbcdc;
+      } else {
+        f = b ^ c ^ d;
+        k = 0xca62c1d6;
+      }
+      const temp = (rotl(a, 5) + f + e + k + w[i]) >>> 0;
+      e = d;
+      d = c;
+      c = rotl(b, 30) >>> 0;
+      b = a;
+      a = temp;
+    }
+    h0 = (h0 + a) >>> 0;
+    h1 = (h1 + b) >>> 0;
+    h2 = (h2 + c) >>> 0;
+    h3 = (h3 + d) >>> 0;
+    h4 = (h4 + e) >>> 0;
+  }
+
+  const out = new Uint8Array(20);
+  const outView = new DataView(out.buffer);
+  [h0, h1, h2, h3, h4].forEach((h, i) => outView.setUint32(i * 4, h, false));
+  return out;
+}
+
+// HMAC-SHA1 segun RFC 2104 (bloque de 64 bytes).
+function hmacSha1(key, message) {
+  const k = key.length > 64 ? sha1(key) : key;
+  const padded = new Uint8Array(64);
+  padded.set(k);
+  const inner = new Uint8Array(64 + message.length);
+  const outer = new Uint8Array(64 + 20);
+  for (let i = 0; i < 64; i++) {
+    inner[i] = padded[i] ^ 0x36;
+    outer[i] = padded[i] ^ 0x5c;
+  }
+  inner.set(message, 64);
+  outer.set(sha1(inner), 64);
+  return sha1(outer);
+}
+
+async function hmacSha1WithFallback(keyBytes, counterBytes) {
+  const cryptoSubtle = globalThis.crypto && globalThis.crypto.subtle;
+  if (cryptoSubtle) {
+    try {
+      const cryptoKey = await cryptoSubtle.importKey(
+        'raw',
+        keyBytes,
+        { name: 'HMAC', hash: { name: 'SHA-1' } },
+        false,
+        ['sign']
+      );
+      return new Uint8Array(await cryptoSubtle.sign('HMAC', cryptoKey, counterBytes));
+    } catch {
+      // Algunas combinaciones de entorno rechazan la operacion; se usa la implementacion local.
+    }
+  }
+  return hmacSha1(keyBytes, counterBytes);
+}
+
+/**
+ * Calcula el codigo TOTP de 6 digitos segun RFC 6238 (HMAC-SHA1 nativo o implementacion local)
  */
 export async function calculateTotpCode(secretBase32, epochMs = Date.now()) {
-  try {
-    const keyBytes = base32ToBytes(secretBase32);
-    if (!keyBytes || keyBytes.length === 0) {
-      return '000000';
-    }
-
-    const epochSec = Math.floor(epochMs / 1000);
-    const counter = Math.floor(epochSec / 30);
-
-    // Buffer de 8 bytes para el contador (Big Endian)
-    const counterBuffer = new ArrayBuffer(8);
-    const counterView = new DataView(counterBuffer);
-    counterView.setUint32(0, 0, false);
-    counterView.setUint32(4, counter, false);
-
-    // Importacion de la llave HMAC-SHA1 en Web Crypto API
-    const cryptoSubtle = window.crypto.subtle;
-    const cryptoKey = await cryptoSubtle.importKey(
-      'raw',
-      keyBytes,
-      { name: 'HMAC', hash: { name: 'SHA-1' } },
-      false,
-      ['sign']
-    );
-
-    // Firma HMAC del contador
-    const signature = await cryptoSubtle.sign('HMAC', cryptoKey, counterBuffer);
-    const sigBytes = new Uint8Array(signature);
-
-    // Truncamiento dinamico segun RFC 4226 / RFC 6238
-    const offset = sigBytes[sigBytes.length - 1] & 0x0f;
-    const binary =
-      ((sigBytes[offset] & 0x7f) << 24) |
-      ((sigBytes[offset + 1] & 0xff) << 16) |
-      ((sigBytes[offset + 2] & 0xff) << 8) |
-      (sigBytes[offset + 3] & 0xff);
-
-    const otp = binary % 1000000;
-    return otp.toString().padStart(6, '0');
-  } catch (err) {
-    // Fallback matematico seguro si WebCrypto no estuviese disponible
-    const step = Math.floor(Date.now() / 30000);
-    const hash = (step * 2654435761) % 1000000;
-    return Math.abs(hash).toString().padStart(6, '0');
+  const keyBytes = base32ToBytes(secretBase32);
+  if (!keyBytes || keyBytes.length === 0) {
+    return '000000';
   }
+
+  const epochSec = Math.floor(epochMs / 1000);
+  const counter = Math.floor(epochSec / 30);
+
+  // Contador de 8 bytes Big Endian; la parte alta cubre instantes posteriores al ano 2106.
+  const counterBytes = new Uint8Array(8);
+  const counterView = new DataView(counterBytes.buffer);
+  counterView.setUint32(0, Math.floor(counter / 0x100000000), false);
+  counterView.setUint32(4, counter >>> 0, false);
+
+  // DEF-47: el respaldo anterior devolvia un numero derivado de Date.now() sin usar el secreto.
+  const sigBytes = await hmacSha1WithFallback(keyBytes, counterBytes);
+
+  // Truncamiento dinamico segun RFC 4226 / RFC 6238
+  const offset = sigBytes[sigBytes.length - 1] & 0x0f;
+  const binary =
+    ((sigBytes[offset] & 0x7f) << 24) |
+    ((sigBytes[offset + 1] & 0xff) << 16) |
+    ((sigBytes[offset + 2] & 0xff) << 8) |
+    (sigBytes[offset + 3] & 0xff);
+
+  const otp = binary % 1000000;
+  return otp.toString().padStart(6, '0');
 }
 
 /**
