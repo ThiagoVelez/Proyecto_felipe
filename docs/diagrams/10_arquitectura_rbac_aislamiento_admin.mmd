@@ -1,8 +1,9 @@
 flowchart TB
     subgraph Usuarios ["Usuarios del Sistema (RBAC)"]
         UserAdmin["Usuario con Rol ADMIN (role_id = 1)"]
-        UserMedico["Facultativo Médico: Dr. Santiago Vélez (role_id = 2)"]
+        UserMedico["Facultativo Médico (role_id = 2)"]
         UserEnfermero["Personal de Enfermería (role_id = 3)"]
+        UserAdmision["Personal de Admisión (role_id = 4)"]
     end
 
     subgraph FrontendApp ["Frontend React 18 PWA (App.jsx Dispatcher)"]
@@ -12,12 +13,10 @@ flowchart TB
             AdminDash["AdminDashboardScreen"]
             ModGobernanza["Gobernanza de Personal (Cotejo ReTHUS & Habilitación)"]
             ModAuditoria["Bitácora Forense Inmutable (Trazas SHA-256)"]
-            ModSedes["Gestión de Red Asistencial (Cartago, La Unión, Tuluá, Rural)"]
-            ModCatalogo["Catálogo Farmacológico CUM / INVIMA"]
+            ModSedes["Catálogo Local de Sedes (Cartago, La Unión, Tuluá, Rural)"]
             AdminDash --> ModGobernanza
             AdminDash --> ModAuditoria
             AdminDash --> ModSedes
-            AdminDash --> ModCatalogo
         end
 
         subgraph ClinicalScope ["Entorno Clínico Asistencial Protegido (Clinical Layout)"]
@@ -30,7 +29,7 @@ flowchart TB
     end
 
     subgraph BackendGateway ["API Gateway GoFiber v2 (Control RBAC Estricto)"]
-        AuthMiddleware["AuthMiddleware: Verificación JWT Bearer"]
+        AuthMiddleware["AuthMiddleware: JWT Bearer + cuenta activa y rol vigentes"]
         RBACCheck{"RequireRoles Middleware"}
 
         subgraph EndpointsAdmin ["Rutas Administrativas (/api/v1/admin/*)"]
@@ -44,6 +43,8 @@ flowchart TB
             RouteHCE["/api/v1/clinical-records/*"]
             RoutePresc["/api/v1/prescriptions/*"]
             RouteSync["/api/v1/sync/*"]
+            RoutePatients["/api/v1/patients/* - ADMISION, ENFERMERO, MEDICO"]
+            RouteMeds["/api/v1/medications"]
         end
     end
 
@@ -51,9 +52,10 @@ flowchart TB
     UserAdmin --> AuthFilter
     UserMedico --> AuthFilter
     UserEnfermero --> AuthFilter
+    UserAdmision --> AuthFilter
 
     AuthFilter -->|Rol ADMIN| AdminScope
-    AuthFilter -->|Rol Asistencial MEDICO o ENFERMERO| ClinicalScope
+    AuthFilter -->|Rol Asistencial MEDICO, ENFERMERO o ADMISION| ClinicalScope
 
     %% Llamadas de Red Seguras
     AdminScope -->|Token JWT ADMIN| AuthMiddleware
@@ -62,7 +64,7 @@ flowchart TB
     AuthMiddleware --> RBACCheck
 
     RBACCheck -->|Permitido ADMIN| EndpointsAdmin
-    RBACCheck -->|Permitido MEDICO y ENFERMERO| EndpointsClinicos
+    RBACCheck -->|Permitido MEDICO, ENFERMERO y ADMISION según la ruta| EndpointsClinicos
 
     %% Restricciones de Ley y Bloqueos
     RBACCheck -.->|403 Forbidden: ADMIN bloqueado de datos clínicos| EndpointsClinicos

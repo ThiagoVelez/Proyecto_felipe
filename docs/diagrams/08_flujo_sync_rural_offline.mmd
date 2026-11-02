@@ -12,7 +12,7 @@ flowchart TD
 
     subgraph RestablecimientoConexion ["Retorno a Sede Central / Deteccion de Red"]
         NetEvent["Evento navigator.onLine / Conexion Hospitalaria Establecida"]
-        BatchBuilder["Constructor de Lote Cifrado (Batch JSON)"]
+        BatchBuilder["Constructor de Lote (Batch JSON: id, paciente, contenido, firma, closed_at)"]
         SyncService["Servicio de Sincronizacion PWA (src/services/api.js)"]
 
         LocalCache --> NetEvent
@@ -21,18 +21,31 @@ flowchart TD
     end
 
     subgraph BackendGo ["Servidor Central GoFiber & Base de Datos"]
-        SyncEndpoint["Endpoint POST /api/v1/sync/batch"]
-        IdempotencyCheck{"Verifica Idempotencia: ¿UUID ya existe en BD?"}
-        RejectDuplicate["Descarte Silencioso de Duplicados (HTTP 200 OK Idempotente)"]
-        ChainVerify["Verificacion de Continuidad de Cadena Criptografica SHA-256"]
-        PersistBatch["Insercion Transaccional en Base de Datos (is_offline_sync = TRUE)"]
+        SyncEndpoint["POST /api/v1/sync/batch (JWT rol MEDICO)"]
+        Sanitize["Descarta doctor_id, previous_hash y hash_sha256 del cliente; autor = medico autenticado"]
+        IdempotencyCheck{"¿El UUID ya existe en BD?"}
+        ClosedCheck{"¿El folio existente esta cerrado?"}
+        Acknowledge["Se reconoce sin modificarlo (HTTP 200 idempotente, nunca se reabre)"]
+        OwnerCheck{"¿Borrador de otro medico?"}
+        SkipForeign["Se omite el registro"]
+        ChainCompute["Calcula hash previo y hash en el servidor, encadenando al historial y dentro del lote (closed_at a segundos)"]
+        PersistBatch["Transaccion atomica: SELECT ... FOR UPDATE, INSERT o UPDATE de borradores (is_offline_sync = TRUE)"]
+        ChainConflict{"¿Conflicto de cadena concurrente?"}
+        Retry["Recalcula el lote (hasta 5 intentos)"]
         AuditBatch["Registro en Bitacora de Auditoria Forense"]
 
         SyncService -->|Transmision por Lote| SyncEndpoint
-        SyncEndpoint --> IdempotencyCheck
-        IdempotencyCheck -->|Si ya existe| RejectDuplicate
-        IdempotencyCheck -->|No existe| ChainVerify
-        ChainVerify --> PersistBatch
-        PersistBatch --> AuditBatch
+        SyncEndpoint --> Sanitize
+        Sanitize --> IdempotencyCheck
+        IdempotencyCheck -->|Si existe| ClosedCheck
+        IdempotencyCheck -->|No existe| ChainCompute
+        ClosedCheck -->|Cerrado| Acknowledge
+        ClosedCheck -->|Abierto| OwnerCheck
+        OwnerCheck -->|Si| SkipForeign
+        OwnerCheck -->|No, mismo autor| ChainCompute
+        ChainCompute --> PersistBatch
+        PersistBatch --> ChainConflict
+        ChainConflict -->|Si| Retry
+        Retry --> ChainCompute
+        ChainConflict -->|No| AuditBatch
     end
-

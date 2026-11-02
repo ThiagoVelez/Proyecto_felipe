@@ -38,6 +38,12 @@ La evaluacion integral del producto software «SaludConecta IPS v2.4» se rige p
 
 ---
 
+## 2.1 Auditoria de Seguridad (SEC-xx)
+
+Una auditoria posterior registro y corrigio 25 defectos adicionales: 7 criticos, 16 altos, 1 medio y 1 bajo. Cubren el cruce de alergias (paciente del folio, familias farmacologicas y tildes), la inmutabilidad en sincronizacion, la clasificacion Manchester, la persistencia sin fallback silencioso, la eliminacion de cuentas con credenciales conocidas, `JWT_SECRET` obligatorio, revocacion inmediata de sesiones, MFA con codigo vigente, bloqueo por intentos, cadena SHA-256 sin bifurcaciones, control de acceso por autor del folio, sincronizacion con autoria del servidor, API de admision, triggers en PostgreSQL, actualizacion de Fiber y frontend conectado a la API real. El detalle por defecto (causa, correccion y prueba asociada) esta en la seccion 12 del `README.md`.
+
+---
+
 ## 3. Acciones de Mantenimiento Preventivo y Refactorizacion Ejecutadas
 
 1. **Desacoplamiento Estricto mediante Puertos e Inversion de Dependencias:**

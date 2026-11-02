@@ -8,8 +8,8 @@ sequenceDiagram
 
     %% Fase 1: Inicio de Sesion
     Note over User,Storage: FASE 1: Autenticación Exitosa Inicial
-    User->>Browser: Ingresa credenciales y Token TOTP (6 dígitos)
-    Browser->>API: POST /api/v1/auth/login
+    User->>Browser: Ingresa credenciales (y TOTP de 6 dígitos si la cuenta tiene MFA)
+    Browser->>API: POST /api/v1/auth/login { email, password, totp_code }
     API-->>Browser: 200 OK { token, user: { role, full_name, professional_card } }
     Browser->>App: handleLoginSuccess(data)
     App->>Storage: setItem('saludconecta_session_active', 'true')
@@ -28,6 +28,8 @@ sequenceDiagram
     App->>Storage: getItem('saludconecta_current_view')
     Storage-->>App: Retorna sesión activa, usuario almacenado y vista actual
     App->>App: setIsAuthenticated(true), setCurrentUser(user), setCurrentView(view)
+    App->>API: GET /api/v1/auth/me (revalida que la cuenta siga activa)
+    API-->>App: 200 OK { user }
     App-->>Browser: Restaura exactamente la pantalla de trabajo previa (Sin ir a Login)
 
     %% Fase 3: Cierre de Sesion Seguro
@@ -41,3 +43,9 @@ sequenceDiagram
     App->>App: setIsAuthenticated(false), setCurrentUser(null)
     App-->>Browser: Redirige limpiamente a AuthScreen (Login con fondo ECG animado)
 
+    %% Fase 4: Revocacion por el servidor
+    Note over User,API: FASE 4: Sesión Vencida o Cuenta Suspendida
+    App->>API: Cualquier solicitud con el token vigente
+    API-->>App: 401 Unauthorized
+    App->>Storage: Limpia sesión, usuario, token y vista
+    App-->>Browser: Evento saludconecta:session-expired y aviso en AuthScreen

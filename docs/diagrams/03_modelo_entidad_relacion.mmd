@@ -113,9 +113,9 @@ erDiagram
         text treatment_plan
         boolean is_closed
         string signature_token
-        string previous_hash
+        string previous_hash "UK compuesto (patient_id, previous_hash)"
         string hash_sha256 UK
-        datetime closed_at
+        datetime closed_at "sellado a segundos"
         timestamp created_at
     }
 

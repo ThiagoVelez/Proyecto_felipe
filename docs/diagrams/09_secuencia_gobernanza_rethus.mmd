@@ -27,8 +27,8 @@ sequenceDiagram
     %% Fase 2: Bloqueo de Acceso No Habilitado
     Note over Personal,API: FASE 2: Intento de Acceso Preventivo Bloqueado
     Personal->>PWA: Intenta iniciar sesión con credenciales
-    PWA->>API: POST /api/v1/auth/login { email, password, totp }
-    API->>Core: Login(email, password, totp)
+    PWA->>API: POST /api/v1/auth/login { email, password, totp_code }
+    API->>Core: Login(email, password, totp_code)
     Core->>DB: SELECT * FROM users WHERE email = ?
     DB-->>Core: Usuario encontrado con is_active = FALSE
     Core-->>API: ErrUserInactive
@@ -51,11 +51,11 @@ sequenceDiagram
     API->>Core: ActivateUser(userID)
     Core->>Core: Validar presencia inmutable de professional_card
     Core->>DB: UPDATE users SET is_active = TRUE WHERE id = ?
-    Core->>DB: INSERT INTO audit_logs (action="USER_ACTIVATION", resource="rethus_registry", sha256)
+    API->>DB: AuditMiddleware: INSERT INTO audit_logs (action=UPDATE, resource=/api/v1/admin/users/:id/status, usuario, IP, Correlation-ID)
     DB-->>Core: OK (Transacción confirmada)
     Core-->>API: Usuario habilitado
     API-->>PWA: 200 OK ("Usuario habilitado y verificado ante ReTHUS")
-    PWA-->>Admin: Actualización optimista de estado en tabla asistencial
+    PWA-->>Admin: Actualiza la tabla solo tras la confirmación del servidor (si falla, muestra el error real)
 
     %% Fase 4: Sesión Habilitada
     Note over Personal,DB: FASE 4: Ingreso Asistencial Habilitado
@@ -68,3 +68,15 @@ sequenceDiagram
     API-->>PWA: 200 OK { token, user }
     PWA-->>Personal: Acceso concedido al Portal Clínico Asistencial
 
+    %% Fase 5: Suspensión con efecto inmediato
+    Note over Admin,DB: FASE 5: Suspensión con Revocación Inmediata
+    Admin->>PWA: Click "Suspender"
+    PWA->>API: PATCH /api/v1/admin/users/:id/status { is_active: false }
+    API->>Core: DeactivateUser(userID)
+    Core->>DB: UPDATE users SET is_active = FALSE WHERE id = ?
+    Personal->>PWA: Cualquier acción con el token aún vigente
+    PWA->>API: Solicitud con Authorization Bearer
+    API->>Core: ValidateSession(userID)
+    Core-->>API: ErrUserInactive
+    API-->>PWA: 401 Unauthorized (La cuenta se encuentra desactivada)
+    PWA-->>Personal: Cierra la sesión y vuelve al login

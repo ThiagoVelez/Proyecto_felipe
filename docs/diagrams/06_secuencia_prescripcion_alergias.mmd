@@ -5,33 +5,39 @@ sequenceDiagram
     participant Modal as AllergyAlertModal (React)
     participant API as Fiber Router / Middleware
     participant Service as PrescriptionService
-    participant DB as MySQL Database / Catalogo CUM
+    participant DB as Base de Datos / Catalogo CUM
 
-    Medico->>+Frontend: Selecciona paciente y medicamento "Amoxicilina 500mg" (CUM)
-    Frontend->>+API: POST /api/v1/prescriptions (Payload: patient_id, items)
-    API->>API: Valida Token JWT, Correlation-ID y Rol "MEDICO"
-    API->>+Service: CreatePrescription(ctx, req)
+    Medico->>+Frontend: Selecciona el folio y un medicamento del catalogo (GET /medications?q=)
+    Frontend->>+API: POST /api/v1/prescriptions { clinical_record_id, items }
+    API->>API: Valida JWT, cuenta activa, Correlation-ID y Rol "MEDICO"
+    API->>+Service: IssuePrescription(ctx, prescription)
+
+    Service->>+DB: SELECT folio por clinical_record_id
+    DB-->>-Service: Folio con su patient_id y doctor_id
+
+    alt El patient_id enviado no coincide con el del folio
+        Service-->>API: ErrPatientMismatch
+        API-->>Frontend: HTTP 409 Conflict
+    else El medico no es el autor del folio
+        Service-->>API: ErrNotRecordOwner
+        API-->>Frontend: HTTP 403 Forbidden
+    end
 
     rect rgb(255, 235, 235)
-        Note over Service, DB: Intercepcion de Seguridad Farmacologica (< 150 ms)
-        Service->>+DB: SELECT active_ingredient, severity FROM patient_allergies WHERE patient_id = ?
-        DB-->>-Service: Alergias del paciente (ej: "BETALACTAMICOS", severidad: "SEVERA")
-        Service->>+DB: SELECT active_ingredient FROM medications_catalog WHERE id = ?
-        DB-->>-Service: Principio activo: "Amoxicilina" (Familia Betalactamicos)
-        Service->>Service: Interceptor cruza familias farmacologicas (Amoxicilina colisiona con Betalactamicos)
-        Service-->>API: Error domain.ErrAllergyConflict: "Alerta Critica: Alergia a Betalactamicos"
+        Note over Service, DB: Intercepcion de Seguridad Farmacologica (< 150 ms) con el paciente DEL FOLIO
+        Service->>+DB: SELECT alergias WHERE patient_id = (paciente del folio)
+        DB-->>-Service: Alergias (ej: "Penicilina", severidad "SEVERA")
+        Service->>+DB: SELECT principio activo y generico del medicamento
+        DB-->>-Service: "AMOXICILINA" / "Amoxicilina"
+        Service->>Service: MatchAllergy: sin tildes ni mayusculas, por componente y por familia (Amoxicilina pertenece a Penicilina y Betalactamicos)
+        Service-->>API: AllergyConflictError { principio, severidad, medicamento }
     end
 
-    API-->>-Frontend: HTTP 422 Unprocessable Entity { error: "Alerta Critica", conflict: "BETALACTAMICOS" }
-    Frontend->>+Modal: Renderiza Modal de Contraindicacion Critica
-    Modal-->>Medico: Muestra advertencia roja de choque anafilactico y bloqueo de emision
+    API-->>-Frontend: HTTP 422 { error, allergy_conflict: true, active_ingredient, severity, medication }
+    Frontend->>+Modal: Renderiza Modal de Contraindicacion Critica con los datos del servidor
+    Modal-->>Medico: Muestra advertencia roja y bloqueo de emision (sin opcion de omitir)
+    Medico->>Modal: Clic en "Cancelar y seleccionar farmaco alternativo"
+    Modal-->>Frontend: Limpia el item conflictivo
+    Frontend-->>Medico: Permite recetar una alternativa fuera de la familia
 
-    alt Medico cancela prescripcion insegura (Conducta Recomendada)
-        Medico->>Modal: Clic en "Cancelar y seleccionar farmaco alternativo"
-        Modal-->>Frontend: Limpia item conflictivo
-        Frontend-->>Medico: Permite recetar alternativa no betalactamica (ej. Claritromicina)
-    else Medico asume responsabilidad clinica informada
-        Medico->>Modal: Marca casilla obligatoria de confirmacion de riesgo y firma
-        Modal->>Frontend: Habilita excepcion justificada
-    end
-
+    Note over Service, DB: Sin conflicto: valida stock acumulado, persiste la receta y descuenta inventario (409 si es insuficiente)

@@ -20,6 +20,14 @@
 | **RF04** | Cadena Criptografica SHA-256 | Calculo determinista de hash SHA-256 encadenado que incorpora el hash del folio previo del paciente, asegurando trazabilidad contra alteraciones o ataques de sustitucion. | **Must Have** |
 | **RF05** | Intercepcion Farmacologica de Alergias | Cruce de seguridad en tiempo real entre el principio activo del catalogo CUM recetado y los antecedentes alergicos del paciente. Respuesta en < 150 ms bloqueando prescripciones conflictivas (ej. Betalactamicos). | **Must Have** |
 | **RF06** | Sincronizacion Offline-First Rural | Consolidacion por lotes idempotentes (UUID v4) de folios capturados en brigadas rurales desconectadas, garantizando validacion de firmas y continuidad de la cadena criptografica. | **Should Have** |
+| **RF07** | Gobernanza de Personal y Habilitacion ReTHUS | Registro de personal exclusivo del Administrador; toda cuenta ingresa inactiva y exige tarjeta profesional para roles medicos y de enfermeria. Activacion y suspension controladas; la suspension revoca de inmediato los tokens vigentes. | **Must Have** |
+| **RF08** | Panel Administrativo Desacoplado | Entorno exclusivo del rol ADMIN con gobernanza de personal y bitacora forense real (inicios de sesion, mutaciones y lecturas de datos clinicos). Los errores del servidor se muestran sin simular exito. | **Must Have** |
+| **RF09** | Perfil Asistencial con Alto Contraste | Perfil con banners tematicos, foto reactiva y oval de alta luminosidad (contraste WCAG AAA). | **Must Have** |
+| **RF10** | Menu Lateral Colapsable y Persistencia de Sesion | Sidebar colapsable y persistencia de sesion ante recarga (F5) con revalidacion contra `GET /auth/me`. | **Must Have** |
+| **RF11** | Admision de Pacientes y Antecedentes Alergicos | API de admision, busqueda por documento y registro de alergias para ADMISION, ENFERMERO y MEDICO, con validacion de catalogos y rechazo de documentos duplicados. | **Must Have** |
+| **RF12** | Catalogo Farmacologico y Prescripcion | Consulta de catalogo CUM con stock y descuento de inventario al prescribir (catalogo inicial de demostracion `CUM-DEMO-xxx`). | **Should Have** |
+
+> El detalle vigente de cada requisito (limites de intentos, revocacion de sesion, cruce de alergias por familia, autor del folio, cadena sin bifurcaciones, sincronizacion con autoria y hashes del servidor) esta en la seccion 4 del `README.md`.
 
 ---
 
@@ -28,6 +36,11 @@
 1. **RNF01 - Latencia de Respuesta (Eficiencia de Desempeno):** El percentil 95 (p95) de la latencia en operaciones de lectura y emision de prescripciones debe ser inferior a 400 ms bajo concurrencia estandar.
 2. **RNF02 - Trazabilidad y Auditoria Forense:** Cada peticion debe portar y propagar un encabezado `X-Correlation-ID` unico (UUID v4). Las operaciones de mutacion deben quedar persistidas en bitacora inalterable con direccion IP, marca de tiempo UTC y actor institucional (ISO/IEC 27001).
 3. **RNF03 - Seguridad en Aplicaciones (OWASP ASVS Nivel 2):** Proteccion contra inyeccion SQL mediante sentencias preparadas, encriptacion de contrasenas mediante Bcrypt (coste 12), expiracion forzosa de tokens JWT, limitacion de tasa de peticiones (Rate Limiting) y sanitizacion de cabeceras CORS.
+4. **RNF04 - Inmutabilidad Criptografica de Datos:** La modificacion de folios cerrados y de notas aclaratorias se previene en la aplicacion y en el motor de base de datos (triggers en MySQL y PostgreSQL).
+5. **RNF05 - Resiliencia en Zonas Rurales:** Operacion autonoma sin conexion y sincronizacion idempotente con la sede central.
+6. **RNF06 - Configuracion y Persistencia a Prueba de Fallos:** El servicio no arranca sin `JWT_SECRET` seguro y, si la base de datos configurada no responde, termina con error en lugar de conmutar a memoria.
+7. **RNF07 - Gestion de Secretos:** Sin secretos ni cuentas por defecto en codigo, compose o documentacion; las credenciales viven en un `.env` privado.
+8. **RNF08 - Consistencia bajo Concurrencia:** Repositorios con copias defensivas y candados (`go test -race`), cadena SHA-256 lineal ante cierres simultaneos y lotes atomicos.
 
 ---
 

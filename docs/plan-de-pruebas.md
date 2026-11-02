@@ -53,6 +53,24 @@ El aseguramiento de calidad de «SaludConecta IPS v2.4» se fundamenta en la nor
 
 ---
 
+### Pruebas de la auditoria de seguridad
+
+| ID | Modulo | Prueba | Resultado esperado |
+| :--- | :--- | :--- | :--- |
+| **TC-SEC-01** | Farmacia | `TestAllergyCrossCheckUsesRecordPatient` | El cruce usa el paciente del folio; un paciente ajeno devuelve conflicto 409 |
+| **TC-SEC-02** | Farmacia | `TestAllergyFamilyAndAccentMatching` | Penicilina bloquea amoxicilina; con y sin tildes; paracetamol no se bloquea |
+| **TC-SEC-03** | HCE | `TestRecordObjectLevelAccess` | Solo el autor cierra y anexa notas; el folio del autor verifica su integridad |
+| **TC-SEC-04** | HCE | `TestConcurrentClosesKeepChainLinear` | Cierres simultaneos forman una cadena lineal sin eslabones repetidos |
+| **TC-SEC-05** | Sync | `TestSyncNeverRewritesClosedRecordsNorTrustsClient` | Folio cerrado intacto al reenviar; autoria y hashes del servidor |
+| **TC-SEC-06** | Triaje | `TestTriageRejectsClientLevelOutsideCatalog`, `TestTriageTemperatureDiscriminators` | Nivel del cliente validado; 30 C es NIVEL_II |
+| **TC-SEC-07** | Auth | `TestDeactivatedUserLosesAccessImmediately`, `TestMFASetupRequiresCurrentCode` | Revocacion inmediata y MFA con codigo vigente |
+| **TC-SEC-08** | Auth | `TestLoginBruteForceLockout`, `TestTOTPBruteForceLockout`, `TestRateLimitUsesRealClientIPBehindProxy` | Bloqueo por cuenta y limite por IP real |
+| **TC-SEC-09** | Config | `TestJWTSecretValidation`, `TestBootstrapAdminNeverUsesDefaults` | Sin secretos ni cuentas por defecto |
+| **TC-SEC-10** | Pacientes | `TestAdmissionPatientAndAllergyAPI` | Admision y alergias por API con RBAC y validacion |
+| **TC-SEC-11** | Frontend | `ClinicalScreens`, `PatientFlow`, `AdminGovernance`, `AuthMfa`, `totp` | Pantallas sobre la API real; errores visibles; TOTP solo en servidor |
+
+---
+
 ## 4. Matriz de Trazabilidad de Requisitos (RTM)
 
 | Requisito Funcional | Casos de Prueba Asociados | Estado de Cobertura | Resultado de Ejecucion |
@@ -63,4 +81,7 @@ El aseguramiento de calidad de «SaludConecta IPS v2.4» se fundamenta en la nor
 | **RF04: Cadena Criptografica SHA-256** | `TC-HCE-05`, `TestChainedSHA256Integrity` | 100% | **PASS** |
 | **RF05: Intercepcion de Alergias** | `TC-RX-01`, `TC-RX-02`, `TC-UI-01` | 100% | **PASS** |
 | **RF06: Sincronizacion Offline Rural** | `SaveBatch` / Batch Synchronization Integrity Unit Suite | 100% | **PASS** |
-
+| **RF07-RF08: Gobernanza y Panel Admin** | `TestStaffGovernanceAndReTHUSVerification`, `TestStaffRegisterRequiresAdmin`, `AdminGovernance.test.jsx` | 100% | **PASS** |
+| **RF10: Sesion resistente a F5** | `AuthMfa.test.jsx`, `DoctorLayout.test.jsx` | 100% | **PASS** |
+| **RF11: Admision de Pacientes** | `TestAdmissionPatientAndAllergyAPI`, `PatientFlow.test.jsx` | 100% | **PASS** |
+| **RF12: Catalogo y Prescripcion** | `TestConcurrentPrescriptionsDoNotRaceOnStock`, `TestGetMedicationReturnsCopy` | 100% | **PASS** |

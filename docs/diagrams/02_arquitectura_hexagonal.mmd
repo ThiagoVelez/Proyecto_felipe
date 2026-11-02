@@ -13,11 +13,12 @@ flowchart TD
         FiberServer["Servidor HTTP GoFiber v2 (Puerto :8080)"]
         AuthHandler["AuthHandler & MFA Controller (Registro de Personal ReTHUS)"]
         AdminHandler["AdminHandler (Gobernanza de Personal & Auditoría)"]
+        PatientHandler["PatientHandler (Admisión y Alergias)"]
         TriageHandler["TriageHandler"]
         RecordHandler["ClinicalRecordHandler"]
         PrescHandler["PrescriptionHandler"]
         SyncHandler["SyncHandler (Lotes Offline UUID v4)"]
-        Middlewares["Middlewares: JWT, RBAC, RateLimit, Audit & CorrelationID"]
+        Middlewares["Middlewares: JWT + Sesión Vigente, RBAC, RateLimit (IP real tras proxy), Audit & CorrelationID"]
     end
 
     subgraph CoreHexagon ["Núcleo de Negocio (Core Domain & Puertos)"]
@@ -25,6 +26,7 @@ flowchart TD
         subgraph InPorts ["Puertos de Entrada (Driving Interfaces)"]
             AuthServicePort["AuthService Port"]
             AdminServicePort["AdminService Port"]
+            PatientServicePort["PatientService Port"]
             TriageServicePort["TriageService Port"]
             RecordServicePort["ClinicalRecordService Port"]
             PrescServicePort["PrescriptionService Port"]
@@ -32,12 +34,13 @@ flowchart TD
         end
 
         subgraph DomainServices ["Servicios de Dominio (Casos de Uso Puros)"]
-            AuthLogic["Lógica de Autenticación, TOTP & Inactividad Obligatoria"]
+            AuthLogic["Autenticación, TOTP, Bloqueo por Intentos & Revalidación de Sesión"]
             AdminLogic["Gobernanza ReTHUS, Activación & Auditoría Forense"]
-            ManchesterEngine["Motor Triaje Manchester & Validación Fisiológica"]
-            HCEImmutability["Reglas de Inmutabilidad HCE & Cadena SHA-256"]
-            AllergyInterceptor["Motor Interceptor de Alergias (< 150 ms)"]
-            SyncIdempotency["Consolidador de Lotes e Idempotencia"]
+            PatientLogic["Admisión de Pacientes & Validación de Alergias"]
+            ManchesterEngine["Motor Triaje Manchester (nivel calculado en servidor)"]
+            HCEImmutability["Inmutabilidad HCE, Autor del Folio & Cadena SHA-256 sin Bifurcación"]
+            AllergyInterceptor["Interceptor de Alergias por Familia y sin Tildes (< 150 ms)"]
+            SyncIdempotency["Consolidador Idempotente (autoría y hashes en servidor)"]
         end
 
         subgraph OutPorts ["Puertos de Salida (Driven Interfaces)"]
@@ -54,9 +57,9 @@ flowchart TD
 
     subgraph SecondaryAdapters ["Adaptadores Secundarios (Driven / Salida)"]
         direction TB
-        MySQLAdapter["MySQL 8.0 Repository (InnoDB + Seeder Idempotente)"]
-        PostgresAdapter["PostgreSQL Repository (Opcional)"]
-        MemoryAdapter["In-Memory Repository (Test Mode / Volátil)"]
+        MySQLAdapter["MySQL 8.0 Repository (InnoDB + Migración Idempotente)"]
+        PostgresAdapter["PostgreSQL Repository (Opcional, esquema y triggers propios)"]
+        MemoryAdapter["In-Memory Repository (Solo pruebas, DB_DRIVER=memory)"]
         RIPSJsonAdapter["RIPS JSON Generator (Res. 2275 de 2023)"]
         HL7FHIRAdapter["HL7 FHIR R4 Mapper (Interoperabilidad Internacional)"]
         CryptoAdapter["Crypto Package (Bcrypt Cost 12, SHA-256, HMAC-SHA1 TOTP)"]
@@ -66,6 +69,7 @@ flowchart TD
     FiberServer --> Middlewares
     Middlewares --> AuthHandler
     Middlewares --> AdminHandler
+    Middlewares --> PatientHandler
     Middlewares --> TriageHandler
     Middlewares --> RecordHandler
     Middlewares --> PrescHandler
@@ -73,6 +77,7 @@ flowchart TD
 
     AuthHandler --> AuthServicePort
     AdminHandler --> AdminServicePort
+    PatientHandler --> PatientServicePort
     TriageHandler --> TriageServicePort
     RecordHandler --> RecordServicePort
     PrescHandler --> PrescServicePort
@@ -80,6 +85,7 @@ flowchart TD
 
     AuthServicePort --> AuthLogic
     AdminServicePort --> AdminLogic
+    PatientServicePort --> PatientLogic
     TriageServicePort --> ManchesterEngine
     RecordServicePort --> HCEImmutability
     PrescServicePort --> AllergyInterceptor
