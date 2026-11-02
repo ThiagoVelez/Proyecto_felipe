@@ -1,6 +1,7 @@
 package backend_test
 
 import (
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -56,6 +57,16 @@ func calidadToken(t *testing.T, userID, role string) string {
 		t.Fatalf("No se pudo generar el token: %v", err)
 	}
 	return token
+}
+
+// marcaDefecto prefija la asercion que demuestra un defecto abierto. La herramienta
+// tests/backend/herramientas/controldefectos la usa para distinguir un fallo por el defecto de un
+// fallo por otra causa (preparacion fallida, panico o error de compilacion).
+const marcaDefecto = "DEFECTO-REPRODUCIDO"
+
+func defectoReproducido(t *testing.T, id, formato string, args ...interface{}) {
+	t.Helper()
+	t.Errorf("%s %s: %s", marcaDefecto, id, fmt.Sprintf(formato, args...))
 }
 
 // requireDefectoAbierto omite por defecto las pruebas que documentan defectos aun no corregidos.

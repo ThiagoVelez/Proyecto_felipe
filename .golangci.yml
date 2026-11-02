@@ -40,6 +40,7 @@ linters:
         - (*database/sql.Tx).Rollback
         - (io.Closer).Close
         - fmt.Fprintln
+        - fmt.Fprintf
     gosec:
       excludes:
         - G505 # crypto/sha1 es obligatorio en HOTP/TOTP segun RFC 4226 y RFC 6238
