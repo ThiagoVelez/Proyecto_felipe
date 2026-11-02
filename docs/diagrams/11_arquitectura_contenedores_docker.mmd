@@ -9,7 +9,7 @@ flowchart TB
             
             subgraph FrontContainer ["Contenedor 1: saludconecta-frontend (React PWA + Nginx Alpine)"]
                 NginxSrv["Servidor Web Nginx (Puerto 80 Interno)"]
-                StaticFiles["Archivos Estáticos SPA: HTML5, CSS3, JS Chunks, Video MP4"]
+                StaticFiles["Archivos Estáticos SPA: HTML5, CSS3, JS Chunks, Assets"]
                 ReverseProxy["Proxy Inverso Integrado (/api/ -> http://backend:8080/api/)"]
                 GzipEngine["Compresión Gzip & Cabeceras de Seguridad (ISO 27001)"]
             end
@@ -50,3 +50,4 @@ flowchart TB
     DBContainer --> SchemaInit
     DBContainer --> MySQLHealth
     MySQLCore --> VolMySQL
+

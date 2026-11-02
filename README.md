@@ -23,16 +23,16 @@
 
 ## 2. Integrantes y Asignación de Roles del Equipo
 
-| Nombre del Integrante                                  | Rol Asignado                           | Responsabilidades Principales                                                                                                  |
-| :----------------------------------------------------- | :------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------- |
+| Nombre del Integrante                                  | Rol Asignado                           | Responsabilidades Principales                                                                                                   |
+| :----------------------------------------------------- | :------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------ |
 | **Santiago Vélez**                                     | Líder Técnico / Arquitecto de Software | Diseño de arquitectura hexagonal, definición de puertos y adaptadores, gobernanza ReTHUS, coordinación Go/Fiber y persistencia. |
-| **Santiago Arcos**                                     | Responsable de Pruebas (QA / Testing)  | Diseño de casos de prueba aplicando partición de equivalencia y valores límite, automatización de suites en Go y React.        |
-| **Juan José Sánchez**                                  | Responsable de Calidad (ISO/IEC 25010) | Evaluación de características de calidad ISO 25010, bitácora de defectos (DEF-01 a DEF-04) y verificación de seguridad.        |
-| **Santiago Vélez, Santiago Arcos y Juan José Sánchez** | Responsables de Documentación          | Elaboración de especificaciones formales de requisitos, marco normativo (Res. 1995 / 2275), criterios BDD y manuales técnicos. |
+| **Santiago Arcos**                                     | Responsable de Pruebas (QA / Testing)  | Diseño de casos de prueba aplicando partición de equivalencia y valores límite, automatización de suites en Go y React.         |
+| **Juan José Sánchez**                                  | Responsable de Calidad (ISO/IEC 25010) | Evaluación de características de calidad ISO 25010, bitácora de defectos (DEF-01 a DEF-04) y verificación de seguridad.         |
+| **Santiago Vélez, Santiago Arcos y Juan José Sánchez** | Responsables de Documentación          | Elaboración de especificaciones formales de requisitos, marco normativo (Res. 1995 / 2275), criterios BDD y manuales técnicos.  |
 
 ### Persona Oficial de Pruebas Clínicas
 
-El facultativo líder y médico especialista activo en el entorno de pruebas es el **Dr. Santiago Vélez** (`svelez@saludconecta.ips.gov.co`, Tarjeta Profesional ReTHUS `RM-94821-VALLE`, Especialidad: *Medicina de Urgencias*, Sede: *Cartago - Hospital Central*).
+El facultativo líder y médico especialista activo en el entorno de pruebas es el **Dr. Santiago Vélez** (`svelez@saludconecta.ips.gov.co`, Tarjeta Profesional ReTHUS `RM-94821-VALLE`, Especialidad: _Medicina de Urgencias_, Sede: _Cartago - Hospital Central_).
 
 ---
 
@@ -55,28 +55,28 @@ El flujo de trabajo, la priorización de requisitos y el ciclo de vida del desar
 
 ### 4.1. Requisitos Funcionales (Priorización MoSCoW)
 
-| Código   | Nombre del Requisito                                | Descripción Detallada                                                                                                                                                                                                                                                                                       | Prioridad MoSCoW |
-| :------- | :-------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------- |
-| **RF01** | Autenticación, MFA y Roles RBAC                     | Control de acceso basado en roles asistenciales (MEDICO, ENFERMERO, ADMISION, AUDITOR, ADMIN) con tokens JWT (HS256) y autenticación multifactor obligatoria mediante algoritmo TOTP (RFC 6238) con generador y validador de código QR escaneable en Google Authenticator, Authy y Microsoft Authenticator. | **Must Have**    |
-| **RF02** | Triaje Manchester y Guardia Fisiológica             | Valoración en urgencias con semaforización automática en 5 niveles (Nivel I Rojo a Nivel V Azul) según constantes vitales e intercepción preventiva de rangos fisiológicos incompatibles (Escala de Glasgow < 3 o > 15, Frecuencia Cardíaca <= 0 o > 300 lpm, etc.).                                        | **Must Have**    |
-| **RF03** | HCE e Inmutabilidad Absoluta                        | Registro de atención clínica con bloqueo de modificación post-cierre. Una vez firmado electrónicamente el folio, cualquier petición de mutación es rechazada con HTTP 403 Forbidden y protegida por triggers a nivel de base de datos (Resolución 1995 de 1999).                                            | **Must Have**    |
-| **RF04** | Cadena Criptográfica SHA-256                        | Cálculo determinista de hash SHA-256 encadenado que incorpora el hash del folio previo del paciente, asegurando custodia legal, no repudio y trazabilidad inalterable ante auditorías forenses.                                                                                                             | **Must Have**    |
-| **RF05** | Intercepción Farmacológica de Alergias              | Cruce de seguridad en tiempo real entre el principio activo del catálogo CUM recetado y los antecedentes alérgicos del paciente. Respuesta en < 150 ms bloqueando prescripciones conflictivas (ej. Betalactámicos / Penicilinas).                                                                           | **Must Have**    |
-| **RF06** | Sincronización Offline-First Rural                  | Consolidación por lotes idempotentes con identificadores UUID v4 de folios y triajes capturados en brigadas rurales desconectadas, garantizando validación de firmas y continuidad de la cadena criptográfica.                                                                                              | **Should Have**  |
-| **RF07** | Gobernanza de Personal y Habilitación ReTHUS        | Registro de personal exclusivo del Administrador, donde toda cuenta ingresa obligatoriamente inactiva (`is_active = FALSE`). Validación mandatoria de Tarjeta Profesional ReTHUS para roles médicos y de enfermería (Res. 1995/1999). Activación y suspensión controlada mediante auditoría forense inmutable.                 | **Must Have**    |
-| **RF08** | Panel de Control Administrativo Desacoplado         | Entorno exclusivo para rol `ADMIN` (`AdminLayout`) aislado absolutamente de historias clínicas y consultas (Ley 1581 de 2012). Módulos de gobernanza de personal, visor forense de hashes SHA-256, monitoreo de 4 sedes operativas y catálogo farmacológico CUM/INVIMA.                                 | **Must Have**    |
-| **RF09** | Perfil Asistencial y Administrativo con Alto Contraste | Perfil estilo red social con colección de 5 banners temáticos (Pediatría, Farmacia, Urgencias, Cirugía, Cardiología), carga reactiva de foto de perfil y encapsulación de identidad en un óvalo protector de alta luminosidad (`bg-white/95`) que garantiza contraste WCAG AAA sobre cualquier fondo. | **Must Have**    |
-| **RF10** | Menú Lateral Colapsable y Persistencia de Sesión F5 | Sidebar asistencial con modo colapsable (`w-20`) centrado exclusivamente en íconos con tooltips y margen reactivo (`ml-20`/`ml-64`). Persistencia local del estado de autenticación y vista activa que previene el cierre de sesión ante eventos de recarga del navegador (F5).                   | **Must Have**    |
+| Código   | Nombre del Requisito                                   | Descripción Detallada                                                                                                                                                                                                                                                                                       | Prioridad MoSCoW |
+| :------- | :----------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------- |
+| **RF01** | Autenticación, MFA y Roles RBAC                        | Control de acceso basado en roles asistenciales (MEDICO, ENFERMERO, ADMISION, AUDITOR, ADMIN) con tokens JWT (HS256) y autenticación multifactor obligatoria mediante algoritmo TOTP (RFC 6238) con generador y validador de código QR escaneable en Google Authenticator, Authy y Microsoft Authenticator. | **Must Have**    |
+| **RF02** | Triaje Manchester y Guardia Fisiológica                | Valoración en urgencias con semaforización automática en 5 niveles (Nivel I Rojo a Nivel V Azul) según constantes vitales e intercepción preventiva de rangos fisiológicos incompatibles (Escala de Glasgow < 3 o > 15, Frecuencia Cardíaca <= 0 o > 300 lpm, etc.).                                        | **Must Have**    |
+| **RF03** | HCE e Inmutabilidad Absoluta                           | Registro de atención clínica con bloqueo de modificación post-cierre. Una vez firmado electrónicamente el folio, cualquier petición de mutación es rechazada con HTTP 403 Forbidden y protegida por triggers a nivel de base de datos (Resolución 1995 de 1999).                                            | **Must Have**    |
+| **RF04** | Cadena Criptográfica SHA-256                           | Cálculo determinista de hash SHA-256 encadenado que incorpora el hash del folio previo del paciente, asegurando custodia legal, no repudio y trazabilidad inalterable ante auditorías forenses.                                                                                                             | **Must Have**    |
+| **RF05** | Intercepción Farmacológica de Alergias                 | Cruce de seguridad en tiempo real entre el principio activo del catálogo CUM recetado y los antecedentes alérgicos del paciente. Respuesta en < 150 ms bloqueando prescripciones conflictivas (ej. Betalactámicos / Penicilinas).                                                                           | **Must Have**    |
+| **RF06** | Sincronización Offline-First Rural                     | Consolidación por lotes idempotentes con identificadores UUID v4 de folios y triajes capturados en brigadas rurales desconectadas, garantizando validación de firmas y continuidad de la cadena criptográfica.                                                                                              | **Should Have**  |
+| **RF07** | Gobernanza de Personal y Habilitación ReTHUS           | Registro de personal exclusivo del Administrador, donde toda cuenta ingresa obligatoriamente inactiva (`is_active = FALSE`). Validación mandatoria de Tarjeta Profesional ReTHUS para roles médicos y de enfermería (Res. 1995/1999). Activación y suspensión controlada mediante auditoría forense inmutable.                 | **Must Have**    |
+| **RF08** | Panel de Control Administrativo Desacoplado            | Entorno exclusivo para rol `ADMIN` (`AdminLayout`) aislado absolutamente de historias clínicas y consultas (Ley 1581 de 2012). Módulos de gobernanza de personal, visor forense de hashes SHA-256, monitoreo de 4 sedes operativas y catálogo farmacológico CUM/INVIMA.                                     | **Must Have**    |
+| **RF09** | Perfil Asistencial y Administrativo con Alto Contraste | Perfil estilo red social con colección de 5 banners temáticos (Pediatría, Farmacia, Urgencias, Cirugía, Cardiología), carga reactiva de foto de perfil y encapsulación de identidad en un óvalo protector de alta luminosidad (`bg-white/95`) que garantiza contraste WCAG AAA sobre cualquier fondo.       | **Must Have**    |
+| **RF10** | Menú Lateral Colapsable y Persistencia de Sesión F5    | Sidebar asistencial con modo colapsable (`w-20`) centrado exclusivamente en íconos con tooltips y margen reactivo (`ml-20`/`ml-64`). Persistencia local del estado de autenticación y vista activa que previene el cierre de sesión ante eventos de recarga del navegador (F5).                             | **Must Have**    |
 
 ### 4.2. Requisitos No Funcionales (RNF)
 
-| Código    | Criterio de Calidad                            | Descripción y Métrica de Aceptación                                                                                                                                                                                                      |
-| :-------- | :--------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **RNF01** | Latencia de Respuesta (Eficiencia)             | El percentil 95 (p95) de la latencia en operaciones de lectura y emisión de prescripciones debe ser inferior a 400 ms bajo concurrencia asistencial estándar.                                                                            |
-| **RNF02** | Trazabilidad y Auditoría Forense               | Cada petición debe portar y propagar un encabezado `X-Correlation-ID` único (UUID v4). Las operaciones de mutación quedan persistidas en bitácora inalterable con IP, marca de tiempo UTC y actor institucional (ISO/IEC 27001).         |
-| **RNF03** | Seguridad en Aplicaciones (OWASP ASVS Nivel 2) | Protección contra inyección SQL mediante sentencias preparadas, hashing de contraseñas mediante Bcrypt (coste 12), expiración de tokens JWT, limitación de tasa de peticiones (Rate Limiting) y sanitización de cabeceras CORS.         |
-| **RNF04** | Inmutabilidad Criptográfica de Datos           | Toda modificación física a folios cerrados debe ser prevenida tanto en la capa de aplicación como en el motor de base de datos relacional mediante disparadores `BEFORE UPDATE` y `BEFORE DELETE`.                                       |
-| **RNF05** | Resiliencia y Disponibilidad en Zonas Rurales  | Operación asistencial autónoma en ausencia de conexión a internet mediante almacenamiento local PWA y resolución determinista de duplicados al sincronizar con la sede central.                                                          |
+| Código    | Criterio de Calidad                            | Descripción y Métrica de Aceptación                                                                                                                                                                                              |
+| :-------- | :--------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **RNF01** | Latencia de Respuesta (Eficiencia)             | El percentil 95 (p95) de la latencia en operaciones de lectura y emisión de prescripciones debe ser inferior a 400 ms bajo concurrencia asistencial estándar.                                                                    |
+| **RNF02** | Trazabilidad y Auditoría Forense               | Cada petición debe portar y propagar un encabezado `X-Correlation-ID` único (UUID v4). Las operaciones de mutación quedan persistidas en bitácora inalterable con IP, marca de tiempo UTC y actor institucional (ISO/IEC 27001). |
+| **RNF03** | Seguridad en Aplicaciones (OWASP ASVS Nivel 2) | Protección contra inyección SQL mediante sentencias preparadas, hashing de contraseñas mediante Bcrypt (coste 12), expiración de tokens JWT, limitación de tasa de peticiones (Rate Limiting) y sanitización de cabeceras CORS.  |
+| **RNF04** | Inmutabilidad Criptográfica de Datos           | Toda modificación física a folios cerrados debe ser prevenida tanto en la capa de aplicación como en el motor de base de datos relacional mediante disparadores `BEFORE UPDATE` y `BEFORE DELETE`.                               |
+| **RNF05** | Resiliencia y Disponibilidad en Zonas Rurales  | Operación asistencial autónoma en ausencia de conexión a internet mediante almacenamiento local PWA y resolución determinista de duplicados al sincronizar con la sede central.                                                  |
 
 ---
 
@@ -738,10 +738,10 @@ flowchart TB
 
     subgraph DockerPlatform ["Plataforma de Contenedores Docker (Orquestación Multi-Servicio)"]
         subgraph NetBridge ["Red Aislada: saludconecta_network (Bridge Driver)"]
-            
+
             subgraph FrontContainer ["Contenedor 1: saludconecta-frontend (React PWA + Nginx Alpine)"]
                 NginxSrv["Servidor Web Nginx (Puerto 80 Interno)"]
-                StaticFiles["Archivos Estáticos SPA: HTML5, CSS3, JS Chunks, Video MP4"]
+                StaticFiles["Archivos Estáticos SPA: HTML5, CSS3, JS Chunks, Assets"]
                 ReverseProxy["Proxy Inverso Integrado (/api/ -> http://backend:8080/api/)"]
                 GzipEngine["Compresión Gzip & Cabeceras de Seguridad (ISO 27001)"]
             end
@@ -837,7 +837,7 @@ sequenceDiagram
     App->>Storage: removeItem('saludconecta_token')
     App->>Storage: removeItem('saludconecta_current_view')
     App->>App: setIsAuthenticated(false), setCurrentUser(null)
-    App-->>Browser: Redirige limpiamente a AuthScreen (Login con Video)
+    App-->>Browser: Redirige limpiamente a AuthScreen (Login con fondo ECG animado)
 ```
 
 - Archivo fuente: [`docs/diagrams/12_persistencia_sesion_f5.mmd`](docs/diagrams/12_persistencia_sesion_f5.mmd)
@@ -925,7 +925,7 @@ proyecto-final/
 │           │   ├── MfaQrModal.jsx # Modal con QR escaneable en Google Authenticator/Authy
 │           │   └── StaffRegisterModal.jsx # Modal de registro de personal (perfil admin) con validación ReTHUS
 │           ├── screens/           # Pantallas asistenciales (Stitch Design System)
-│           │   ├── AuthScreen.jsx # Acceso, sede, video de fondo en bucle y QR directo
+│           │   ├── AuthScreen.jsx # Acceso, sede, fondo animado con pulso ECG y QR directo
 │           │   ├── DashboardScreen.jsx # Indicadores KPI y sala de espera Manchester
 │           │   ├── TriageScreen.jsx    # Captura de constantes y escala Glasgow
 │           │   ├── HceScreen.jsx  # Historia clínica, pestañas y sellado inmutable
@@ -1009,6 +1009,7 @@ Si prefieres ejecutar los componentes de forma nativa en tu entorno de desarroll
 #### 7.2.2. Seeder Automático e Idempotente (`adapters/storage/mysql/seeder.go`)
 
 Al iniciar el servidor en Go, el sistema ejecuta automáticamente la función `SeedInitialAdmin(db *sql.DB)`:
+
 - Comprueba y crea dinámicamente las columnas de habilitación profesional en la tabla `users` (`document_type`, `document_number`, `phone`, `specialty`, `branch`).
 - Siembra el Administrador inicial (`admin@saludconecta.ips.gov.co`) con contraseña cifrada mediante Bcrypt coste 12 si no existe ningún usuario con `role_id = 1`.
 - Siembra al facultativo líder **Dr. Santiago Vélez** (`svelez@saludconecta.ips.gov.co`, `RM-94821-VALLE`, activo con MFA).
@@ -1039,26 +1040,25 @@ _El servidor de desarrollo Vite servirá la aplicación en `http://localhost:517
 
 ---
 
-
 ## 8. Variables de Entorno de Muestra (`.env.example`)
 
 Siguiendo la política de protección de infraestructura sensible (Regla 27), todas las credenciales y puertos reales se mantienen confidenciales mediante máscaras genéricas:
 
-| Variable               | Descripción                                               | Valor de Muestra                              |
-| :--------------------- | :-------------------------------------------------------- | :-------------------------------------------- |
-| `PORT`                 | Puerto de escucha del servicio HTTP GoFiber               | `8080`                                        |
-| `DB_DRIVER`            | Adaptador de persistencia (`mysql`, `postgres`, `memory`) | `mysql`                                       |
-| `DB_HOST`              | Host del motor de base de datos relacional                | `localhost`                                   |
-| `DB_PORT`              | Puerto del motor de base de datos                         | `3306`                                        |
-| `DB_USER`              | Usuario de conexión con permisos DDL/DML                  | `root`                                        |
-| `DB_PASSWORD`          | Clave de acceso a la base de datos                        | `secret_password`                             |
-| `DB_NAME`              | Nombre de la base de datos clínica                        | `saludconecta_db`                             |
-| `JWT_SECRET`           | Semilla secreta para la firma de tokens HS256             | `super_secret_seed_key`                       |
-| `CORS_ALLOWED_ORIGINS` | Orígenes web autorizados para consumo de la API           | `http://localhost:5173,http://localhost:5174` |
-| `ADMIN_INITIAL_EMAIL`  | Correo institucional del administrador inicial            | `admin@saludconecta.ips.gov.co`               |
-| `ADMIN_INITIAL_PASSWORD`| Clave inicial para inicialización automática             | `AdminSalud2026*`                             |
-| `IPS_NIT`              | NIT de la institución prestadora de salud                 | `900123456`                                   |
-| `COD_PRESTADOR`        | Código de habilitación MinSalud (12 dígitos)              | `110010999901`                                |
+| Variable                 | Descripción                                               | Valor de Muestra                              |
+| :----------------------- | :-------------------------------------------------------- | :-------------------------------------------- |
+| `PORT`                   | Puerto de escucha del servicio HTTP GoFiber               | `8080`                                        |
+| `DB_DRIVER`              | Adaptador de persistencia (`mysql`, `postgres`, `memory`) | `mysql`                                       |
+| `DB_HOST`                | Host del motor de base de datos relacional                | `localhost`                                   |
+| `DB_PORT`                | Puerto del motor de base de datos                         | `3306`                                        |
+| `DB_USER`                | Usuario de conexión con permisos DDL/DML                  | `root`                                        |
+| `DB_PASSWORD`            | Clave de acceso a la base de datos                        | `secret_password`                             |
+| `DB_NAME`                | Nombre de la base de datos clínica                        | `saludconecta_db`                             |
+| `JWT_SECRET`             | Semilla secreta para la firma de tokens HS256             | `super_secret_seed_key`                       |
+| `CORS_ALLOWED_ORIGINS`   | Orígenes web autorizados para consumo de la API           | `http://localhost:5173,http://localhost:5174` |
+| `ADMIN_INITIAL_EMAIL`    | Correo institucional del administrador inicial            | `admin@saludconecta.ips.gov.co`               |
+| `ADMIN_INITIAL_PASSWORD` | Clave inicial para inicialización automática              | `AdminSalud2026*`                             |
+| `IPS_NIT`                | NIT de la institución prestadora de salud                 | `900123456`                                   |
+| `COD_PRESTADOR`          | Código de habilitación MinSalud (12 dígitos)              | `110010999901`                                |
 
 ---
 
