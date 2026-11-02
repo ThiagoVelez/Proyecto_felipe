@@ -731,10 +731,10 @@ export const UserProfileModal = ({ isOpen, onClose, user, onUpdateUser }) => {
                     <div className="flex items-center justify-between p-3 rounded-xl bg-surface-container-low">
                       <div>
                         <div className="font-bold text-on-surface">Autenticación Multifactor (TOTP RFC 6238)</div>
-                        <div className="text-[11px] text-outline">Generador de códigos temporales de 30 segundos activo</div>
+                        <div className="text-[11px] text-outline">{user?.mfa_enabled ? 'Se solicita código temporal de 30 segundos en cada inicio de sesión' : 'Segundo factor no habilitado. Configúrelo en Seguridad & MFA'}</div>
                       </div>
-                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold">
-                        Activo & Sincronizado
+                      <span className={`px-2.5 py-0.5 rounded-full ${user?.mfa_enabled ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'} text-[11px] font-bold`}>
+                        {user?.mfa_enabled ? 'Habilitado' : 'No habilitado'}
                       </span>
                     </div>
 

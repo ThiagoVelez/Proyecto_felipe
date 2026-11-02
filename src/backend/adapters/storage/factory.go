@@ -85,11 +85,14 @@ func NewRepositoryBundle(cfg Config, log *logger.Logger) (*RepositoryBundle, err
 			return nil, fmt.Errorf("fallo conexion al adaptador mysql: %w", err)
 		}
 
-		// Ejecucion automatica del seeder institucional idempotente
-		if err := mysql.SeedInitialAdmin(db); err != nil {
-			log.Warn("Advertencia ejecutando seeder de inicializacion MySQL", map[string]interface{}{
-				"error": err.Error(),
-			})
+		// Migracion idempotente: roles, indice de cadena SHA-256, disparadores de inmutabilidad y catalogo inicial
+		warnings, err := mysql.Migrate(db)
+		if err != nil {
+			_ = db.Close()
+			return nil, fmt.Errorf("fallo la migracion de esquema mysql: %w", err)
+		}
+		for _, warning := range warnings {
+			log.Warn("Endurecimiento de esquema MySQL pendiente", map[string]interface{}{"detalle": warning})
 		}
 
 		return &RepositoryBundle{
@@ -127,6 +130,11 @@ func NewRepositoryBundle(cfg Config, log *logger.Logger) (*RepositoryBundle, err
 		db, err := postgres.NewConnection(pgCfg)
 		if err != nil {
 			return nil, fmt.Errorf("fallo conexion al adaptador postgresql: %w", err)
+		}
+
+		if err := postgres.Migrate(db); err != nil {
+			_ = db.Close()
+			return nil, fmt.Errorf("fallo la migracion de esquema postgresql: %w", err)
 		}
 
 		return &RepositoryBundle{

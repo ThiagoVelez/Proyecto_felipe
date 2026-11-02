@@ -6,9 +6,19 @@ import (
 	"errors"
 	"time"
 
+	"github.com/lib/pq"
 	"saludconecta-backend/core/domain"
 	"saludconecta-backend/core/ports"
 )
+
+// chainIndexName es el indice unico que impide que dos folios cerrados del mismo paciente consuman el mismo eslabon previo.
+const chainIndexName = "uq_cr_patient_chain"
+
+// isChainConflict detecta la violacion del indice unico de la cadena SHA-256.
+func isChainConflict(err error) bool {
+	var pqErr *pq.Error
+	return errors.As(err, &pqErr) && pqErr.Code == "23505" && pqErr.Constraint == chainIndexName
+}
 
 type clinicalRecordRepo struct {
 	db *sql.DB
@@ -91,6 +101,10 @@ func (r *clinicalRecordRepo) GetLastClosedRecordByPatient(ctx context.Context, p
 		FROM clinical_records cr
 		LEFT JOIN users u ON cr.doctor_id = u.id
 		WHERE cr.patient_id = $1 AND cr.is_closed = TRUE
+		  AND NOT EXISTS (
+		      SELECT 1 FROM clinical_records nx
+		      WHERE nx.patient_id = cr.patient_id AND nx.is_closed = TRUE AND nx.previous_hash = cr.hash_sha256
+		  )
 		ORDER BY cr.closed_at DESC, cr.created_at DESC
 		LIMIT 1
 	`
@@ -151,7 +165,10 @@ func (r *clinicalRecordRepo) CloseRecord(ctx context.Context, id string, signatu
 		SET is_closed = TRUE, signature_token = $1, previous_hash = $2, hash_sha256 = $3, closed_at = $4
 		WHERE id = $5 AND is_closed = FALSE
 	`
-	res, err := r.db.ExecContext(ctx, query, signatureToken, previousHash, hashSHA256, closedAt, id)
+	res, err := r.db.ExecContext(ctx, query, signatureToken, previousHash, hashSHA256, closedAt.UTC().Truncate(time.Second), id)
+	if isChainConflict(err) {
+		return domain.ErrChainConflict
+	}
 	if err != nil {
 		return err
 	}
@@ -199,6 +216,8 @@ func (r *clinicalRecordRepo) getClarifications(ctx context.Context, recordID str
 	return list, rows.Err()
 }
 
+// SaveBatch consolida folios sincronizados dentro de una transaccion. Un folio ya cerrado nunca se actualiza
+// (el trigger de inmutabilidad abortaria todo el lote); un borrador existente se actualiza y uno nuevo se inserta.
 func (r *clinicalRecordRepo) SaveBatch(ctx context.Context, records []domain.ClinicalRecord) error {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -206,40 +225,45 @@ func (r *clinicalRecordRepo) SaveBatch(ctx context.Context, records []domain.Cli
 	}
 	defer tx.Rollback()
 
-	query := `
+	insertQuery := `
 		INSERT INTO clinical_records (
 			id, patient_id, doctor_id, triage_id, anamnesis, physical_exam, cie11_code,
 			diagnosis_description, treatment_plan, is_closed, signature_token, previous_hash,
 			hash_sha256, is_offline_sync, sync_batch_id, created_at, closed_at
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
-		ON CONFLICT (id) DO UPDATE SET sync_batch_id = EXCLUDED.sync_batch_id
 	`
-	stmt, err := tx.PrepareContext(ctx, query)
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
+	updateQuery := `
+		UPDATE clinical_records
+		SET triage_id = $1, anamnesis = $2, physical_exam = $3, cie11_code = $4, diagnosis_description = $5,
+		    treatment_plan = $6, is_closed = $7, signature_token = $8, previous_hash = $9, hash_sha256 = $10,
+		    is_offline_sync = $11, sync_batch_id = $12, closed_at = $13
+		WHERE id = $14 AND is_closed = FALSE
+	`
 
 	for _, rec := range records {
-		_, err := stmt.ExecContext(ctx,
-			rec.ID,
-			rec.PatientID,
-			rec.DoctorID,
-			rec.TriageID,
-			rec.Anamnesis,
-			rec.PhysicalExam,
-			rec.CIE11Code,
-			rec.DiagnosisDescription,
-			rec.TreatmentPlan,
-			rec.IsClosed,
-			rec.SignatureToken,
-			rec.PreviousHash,
-			rec.HashSHA256,
-			rec.IsOfflineSync,
-			rec.SyncBatchID,
-			rec.CreatedAt,
-			rec.ClosedAt,
-		)
+		var alreadyClosed bool
+		err := tx.QueryRowContext(ctx, `SELECT is_closed FROM clinical_records WHERE id = $1 FOR UPDATE`, rec.ID).Scan(&alreadyClosed)
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			_, err = tx.ExecContext(ctx, insertQuery,
+				rec.ID, rec.PatientID, rec.DoctorID, rec.TriageID, rec.Anamnesis, rec.PhysicalExam, rec.CIE11Code,
+				rec.DiagnosisDescription, rec.TreatmentPlan, rec.IsClosed, rec.SignatureToken, rec.PreviousHash,
+				rec.HashSHA256, rec.IsOfflineSync, rec.SyncBatchID, rec.CreatedAt, rec.ClosedAt,
+			)
+		case err != nil:
+			return err
+		case alreadyClosed:
+			continue
+		default:
+			_, err = tx.ExecContext(ctx, updateQuery,
+				rec.TriageID, rec.Anamnesis, rec.PhysicalExam, rec.CIE11Code, rec.DiagnosisDescription,
+				rec.TreatmentPlan, rec.IsClosed, rec.SignatureToken, rec.PreviousHash, rec.HashSHA256,
+				rec.IsOfflineSync, rec.SyncBatchID, rec.ClosedAt, rec.ID,
+			)
+		}
+		if isChainConflict(err) {
+			return domain.ErrChainConflict
+		}
 		if err != nil {
 			return err
 		}
@@ -247,4 +271,3 @@ func (r *clinicalRecordRepo) SaveBatch(ctx context.Context, records []domain.Cli
 
 	return tx.Commit()
 }
-

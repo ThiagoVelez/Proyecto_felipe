@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import AuthScreen from './screens/AuthScreen';
@@ -9,7 +9,7 @@ import PrescriptionScreen from './screens/PrescriptionScreen';
 import SecurityMfaScreen from './screens/SecurityMfaScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import AdminLayout from './screens/admin/AdminLayout';
-import { apiClient } from './services/api';
+import { apiClient, SESSION_EXPIRED_EVENT } from './services/api';
 
 export function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -48,9 +48,50 @@ export function App() {
   });
 
   const [selectedPatient, setSelectedPatient] = useState(null);
+  const [selectedTriage, setSelectedTriage] = useState(null);
+
+  // El contexto clinico no debe sobrevivir al cierre de sesion (privacidad de datos del paciente)
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setSelectedPatient(null);
+      setSelectedTriage(null);
+    }
+  }, [isAuthenticated]);
   const [isOffline, setIsOffline] = useState(false);
+  const [sessionNotice, setSessionNotice] = useState('');
+
+  // Cierre de sesion centralizado: el cliente HTTP emite el evento ante cualquier 401 fuera del login
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      localStorage.removeItem('saludconecta_current_view');
+      setIsAuthenticated(false);
+      setCurrentUser(null);
+      setCurrentView('dashboard');
+      setSessionNotice('Su sesión ya no es válida. Inicie sesión nuevamente.');
+    };
+    window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
+  }, []);
+
+  // Revalida el token guardado contra el servidor al montar la aplicacion
+  useEffect(() => {
+    if (!apiClient.token) return undefined;
+    let cancelled = false;
+    apiClient
+      .me()
+      .then((user) => {
+        if (!cancelled && user) setCurrentUser(user);
+      })
+      .catch(() => {
+        // Un 401 ya dispara el cierre de sesion; ante fallos de red se conserva la sesion local
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleLoginSuccess = (data) => {
+    setSessionNotice('');
     setIsAuthenticated(true);
     localStorage.setItem('saludconecta_session_active', 'true');
     if (data && data.user) {
@@ -77,6 +118,19 @@ export function App() {
     localStorage.setItem('saludconecta_current_view', view);
   };
 
+  const handleSelectPatient = (patient, triage = null) => {
+    setSelectedPatient(patient);
+    setSelectedTriage(triage);
+  };
+
+  // Busqueda global por documento: el error se propaga al Header para mostrarlo al usuario
+  const handleHeaderSearch = async (documentType, documentNumber) => {
+    const found = await apiClient.lookupPatient(documentType, documentNumber);
+    const detail = await apiClient.getPatient(found.id);
+    handleSelectPatient(detail);
+    handleNavigate('hce');
+  };
+
   const handleToggleSidebar = () => {
     setIsSidebarCollapsed((prev) => {
       const next = !prev;
@@ -92,7 +146,7 @@ export function App() {
 
   // Si no esta autenticado, mostrar pantalla de Login / AuthScreen
   if (!isAuthenticated) {
-    return <AuthScreen onLoginSuccess={handleLoginSuccess} />;
+    return <AuthScreen onLoginSuccess={handleLoginSuccess} sessionNotice={sessionNotice} />;
   }
 
   // REGLA RBAC ESTRICTA (ISO/IEC 25010): El usuario con rol ADMIN dispone de su propio entorno
@@ -116,6 +170,7 @@ export function App() {
         currentView={currentView}
         isOffline={isOffline}
         setIsOffline={setIsOffline}
+        onSearch={handleHeaderSearch}
         onUpdateUser={handleUpdateUser}
         onNavigate={handleNavigate}
         isSidebarCollapsed={isSidebarCollapsed}
@@ -139,20 +194,37 @@ export function App() {
         >
           {currentView === 'dashboard' && (
             <DashboardScreen
-              onSelectPatient={(p) => setSelectedPatient(p)}
+              onSelectPatient={handleSelectPatient}
               onNavigate={handleNavigate}
             />
           )}
 
           {currentView === 'triage' && (
-            <TriageScreen onNavigate={handleNavigate} />
+            <TriageScreen
+              patient={selectedPatient}
+              onPatientChange={handleSelectPatient}
+              triage={selectedTriage}
+              onTriageSaved={setSelectedTriage}
+              onNavigate={handleNavigate}
+            />
           )}
 
           {currentView === 'hce' && (
-            <HceScreen onNavigate={handleNavigate} />
+            <HceScreen
+              patient={selectedPatient}
+              onPatientChange={handleSelectPatient}
+              triage={selectedTriage}
+              onNavigate={handleNavigate}
+            />
           )}
 
-          {currentView === 'prescription' && <PrescriptionScreen />}
+          {currentView === 'prescription' && (
+            <PrescriptionScreen
+              patient={selectedPatient}
+              onPatientChange={handleSelectPatient}
+              onNavigate={handleNavigate}
+            />
+          )}
 
           {currentView === 'profile' && (
             <ProfileScreen
@@ -163,7 +235,7 @@ export function App() {
           )}
 
           {(currentView === 'security' || currentView === 'auth') && (
-            <SecurityMfaScreen onLogout={handleLogout} />
+            <SecurityMfaScreen user={currentUser} onUpdateUser={handleUpdateUser} />
           )}
         </main>
       </div>

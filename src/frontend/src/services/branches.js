@@ -7,9 +7,6 @@ export const INITIAL_BRANCHES = [
     name: 'Sede Cartago - Hospital Central',
     level: 'Nivel II • Hospitalario',
     municipality: 'Cartago, Valle del Cauca',
-    capacity: '6/8 Consultorios • 2 Quirófanos',
-    connectivity: '99.9%',
-    staffCount: 12,
     status: 'Operativo',
     description: 'Centro de referencia regional. Servicio de Urgencias 24/7, Consulta Especializada y Quirófanos.',
   },
@@ -18,9 +15,6 @@ export const INITIAL_BRANCHES = [
     name: 'Sede La Unión - Urgencias',
     level: 'Nivel I • Trauma',
     municipality: 'La Unión, Valle del Cauca',
-    capacity: '3/4 Boxes de Triaje',
-    connectivity: '99.7%',
-    staffCount: 6,
     status: 'Operativo',
     description: 'Unidad de Atención Rápida y Estabilización de Trauma. Triaje Manchester sincronizado.',
   },
@@ -29,9 +23,6 @@ export const INITIAL_BRANCHES = [
     name: 'Sede Tuluá - Ambulatoria',
     level: 'Ambulatorio • Promoción & Prevención',
     municipality: 'Tuluá, Valle del Cauca',
-    capacity: '4/4 Consultorios Médicos',
-    connectivity: '99.8%',
-    staffCount: 5,
     status: 'Operativo',
     description: 'Centro de Atención Ambulatoria, Promoción de la Salud y Prevención de la Enfermedad.',
   },
@@ -40,15 +31,12 @@ export const INITIAL_BRANCHES = [
     name: 'Brigada Rural Desconectada',
     level: 'PWA Sync • Atención en Terreno',
     municipality: 'Zonas Rurales Valle Norte',
-    capacity: 'Módulo Móvil • 0 Folios Pendientes',
-    connectivity: 'Offline (Sync)',
-    staffCount: 3,
     status: 'En Espera',
     description: 'Módulo de atención rural en veredas del norte del Valle. Almacenamiento IndexedDB y sincronización por lotes.',
   },
 ];
 
-// Las sedes aun no tienen API: el CRUD del administrador las guarda en el almacenamiento de este navegador
+// Las sedes aun no tienen API: el catalogo del administrador se guarda solo en el almacenamiento de este navegador
 export const loadBranches = () => {
   try {
     const saved = JSON.parse(localStorage.getItem(BRANCHES_STORAGE_KEY));

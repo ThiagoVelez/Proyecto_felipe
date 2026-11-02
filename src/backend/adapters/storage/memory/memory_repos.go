@@ -2,16 +2,22 @@ package memory
 
 import (
 	"context"
+	"sort"
 	"strings"
 	"sync"
 	"time"
 
+	"saludconecta-backend/adapters/storage/catalog"
 	"saludconecta-backend/core/domain"
 	"saludconecta-backend/core/ports"
-	"saludconecta-backend/pkg/crypto"
 )
 
+// maxMedicationResults acota el listado devuelto por la busqueda de catalogo.
+const maxMedicationResults = 50
+
 // DataStore almacena la informacion en memoria de manera centralizada y sincronizada.
+// Es un adaptador no persistente destinado a pruebas y desarrollo local: todo repositorio retorna copias
+// para que ningun llamador lea o modifique el estado interno sin tomar el candado.
 type DataStore struct {
 	mu              sync.RWMutex
 	users           map[string]*domain.User
@@ -28,6 +34,8 @@ type DataStore struct {
 	rips            map[string]*domain.RIPSTransaction
 }
 
+// NewDataStore crea el almacen en memoria. No siembra cuentas: el administrador inicial se crea con las
+// credenciales definidas por el operador en el arranque, nunca con valores publicados en el codigo.
 func NewDataStore() *DataStore {
 	ds := &DataStore{
 		users:           make(map[string]*domain.User),
@@ -44,72 +52,10 @@ func NewDataStore() *DataStore {
 		rips:            make(map[string]*domain.RIPSTransaction),
 	}
 
-	// Semillas iniciales en memoria para administracion, atencion clinica y gobernanza
-	adminPass, _ := crypto.HashPassword("AdminSalud2026*")
-	medPass, _ := crypto.HashPassword("MedicoSalud2026*")
-	totpSecret := "JBSWY3DPEHPK3PXP"
-
-	admin := &domain.User{
-		ID:               "usr-admin-0001",
-		RoleID:           1,
-		RoleName:         "ADMIN",
-		FullName:         "Administrador del Sistema",
-		DocumentType:     "CC",
-		DocumentNumber:   "1000000001",
-		Email:            "admin@saludconecta.ips.gov.co",
-		PasswordHash:     adminPass,
-		Phone:            "3100000001",
-		ProfessionalCard: "TI-ADMIN-001",
-		Specialty:        "Seguridad y Gobernanza Hospitalaria",
-		Branch:           "Sede Cartago - Hospital Central",
-		IsActive:         true,
-		MFAEnabled:       false,
-		CreatedAt:        time.Now().UTC(),
-		UpdatedAt:        time.Now().UTC(),
-	}
-
-	medico := &domain.User{
-		ID:               "usr-med-0002",
-		RoleID:           2,
-		RoleName:         "MEDICO",
-		FullName:         "Dr. Santiago Vélez",
-		DocumentType:     "CC",
-		DocumentNumber:   "1118234567",
-		Email:            "svelez@saludconecta.ips.gov.co",
-		PasswordHash:     medPass,
-		Phone:            "3123456789",
-		ProfessionalCard: "RM-94821-VALLE",
-		Specialty:        "Medicina de Urgencias",
-		Branch:           "Sede Cartago - Hospital Central (Nivel II)",
-		IsActive:         true,
-		MFAEnabled:       true,
-		MFASecret:        &totpSecret,
-		CreatedAt:        time.Now().UTC(),
-		UpdatedAt:        time.Now().UTC(),
-	}
-
-	pendingDoctor := &domain.User{
-		ID:               "usr-med-0003",
-		RoleID:           2,
-		RoleName:         "MEDICO",
-		FullName:         "Dra. Camila Yaima",
-		DocumentType:     "CC",
-		DocumentNumber:   "1117654321",
-		Email:            "cyaima@saludconecta.ips.gov.co",
-		PasswordHash:     medPass,
-		Phone:            "3159876543",
-		ProfessionalCard: "RM-88310-VALLE",
-		Specialty:        "Pediatría",
-		Branch:           "Sede La Unión (Urgencias)",
-		IsActive:         false,
-		MFAEnabled:       false,
-		CreatedAt:        time.Now().UTC(),
-		UpdatedAt:        time.Now().UTC(),
-	}
-
-	for _, u := range []*domain.User{admin, medico, pendingDoctor} {
-		ds.users[u.ID] = u
-		ds.usersByEmail[strings.ToLower(u.Email)] = u
+	for i, med := range catalog.DemoMedications() {
+		med.ID = i + 1
+		medCopy := med
+		ds.medications[medCopy.ID] = &medCopy
 	}
 
 	return ds
@@ -119,7 +65,47 @@ func NewDataStore() *DataStore {
 func (ds *DataStore) SeedMedication(med *domain.MedicationCatalog) {
 	ds.mu.Lock()
 	defer ds.mu.Unlock()
-	ds.medications[med.ID] = med
+	medCopy := *med
+	ds.medications[medCopy.ID] = &medCopy
+}
+
+func copyAllergies(src []domain.PatientAllergy) []domain.PatientAllergy {
+	if src == nil {
+		return nil
+	}
+	dst := make([]domain.PatientAllergy, len(src))
+	copy(dst, src)
+	return dst
+}
+
+func copyPatient(p *domain.Patient, allergies []domain.PatientAllergy) *domain.Patient {
+	out := *p
+	out.Allergies = copyAllergies(allergies)
+	return &out
+}
+
+func copyRecord(rec *domain.ClinicalRecord, clarifications []domain.ClinicalRecordClarification) *domain.ClinicalRecord {
+	out := *rec
+	if clarifications != nil {
+		out.Clarifications = make([]domain.ClinicalRecordClarification, len(clarifications))
+		copy(out.Clarifications, clarifications)
+	} else {
+		out.Clarifications = nil
+	}
+	return &out
+}
+
+func copyPrescription(p *domain.Prescription) *domain.Prescription {
+	out := *p
+	out.Items = make([]domain.PrescriptionItem, len(p.Items))
+	for i, item := range p.Items {
+		out.Items[i] = item
+		if item.Medication != nil {
+			medCopy := *item.Medication
+			out.Items[i].Medication = &medCopy
+		}
+	}
+	return &out
 }
 
 // UserMemoryRepo implementa ports.UserRepository en memoria.
@@ -138,7 +124,8 @@ func (r *UserMemoryRepo) GetByID(_ context.Context, id string) (*domain.User, er
 	if !ok {
 		return nil, domain.ErrUserNotFound
 	}
-	return u, nil
+	out := *u
+	return &out, nil
 }
 
 func (r *UserMemoryRepo) GetByEmail(_ context.Context, email string) (*domain.User, error) {
@@ -148,7 +135,8 @@ func (r *UserMemoryRepo) GetByEmail(_ context.Context, email string) (*domain.Us
 	if !ok {
 		return nil, domain.ErrUserNotFound
 	}
-	return u, nil
+	out := *u
+	return &out, nil
 }
 
 func (r *UserMemoryRepo) Create(_ context.Context, user *domain.User) error {
@@ -158,8 +146,9 @@ func (r *UserMemoryRepo) Create(_ context.Context, user *domain.User) error {
 	if _, exists := r.ds.usersByEmail[emailKey]; exists {
 		return domain.ErrEmailAlreadyRegistered
 	}
-	r.ds.users[user.ID] = user
-	r.ds.usersByEmail[emailKey] = user
+	stored := *user
+	r.ds.users[stored.ID] = &stored
+	r.ds.usersByEmail[emailKey] = &stored
 	return nil
 }
 
@@ -189,6 +178,12 @@ func (r *UserMemoryRepo) List(_ context.Context, roleID *int, isActive *bool) ([
 		userCopy := *u
 		list = append(list, &userCopy)
 	}
+	sort.Slice(list, func(i, j int) bool {
+		if !list[i].CreatedAt.Equal(list[j].CreatedAt) {
+			return list[i].CreatedAt.After(list[j].CreatedAt)
+		}
+		return list[i].ID < list[j].ID
+	})
 	return list, nil
 }
 
@@ -232,10 +227,7 @@ func (r *PatientMemoryRepo) GetByID(_ context.Context, id string) (*domain.Patie
 	if !ok {
 		return nil, domain.ErrPatientNotFound
 	}
-	if al, has := r.ds.allergies[id]; has {
-		p.Allergies = al
-	}
-	return p, nil
+	return copyPatient(p, r.ds.allergies[id]), nil
 }
 
 func (r *PatientMemoryRepo) GetByDocument(_ context.Context, docType domain.DocumentType, docNumber string) (*domain.Patient, error) {
@@ -246,10 +238,7 @@ func (r *PatientMemoryRepo) GetByDocument(_ context.Context, docType domain.Docu
 	if !ok {
 		return nil, domain.ErrPatientNotFound
 	}
-	if al, has := r.ds.allergies[p.ID]; has {
-		p.Allergies = al
-	}
-	return p, nil
+	return copyPatient(p, r.ds.allergies[p.ID]), nil
 }
 
 func (r *PatientMemoryRepo) Create(_ context.Context, patient *domain.Patient) error {
@@ -259,29 +248,43 @@ func (r *PatientMemoryRepo) Create(_ context.Context, patient *domain.Patient) e
 	if _, exists := r.ds.patientsByDoc[key]; exists {
 		return domain.ErrPatientAlreadyExists
 	}
-	r.ds.patients[patient.ID] = patient
-	r.ds.patientsByDoc[key] = patient
+	stored := *patient
+	stored.Allergies = nil
+	r.ds.patients[stored.ID] = &stored
+	r.ds.patientsByDoc[key] = &stored
 	return nil
 }
 
 func (r *PatientMemoryRepo) List(_ context.Context, limit, offset int) ([]domain.Patient, error) {
 	r.ds.mu.RLock()
 	defer r.ds.mu.RUnlock()
-	var list []domain.Patient
-	idx := 0
+	all := make([]domain.Patient, 0, len(r.ds.patients))
 	for _, p := range r.ds.patients {
-		if idx >= offset && len(list) < limit {
-			list = append(list, *p)
-		}
-		idx++
+		all = append(all, *copyPatient(p, nil))
 	}
-	return list, nil
+	sort.Slice(all, func(i, j int) bool {
+		if !all[i].CreatedAt.Equal(all[j].CreatedAt) {
+			return all[i].CreatedAt.After(all[j].CreatedAt)
+		}
+		return all[i].ID < all[j].ID
+	})
+	if offset < 0 {
+		offset = 0
+	}
+	if offset >= len(all) {
+		return []domain.Patient{}, nil
+	}
+	end := len(all)
+	if limit > 0 && offset+limit < end {
+		end = offset + limit
+	}
+	return all[offset:end], nil
 }
 
 func (r *PatientMemoryRepo) GetPatientAllergies(_ context.Context, patientID string) ([]domain.PatientAllergy, error) {
 	r.ds.mu.RLock()
 	defer r.ds.mu.RUnlock()
-	return r.ds.allergies[patientID], nil
+	return copyAllergies(r.ds.allergies[patientID]), nil
 }
 
 func (r *PatientMemoryRepo) AddPatientAllergy(_ context.Context, allergy *domain.PatientAllergy) error {
@@ -304,7 +307,8 @@ func NewTriageMemoryRepo(ds *DataStore) ports.TriageRepository {
 func (r *TriageMemoryRepo) Create(_ context.Context, record *domain.TriageRecord) error {
 	r.ds.mu.Lock()
 	defer r.ds.mu.Unlock()
-	r.ds.triages[record.ID] = record
+	stored := *record
+	r.ds.triages[stored.ID] = &stored
 	return nil
 }
 
@@ -315,13 +319,14 @@ func (r *TriageMemoryRepo) GetByID(_ context.Context, id string) (*domain.Triage
 	if !ok {
 		return nil, domain.ErrTriageNotFound
 	}
-	return t, nil
+	out := *t
+	return &out, nil
 }
 
 func (r *TriageMemoryRepo) ListPending(_ context.Context) ([]domain.TriageRecord, error) {
 	r.ds.mu.RLock()
 	defer r.ds.mu.RUnlock()
-	var list []domain.TriageRecord
+	list := []domain.TriageRecord{}
 	for _, t := range r.ds.triages {
 		if t.Status == domain.TriageStatusPending || t.Status == domain.TriageStatusInProgress {
 			list = append(list, *t)
@@ -353,7 +358,10 @@ func NewClinicalRecordMemoryRepo(ds *DataStore) ports.ClinicalRecordRepository {
 func (r *ClinicalRecordMemoryRepo) Create(_ context.Context, record *domain.ClinicalRecord) error {
 	r.ds.mu.Lock()
 	defer r.ds.mu.Unlock()
-	r.ds.clinicalRecords[record.ID] = record
+	if existing, ok := r.ds.clinicalRecords[record.ID]; ok && existing.IsClosed {
+		return domain.ErrRecordAlreadyClosed
+	}
+	r.ds.clinicalRecords[record.ID] = copyRecord(record, nil)
 	return nil
 }
 
@@ -364,35 +372,83 @@ func (r *ClinicalRecordMemoryRepo) GetByID(_ context.Context, id string) (*domai
 	if !ok {
 		return nil, domain.ErrRecordNotFound
 	}
-	if clar, has := r.ds.clarifications[id]; has {
-		rec.Clarifications = clar
+	return copyRecord(rec, r.ds.clarifications[id]), nil
+}
+
+// chainHeadLocked retorna el ultimo eslabon cerrado del paciente: el folio cuyo hash ningun otro folio usa como hash previo.
+// Requiere el candado del almacen tomado por el llamador.
+func (ds *DataStore) chainHeadLocked(patientID string) *domain.ClinicalRecord {
+	referenced := make(map[string]bool)
+	var closed []*domain.ClinicalRecord
+	for _, rec := range ds.clinicalRecords {
+		if rec.PatientID != patientID || !rec.IsClosed {
+			continue
+		}
+		closed = append(closed, rec)
+		if rec.PreviousHash != nil {
+			referenced[*rec.PreviousHash] = true
+		}
 	}
-	return rec, nil
+
+	var head *domain.ClinicalRecord
+	for _, rec := range closed {
+		if rec.HashSHA256 != nil && referenced[*rec.HashSHA256] {
+			continue
+		}
+		if head == nil || laterClosed(rec, head) {
+			head = rec
+		}
+	}
+	return head
+}
+
+func laterClosed(a, b *domain.ClinicalRecord) bool {
+	switch {
+	case a.ClosedAt != nil && b.ClosedAt != nil && !a.ClosedAt.Equal(*b.ClosedAt):
+		return a.ClosedAt.After(*b.ClosedAt)
+	default:
+		return a.CreatedAt.After(b.CreatedAt)
+	}
+}
+
+// chainLinkTakenLocked indica si el patient ya tiene un folio cerrado que consume ese hash previo.
+func (ds *DataStore) chainLinkTakenLocked(patientID, previousHash, exceptID string) bool {
+	for _, rec := range ds.clinicalRecords {
+		if rec.ID == exceptID || rec.PatientID != patientID || !rec.IsClosed {
+			continue
+		}
+		if rec.PreviousHash != nil && *rec.PreviousHash == previousHash {
+			return true
+		}
+	}
+	return false
 }
 
 func (r *ClinicalRecordMemoryRepo) GetLastClosedRecordByPatient(_ context.Context, patientID string) (*domain.ClinicalRecord, error) {
 	r.ds.mu.RLock()
 	defer r.ds.mu.RUnlock()
-	var lastClosed *domain.ClinicalRecord
-	for _, rec := range r.ds.clinicalRecords {
-		if rec.PatientID == patientID && rec.IsClosed {
-			if lastClosed == nil || (rec.ClosedAt != nil && lastClosed.ClosedAt != nil && rec.ClosedAt.After(*lastClosed.ClosedAt)) {
-				lastClosed = rec
-			}
-		}
+	head := r.ds.chainHeadLocked(patientID)
+	if head == nil {
+		return nil, nil
 	}
-	return lastClosed, nil
+	return copyRecord(head, nil), nil
 }
 
 func (r *ClinicalRecordMemoryRepo) ListByPatient(_ context.Context, patientID string) ([]domain.ClinicalRecord, error) {
 	r.ds.mu.RLock()
 	defer r.ds.mu.RUnlock()
-	var list []domain.ClinicalRecord
+	list := []domain.ClinicalRecord{}
 	for _, rec := range r.ds.clinicalRecords {
 		if rec.PatientID == patientID {
-			list = append(list, *rec)
+			list = append(list, *copyRecord(rec, r.ds.clarifications[rec.ID]))
 		}
 	}
+	sort.Slice(list, func(i, j int) bool {
+		if !list[i].CreatedAt.Equal(list[j].CreatedAt) {
+			return list[i].CreatedAt.After(list[j].CreatedAt)
+		}
+		return list[i].ID < list[j].ID
+	})
 	return list, nil
 }
 
@@ -406,11 +462,15 @@ func (r *ClinicalRecordMemoryRepo) CloseRecord(_ context.Context, id string, sig
 	if rec.IsClosed {
 		return domain.ErrRecordAlreadyClosed
 	}
+	if r.ds.chainLinkTakenLocked(rec.PatientID, previousHash, id) {
+		return domain.ErrChainConflict
+	}
+	closed := closedAt
 	rec.IsClosed = true
 	rec.SignatureToken = &signatureToken
 	rec.PreviousHash = &previousHash
 	rec.HashSHA256 = &hashSHA256
-	rec.ClosedAt = &closedAt
+	rec.ClosedAt = &closed
 	return nil
 }
 
@@ -422,11 +482,33 @@ func (r *ClinicalRecordMemoryRepo) AddClarification(_ context.Context, clarifica
 	return nil
 }
 
+// SaveBatch consolida folios sincronizados sin modificar nunca un folio ya cerrado y sin permitir que dos
+// folios cerrados del mismo paciente compartan eslabon previo. La operacion es atomica: o se aplica todo o nada.
 func (r *ClinicalRecordMemoryRepo) SaveBatch(_ context.Context, records []domain.ClinicalRecord) error {
 	r.ds.mu.Lock()
 	defer r.ds.mu.Unlock()
+
+	type pendingLink struct{ patientID, previousHash string }
+	claimed := make(map[pendingLink]bool)
+	toStore := make([]*domain.ClinicalRecord, 0, len(records))
+
 	for i := range records {
-		r.ds.clinicalRecords[records[i].ID] = &records[i]
+		rec := records[i]
+		if existing, ok := r.ds.clinicalRecords[rec.ID]; ok && existing.IsClosed {
+			continue
+		}
+		if rec.IsClosed && rec.PreviousHash != nil {
+			link := pendingLink{rec.PatientID, *rec.PreviousHash}
+			if claimed[link] || r.ds.chainLinkTakenLocked(rec.PatientID, *rec.PreviousHash, rec.ID) {
+				return domain.ErrChainConflict
+			}
+			claimed[link] = true
+		}
+		toStore = append(toStore, copyRecord(&rec, nil))
+	}
+
+	for _, rec := range toStore {
+		r.ds.clinicalRecords[rec.ID] = rec
 	}
 	return nil
 }
@@ -443,7 +525,7 @@ func NewPrescriptionMemoryRepo(ds *DataStore) ports.PrescriptionRepository {
 func (r *PrescriptionMemoryRepo) Create(_ context.Context, prescription *domain.Prescription) error {
 	r.ds.mu.Lock()
 	defer r.ds.mu.Unlock()
-	r.ds.prescriptions[prescription.ID] = prescription
+	r.ds.prescriptions[prescription.ID] = copyPrescription(prescription)
 	return nil
 }
 
@@ -454,7 +536,7 @@ func (r *PrescriptionMemoryRepo) GetByID(_ context.Context, id string) (*domain.
 	if !ok {
 		return nil, domain.ErrPrescriptionNotFound
 	}
-	return p, nil
+	return copyPrescription(p), nil
 }
 
 func (r *PrescriptionMemoryRepo) GetByClinicalRecordID(_ context.Context, recordID string) (*domain.Prescription, error) {
@@ -462,12 +544,13 @@ func (r *PrescriptionMemoryRepo) GetByClinicalRecordID(_ context.Context, record
 	defer r.ds.mu.RUnlock()
 	for _, p := range r.ds.prescriptions {
 		if p.ClinicalRecordID == recordID {
-			return p, nil
+			return copyPrescription(p), nil
 		}
 	}
 	return nil, domain.ErrPrescriptionNotFound
 }
 
+// GetMedicationByID retorna una copia: el stock interno solo cambia bajo candado en DeductStock.
 func (r *PrescriptionMemoryRepo) GetMedicationByID(_ context.Context, id int) (*domain.MedicationCatalog, error) {
 	r.ds.mu.RLock()
 	defer r.ds.mu.RUnlock()
@@ -475,13 +558,14 @@ func (r *PrescriptionMemoryRepo) GetMedicationByID(_ context.Context, id int) (*
 	if !ok {
 		return nil, domain.ErrMedicationNotFound
 	}
-	return med, nil
+	out := *med
+	return &out, nil
 }
 
 func (r *PrescriptionMemoryRepo) SearchMedications(_ context.Context, query string) ([]domain.MedicationCatalog, error) {
 	r.ds.mu.RLock()
 	defer r.ds.mu.RUnlock()
-	var result []domain.MedicationCatalog
+	result := []domain.MedicationCatalog{}
 	q := strings.ToLower(query)
 	for _, med := range r.ds.medications {
 		if strings.Contains(strings.ToLower(med.CommercialName), q) ||
@@ -489,6 +573,10 @@ func (r *PrescriptionMemoryRepo) SearchMedications(_ context.Context, query stri
 			strings.Contains(strings.ToLower(med.ActiveIngredient), q) {
 			result = append(result, *med)
 		}
+	}
+	sort.Slice(result, func(i, j int) bool { return result[i].CommercialName < result[j].CommercialName })
+	if len(result) > maxMedicationResults {
+		result = result[:maxMedicationResults]
 	}
 	return result, nil
 }
@@ -519,8 +607,10 @@ func NewAuditMemoryRepo(ds *DataStore) ports.AuditRepository {
 func (r *AuditMemoryRepo) CreateLog(_ context.Context, log *domain.AuditLog) error {
 	r.ds.mu.Lock()
 	defer r.ds.mu.Unlock()
-	log.ID = int64(len(r.ds.auditLogs) + 1)
-	r.ds.auditLogs = append(r.ds.auditLogs, log)
+	stored := *log
+	stored.ID = int64(len(r.ds.auditLogs) + 1)
+	log.ID = stored.ID
+	r.ds.auditLogs = append(r.ds.auditLogs, &stored)
 	return nil
 }
 
@@ -530,7 +620,7 @@ func (r *AuditMemoryRepo) ListLogs(_ context.Context, limit int) ([]*domain.Audi
 	if limit <= 0 || limit > len(r.ds.auditLogs) {
 		limit = len(r.ds.auditLogs)
 	}
-	var logs []*domain.AuditLog
+	logs := []*domain.AuditLog{}
 	for i := len(r.ds.auditLogs) - 1; i >= 0 && len(logs) < limit; i-- {
 		logCopy := *r.ds.auditLogs[i]
 		logs = append(logs, &logCopy)
@@ -541,7 +631,8 @@ func (r *AuditMemoryRepo) ListLogs(_ context.Context, limit int) ([]*domain.Audi
 func (r *AuditMemoryRepo) SaveRIPSTransaction(_ context.Context, tx *domain.RIPSTransaction) error {
 	r.ds.mu.Lock()
 	defer r.ds.mu.Unlock()
-	r.ds.rips[tx.ID] = tx
+	stored := *tx
+	r.ds.rips[stored.ID] = &stored
 	return nil
 }
 
@@ -552,5 +643,6 @@ func (r *AuditMemoryRepo) GetRIPSTransactionByID(_ context.Context, id string) (
 	if !ok {
 		return nil, domain.ErrRecordNotFound
 	}
-	return tx, nil
+	out := *tx
+	return &out, nil
 }

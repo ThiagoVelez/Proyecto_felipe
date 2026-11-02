@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { AlertTriangle, ShieldAlert, X, CheckSquare, Square, CornerDownRight } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { AlertTriangle, ShieldAlert, X, CheckSquare, Square } from 'lucide-react';
 
 /**
  * AllergyAlertModal - Modal de intercepcion y seguridad farmacologica
@@ -7,13 +7,19 @@ import { AlertTriangle, ShieldAlert, X, CheckSquare, Square, CornerDownRight } f
  */
 export const AllergyAlertModal = ({
   isOpen,
-  activeIngredient = 'BETALACTAMICOS',
+  activeIngredient = '',
   severity = 'SEVERA',
-  medicationName = 'Amoxicilina 500 mg capsulas [CUM: 19934212-01]',
+  medicationName = '',
+  message = '',
   onClose,
   onOverride,
 }) => {
   const [confirmedRisk, setConfirmedRisk] = useState(false);
+  const closeButtonRef = useRef(null);
+
+  useEffect(() => {
+    if (isOpen) closeButtonRef.current?.focus();
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -80,51 +86,44 @@ export const AllergyAlertModal = ({
                 {severity}
               </span>
             </p>
-            <p className="flex justify-between items-baseline text-xs text-red-800 pt-1 border-t border-red-100">
-              <span className="font-semibold">Reaccion previa registrada:</span>
-              <span>Choque Anafilactico documentado en UCI Cartago (2022)</span>
-            </p>
+            {message && (
+              <p className="text-xs text-red-800 pt-1 border-t border-red-100" data-testid="allergy-server-message">
+                {message}
+              </p>
+            )}
           </div>
 
-          {/* Alternativas Terapeuticas Sugeridas */}
-          <div className="p-3 rounded-xl bg-amber-50/80 border border-amber-200 text-amber-950 text-xs space-y-1.5">
-            <div className="font-bold flex items-center gap-1.5 text-amber-900">
-              <AlertTriangle className="w-4 h-4 text-amber-600" />
-              Alternativas Terapeuticas Seguras (No Betalactamicos):
-            </div>
-            <ul className="pl-5 space-y-1 list-disc text-amber-900">
-              <li>
-                <strong>Azitromicina 500 mg</strong> VO cada 24 h (Macrolido - CUM: 19945112)
-              </li>
-              <li>
-                <strong>Claritromicina 500 mg</strong> VO cada 12 h (Macrolido - CUM: 19932088)
-              </li>
-              <li>
-                <strong>Levofloxacino 500 mg</strong> IV/VO cada 24 h (Fluoroquinolona - CUM: 19981240)
-              </li>
-            </ul>
-          </div>
-
-          {/* Checkbox de Confirmacion de Riesgo Bajo Responsabilidad Medica */}
-          <label className="flex items-start gap-2.5 p-3 rounded-xl bg-white/70 border border-red-200 text-xs text-red-950 cursor-pointer hover:bg-white select-none">
-            <button
-              type="button"
-              role="checkbox"
-              aria-checked={confirmedRisk}
-              onClick={() => setConfirmedRisk(!confirmedRisk)}
-              className="mt-0.5 text-red-700 hover:text-red-900 focus:outline-none"
-            >
-              {confirmedRisk ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
-            </button>
+          <div className="p-3 rounded-xl bg-amber-50/80 border border-amber-200 text-amber-950 text-xs flex items-start gap-1.5">
+            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
             <span>
-              Certifico que he evaluado el historial clinico y asumo la responsabilidad deontologica de la formulacion bajo <strong>Firma Forense SHA-256 (Ley 527 de 1999)</strong>.
+              La prescripcion fue rechazada por el servidor. Retire el medicamento o seleccione una alternativa
+              terapeutica sin relacion con el principio activo conflictivo.
             </span>
-          </label>
+          </div>
+
+          {/* Confirmacion de riesgo: solo se ofrece cuando el flujo permite omitir la alerta */}
+          {onOverride && (
+            <label className="flex items-start gap-2.5 p-3 rounded-xl bg-white/70 border border-red-200 text-xs text-red-950 cursor-pointer hover:bg-white select-none">
+              <button
+                type="button"
+                role="checkbox"
+                aria-checked={confirmedRisk}
+                onClick={() => setConfirmedRisk(!confirmedRisk)}
+                className="mt-0.5 text-red-700 hover:text-red-900 focus:outline-none"
+              >
+                {confirmedRisk ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
+              </button>
+              <span>
+                Certifico que he evaluado el historial clinico y asumo la responsabilidad deontologica de la formulacion bajo <strong>Firma Forense SHA-256 (Ley 527 de 1999)</strong>.
+              </span>
+            </label>
+          )}
         </div>
 
         {/* Acciones del Modal */}
         <div className="mt-6 flex flex-col sm:flex-row items-center justify-end gap-3 pt-3 border-t border-red-200">
           <button
+            ref={closeButtonRef}
             type="button"
             onClick={onClose}
             className="w-full sm:w-auto px-4 py-2.5 bg-red-700 hover:bg-red-800 text-white font-semibold text-sm rounded-xl transition-all shadow-md active:scale-95 cursor-pointer"

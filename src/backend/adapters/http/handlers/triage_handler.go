@@ -58,7 +58,8 @@ func (h *TriageHandler) Create(c *fiber.Ctx) error {
 
 	created, err := h.triageService.RegisterTriage(c.Context(), record)
 	if err != nil {
-		if errors.Is(err, domain.ErrInvalidGlasgowScore) || errors.Is(err, domain.ErrInvalidOxygenSaturation) || errors.Is(err, domain.ErrInvalidVitals) {
+		if errors.Is(err, domain.ErrInvalidGlasgowScore) || errors.Is(err, domain.ErrInvalidOxygenSaturation) ||
+			errors.Is(err, domain.ErrInvalidVitals) || errors.Is(err, domain.ErrInvalidManchesterLevel) {
 			return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
 				"error": err.Error(),
 			})
@@ -112,6 +113,9 @@ func (h *TriageHandler) UpdateStatus(c *fiber.Ctx) error {
 	}
 
 	if err := h.triageService.UpdateTriageStatus(c.Context(), id, req.Status); err != nil {
+		if errors.Is(err, domain.ErrInvalidTriageStatus) {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+		}
 		if errors.Is(err, domain.ErrTriageAlreadyProcessed) {
 			return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": err.Error()})
 		}
@@ -123,4 +127,3 @@ func (h *TriageHandler) UpdateStatus(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{"message": "Estado de triaje actualizado exitosamente"})
 }
-

@@ -699,10 +699,10 @@ export const ProfileScreen = ({ user, onUpdateUser, onNavigate }) => {
             <div className="flex items-center justify-between p-4 rounded-2xl bg-surface-container-low">
               <div>
                 <div className="font-bold text-on-surface">Autenticación Multifactor (TOTP RFC 6238)</div>
-                <div className="text-[11px] text-outline">Generador de códigos temporales de 30 segundos activo</div>
+                <div className="text-[11px] text-outline">{user?.mfa_enabled ? 'Se solicita código temporal de 30 segundos en cada inicio de sesión' : 'Segundo factor no habilitado. Configúrelo en Seguridad & MFA'}</div>
               </div>
-              <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">
-                Activo & Sincronizado
+              <span className={`px-3 py-1 rounded-full ${user?.mfa_enabled ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'} text-xs font-bold`}>
+                {user?.mfa_enabled ? 'Habilitado' : 'No habilitado'}
               </span>
             </div>
 

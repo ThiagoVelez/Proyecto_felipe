@@ -10,6 +10,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
 
@@ -116,36 +117,49 @@ func GenerateMFASecret() (string, error) {
 	return base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(secretBytes), nil
 }
 
+// hotpCode calcula el codigo de 6 digitos del intervalo indicado (RFC 4226 / RFC 6238).
+func hotpCode(key []byte, interval int64) string {
+	buf := make([]byte, 8)
+	binary.BigEndian.PutUint64(buf, uint64(interval))
+
+	mac := hmac.New(sha1.New, key)
+	mac.Write(buf)
+	hash := mac.Sum(nil)
+
+	offsetIndex := hash[len(hash)-1] & 0x0f
+	binaryCode := (int(hash[offsetIndex])&0x7f)<<24 |
+		(int(hash[offsetIndex+1])&0xff)<<16 |
+		(int(hash[offsetIndex+2])&0xff)<<8 |
+		(int(hash[offsetIndex+3]) & 0xff)
+
+	return fmt.Sprintf("%06d", binaryCode%1000000)
+}
+
+func decodeSecret(secret string) ([]byte, error) {
+	secret = strings.ToUpper(strings.ReplaceAll(secret, " ", ""))
+	return base32.StdEncoding.WithPadding(base32.NoPadding).DecodeString(secret)
+}
+
+// GenerateTOTP calcula el codigo vigente para un secreto base32 en el instante dado.
+func GenerateTOTP(secret string, at time.Time) (string, error) {
+	key, err := decodeSecret(secret)
+	if err != nil {
+		return "", err
+	}
+	return hotpCode(key, at.Unix()/30), nil
+}
+
 // VerifyTOTP valida un codigo numerico de 6 digitos contra el secreto base32 segun RFC 6238.
 // Permite una ventana de tolerancia de +/- 1 intervalo (30 segundos).
 func VerifyTOTP(secret string, code string) bool {
-	secret = strings.ToUpper(strings.ReplaceAll(secret, " ", ""))
-	key, err := base32.StdEncoding.WithPadding(base32.NoPadding).DecodeString(secret)
+	key, err := decodeSecret(secret)
 	if err != nil {
 		return false
 	}
 
-	currentTime := time.Now().Unix()
-	step := int64(30)
-	currentInterval := currentTime / step
-
+	currentInterval := time.Now().Unix() / 30
 	for offset := int64(-1); offset <= 1; offset++ {
-		interval := currentInterval + offset
-		buf := make([]byte, 8)
-		binary.BigEndian.PutUint64(buf, uint64(interval))
-
-		mac := hmac.New(sha1.New, key)
-		mac.Write(buf)
-		hash := mac.Sum(nil)
-
-		offsetIndex := hash[len(hash)-1] & 0x0f
-		binaryCode := (int(hash[offsetIndex])&0x7f)<<24 |
-			(int(hash[offsetIndex+1])&0xff)<<16 |
-			(int(hash[offsetIndex+2])&0xff)<<8 |
-			(int(hash[offsetIndex+3]) & 0xff)
-
-		expectedCode := fmt.Sprintf("%06d", binaryCode%1000000)
-		if expectedCode == code {
+		if hmac.Equal([]byte(hotpCode(key, currentInterval+offset)), []byte(code)) {
 			return true
 		}
 	}
@@ -153,3 +167,14 @@ func VerifyTOTP(secret string, code string) bool {
 	return false
 }
 
+// BuildOTPAuthURI construye la URI otpauth:// que escanean las aplicaciones autenticadoras (Google Authenticator, Authy).
+func BuildOTPAuthURI(secret, accountEmail, issuer string) string {
+	label := url.PathEscape(issuer) + ":" + url.PathEscape(accountEmail)
+	query := url.Values{}
+	query.Set("secret", secret)
+	query.Set("issuer", issuer)
+	query.Set("algorithm", "SHA1")
+	query.Set("digits", "6")
+	query.Set("period", "30")
+	return "otpauth://totp/" + label + "?" + query.Encode()
+}

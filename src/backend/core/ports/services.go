@@ -11,7 +11,10 @@ type AuthService interface {
 	Login(ctx context.Context, email, password, totpCode string) (token string, user *domain.User, err error)
 	Register(ctx context.Context, user *domain.User, plainPassword string) error
 	RegisterStaff(ctx context.Context, user *domain.User, plainPassword string) error
-	SetupMFA(ctx context.Context, userID string) (secret string, err error)
+	// ValidateSession verifica que la cuenta del token siga existiendo y activa, y retorna su estado vigente.
+	ValidateSession(ctx context.Context, userID string) (*domain.User, error)
+	// SetupMFA genera un nuevo secreto TOTP; si el usuario ya tiene MFA habilitado exige el codigo vigente.
+	SetupMFA(ctx context.Context, userID, currentCode string) (secret string, err error)
 	EnableMFA(ctx context.Context, userID, totpCode string) error
 }
 
@@ -21,6 +24,16 @@ type AdminService interface {
 	ActivateUser(ctx context.Context, userID string) error
 	DeactivateUser(ctx context.Context, userID string) error
 	GetAuditLogs(ctx context.Context, limit int) ([]*domain.AuditLog, error)
+}
+
+// PatientService define los casos de uso de admision de pacientes y registro de antecedentes alergicos.
+type PatientService interface {
+	RegisterPatient(ctx context.Context, patient *domain.Patient) (*domain.Patient, error)
+	GetPatient(ctx context.Context, id string) (*domain.Patient, error)
+	FindByDocument(ctx context.Context, docType domain.DocumentType, docNumber string) (*domain.Patient, error)
+	ListPatients(ctx context.Context, limit, offset int) ([]domain.Patient, error)
+	AddAllergy(ctx context.Context, allergy *domain.PatientAllergy) (*domain.PatientAllergy, error)
+	GetAllergies(ctx context.Context, patientID string) ([]domain.PatientAllergy, error)
 }
 
 // TriageService define los casos de uso para clasificacion y priorizacion clinica.
@@ -46,11 +59,13 @@ type PrescriptionService interface {
 	IssuePrescription(ctx context.Context, prescription *domain.Prescription) (*domain.Prescription, error)
 	GetPrescriptionByID(ctx context.Context, id string) (*domain.Prescription, error)
 	GetByClinicalRecord(ctx context.Context, recordID string) (*domain.Prescription, error)
+	SearchMedications(ctx context.Context, query string) ([]domain.MedicationCatalog, error)
 }
 
 // SyncService define los casos de uso para sincronizacion por lotes de atencion rural desconectada.
+// El autor de los folios es siempre el medico autenticado; la cadena SHA-256 se calcula en el servidor.
 type SyncService interface {
-	ProcessOfflineBatch(ctx context.Context, batchID string, records []domain.ClinicalRecord) (int, error)
+	ProcessOfflineBatch(ctx context.Context, doctorID, batchID string, records []domain.ClinicalRecord) (int, error)
 }
 
 // RIPSGeneratorPort define la exportacion estandarizada de datos clinicos bajo la Resolucion 2275.

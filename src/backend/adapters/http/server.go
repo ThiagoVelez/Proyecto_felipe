@@ -16,6 +16,8 @@ type ServerConfig struct {
 	RateLimitMax   int
 	RateLimitTime  time.Duration
 	JWTSecret      string
+	// TrustedProxies lista IPs/CIDR del proxy inverso cuya cabecera X-Real-IP se acepta como IP del cliente.
+	TrustedProxies []string
 	RouterConfig   RouterConfig
 	AuditRepo      ports.AuditRepository
 	Logger         *logger.Logger
@@ -34,6 +36,11 @@ func NewServer(cfg ServerConfig) *Server {
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  120 * time.Second,
+		// Detras de nginx, c.IP() debe ser el cliente real; de lo contrario el limite de tasa se comparte entre todos
+		// los usuarios por usar la IP del proxy. Solo se confia en la cabecera si la solicitud llega de un proxy permitido.
+		ProxyHeader:             "X-Real-IP",
+		EnableTrustedProxyCheck: len(cfg.TrustedProxies) > 0,
+		TrustedProxies:          cfg.TrustedProxies,
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			code := fiber.StatusInternalServerError
 			if e, ok := err.(*fiber.Error); ok {
@@ -91,3 +98,7 @@ func (s *Server) Shutdown() error {
 	return s.app.Shutdown()
 }
 
+// App expone la aplicacion Fiber subyacente para pruebas de integracion HTTP.
+func (s *Server) App() *fiber.App {
+	return s.app
+}

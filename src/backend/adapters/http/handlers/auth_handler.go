@@ -8,6 +8,7 @@ import (
 
 	"saludconecta-backend/core/domain"
 	"saludconecta-backend/core/ports"
+	"saludconecta-backend/pkg/crypto"
 )
 
 type AuthHandler struct {
@@ -40,8 +41,15 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 		})
 	}
 
+	c.Locals("audit_action", string(domain.ActionLogin))
+
 	token, user, err := h.authService.Login(c.Context(), req.Email, req.Password, req.TOTPCode)
 	if err != nil {
+		if errors.Is(err, domain.ErrTooManyAttempts) {
+			return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{
+				"error": "Demasiados intentos fallidos; la cuenta queda bloqueada temporalmente. Intente nuevamente en unos minutos.",
+			})
+		}
 		if errors.Is(err, domain.ErrInvalidCredentials) {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"error": "Credenciales invalidas",
@@ -68,24 +76,47 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 		})
 	}
 
+	// La bitacora atribuye el inicio de sesion exitoso al usuario autenticado
+	c.Locals("user_id", user.ID)
+	c.Locals("role", user.RoleName)
+
 	return c.JSON(fiber.Map{
 		"token": token,
-		"user": fiber.Map{
-			"id":                user.ID,
-			"full_name":         user.FullName,
-			"document_type":     user.DocumentType,
-			"document_number":   user.DocumentNumber,
-			"email":             user.Email,
-			"phone":             user.Phone,
-			"role":              user.RoleName,
-			"role_id":           user.RoleID,
-			"professional_card": user.ProfessionalCard,
-			"specialty":         user.Specialty,
-			"branch":            user.Branch,
-			"is_active":         user.IsActive,
-			"mfa_enabled":       user.MFAEnabled,
-		},
+		"user":  userView(user),
 	})
+}
+
+// userView arma la representacion publica de la cuenta autenticada.
+func userView(user *domain.User) fiber.Map {
+	return fiber.Map{
+		"id":                user.ID,
+		"full_name":         user.FullName,
+		"document_type":     user.DocumentType,
+		"document_number":   user.DocumentNumber,
+		"email":             user.Email,
+		"phone":             user.Phone,
+		"role":              user.RoleName,
+		"role_id":           user.RoleID,
+		"professional_card": user.ProfessionalCard,
+		"specialty":         user.Specialty,
+		"branch":            user.Branch,
+		"is_active":         user.IsActive,
+		"mfa_enabled":       user.MFAEnabled,
+	}
+}
+
+// Me retorna el estado vigente de la cuenta del token (sirve para revalidar la sesion al recargar).
+func (h *AuthHandler) Me(c *fiber.Ctx) error {
+	userID, ok := c.Locals("user_id").(string)
+	if !ok || userID == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "No autorizado"})
+	}
+
+	user, err := h.authService.ValidateSession(c.Context(), userID)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "La sesion ya no es valida"})
+	}
+	return c.JSON(fiber.Map{"user": userView(user)})
 }
 
 type RegisterRequest struct {
@@ -122,6 +153,12 @@ func (h *AuthHandler) RegisterStaff(c *fiber.Ctx) error {
 		})
 	}
 
+	if domain.RoleNameByID(req.RoleID) == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "role_id no pertenece al catalogo de roles",
+		})
+	}
+
 	if req.DocumentType == "" {
 		req.DocumentType = "CC"
 	}
@@ -129,6 +166,7 @@ func (h *AuthHandler) RegisterStaff(c *fiber.Ctx) error {
 	user := &domain.User{
 		ID:               uuid.New().String(),
 		RoleID:           req.RoleID,
+		RoleName:         domain.RoleNameByID(req.RoleID),
 		FullName:         req.FullName,
 		DocumentType:     req.DocumentType,
 		DocumentNumber:   req.DocumentNumber,
@@ -169,16 +207,35 @@ func (h *AuthHandler) SetupMFA(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "No autorizado"})
 	}
 
-	secret, err := h.authService.SetupMFA(c.Context(), userID)
+	var req SetupMFARequest
+	// El cuerpo es opcional: solo se necesita cuando la cuenta ya tiene un segundo factor activo
+	_ = c.BodyParser(&req)
+
+	secret, err := h.authService.SetupMFA(c.Context(), userID, req.CurrentCode)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Error al inicializar configuracion MFA",
-		})
+		switch {
+		case errors.Is(err, domain.ErrTooManyAttempts):
+			return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{"error": "Demasiados intentos fallidos; intente nuevamente en unos minutos"})
+		case errors.Is(err, domain.ErrCurrentCodeRequired):
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+		case errors.Is(err, domain.ErrMFAValidationFailed):
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Codigo TOTP vigente incorrecto"})
+		default:
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Error al inicializar configuracion MFA",
+			})
+		}
 	}
 
+	email, _ := c.Locals("email").(string)
 	return c.JSON(fiber.Map{
-		"secret": secret,
+		"secret":      secret,
+		"otpauth_uri": crypto.BuildOTPAuthURI(secret, email, "SaludConecta IPS"),
 	})
+}
+
+type SetupMFARequest struct {
+	CurrentCode string `json:"current_code"`
 }
 
 type EnableMFARequest struct {
@@ -199,6 +256,9 @@ func (h *AuthHandler) EnableMFA(c *fiber.Ctx) error {
 	}
 
 	if err := h.authService.EnableMFA(c.Context(), userID, req.Code); err != nil {
+		if errors.Is(err, domain.ErrTooManyAttempts) {
+			return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{"error": "Demasiados intentos fallidos; intente nuevamente en unos minutos"})
+		}
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Codigo TOTP incorrecto",
 		})

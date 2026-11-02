@@ -28,6 +28,7 @@ func TestRuralOfflineBatchSynchronization(t *testing.T) {
 	batchID := uuid.New().String()
 	recordID := uuid.New().String()
 	closedAt := time.Now().UTC()
+	signature := "firma-digital-brigada-rural"
 
 	offlineRecords := []domain.ClinicalRecord{
 		{
@@ -40,12 +41,13 @@ func TestRuralOfflineBatchSynchronization(t *testing.T) {
 			DiagnosisDescription: "Gastroenteritis infecciosa no especificada",
 			TreatmentPlan:        "Sales de rehidratacion oral y vigilancia clinica.",
 			IsClosed:             true,
+			SignatureToken:       &signature,
 			ClosedAt:             &closedAt,
 		},
 	}
 
 	// 1. Sincronizacion inicial del lote offline
-	syncedCount, err := syncService.ProcessOfflineBatch(ctx, batchID, offlineRecords)
+	syncedCount, err := syncService.ProcessOfflineBatch(ctx, "d-med-01", batchID, offlineRecords)
 	if err != nil {
 		t.Fatalf("Error procesando lote de sincronizacion offline: %v", err)
 	}
@@ -69,7 +71,7 @@ func TestRuralOfflineBatchSynchronization(t *testing.T) {
 	}
 
 	// 2. Garantia de idempotencia: reenvio del mismo lote con el mismo UUID v4
-	syncedCountReplay, err := syncService.ProcessOfflineBatch(ctx, batchID, offlineRecords)
+	syncedCountReplay, err := syncService.ProcessOfflineBatch(ctx, "d-med-01", batchID, offlineRecords)
 	if err != nil {
 		t.Fatalf("El reenvio del lote no deberia fallar por colision (debe ser idempotente): %v", err)
 	}
@@ -86,7 +88,7 @@ func TestRuralOfflineBatchSynchronization(t *testing.T) {
 			Anamnesis: "Atencion en campo sin registro de paciente previo",
 		},
 	}
-	syncedGhost, err := syncService.ProcessOfflineBatch(ctx, uuid.New().String(), ghostRecords)
+	syncedGhost, err := syncService.ProcessOfflineBatch(ctx, "d-med-01", uuid.New().String(), ghostRecords)
 	if err != nil {
 		t.Fatalf("Error inesperado procesando lote con paciente inexistente: %v", err)
 	}

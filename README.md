@@ -896,7 +896,7 @@ proyecto-final/
 │   │   │   │   └── router.go      # Registro de rutas y control de acceso
 │   │   │   ├── storage/           # Implementaciones MySQL, PostgreSQL y memoria
 │   │   │   │   ├── mysql/         # Adaptador MySQL y Seeder institucional (seeder.go)
-│   │   │   │   ├── memory/        # Adaptador en memoria con precarga institucional
+│   │   │   │   ├── memory/        # Adaptador en memoria (solo pruebas y desarrollo, sin cuentas precargadas)
 │   │   │   │   └── postgres/      # Adaptador PostgreSQL compatible
 │   │   │   └── interoperability/  # Generador RIPS JSON y mapeador HL7 FHIR
 │   │   ├── database/schema.sql    # DDL relacional, índices y triggers SQL de inmutabilidad
@@ -967,7 +967,10 @@ Para que cualquier miembro del equipo de desarrollo o evaluación pueda ejecutar
 1. **Requisitos:**
    - Tener instalado [Docker Desktop](https://www.docker.com/products/docker-desktop/) en ejecución.
 
-2. **Iniciar la Plataforma Completa:**
+2. **Definir las variables privadas:**
+   Copia `.env.example` como `.env` en la raíz y completa `DB_ROOT_PASSWORD`, `DB_PASSWORD`, `JWT_SECRET` (mínimo 32 caracteres aleatorios), `ADMIN_INITIAL_EMAIL` y `ADMIN_INITIAL_PASSWORD`. Sin estas variables `docker compose` se detiene a propósito y el repositorio no incluye credenciales por defecto.
+
+3. **Iniciar la Plataforma Completa:**
    Desde la raíz del repositorio, ejecuta:
 
    ```bash
@@ -976,14 +979,15 @@ Para que cualquier miembro del equipo de desarrollo o evaluación pueda ejecutar
 
    _Docker construirá y orquestará automáticamente tres contenedores interconectados:_
    - `saludconecta-mysql`: Base de datos MySQL 8.0 con migración DDL automática (`schema.sql`) y volumen persistente.
-   - `saludconecta-backend`: API en Go 1.22+ (GoFiber v2) compilada en binario estático sobre Alpine Linux con seeder idempotente.
+   - `saludconecta-backend`: API en Go 1.22+ (GoFiber v2) compilada en binario estático sobre Alpine Linux con migración idempotente.
    - `saludconecta-frontend`: React PWA + Vite servido a través de Nginx Alpine con proxy inverso integrado hacia `/api/`.
 
-3. **Acceso Inmediato al Sistema:**
+4. **Acceso al Sistema:**
    - Abre tu navegador web en: **[http://localhost:5173](http://localhost:5173)** (o alternativamente en `http://localhost`).
-   - La API del backend estará disponible en `http://localhost:8080/api/v1/health`.
+   - Inicia sesión con el Administrador definido en `ADMIN_INITIAL_EMAIL` / `ADMIN_INITIAL_PASSWORD` y registra desde el panel al resto del personal.
+   - La API del backend queda disponible solo en el equipo local: `http://localhost:8080/api/v1/health`.
 
-4. **Detener el Entorno:**
+5. **Detener el Entorno:**
    ```bash
    docker compose down
    ```
@@ -1006,14 +1010,18 @@ Si prefieres ejecutar los componentes de forma nativa en tu entorno de desarroll
 
 2. Configura las variables de entorno para el backend creando el archivo `.env` en `src/backend/` tomando como base `.env.example`.
 
-#### 7.2.2. Seeder Automático e Idempotente (`adapters/storage/mysql/seeder.go`)
+#### 7.2.2. Migración Idempotente y Administrador Inicial (`adapters/storage/mysql/seeder.go`)
 
-Al iniciar el servidor en Go, el sistema ejecuta automáticamente la función `SeedInitialAdmin(db *sql.DB)`:
+Al iniciar el servidor en Go, el sistema ejecuta automáticamente la función `Migrate(db *sql.DB)`:
 
 - Comprueba y crea dinámicamente las columnas de habilitación profesional en la tabla `users` (`document_type`, `document_number`, `phone`, `specialty`, `branch`).
-- Siembra el Administrador inicial (`admin@saludconecta.ips.gov.co`) con contraseña cifrada mediante Bcrypt coste 12 si no existe ningún usuario con `role_id = 1`.
-- Siembra al facultativo líder **Dr. Santiago Vélez** (`svelez@saludconecta.ips.gov.co`, `RM-94821-VALLE`, activo con MFA).
-- Siembra un registro de prueba de personal pendiente (**Dra. Camila Yaima**, inactiva) para verificación inmediata de la gobernanza ReTHUS.
+- Crea el índice único `uq_cr_patient_chain (patient_id, previous_hash)` que impide bifurcar la cadena SHA-256 de un paciente cuando se cierran dos folios en simultáneo.
+- Instala, si faltan, los disparadores de inmutabilidad de folios cerrados y de notas aclaratorias (en PostgreSQL el esquema equivalente se aplica desde `adapters/storage/postgres/schema.sql`).
+- Carga el catálogo farmacológico inicial de demostración (códigos `CUM-DEMO-xxx`, que deben sustituirse por la carga oficial del INVIMA).
+
+**No se siembran cuentas con credenciales conocidas.** El Administrador inicial se crea solo si no existe ninguno y únicamente cuando el operador define `ADMIN_INITIAL_EMAIL` y `ADMIN_INITIAL_PASSWORD` (mínimo 12 caracteres) en su `.env`. El resto del personal lo registra ese Administrador desde el panel (la cuenta nace inactiva hasta la verificación ReTHUS).
+
+**`JWT_SECRET` es obligatorio** (mínimo 32 caracteres aleatorios, sin valores publicados): sin él el servicio no arranca. Si el motor de base de datos configurado no responde, el servicio termina con error y **no** conmuta a memoria, para no perder registros clínicos.
 
 #### 7.2.3. Puesta en Marcha del Backend (Go)
 
@@ -1026,7 +1034,7 @@ go run cmd/api/main.go
 
 _El servicio HTTP de GoFiber iniciará escuchando en el puerto configurado (por defecto `http://localhost:8080`)._
 
-> **Nota para pruebas en memoria:** Si deseas ejecutar el backend sin depender de MySQL activo, define la variable de entorno antes de ejecutar: `$env:DB_DRIVER="memory"; go run cmd/api/main.go`. El adaptador en memoria precarga automáticamente las cuentas del Administrador y del Dr. Santiago Vélez.
+> **Nota para pruebas en memoria:** Para ejecutar el backend sin MySQL, defina `DB_DRIVER=memory` de forma explícita (por ejemplo `$env:DB_DRIVER="memory"; go run cmd/api/main.go`). Es un modo no persistente exclusivo de desarrollo: no precarga cuentas, por lo que debe definir `ADMIN_INITIAL_EMAIL` y `ADMIN_INITIAL_PASSWORD` para crear el Administrador.
 
 #### 7.2.4. Puesta en Marcha del Frontend (React)
 
@@ -1053,10 +1061,10 @@ Siguiendo la política de protección de infraestructura sensible (Regla 27), to
 | `DB_USER`                | Usuario de conexión con permisos DDL/DML                  | `root`                                        |
 | `DB_PASSWORD`            | Clave de acceso a la base de datos                        | `secret_password`                             |
 | `DB_NAME`                | Nombre de la base de datos clínica                        | `saludconecta_db`                             |
-| `JWT_SECRET`             | Semilla secreta para la firma de tokens HS256             | `super_secret_seed_key`                       |
+| `JWT_SECRET`             | Semilla secreta para la firma de tokens HS256             | `defina_un_secreto_aleatorio_de_32_o_mas`       |
 | `CORS_ALLOWED_ORIGINS`   | Orígenes web autorizados para consumo de la API           | `http://localhost:5173,http://localhost:5174` |
-| `ADMIN_INITIAL_EMAIL`    | Correo institucional del administrador inicial            | `admin@saludconecta.ips.gov.co`               |
-| `ADMIN_INITIAL_PASSWORD` | Clave inicial para inicialización automática              | `AdminSalud2026*`                             |
+| `ADMIN_INITIAL_EMAIL`    | Correo del administrador inicial (se crea solo si no hay ninguno) | `admin@su-institucion.example`        |
+| `ADMIN_INITIAL_PASSWORD` | Clave inicial para inicialización automática              | `defina_una_clave_privada_larga`              |
 | `IPS_NIT`                | NIT de la institución prestadora de salud                 | `900123456`                                   |
 | `COD_PRESTADOR`          | Código de habilitación MinSalud (12 dígitos)              | `110010999901`                                |
 

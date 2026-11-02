@@ -189,7 +189,7 @@ func (r *prescriptionRepo) SearchMedications(ctx context.Context, query string) 
 		FROM medications_catalog
 		WHERE commercial_name LIKE ? OR generic_name LIKE ? OR active_ingredient LIKE ?
 		ORDER BY commercial_name ASC
-		LIMIT 20
+		LIMIT 50
 	`
 	rows, err := r.db.QueryContext(ctx, sqlQuery, q, q, q)
 	if err != nil {
@@ -230,4 +230,3 @@ func (r *prescriptionRepo) DeductStock(ctx context.Context, medicationID int, qu
 	}
 	return nil
 }
-

@@ -23,9 +23,14 @@ CREATE TABLE IF NOT EXISTS users (
     id VARCHAR(36) PRIMARY KEY, -- UUID v4
     role_id INT NOT NULL,
     full_name VARCHAR(150) NOT NULL,
+    document_type VARCHAR(10) DEFAULT 'CC',
+    document_number VARCHAR(25) DEFAULT '',
     email VARCHAR(120) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
+    phone VARCHAR(25) DEFAULT '',
     professional_card VARCHAR(50) NULL, -- Registro medico / tarjeta profesional
+    specialty VARCHAR(100) DEFAULT '',
+    branch VARCHAR(100) DEFAULT '',
     mfa_secret VARCHAR(64) NULL,        -- Semilla TOTP
     mfa_enabled BOOLEAN DEFAULT FALSE,
     is_active BOOLEAN DEFAULT TRUE,
@@ -133,11 +138,13 @@ CREATE TABLE IF NOT EXISTS clinical_records (
     is_offline_sync BOOLEAN DEFAULT FALSE,
     sync_batch_id VARCHAR(36) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    closed_at TIMESTAMP NULL,
+    closed_at TIMESTAMP NULL,        -- Precision de segundos: el servicio sella con la misma precision que entra al hash
     CONSTRAINT fk_cr_patient FOREIGN KEY (patient_id) REFERENCES patients(id),
     CONSTRAINT fk_cr_doctor FOREIGN KEY (doctor_id) REFERENCES users(id),
     CONSTRAINT fk_cr_triage FOREIGN KEY (triage_id) REFERENCES triage_records(id),
-    INDEX idx_cr_patient_history (patient_id, created_at DESC)
+    INDEX idx_cr_patient_history (patient_id, created_at DESC),
+    -- Impide bifurcar la cadena SHA-256: un solo folio cerrado por eslabon previo y paciente (los borradores usan NULL)
+    UNIQUE KEY uq_cr_patient_chain (patient_id, previous_hash)
 ) ENGINE=InnoDB;
 
 -- Notas aclaratorias (la unica forma legal de adicionar info a un folio cerrado)
@@ -226,6 +233,8 @@ CREATE TABLE IF NOT EXISTS rips_transactions (
 
 DROP TRIGGER IF EXISTS trg_prevent_update_closed_record;
 DROP TRIGGER IF EXISTS trg_prevent_delete_clinical_record;
+DROP TRIGGER IF EXISTS trg_prevent_update_clarification;
+DROP TRIGGER IF EXISTS trg_prevent_delete_clarification;
 
 DELIMITER $$
 
@@ -248,6 +257,23 @@ FOR EACH ROW
 BEGIN
     SIGNAL SQLSTATE '45000'
     SET MESSAGE_TEXT = 'Operacion denegada: Queda prohibida la eliminacion de registros de Historias Clinicas (Custodia Legal).';
+END$$
+
+-- Las notas aclaratorias son append-only: ni se editan ni se eliminan
+CREATE TRIGGER trg_prevent_update_clarification
+BEFORE UPDATE ON clinical_record_clarifications
+FOR EACH ROW
+BEGIN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'Operacion denegada: Las notas aclaratorias son inmutables y no pueden modificarse ni eliminarse.';
+END$$
+
+CREATE TRIGGER trg_prevent_delete_clarification
+BEFORE DELETE ON clinical_record_clarifications
+FOR EACH ROW
+BEGIN
+    SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'Operacion denegada: Las notas aclaratorias son inmutables y no pueden modificarse ni eliminarse.';
 END$$
 
 DELIMITER ;

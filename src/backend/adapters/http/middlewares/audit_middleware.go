@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -39,17 +40,19 @@ func AuditMiddleware(log *logger.Logger, auditRepo ports.AuditRepository) fiber.
 		statusCode := c.Response().StatusCode()
 
 		subLog.Info("Solicitud HTTP procesada", map[string]interface{}{
-			"method":      c.Method(),
-			"path":        c.Path(),
-			"ip":          c.IP(),
-			"status":      statusCode,
-			"latency_ms":  latency.Milliseconds(),
-			"user_agent":  c.Get("User-Agent"),
+			"method":     c.Method(),
+			"path":       c.Path(),
+			"ip":         c.IP(),
+			"status":     statusCode,
+			"latency_ms": latency.Milliseconds(),
+			"user_agent": c.Get("User-Agent"),
 		})
 
-		// Si es una operacion que muta estado (POST, PUT, DELETE, PATCH), registrar en base de datos
+		// Se registran las operaciones que mutan estado y las lecturas de datos clinicos o de pacientes (Ley 1581)
 		method := c.Method()
-		if auditRepo != nil && (method == fiber.MethodPost || method == fiber.MethodPut || method == fiber.MethodPatch || method == fiber.MethodDelete) {
+		isMutation := method == fiber.MethodPost || method == fiber.MethodPut || method == fiber.MethodPatch || method == fiber.MethodDelete
+		isSensitiveRead := method == fiber.MethodGet && isSensitivePath(c.Path()) && statusCode < fiber.StatusBadRequest
+		if auditRepo != nil && (isMutation || isSensitiveRead) {
 			var userIDPtr *string
 			if uID, ok := c.Locals("user_id").(string); ok && uID != "" {
 				userIDPtr = &uID
@@ -60,8 +63,14 @@ func AuditMiddleware(log *logger.Logger, auditRepo ports.AuditRepository) fiber.
 			}
 
 			action := domain.ActionUpdate
-			if method == fiber.MethodPost {
+			switch {
+			case method == fiber.MethodGet:
+				action = domain.ActionRead
+			case method == fiber.MethodPost:
 				action = domain.ActionCreate
+			}
+			if override, ok := c.Locals("audit_action").(string); ok && override != "" {
+				action = domain.AuditAction(override)
 			}
 
 			auditEntry := &domain.AuditLog{
@@ -88,3 +97,9 @@ func AuditMiddleware(log *logger.Logger, auditRepo ports.AuditRepository) fiber.
 	}
 }
 
+// isSensitivePath identifica los recursos cuya lectura debe quedar en la bitacora forense.
+func isSensitivePath(path string) bool {
+	return strings.Contains(path, "/clinical-records") ||
+		strings.Contains(path, "/patients") ||
+		strings.Contains(path, "/prescriptions")
+}

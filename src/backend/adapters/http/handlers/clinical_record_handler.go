@@ -106,8 +106,11 @@ func (h *ClinicalRecordHandler) CloseAndSign(c *fiber.Ctx) error {
 
 	closed, err := h.recordService.CloseAndSign(c.Context(), recordID, doctorID, req.SignatureToken)
 	if err != nil {
-		if errors.Is(err, domain.ErrRecordAlreadyClosed) {
+		if errors.Is(err, domain.ErrRecordAlreadyClosed) || errors.Is(err, domain.ErrChainConflict) {
 			return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": err.Error()})
+		}
+		if errors.Is(err, domain.ErrNotRecordOwner) {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": err.Error()})
 		}
 		if errors.Is(err, domain.ErrRecordNotFound) {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": err.Error()})
@@ -137,6 +140,12 @@ func (h *ClinicalRecordHandler) AddClarification(c *fiber.Ctx) error {
 	}
 
 	if err := h.recordService.AddClarification(c.Context(), recordID, doctorID, req.Note); err != nil {
+		if errors.Is(err, domain.ErrNotRecordOwner) {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": err.Error()})
+		}
+		if errors.Is(err, domain.ErrRecordNotClosed) {
+			return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": err.Error()})
+		}
 		if errors.Is(err, domain.ErrRecordNotFound) {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": err.Error()})
 		}
@@ -170,6 +179,9 @@ func (h *ClinicalRecordHandler) GetPatientHistory(c *fiber.Ctx) error {
 func (h *ClinicalRecordHandler) VerifyIntegrity(c *fiber.Ctx) error {
 	recordID := c.Params("id")
 	valid, err := h.recordService.VerifyIntegrity(c.Context(), recordID)
+	if errors.Is(err, domain.ErrRecordNotFound) {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": err.Error()})
+	}
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Error verificando cadena SHA-256"})
 	}
@@ -225,4 +237,3 @@ func (h *ClinicalRecordHandler) ExportFHIR(c *fiber.Ctx) error {
 
 	return c.JSON(bundle)
 }
-

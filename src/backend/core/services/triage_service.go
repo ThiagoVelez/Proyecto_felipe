@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"sort"
 	"time"
 
 	"github.com/google/uuid"
@@ -36,14 +37,18 @@ func (s *triageService) RegisterTriage(ctx context.Context, record *domain.Triag
 		record.ID = uuid.New().String()
 	}
 
-	// Si no se asigno un nivel o se requiere recalculo, aplicar el discriminador de signos vitales
-	if record.ManchesterLevel == "" {
-		record.ManchesterLevel = record.SuggestManchesterPriority()
+	// El nivel lo determinan los signos vitales; un nivel enviado por el cliente solo se acepta como
+	// escalamiento clinico (igual o mas urgente que el calculado) y siempre dentro del catalogo cerrado.
+	suggested := record.SuggestManchesterPriority()
+	switch {
+	case record.ManchesterLevel == "":
+		record.ManchesterLevel = suggested
+	case !record.ManchesterLevel.IsValid() || record.ManchesterLevel.Rank() > suggested.Rank():
+		return nil, domain.ErrInvalidManchesterLevel
 	}
 
-	if record.Status == "" {
-		record.Status = domain.TriageStatusPending
-	}
+	// El estado inicial siempre es pendiente: el cliente no puede registrar un triaje ya procesado
+	record.Status = domain.TriageStatusPending
 	record.CreatedAt = time.Now().UTC()
 
 	if err := s.triageRepo.Create(ctx, record); err != nil {
@@ -54,7 +59,18 @@ func (s *triageService) RegisterTriage(ctx context.Context, record *domain.Triag
 }
 
 func (s *triageService) GetTriageQueue(ctx context.Context) ([]domain.TriageRecord, error) {
-	return s.triageRepo.ListPending(ctx)
+	queue, err := s.triageRepo.ListPending(ctx)
+	if err != nil {
+		return nil, err
+	}
+	sort.SliceStable(queue, func(i, j int) bool {
+		ri, rj := queue[i].ManchesterLevel.Rank(), queue[j].ManchesterLevel.Rank()
+		if ri != rj {
+			return ri < rj
+		}
+		return queue[i].CreatedAt.Before(queue[j].CreatedAt)
+	})
+	return queue, nil
 }
 
 func (s *triageService) GetTriageByID(ctx context.Context, id string) (*domain.TriageRecord, error) {
@@ -62,6 +78,10 @@ func (s *triageService) GetTriageByID(ctx context.Context, id string) (*domain.T
 }
 
 func (s *triageService) UpdateTriageStatus(ctx context.Context, id string, status domain.TriageStatus) error {
+	if !status.IsValid() {
+		return domain.ErrInvalidTriageStatus
+	}
+
 	record, err := s.triageRepo.GetByID(ctx, id)
 	if err != nil {
 		return err
@@ -73,4 +93,3 @@ func (s *triageService) UpdateTriageStatus(ctx context.Context, id string, statu
 
 	return s.triageRepo.UpdateStatus(ctx, id, status)
 }
-

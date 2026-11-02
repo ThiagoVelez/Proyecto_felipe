@@ -9,6 +9,8 @@ var (
 	ErrPatientNotFound      = errors.New("paciente no encontrado")
 	ErrPatientAlreadyExists = errors.New("ya existe un paciente con el documento proporcionado")
 	ErrInvalidDocumentType  = errors.New("tipo de documento de identificacion invalido")
+	ErrInvalidPatientData   = errors.New("los datos del paciente son invalidos o estan incompletos")
+	ErrInvalidAllergyData   = errors.New("los datos de la alergia son invalidos o estan incompletos")
 )
 
 // DocumentType define los tipos de documento validos en el sistema de salud colombiano.
@@ -55,33 +57,33 @@ const (
 
 // PatientAllergy representa el registro de una hipersensibilidad o alergia a principios activos.
 type PatientAllergy struct {
-	ID               int
-	PatientID        string
-	ActiveIngredient string
-	Severity         AllergySeverity
-	Notes            string
-	CreatedAt        time.Time
+	ID               int             `json:"id"`
+	PatientID        string          `json:"patient_id"`
+	ActiveIngredient string          `json:"active_ingredient"`
+	Severity         AllergySeverity `json:"severity"`
+	Notes            string          `json:"notes"`
+	CreatedAt        time.Time       `json:"created_at"`
 }
 
 // Patient representa la entidad del paciente atendido en la IPS.
 type Patient struct {
-	ID                 string
-	DocumentType       DocumentType
-	DocumentNumber     string
-	FirstName          string
-	SecondName         *string
-	LastName           string
-	SecondLastName     *string
-	BirthDate          time.Time
-	Gender             Gender
-	BloodType          BloodType
-	EPSName            string
-	AffiliationStatus  AffiliationStatus
-	Phone              *string
-	IsRuralZone        bool
-	CreatedAt          time.Time
-	UpdatedAt          time.Time
-	Allergies          []PatientAllergy
+	ID                string            `json:"id"`
+	DocumentType      DocumentType      `json:"document_type"`
+	DocumentNumber    string            `json:"document_number"`
+	FirstName         string            `json:"first_name"`
+	SecondName        *string           `json:"second_name"`
+	LastName          string            `json:"last_name"`
+	SecondLastName    *string           `json:"second_last_name"`
+	BirthDate         time.Time         `json:"birth_date"`
+	Gender            Gender            `json:"gender"`
+	BloodType         BloodType         `json:"blood_type"`
+	EPSName           string            `json:"eps_name"`
+	AffiliationStatus AffiliationStatus `json:"affiliation_status"`
+	Phone             *string           `json:"phone"`
+	IsRuralZone       bool              `json:"is_rural_zone"`
+	CreatedAt         time.Time         `json:"created_at"`
+	UpdatedAt         time.Time         `json:"updated_at"`
+	Allergies         []PatientAllergy  `json:"allergies"`
 }
 
 // FullName retorna el nombre completo formateado del paciente.
@@ -97,13 +99,11 @@ func (p *Patient) FullName() string {
 	return name
 }
 
-// IsAllergicToIngredient determina si el paciente presenta hipersensibilidad registrada a un principio activo.
+// IsAllergicToIngredient determina si el paciente presenta hipersensibilidad registrada a un principio activo,
+// considerando normalizacion de tildes/mayusculas y pertenencia a la misma familia farmacologica.
 func (p *Patient) IsAllergicToIngredient(ingredient string) (bool, *PatientAllergy) {
-	for i := range p.Allergies {
-		if p.Allergies[i].ActiveIngredient == ingredient {
-			return true, &p.Allergies[i]
-		}
+	if allergy := MatchAllergy(p.Allergies, ingredient); allergy != nil {
+		return true, allergy
 	}
 	return false, nil
 }
-

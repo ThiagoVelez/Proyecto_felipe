@@ -1,29 +1,13 @@
 import React, { useState } from 'react';
-import {
-  ShieldAlert,
-  Users,
-  Activity,
-  Building2,
-  Pill,
-  LogOut,
-  Clock,
-  ShieldCheck,
-  Server,
-  ArrowLeft,
-} from 'lucide-react';
+import { LogOut, ShieldCheck } from 'lucide-react';
 import AdminDashboardScreen from './AdminDashboardScreen';
 import ProfileScreen from '../ProfileScreen';
 
 export const AdminLayout = ({ user, onLogout, onUpdateUser }) => {
   const [adminView, setAdminView] = useState('dashboard'); // 'dashboard' | 'profile'
-  const currentUser = user || {
-    full_name: 'Administrador del Sistema',
-    name: 'Administrador del Sistema',
-    role: 'ADMIN',
-    role_id: 1,
-    professional_card: 'TI-ADMIN-001',
-    branch: 'Sede Cartago - Hospital Central',
-  };
+  const currentUser = user || {};
+  const displayName = currentUser.full_name || currentUser.name || 'Administrador';
+  const initials = displayName.slice(0, 2).toUpperCase();
   return (
     <div className="min-h-screen bg-surface flex flex-col font-sans">
       {/* HEADER EXCLUSIVO ADMINISTRATIVO */}
@@ -48,11 +32,6 @@ export const AdminLayout = ({ user, onLogout, onUpdateUser }) => {
 
         {/* Acciones y Perfil del Administrador */}
         <div className="flex items-center gap-3">
-          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-low border border-outline-variant/30 text-xs text-on-surface-variant">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span className="font-semibold text-emerald-800">Servidor Go/Fiber En Línea</span>
-          </div>
-
           {/* Perfil del Administrador (Navega a la Pantalla Completa de Perfil) */}
           <button
             type="button"
@@ -68,20 +47,20 @@ export const AdminLayout = ({ user, onLogout, onUpdateUser }) => {
               />
             ) : (
               <div className="w-9 h-9 rounded-full bg-amber-100 border-2 border-amber-300 text-amber-800 font-bold text-xs flex items-center justify-center shrink-0">
-                AD
+                {initials}
               </div>
             )}
             <div className="hidden sm:flex flex-col text-left">
               <div className="flex items-center gap-1.5">
                 <span className="font-semibold text-xs text-on-surface">
-                  {currentUser.full_name || currentUser.name || 'Administrador del Sistema'}
+                  {displayName}
                 </span>
                 <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-200 text-amber-900">
                   ADMIN TI
                 </span>
               </div>
               <div className="text-[11px] font-mono text-outline">
-                {currentUser.professional_card || 'TI-ADMIN-001'} • Sede Cartago
+                {[currentUser.professional_card, currentUser.branch].filter(Boolean).join(' • ') || 'Sin datos de perfil'}
               </div>
             </div>
           </button>
@@ -91,6 +70,7 @@ export const AdminLayout = ({ user, onLogout, onUpdateUser }) => {
             type="button"
             onClick={onLogout}
             title="Cerrar sesion de administracion"
+            aria-label="Cerrar sesión de administración"
             className="h-9 px-3 rounded-xl flex items-center gap-1.5 text-red-700 hover:bg-red-50 hover:text-red-800 transition-colors cursor-pointer text-xs font-semibold"
           >
             <LogOut className="w-4 h-4" />

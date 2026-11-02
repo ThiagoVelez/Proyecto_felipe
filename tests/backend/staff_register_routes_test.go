@@ -13,6 +13,7 @@ import (
 	httpadapter "saludconecta-backend/adapters/http"
 	"saludconecta-backend/adapters/http/handlers"
 	"saludconecta-backend/adapters/storage/memory"
+	"saludconecta-backend/core/domain"
 	"saludconecta-backend/core/services"
 	"saludconecta-backend/pkg/crypto"
 )
@@ -26,15 +27,31 @@ func TestStaffRegisterRequiresAdmin(t *testing.T) {
 	userRepo := memory.NewUserMemoryRepo(ds)
 	auditRepo := memory.NewAuditMemoryRepo(ds)
 
+	authService := services.NewAuthService(userRepo, secret, time.Hour)
+
+	// Las sesiones se validan contra el almacen: cada rol de la prueba existe como cuenta activa
+	for _, role := range []struct {
+		id   int
+		name string
+	}{{1, "ADMIN"}, {2, "MEDICO"}} {
+		if err := userRepo.Create(context.Background(), &domain.User{
+			ID: "usr-" + role.name, RoleID: role.id, RoleName: role.name, FullName: role.name,
+			Email: role.name + "@example.com", IsActive: true,
+		}); err != nil {
+			t.Fatalf("No se pudo crear la cuenta de prueba %s: %v", role.name, err)
+		}
+	}
+
 	app := fiber.New()
 	httpadapter.SetupRoutes(app, httpadapter.RouterConfig{
-		AuthHandler:  handlers.NewAuthHandler(services.NewAuthService(userRepo, secret, time.Hour)),
+		AuthHandler:  handlers.NewAuthHandler(authService),
 		AdminHandler: handlers.NewAdminHandler(services.NewAdminService(userRepo, auditRepo)),
+		Sessions:     authService,
 		JWTSecret:    secret,
 	})
 
 	tokenFor := func(role string) string {
-		token, err := crypto.GenerateJWT("usr-prueba", role, "prueba@example.com", secret, time.Hour)
+		token, err := crypto.GenerateJWT("usr-"+role, role, role+"@example.com", secret, time.Hour)
 		if err != nil {
 			t.Fatalf("No se pudo generar el token: %v", err)
 		}
@@ -63,7 +80,8 @@ func TestStaffRegisterRequiresAdmin(t *testing.T) {
 				req.Header.Set("Authorization", "Bearer "+tc.token)
 			}
 
-			res, err := app.Test(req)
+			// Bcrypt con coste 12 supera el timeout de 1 s de app.Test, sobre todo bajo -race; no es una condicion de carrera
+			res, err := app.Test(req, 30000)
 			if err != nil {
 				t.Fatalf("Fallo ejecutando la solicitud: %v", err)
 			}

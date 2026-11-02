@@ -83,15 +83,13 @@ describe('Registro de personal - Acceso exclusivo desde el perfil del administra
 });
 
 describe('AuthScreen - El acceso depende de la respuesta del servidor', () => {
-  const submitLogin = async (container) => {
+  const submitLogin = (container) => {
     fireEvent.change(screen.getByPlaceholderText(/usuario@saludconecta.ips.gov.co/i), {
       target: { value: 'admin@saludconecta.ips.gov.co' },
     });
     fireEvent.change(screen.getByPlaceholderText(/Ej: MiClave2026/i), {
       target: { value: 'ClaveIncorrecta' },
     });
-    fireEvent.click(screen.getByTitle(/Opcion de prueba/i));
-    await waitFor(() => expect(container.querySelector('#totp-input-0').value).not.toBe(''));
     fireEvent.submit(container.querySelector('form'));
   };
 
@@ -131,7 +129,7 @@ describe('AuthScreen - El acceso depende de la respuesta del servidor', () => {
     const onLoginSuccess = vi.fn();
     const { container } = render(<AuthScreen onLoginSuccess={onLoginSuccess} />);
 
-    await submitLogin(container);
+    submitLogin(container);
 
     expect(await screen.findByText('Credenciales invalidas')).toBeInTheDocument();
     expect(onLoginSuccess).not.toHaveBeenCalled();
@@ -144,7 +142,7 @@ describe('AuthScreen - El acceso depende de la respuesta del servidor', () => {
     const onLoginSuccess = vi.fn();
     const { container } = render(<AuthScreen onLoginSuccess={onLoginSuccess} />);
 
-    await submitLogin(container);
+    submitLogin(container);
 
     expect(await screen.findByText(/El servicio no está disponible/i)).toBeInTheDocument();
     expect(onLoginSuccess).not.toHaveBeenCalled();
@@ -160,7 +158,7 @@ describe('AuthScreen - El acceso depende de la respuesta del servidor', () => {
     const onLoginSuccess = vi.fn();
     const { container } = render(<AuthScreen onLoginSuccess={onLoginSuccess} />);
 
-    await submitLogin(container);
+    submitLogin(container);
 
     await waitFor(() => expect(onLoginSuccess).toHaveBeenCalledWith({ token: 'token-real', user }));
     expect(localStorage.getItem('saludconecta_token')).toBe('token-real');
@@ -170,40 +168,169 @@ describe('AuthScreen - El acceso depende de la respuesta del servidor', () => {
 });
 
 describe('AdminDashboardScreen - Panel de Control y Separación RBAC', () => {
-  it('muestra las métricas de gobernanza y la lista de personal asistencial', async () => {
+  const serverUsers = [
+    {
+      id: 'u-1',
+      role_id: 2,
+      role_name: 'MEDICO',
+      full_name: 'Dra. Ana Servidor',
+      document_type: 'CC',
+      document_number: '1001',
+      email: 'ana@example.com',
+      professional_card: 'RM-1',
+      specialty: 'Pediatría',
+      branch: 'Sede Cartago - Hospital Central (Nivel II)',
+      is_active: true,
+    },
+    {
+      id: 'u-2',
+      role_id: 3,
+      role_name: 'ENFERMERO',
+      full_name: 'Lic. Beto Pendiente',
+      document_type: 'CC',
+      document_number: '1002',
+      email: 'beto@example.com',
+      professional_card: 'ENF-2',
+      is_active: false,
+    },
+  ];
+
+  const jsonResponse = (body, status = 200) => new Response(JSON.stringify(body), { status });
+
+  const mockServer = ({ statusResponse, logs = [] } = {}) =>
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url, options = {}) => {
+      const method = options.method || 'GET';
+      if (url.startsWith('/api/v1/admin/users') && method === 'GET') {
+        return jsonResponse({ users: serverUsers, count: serverUsers.length });
+      }
+      if (url.includes('/status') && method === 'PATCH') {
+        return statusResponse();
+      }
+      if (url.startsWith('/api/v1/admin/audit-logs')) {
+        return jsonResponse({ audit_logs: logs, count: logs.length });
+      }
+      return jsonResponse({ error: 'ruta inesperada' }, 404);
+    });
+
+  it('muestra las métricas y el personal que devuelve el servidor', async () => {
+    const fetchSpy = mockServer();
     render(<AdminDashboardScreen />);
 
     expect(screen.getByText(/Gobernanza de Personal \(ReTHUS\)/i)).toBeInTheDocument();
     expect(screen.getByText(/Total Personal/i)).toBeInTheDocument();
-    expect(screen.getByText(/Médicos Habilitados/i)).toBeInTheDocument();
-    expect(screen.getByText(/Pendientes ReTHUS/i)).toBeInTheDocument();
-
-    // Comprueba la presencia de Dr. Santiago Vélez en la lista
-    await waitFor(() => {
-      expect(screen.getByText(/Dr. Santiago Vélez/i)).toBeInTheDocument();
-    });
+    expect(await screen.findByText('Dra. Ana Servidor')).toBeInTheDocument();
+    expect(screen.getByText('Lic. Beto Pendiente')).toBeInTheDocument();
+    expect(screen.queryByText(/Santiago Vélez/i)).not.toBeInTheDocument();
+    fetchSpy.mockRestore();
   });
 
-  it('permite cambiar a la pestaña de Red Asistencial y Sedes con CRUD', async () => {
+  it('muestra el error real y permite reintentar cuando el listado de personal falla', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      if (url.startsWith('/api/v1/admin/users')) return jsonResponse({ error: 'Acceso denegado' }, 403);
+      return jsonResponse({ audit_logs: [], count: 0 });
+    });
     render(<AdminDashboardScreen />);
 
-    const branchesTab = screen.getByRole('button', { name: /Red Asistencial y Sedes/i });
-    fireEvent.click(branchesTab);
+    expect(await screen.findByText('Acceso denegado')).toBeInTheDocument();
+    expect(screen.queryByText('Dra. Ana Servidor')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /Reintentar/i }).length).toBeGreaterThanOrEqual(1);
+    fetchSpy.mockRestore();
+  });
+
+  it('no muestra éxito ni altera el estado cuando el servidor rechaza el cambio de estado', async () => {
+    const fetchSpy = mockServer({
+      statusResponse: () => jsonResponse({ error: 'No se puede desactivar la cuenta' }, 409),
+    });
+    render(<AdminDashboardScreen />);
+
+    await screen.findByText('Dra. Ana Servidor');
+    fireEvent.click(screen.getByTitle(/Suspender acceso asistencial/i));
+
+    expect(await screen.findByText(/No se puede desactivar la cuenta/i)).toBeInTheDocument();
+    expect(screen.queryByText(/fue suspendido/i)).not.toBeInTheDocument();
+    // La cuenta sigue habilitada: el botón de suspender continúa disponible
+    expect(screen.getByTitle(/Suspender acceso asistencial/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Reintentar$/i })).toBeInTheDocument();
+    fetchSpy.mockRestore();
+  });
+
+  it('refleja el cambio de estado solo después de la confirmación del servidor', async () => {
+    const fetchSpy = mockServer({
+      statusResponse: () => jsonResponse({ message: 'ok', user_id: 'u-1', is_active: false }),
+    });
+    render(<AdminDashboardScreen />);
+
+    await screen.findByText('Dra. Ana Servidor');
+    fireEvent.click(screen.getByTitle(/Suspender acceso asistencial/i));
+
+    expect(await screen.findByText(/fue suspendido/i)).toBeInTheDocument();
+    const patchCall = fetchSpy.mock.calls.find(([, opts]) => opts?.method === 'PATCH');
+    expect(patchCall[0]).toBe('/api/v1/admin/users/u-1/status');
+    expect(JSON.parse(patchCall[1].body)).toEqual({ is_active: false });
+    fetchSpy.mockRestore();
+  });
+
+  it('presenta la bitácora real del servidor usando el campo timestamp', async () => {
+    const fetchSpy = mockServer({
+      logs: [
+        {
+          id: 7,
+          user_id: 'u-1',
+          role: 'MEDICO',
+          action: 'LOGIN',
+          resource: '/api/v1/auth/login',
+          ip_address: '10.0.0.5',
+          correlation_id: 'corr-real-7',
+          details: { method: 'POST' },
+          timestamp: '2026-11-02T10:00:00Z',
+        },
+      ],
+    });
+    render(<AdminDashboardScreen />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Auditoría Forense/i }));
+
+    expect(await screen.findByText('/api/v1/auth/login')).toBeInTheDocument();
+    expect(screen.getByText(/corr-real-7/)).toBeInTheDocument();
+    expect(screen.getByText('LOGIN')).toBeInTheDocument();
+    expect(screen.queryByText(/Sin fecha/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Registrar Hallazgo/i })).not.toBeInTheDocument();
+    fetchSpy.mockRestore();
+  });
+
+  it('muestra el error del servidor en la bitácora y un estado vacío explícito', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      if (url.startsWith('/api/v1/admin/audit-logs')) return jsonResponse({ error: 'Servicio de auditoría caído' }, 503);
+      return jsonResponse({ users: [], count: 0 });
+    });
+    render(<AdminDashboardScreen />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Auditoría Forense/i }));
+
+    expect(await screen.findByText('Servicio de auditoría caído')).toBeInTheDocument();
+    expect(screen.getByText(/No hay datos disponibles/i)).toBeInTheDocument();
+    fetchSpy.mockRestore();
+  });
+
+  it('la pestaña de sedes no inventa cifras de ocupación ni conectividad', async () => {
+    const fetchSpy = mockServer();
+    render(<AdminDashboardScreen />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Red Asistencial y Sedes/i }));
 
     expect(await screen.findByText(/Sede Cartago - Hospital Central/i)).toBeInTheDocument();
-    expect(screen.getByText(/Sede La Unión - Urgencias/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Nueva Sede Asistencial/i })).toBeInTheDocument();
+    expect(screen.queryByText(/Conectividad/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Capacidad/i)).not.toBeInTheDocument();
+    fetchSpy.mockRestore();
   });
 
-  it('permite cambiar a la pestaña de Catálogo CUM Farmacológico con CRUD', async () => {
+  it('ya no ofrece el catálogo farmacológico simulado', () => {
+    const fetchSpy = mockServer();
     render(<AdminDashboardScreen />);
 
-    const catalogTab = screen.getByRole('button', { name: /Catálogo CUM Farmacológico/i });
-    fireEvent.click(catalogTab);
-
-    expect(await screen.findByText(/CUM-199420-1/i)).toBeInTheDocument();
-    expect(screen.getByText(/Amoxil 500mg/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Nuevo Medicamento CUM/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Catálogo CUM Farmacológico/i })).not.toBeInTheDocument();
+    fetchSpy.mockRestore();
   });
 });
 

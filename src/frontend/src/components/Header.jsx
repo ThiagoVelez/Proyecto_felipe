@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Search,
   Wifi,
@@ -11,7 +11,9 @@ import {
   RefreshCw,
   User,
   Menu,
+  Loader2,
 } from 'lucide-react';
+import { DOCUMENT_TYPES, getErrorMessage } from '../utils/clinical';
 
 export const Header = ({
   onLogout,
@@ -28,6 +30,21 @@ export const Header = ({
   const [docType, setDocType] = useState('CC');
   const [searchQuery, setSearchQuery] = useState('');
   const [sessionSeconds, setSessionSeconds] = useState(14 * 60 + 32);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState('');
+  const searchInputRef = useRef(null);
+
+  // Atajo Ctrl + K para enfocar el buscador global de pacientes
+  useEffect(() => {
+    const onKeyDown = (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, []);
 
   const currentUser = user || {
     name: 'Dr. Santiago Vélez',
@@ -55,9 +72,24 @@ export const Header = ({
     setSessionSeconds(15 * 60);
   };
 
-  const handleSearchSubmit = (e) => {
+  const handleSearchSubmit = async (e) => {
     e.preventDefault();
-    if (onSearch) onSearch(docType, searchQuery);
+    const query = searchQuery.trim();
+    if (!onSearch || !query || isSearching) return;
+    setIsSearching(true);
+    setSearchError('');
+    try {
+      await onSearch(docType, query);
+      setSearchQuery('');
+    } catch (err) {
+      setSearchError(
+        err?.status === 404
+          ? 'No existe un paciente con ese documento.'
+          : getErrorMessage(err, 'No fue posible buscar al paciente.')
+      );
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   return (
@@ -96,28 +128,47 @@ export const Header = ({
         {/* BUSCADOR DE PACIENTES GLOBAL */}
         <form
           onSubmit={handleSearchSubmit}
-          className="flex-1 max-w-xl mx-4 hidden md:flex items-center h-11 rounded-xl bg-surface-container-low px-3 shadow-xs border border-outline-variant/40 focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-all"
+          className="relative flex-1 max-w-xl mx-4 hidden md:flex items-center h-11 rounded-xl bg-surface-container-low px-3 shadow-xs border border-outline-variant/40 focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-all"
         >
-          <Search className="w-5 h-5 text-outline mr-2 shrink-0" />
+          {isSearching ? (
+            <Loader2 className="w-5 h-5 text-primary mr-2 shrink-0 animate-spin" />
+          ) : (
+            <Search className="w-5 h-5 text-outline mr-2 shrink-0" />
+          )}
           <select
+            aria-label="Tipo de documento del paciente"
             value={docType}
             onChange={(e) => setDocType(e.target.value)}
             className="bg-transparent text-on-surface font-semibold text-xs border-none outline-none pr-2 cursor-pointer focus:ring-0"
           >
-            <option value="CC">CC</option>
-            <option value="TI">TI</option>
-            <option value="CE">CE</option>
-            <option value="RC">RC</option>
-            <option value="RU">RU</option>
+            {DOCUMENT_TYPES.map((t) => (
+              <option key={t.value} value={t.value}>
+                {t.value}
+              </option>
+            ))}
           </select>
           <div className="h-4 w-px bg-outline-variant mx-2"></div>
           <input
+            ref={searchInputRef}
             type="text"
+            aria-label="Número de documento del paciente"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Buscar paciente por documento o nombre... [Atajo: Ctrl + K]"
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setSearchError('');
+            }}
+            disabled={isSearching}
+            placeholder="Buscar paciente por documento... [Atajo: Ctrl + K]"
             className="w-full bg-transparent text-sm text-on-surface placeholder:text-outline outline-none border-none focus:ring-0"
           />
+          {searchError && (
+            <p
+              role="alert"
+              className="absolute top-full left-0 mt-1 px-3 py-1.5 rounded-lg bg-red-50 border border-red-200 text-red-800 text-xs shadow-xs"
+            >
+              {searchError}
+            </p>
+          )}
         </form>
 
         {/* ACCIONES Y PERFIL CLINICO */}

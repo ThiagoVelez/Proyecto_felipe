@@ -45,9 +45,9 @@ func (h *PrescriptionHandler) Create(c *fiber.Ctx) error {
 		})
 	}
 
-	if req.ClinicalRecordID == "" || req.PatientID == "" || len(req.Items) == 0 {
+	if req.ClinicalRecordID == "" || len(req.Items) == 0 {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "clinical_record_id, patient_id y al menos un item farmacologico son requeridos",
+			"error": "clinical_record_id y al menos un item farmacologico son requeridos",
 		})
 	}
 
@@ -83,8 +83,18 @@ func (h *PrescriptionHandler) Create(c *fiber.Ctx) error {
 				"medication":        allergyErr.MedicationName,
 			})
 		}
-		if errors.Is(err, domain.ErrInsufficientMedicationStock) {
+		if errors.Is(err, domain.ErrInsufficientMedicationStock) || errors.Is(err, domain.ErrPatientMismatch) {
 			return c.Status(fiber.StatusConflict).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+		if errors.Is(err, domain.ErrNotRecordOwner) {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
+		if errors.Is(err, domain.ErrInvalidPrescriptionItem) || errors.Is(err, domain.ErrEmptyPrescriptionItems) {
+			return c.Status(fiber.StatusUnprocessableEntity).JSON(fiber.Map{
 				"error": err.Error(),
 			})
 		}
@@ -125,3 +135,11 @@ func (h *PrescriptionHandler) GetByClinicalRecord(c *fiber.Ctx) error {
 	return c.JSON(presc)
 }
 
+// SearchMedications consulta el catalogo CUM institucional para armar la formula.
+func (h *PrescriptionHandler) SearchMedications(c *fiber.Ctx) error {
+	medications, err := h.prescService.SearchMedications(c.Context(), c.Query("q"))
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Error consultando el catalogo de medicamentos"})
+	}
+	return c.JSON(fiber.Map{"medications": medications, "count": len(medications)})
+}

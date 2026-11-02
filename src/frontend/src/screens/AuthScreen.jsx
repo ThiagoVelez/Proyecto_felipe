@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   ShieldCheck,
   Lock,
@@ -7,149 +7,98 @@ import {
   Eye,
   EyeOff,
   Smartphone,
-  Timer,
   AlertTriangle,
   FileCheck2,
-  PhoneCall,
   Scale,
   Contrast,
-  CheckCircle2,
-  RefreshCw,
-  QrCode,
-  ShieldAlert,
 } from 'lucide-react';
 import LoginBackground from '../components/LoginBackground';
 import BranchAccordion from '../components/BranchAccordion';
-import MfaQrModal from '../components/MfaQrModal';
 import { loadBranches } from '../services/branches';
 import { apiClient } from '../services/api';
-import {
-  calculateTotpCode,
-  getRemainingSeconds,
-  generateBase32Secret,
-  generateQrDataUrl,
-  buildOtpAuthUri,
-} from '../utils/totp';
 
-export const AuthScreen = ({ onLoginSuccess }) => {
+const EMPTY_CODE = ['', '', '', '', '', ''];
+
+export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
   const [identifier, setIdentifier] = useState('');
   const [branches] = useState(loadBranches);
   const [branch, setBranch] = useState(() => branches[0]?.name || '');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [mfaSecret, setMfaSecret] = useState('JBSWY3DPEHPK3PXP');
-  const [qrDataUrl, setQrDataUrl] = useState('');
-  const [totp, setTotp] = useState(['', '', '', '', '', '']);
-  const [mfaTimer, setMfaTimer] = useState(getRemainingSeconds());
+  const [mfaRequired, setMfaRequired] = useState(false);
+  const [totp, setTotp] = useState(EMPTY_CODE);
   const [highContrast, setHighContrast] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
-  const [showQrModal, setShowQrModal] = useState(false);
+  const [isError, setIsError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const digitRefs = useRef([]);
 
-  // Genera el codigo QR directamente para visualizacion inmediata
-  const updateQrCode = async (secret = mfaSecret) => {
-    try {
-      const uri = buildOtpAuthUri(secret, identifier, 'SaludConecta IPS');
-      const dataUrl = await generateQrDataUrl(uri, 130);
-      if (dataUrl) setQrDataUrl(dataUrl);
-    } catch (err) {
-      console.error('Error generando QR directo:', err);
-    }
-  };
-
-  // Inicializacion y sincronizacion del temporizador TOTP
-  useEffect(() => {
-    updateQrCode(mfaSecret);
-
-    const timer = setInterval(() => {
-      const rem = getRemainingSeconds();
-      setMfaTimer(rem);
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [mfaSecret, identifier]);
-
-  const handleManualRotate = () => {
-    const newSecret = generateBase32Secret(16);
-    setMfaSecret(newSecret);
-    updateQrCode(newSecret);
-    setTotp(['', '', '', '', '', '']);
-    setStatusMessage('Nueva clave generada. Escanee el nuevo QR en su aplicacion.');
+  const showStatus = (message, error = false) => {
+    setStatusMessage(message);
+    setIsError(error);
   };
 
   const handleDigitChange = (index, value) => {
     const sanitized = value.replace(/\D/g, '');
-    const newTotp = [...totp];
+
+    // Pegado de un codigo completo desde la aplicacion autenticadora
     if (sanitized.length > 1) {
-      newTotp[index] = sanitized.slice(-1);
-    } else {
-      newTotp[index] = sanitized;
+      const digits = sanitized.slice(0, 6).split('');
+      setTotp([...digits, ...EMPTY_CODE].slice(0, 6));
+      digitRefs.current[Math.min(digits.length, 5)]?.focus();
+      return;
     }
+
+    const newTotp = [...totp];
+    newTotp[index] = sanitized;
     setTotp(newTotp);
 
-    // Auto-focus al siguiente input
     if (sanitized && index < 5) {
-      const nextInput = document.getElementById(`totp-input-${index + 1}`);
-      if (nextInput) nextInput.focus();
+      digitRefs.current[index + 1]?.focus();
     }
   };
 
   const handleKeyDown = (index, e) => {
     if (e.key === 'Backspace' && !totp[index] && index > 0) {
-      const prevInput = document.getElementById(`totp-input-${index - 1}`);
-      if (prevInput) prevInput.focus();
+      digitRefs.current[index - 1]?.focus();
     }
-  };
-
-  // Ayudante de prueba: autocompleta con el codigo actual del segundo
-  const handleAutofillTest = async () => {
-    const currentCode = await calculateTotpCode(mfaSecret);
-    setTotp(currentCode.split(''));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const code = totp.join('');
-    if (code.length < 6) {
-      setStatusMessage('Por favor ingrese los 6 digitos generados por su aplicacion Authenticator.');
-      return;
-    }
 
-    // Validacion con tolerancia de +/- 1 ventana (30s) segun RFC 6238
-    const now = Date.now();
-    const currentCode = await calculateTotpCode(mfaSecret, now);
-    const prevCode = await calculateTotpCode(mfaSecret, now - 30000);
-    const nextCode = await calculateTotpCode(mfaSecret, now + 30000);
-
-    const isValid = code === currentCode || code === prevCode || code === nextCode;
-
-    if (!isValid) {
-      setStatusMessage('Codigo TOTP incorrecto o expirado. Verifique el reloj de su telefono e intentelo de nuevo.');
+    if (mfaRequired && code.length < 6) {
+      showStatus('Ingrese los 6 digitos generados por su aplicacion Authenticator.', true);
       return;
     }
 
     setIsSubmitting(true);
-    setStatusMessage('Verificando credenciales con servidor de gobernanza Go/Fiber...');
+    showStatus('Verificando credenciales con el servidor...');
 
     try {
-      const res = await apiClient.login({
-        email: identifier,
-        password: password,
-        totp_code: code,
-      });
+      // El codigo TOTP lo valida siempre el servidor; el cliente solo lo transporta
+      const credentials = { email: identifier, password };
+      if (code.length === 6) credentials.totp_code = code;
 
-      if (res && res.user) {
-        setStatusMessage('Autenticación exitosa. Redirigiendo a interfaz autorizada...');
-        setTimeout(() => {
-          if (onLoginSuccess) {
-            onLoginSuccess(res);
-          }
-        }, 200);
+      const res = await apiClient.login(credentials);
+
+      if (res?.user) {
+        showStatus('Autenticacion exitosa. Redirigiendo a interfaz autorizada...');
+        onLoginSuccess?.(res);
       } else {
-        setStatusMessage('Credenciales inválidas o cuenta pendiente de habilitación ReTHUS.');
+        showStatus('El servidor no devolvio una sesion valida. Intente nuevamente.', true);
       }
     } catch (err) {
-      setStatusMessage(err.message || 'Error en comunicación con el servicio de autenticación.');
+      if (err.data?.mfa_required) {
+        setMfaRequired(true);
+        setTotp(EMPTY_CODE);
+        showStatus('Su cuenta tiene segundo factor activo. Ingrese el codigo de 6 digitos de su aplicacion Authenticator.');
+        setTimeout(() => digitRefs.current[0]?.focus(), 0);
+      } else {
+        if (mfaRequired) setTotp(EMPTY_CODE);
+        showStatus(err.message || 'Error en comunicacion con el servicio de autenticacion.', true);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -215,36 +164,6 @@ export const AuthScreen = ({ onLoginSuccess }) => {
                 Acceso restringido exclusivamente a profesionales autorizados por ReTHUS y MinSalud. Toda acción queda registrada bajo bitácora inalterable (Ley 1581 de 2012 y Res. 1995 de 1999).
               </p>
             </div>
-
-            {/* Disponibilidad de Red Asistencial */}
-            <div className="space-y-1.5 pt-1">
-              <div className="flex items-center justify-between text-[11px]">
-                <span className="text-white/70">Disponibilidad Red Asistencial</span>
-                <span className="flex items-center space-x-1 text-emerald-400 font-mono font-semibold text-[10px]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span>En Línea 99.98%</span>
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-1.5 text-[10px] text-white/80 font-mono">
-                <div className="bg-white/5 p-1.5 rounded-lg border border-white/5 flex items-center justify-between">
-                  <span className="truncate">Sede Cartago (H. Central)</span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                </div>
-                <div className="bg-white/5 p-1.5 rounded-lg border border-white/5 flex items-center justify-between">
-                  <span className="truncate">Sede La Unión (Urgencias)</span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                </div>
-                <div className="bg-white/5 p-1.5 rounded-lg border border-white/5 flex items-center justify-between">
-                  <span className="truncate">Sede Tuluá (Ambulatoria)</span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                </div>
-                <div className="bg-white/5 p-1.5 rounded-lg border border-white/5 flex items-center justify-between">
-                  <span className="truncate">Brigada Rural (PWA Sync)</span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -273,12 +192,14 @@ export const AuthScreen = ({ onLoginSuccess }) => {
               {/* Identificador y Sede Operativa */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
-                  <label className="block text-[11px] font-semibold text-on-surface mb-1">
+                  <label htmlFor="login-email" className="block text-[11px] font-semibold text-on-surface mb-1">
                     Correo Institucional
                   </label>
                   <div className="relative">
                     <input
-                      type="text"
+                      id="login-email"
+                      type="email"
+                      autoComplete="username"
                       value={identifier}
                       onChange={(e) => setIdentifier(e.target.value)}
                       required
@@ -300,15 +221,14 @@ export const AuthScreen = ({ onLoginSuccess }) => {
               {/* Contraseña */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-[11px] font-semibold text-on-surface">
+                  <label htmlFor="login-password" className="text-[11px] font-semibold text-on-surface">
                     Contraseña Asistencial ReTHUS
                   </label>
-                  <span className="text-[10px] text-primary font-mono font-medium">
-                    Fortaleza: Alta (Médica)
-                  </span>
                 </div>
                 <div className="relative">
                   <input
+                    id="login-password"
+                    autoComplete="current-password"
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -320,6 +240,7 @@ export const AuthScreen = ({ onLoginSuccess }) => {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                     className="absolute right-2.5 top-2 text-outline hover:text-on-surface cursor-pointer"
                   >
                     {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
@@ -327,68 +248,35 @@ export const AuthScreen = ({ onLoginSuccess }) => {
                 </div>
               </div>
 
-              {/* PASO 2: QR DIRECTAMENTE VISIBLE PARA ESCANEO + CASILLAS DE ENTRADA VACIAS */}
-              <div className="p-2.5 rounded-xl bg-surface-container-low border border-primary/25 shadow-xs space-y-2">
-                <div className="flex items-center justify-between">
+              {/* SEGUNDO FACTOR: solo se solicita cuando el servidor responde mfa_required */}
+              {mfaRequired && (
+                <div className="p-2.5 rounded-xl bg-surface-container-low border border-primary/25 shadow-xs space-y-2">
                   <div className="flex items-center space-x-2">
                     <div className="w-6 h-6 rounded-lg bg-primary-container text-white flex items-center justify-center shrink-0">
                       <Smartphone className="w-3.5 h-3.5" />
                     </div>
                     <div>
-                      <h3 className="text-xs font-bold text-on-surface">Segundo Factor Obligatorio (TOTP)</h3>
-                      <p className="text-[10px] text-on-surface-variant">Escanee el QR con Google Authenticator o Authy</p>
+                      <h3 className="text-xs font-bold text-on-surface">Segundo Factor de Autenticacion (TOTP)</h3>
+                      <p className="text-[10px] text-on-surface-variant">Ingrese el codigo vigente de Google Authenticator, Microsoft Authenticator o Authy</p>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-1 px-2 py-0.5 bg-white rounded-full shadow-xs text-primary font-mono text-[11px]">
-                    <Timer className="w-3 h-3" />
-                    <span>Ventana: <strong>00:{mfaTimer.toString().padStart(2, '0')}s</strong></span>
-                  </div>
-                </div>
 
-                {/* FILA PRINCIPAL: QR DIRECTO A LA IZQUIERDA Y CASILLAS VACIAS A LA DERECHA */}
-                <div className="flex items-center justify-between gap-3 pt-1">
-                  {/* CODIGO QR DIRECTAMENTE VISIBLE */}
-                  <div className="flex flex-col items-center shrink-0">
-                    <div className="p-1 bg-white rounded-xl border-2 border-primary shadow-xs">
-                      {qrDataUrl ? (
-                        <img
-                          src={qrDataUrl}
-                          alt="Codigo QR TOTP SaludConecta"
-                          className="w-20 h-20 rounded cursor-pointer transition-transform hover:scale-105"
-                          title="Haz clic para ampliar QR"
-                          onClick={() => setShowQrModal(true)}
-                        />
-                      ) : (
-                        <div className="w-20 h-20 flex items-center justify-center text-[10px] text-outline">
-                          Generando QR...
-                        </div>
-                      )}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setShowQrModal(true)}
-                      className="text-[9px] font-bold text-primary hover:underline mt-0.5 flex items-center gap-0.5 cursor-pointer"
-                    >
-                      <QrCode className="w-2.5 h-2.5" />
-                      Ampliar QR
-                    </button>
-                  </div>
-
-                  {/* CASILLAS VACIAS DONDE EL USUARIO ESCRIBE EL CODIGO */}
-                  <div className="flex-1 flex flex-col justify-center space-y-1 min-w-0">
-                    <label className="text-[10px] font-semibold text-on-surface leading-tight block">
+                  <div className="space-y-1" role="group" aria-labelledby="totp-group-label">
+                    <span id="totp-group-label" className="text-[10px] font-semibold text-on-surface leading-tight block">
                       Código de 6 dígitos de su aplicación:
-                    </label>
-
+                    </span>
                     <div className="flex items-center gap-1">
                       {totp.map((digit, idx) => (
                         <React.Fragment key={idx}>
                           {idx === 3 && <span className="text-outline font-bold text-xs">-</span>}
                           <input
-                            id={`totp-input-${idx}`}
+                            ref={(el) => {
+                              digitRefs.current[idx] = el;
+                            }}
                             type="text"
                             inputMode="numeric"
-                            maxLength={1}
+                            autoComplete="one-time-code"
+                            aria-label={`Digito ${idx + 1} del codigo TOTP`}
                             value={digit}
                             onChange={(e) => handleDigitChange(idx, e.target.value)}
                             onKeyDown={(e) => handleKeyDown(idx, e)}
@@ -398,29 +286,9 @@ export const AuthScreen = ({ onLoginSuccess }) => {
                         </React.Fragment>
                       ))}
                     </div>
-
-                    <div className="flex items-center justify-between text-[10px] text-on-surface-variant pt-0.5">
-                      <button
-                        type="button"
-                        onClick={handleAutofillTest}
-                        className="text-primary hover:underline font-medium text-[10px] cursor-pointer"
-                        title="Opcion de prueba: pega el codigo actual sincronizado"
-                      >
-                        Pegar código de prueba
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={handleManualRotate}
-                        className="text-on-surface-variant hover:text-primary flex items-center gap-1 cursor-pointer"
-                      >
-                        <RefreshCw className="w-3 h-3" />
-                        <span>Rotar QR</span>
-                      </button>
-                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Advertencia de Bloqueo */}
               <div className="p-2 bg-amber-50 rounded-lg flex items-center space-x-2 border border-amber-200">
@@ -430,8 +298,19 @@ export const AuthScreen = ({ onLoginSuccess }) => {
                 </p>
               </div>
 
+              {sessionNotice && !statusMessage && (
+                <div role="alert" className="p-2 rounded-lg bg-amber-50 text-amber-900 border border-amber-200 text-[11px] font-medium text-center">
+                  {sessionNotice}
+                </div>
+              )}
+
               {statusMessage && (
-                <div className="p-2 rounded-lg bg-primary/10 text-primary text-[11px] font-medium text-center">
+                <div
+                  role={isError ? 'alert' : 'status'}
+                  className={`p-2 rounded-lg text-[11px] font-medium text-center ${
+                    isError ? 'bg-red-50 text-red-800 border border-red-200' : 'bg-primary/10 text-primary'
+                  }`}
+                >
                   {statusMessage}
                 </div>
               )}
@@ -443,7 +322,7 @@ export const AuthScreen = ({ onLoginSuccess }) => {
                 className="w-full h-10 bg-primary hover:bg-primary-container text-white font-bold text-xs rounded-xl shadow-sm hover:shadow-md flex items-center justify-center space-x-1.5 transition-all cursor-pointer active:scale-[0.99] disabled:opacity-50"
               >
                 <Lock className="w-3.5 h-3.5" />
-                <span>{isSubmitting ? 'Verificando con Servidor...' : 'Verificar y Firmar Acceso Asistencial'}</span>
+                <span>{isSubmitting ? 'Verificando con Servidor...' : mfaRequired ? 'Verificar y Firmar Acceso Asistencial' : 'Iniciar Sesión'}</span>
               </button>
             </form>
           </div>
@@ -473,14 +352,6 @@ export const AuthScreen = ({ onLoginSuccess }) => {
           </div>
         </div>
       </div>
-
-      {/* MODAL QR ESCANEABLE */}
-      <MfaQrModal
-        isOpen={showQrModal}
-        onClose={() => setShowQrModal(false)}
-        secret={mfaSecret}
-        email={identifier}
-      />
     </div>
   );
 };

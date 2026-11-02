@@ -14,6 +14,8 @@ var (
 	ErrUserInactive            = errors.New("el usuario se encuentra inactivo o pendiente de aprobacion rethus")
 	ErrUnauthorizedRole        = errors.New("el rol del usuario no tiene permisos para esta accion")
 	ErrMissingProfessionalCard = errors.New("la tarjeta profesional o registro rethus es obligatoria para personal medico y asistencial")
+	ErrTooManyAttempts         = errors.New("demasiados intentos fallidos; intente nuevamente mas tarde")
+	ErrCurrentCodeRequired     = errors.New("se requiere el codigo TOTP vigente para reemplazar el segundo factor")
 )
 
 // Role representa los perfiles de acceso bajo control RBAC.
@@ -36,8 +38,8 @@ type User struct {
 	PasswordHash     string    `json:"-"`
 	Phone            string    `json:"phone"`
 	ProfessionalCard string    `json:"professional_card"` // Obligatorio para MEDICO/ENFERMERO
-	Specialty        string    `json:"specialty"`          // Medicina General, Pediatria, Urgencias, etc.
-	Branch           string    `json:"branch"`             // Cartago, La Union, Tulua, Brigada Rural
+	Specialty        string    `json:"specialty"`         // Medicina General, Pediatria, Urgencias, etc.
+	Branch           string    `json:"branch"`            // Cartago, La Union, Tulua, Brigada Rural
 	MFASecret        *string   `json:"-"`
 	MFAEnabled       bool      `json:"mfa_enabled"`
 	IsActive         bool      `json:"is_active"`
@@ -48,4 +50,22 @@ type User struct {
 // HasMedicalLicense verifica si el usuario cuenta con registro medico habilitante ReTHUS.
 func (u *User) HasMedicalLicense() bool {
 	return u.ProfessionalCard != ""
+}
+
+// RoleNameByID traduce el identificador de rol del catalogo RBAC a su nombre; retorna vacio si no existe.
+func RoleNameByID(id int) string {
+	switch id {
+	case 1:
+		return "ADMIN"
+	case 2:
+		return "MEDICO"
+	case 3:
+		return "ENFERMERO"
+	case 4:
+		return "ADMISION"
+	case 5:
+		return "AUDITOR"
+	default:
+		return ""
+	}
 }

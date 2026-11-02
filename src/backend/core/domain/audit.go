@@ -17,15 +17,15 @@ const (
 
 // AuditLog representa una traza inalterable de actividad del sistema para cumplimiento ISO/IEC 27001.
 type AuditLog struct {
-	ID            int64
-	UserID        *string
-	Role          *string
-	Action        AuditAction
-	Resource      string
-	IPAddress     string
-	CorrelationID string
-	Details       map[string]interface{}
-	Timestamp     time.Time
+	ID            int64                  `json:"id"`
+	UserID        *string                `json:"user_id"`
+	Role          *string                `json:"role"`
+	Action        AuditAction            `json:"action"`
+	Resource      string                 `json:"resource"`
+	IPAddress     string                 `json:"ip_address"`
+	CorrelationID string                 `json:"correlation_id"`
+	Details       map[string]interface{} `json:"details"`
+	Timestamp     time.Time              `json:"timestamp"`
 }
 
 // RIPSPackageType define la categoria del paquete RIPS bajo la Resolucion 2275 de 2023.
@@ -49,12 +49,11 @@ const (
 
 // RIPSTransaction almacena el intercambio de datos estructurados para facturacion electronica en salud.
 type RIPSTransaction struct {
-	ID                string
-	InvoiceNumber     string
-	PackageType       RIPSPackageType
-	PayloadJSON       string
-	ValidationStatus  RIPSValidationStatus
-	SentToMinSaludAt  *time.Time
-	CreatedAt         time.Time
+	ID               string
+	InvoiceNumber    string
+	PackageType      RIPSPackageType
+	PayloadJSON      string
+	ValidationStatus RIPSValidationStatus
+	SentToMinSaludAt *time.Time
+	CreatedAt        time.Time
 }
-

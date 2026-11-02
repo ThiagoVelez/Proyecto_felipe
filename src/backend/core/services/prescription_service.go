@@ -34,42 +34,51 @@ func (s *prescriptionService) IssuePrescription(ctx context.Context, prescriptio
 		return nil, domain.ErrEmptyPrescriptionItems
 	}
 
-	// Validar folio clinico
-	if _, err := s.recordRepo.GetByID(ctx, prescription.ClinicalRecordID); err != nil {
+	record, err := s.recordRepo.GetByID(ctx, prescription.ClinicalRecordID)
+	if err != nil {
 		return nil, domain.ErrRecordNotFound
 	}
 
-	// Obtener historial alergico del paciente
-	allergies, err := s.patientRepo.GetPatientAllergies(ctx, prescription.PatientID)
+	// El paciente es el del folio: el cliente no puede elegir contra que historial alergico se cruza la receta
+	if prescription.PatientID != "" && prescription.PatientID != record.PatientID {
+		return nil, domain.ErrPatientMismatch
+	}
+	if record.DoctorID != prescription.DoctorID {
+		return nil, domain.ErrNotRecordOwner
+	}
+	prescription.PatientID = record.PatientID
+
+	allergies, err := s.patientRepo.GetPatientAllergies(ctx, record.PatientID)
 	if err != nil {
 		return nil, err
 	}
 
-	allergyMap := make(map[string]domain.PatientAllergy)
-	for _, a := range allergies {
-		allergyMap[strings.ToUpper(strings.TrimSpace(a.ActiveIngredient))] = a
-	}
+	// Cantidad acumulada por medicamento para detectar stock insuficiente cuando un mismo farmaco se repite
+	requested := make(map[int]int)
 
-	// Validar cada medicamento contra alergias y disponibilidad de inventario
 	for i := range prescription.Items {
 		item := &prescription.Items[i]
+		if item.MedicationID <= 0 || item.TotalQuantity <= 0 {
+			return nil, domain.ErrInvalidPrescriptionItem
+		}
+
 		med, err := s.prescRepo.GetMedicationByID(ctx, item.MedicationID)
 		if err != nil {
 			return nil, domain.ErrMedicationNotFound
 		}
 		item.Medication = med
 
-		normalizedIngredient := strings.ToUpper(strings.TrimSpace(med.ActiveIngredient))
-		if allergy, exists := allergyMap[normalizedIngredient]; exists {
+		if allergy := domain.MatchAllergy(allergies, med.ActiveIngredient, med.GenericName); allergy != nil {
 			return nil, &domain.AllergyConflictError{
-				PatientID:        prescription.PatientID,
+				PatientID:        record.PatientID,
 				ActiveIngredient: allergy.ActiveIngredient,
 				Severity:         allergy.Severity,
 				MedicationName:   med.CommercialName,
 			}
 		}
 
-		if med.StockQuantity < item.TotalQuantity {
+		requested[item.MedicationID] += item.TotalQuantity
+		if med.StockQuantity < requested[item.MedicationID] {
 			return nil, domain.ErrInsufficientMedicationStock
 		}
 	}
@@ -84,8 +93,10 @@ func (s *prescriptionService) IssuePrescription(ctx context.Context, prescriptio
 		return nil, err
 	}
 
-	for _, item := range prescription.Items {
-		_ = s.prescRepo.DeductStock(ctx, item.MedicationID, item.TotalQuantity)
+	for medicationID, quantity := range requested {
+		if err := s.prescRepo.DeductStock(ctx, medicationID, quantity); err != nil {
+			return nil, err
+		}
 	}
 
 	return prescription, nil
@@ -99,3 +110,6 @@ func (s *prescriptionService) GetByClinicalRecord(ctx context.Context, recordID 
 	return s.prescRepo.GetByClinicalRecordID(ctx, recordID)
 }
 
+func (s *prescriptionService) SearchMedications(ctx context.Context, query string) ([]domain.MedicationCatalog, error) {
+	return s.prescRepo.SearchMedications(ctx, strings.TrimSpace(query))
+}

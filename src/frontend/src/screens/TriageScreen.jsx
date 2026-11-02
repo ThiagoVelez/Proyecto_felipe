@@ -1,440 +1,339 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   HeartPulse,
   Activity,
   AlertTriangle,
-  Clock,
-  ShieldAlert,
   CheckCircle2,
   Stethoscope,
   Send,
-  Building2,
-  User,
   ArrowRight,
+  Loader2,
+  Clock,
 } from 'lucide-react';
+import PatientPicker from '../components/PatientPicker';
+import PatientBanner from '../components/PatientBanner';
+import AllergyBanner from '../components/AllergyBanner';
+import { apiClient } from '../services/api';
+import {
+  MANCHESTER_LEVELS,
+  TRIAGE_STATUS_LABELS,
+  formatDateTime,
+  getErrorMessage,
+  getManchesterInfo,
+} from '../utils/clinical';
 
-export const TriageScreen = ({ onNavigate }) => {
-  // Constantes vitales
-  const [systolic, setSystolic] = useState('158');
-  const [diastolic, setDiastolic] = useState('98');
-  const [heartRate, setHeartRate] = useState('112');
-  const [respRate, setRespRate] = useState('22');
-  const [spO2, setSpO2] = useState('91');
-  const [temp, setTemp] = useState('38.6');
-  const [glycemia, setGlycemia] = useState('142');
-  const [glasgow, setGlasgow] = useState('15');
-  const [evaPain, setEvaPain] = useState('7');
+// Rangos plausibles definidos por el contrato de la API; el servidor los vuelve a validar
+const VITAL_FIELDS = [
+  { name: 'systolic_bp', label: 'Presión sistólica', unit: 'mmHg', min: 1, max: 300, step: 1 },
+  { name: 'diastolic_bp', label: 'Presión diastólica', unit: 'mmHg', min: 1, max: 200, step: 1 },
+  { name: 'heart_rate', label: 'Frecuencia cardíaca', unit: 'lpm', min: 1, max: 300, step: 1 },
+  { name: 'respiratory_rate', label: 'Frecuencia respiratoria', unit: 'rpm', min: 1, max: 80, step: 1 },
+  { name: 'oxygen_saturation', label: 'Saturación de O2', unit: '%', min: 0, max: 100, step: 1 },
+  { name: 'body_temperature', label: 'Temperatura', unit: '°C', min: 20, max: 45, step: 0.1 },
+  { name: 'glasgow_score', label: 'Escala de Glasgow', unit: '/ 15', min: 3, max: 15, step: 1 },
+];
 
-  // Discriminador y categoria Manchester
-  const [flowchart, setFlowchart] = useState('Dolor Toracico Agudo');
-  const [selectedDiscriminator, setSelectedDiscriminator] = useState('Dolor irradiado a cuello/mandibula con diaforesis');
-  const [triageSaved, setTriageSaved] = useState(false);
+const INITIAL_FORM = {
+  systolic_bp: '',
+  diastolic_bp: '',
+  heart_rate: '',
+  respiratory_rate: '',
+  oxygen_saturation: '',
+  body_temperature: '',
+  glasgow_score: '',
+  reason_for_consultation: '',
+  manchester_level: '',
+};
 
-  // Validacion de valores limite de Glasgow [3, 15]
-  const glasgowNum = parseInt(glasgow, 10);
-  const isGlasgowInvalid = isNaN(glasgowNum) || glasgowNum < 3 || glasgowNum > 15;
+/** Valida el formulario de triaje con los rangos del contrato y devuelve campo -> mensaje. */
+export const validateTriageForm = (form) => {
+  const errors = {};
+  VITAL_FIELDS.forEach((field) => {
+    const raw = String(form[field.name]).trim();
+    const value = Number(raw);
+    if (raw === '' || Number.isNaN(value)) {
+      errors[field.name] = 'Valor obligatorio.';
+    } else if (value < field.min || value > field.max) {
+      errors[field.name] = `Rango válido: ${field.min} a ${field.max}.`;
+    }
+  });
+  if (!form.reason_for_consultation.trim()) {
+    errors.reason_for_consultation = 'El motivo de consulta es obligatorio.';
+  }
+  return errors;
+};
 
-  // Calculo automatico de prioridad Manchester
-  let calculatedLevel = {
-    number: 'NIVEL II',
-    name: 'MUY URGENTE',
-    maxWait: '15 minutos',
-    color: 'bg-orange-500 text-white',
-    badgeColor: 'bg-orange-100 text-orange-950 border-orange-300',
-  };
+export const TriageScreen = ({ patient, onPatientChange, triage, onTriageSaved, onNavigate }) => {
+  const [form, setForm] = useState(INITIAL_FORM);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [submitError, setSubmitError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [savedTriage, setSavedTriage] = useState(null);
 
-  if (parseInt(spO2, 10) < 88 || parseInt(heartRate, 10) > 140 || glasgowNum < 9) {
-    calculatedLevel = {
-      number: 'NIVEL I',
-      name: 'REANIMACION',
-      maxWait: 'Inmediata (0 min)',
-      color: 'bg-red-600 text-white',
-      badgeColor: 'bg-red-100 text-red-950 border-red-300',
-    };
-  } else if (parseInt(systolic, 10) < 140 && parseInt(spO2, 10) >= 95 && parseInt(evaPain, 10) < 5) {
-    calculatedLevel = {
-      number: 'NIVEL III',
-      name: 'URGENTE',
-      maxWait: '30 minutos',
-      color: 'bg-amber-500 text-amber-950',
-      badgeColor: 'bg-amber-100 text-amber-950 border-amber-300',
-    };
+  useEffect(() => {
+    setForm(INITIAL_FORM);
+    setFieldErrors({});
+    setSubmitError('');
+    setSavedTriage(null);
+  }, [patient?.id]);
+
+  if (!patient) {
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="pb-2 border-b border-surface-container-high">
+          <span className="text-[10px] font-bold text-primary uppercase tracking-wider font-mono">
+            Módulo de triaje Manchester
+          </span>
+          <h1 className="text-2xl font-bold text-on-surface">Seleccione el paciente a valorar</h1>
+        </div>
+        <PatientPicker title="Paciente en valoración" onSelect={onPatientChange} />
+      </div>
+    );
   }
 
-  const handleSaveTriage = (e) => {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+    setFieldErrors((prev) => ({ ...prev, [name]: undefined }));
+    setSubmitError('');
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isGlasgowInvalid) {
-      alert('Error de valor limite: La escala de Glasgow debe encontrarse estrictamente entre 3 y 15 puntos.');
+    if (submitting) return;
+
+    const errors = validateTriageForm(form);
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      setSubmitError('Corrija los campos marcados antes de confirmar el triaje.');
       return;
     }
 
-    setTriageSaved(true);
+    // El nivel Manchester lo calcula el servidor; solo se envia si el clinico escala manualmente
+    const payload = {
+      patient_id: patient.id,
+      reason_for_consultation: form.reason_for_consultation.trim(),
+    };
+    VITAL_FIELDS.forEach((field) => {
+      payload[field.name] = Number(form[field.name]);
+    });
+    if (form.manchester_level) payload.manchester_level = form.manchester_level;
+
+    setSubmitting(true);
+    setSubmitError('');
+    try {
+      const created = await apiClient.createTriage(payload);
+      setSavedTriage(created);
+      if (onTriageSaved) onTriageSaved(created);
+    } catch (err) {
+      setSubmitError(getErrorMessage(err, 'No fue posible registrar el triaje.'));
+    } finally {
+      setSubmitting(false);
+    }
   };
+
+  const activeTriage = triage && triage.patient_id === patient.id ? triage : null;
+  const activeLevel = activeTriage ? getManchesterInfo(activeTriage.manchester_level) : null;
+  const savedLevel = savedTriage ? getManchesterInfo(savedTriage.manchester_level) : null;
 
   return (
     <div className="flex flex-col gap-6">
-      {/* BANNER FIJO DEL PACIENTE EN VALORACION */}
-      <section className="bg-white rounded-2xl p-5 shadow-xs border border-surface-container-high">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-2.5 h-12 rounded-full bg-orange-500 shrink-0"></div>
-            <div className="flex flex-col">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-xl font-bold text-on-surface">Carlos Eduardo Mendoza Gomez</h1>
-                <span className="px-2 py-0.5 rounded bg-surface-container-high text-on-surface-variant font-mono text-xs">
-                  CC 1.118.234.901
-                </span>
-                <span className="px-2 py-0.5 rounded bg-orange-500 text-white font-bold text-[10px] uppercase tracking-wider">
-                  TRIAGE II • EN PROCESO
-                </span>
-              </div>
-              <div className="flex flex-wrap items-center gap-x-3 text-xs text-on-surface-variant mt-1">
-                <span><strong>47 anos</strong> (14/05/1977)</span>
-                <span>•</span>
-                <span className="font-semibold text-primary">Nueva EPS Contributivo Activo</span>
-                <span>•</span>
-                <span>Acomp: <strong>Maria Gomez</strong> (Conyuge - 315-7890123)</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3 bg-surface-container-low px-4 py-2.5 rounded-xl border border-outline-variant/30 text-xs">
-            <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-outline" />
-              <div className="flex flex-col">
-                <span className="text-[10px] uppercase font-mono text-outline font-bold">Arribo</span>
-                <span className="font-mono font-bold text-on-surface">08:14 AM</span>
-              </div>
-            </div>
-            <div className="h-5 w-px bg-outline-variant/50"></div>
-            <div className="flex items-center gap-2">
-              <Activity className="w-4 h-4 text-red-600 animate-pulse" />
-              <div className="flex flex-col">
-                <span className="text-[10px] uppercase font-mono text-red-700 font-bold">Espera Triaje</span>
-                <span className="font-mono font-bold text-red-700">06 min</span>
-              </div>
-            </div>
-            <div className="h-5 w-px bg-outline-variant/50"></div>
-            <div className="flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-primary" />
-              <div className="flex flex-col">
-                <span className="text-[10px] uppercase font-mono text-outline font-bold">Ubicacion</span>
-                <span className="font-semibold text-primary">Box Triage #02</span>
-              </div>
-            </div>
-          </div>
-        </div>
+      <section className="bg-white rounded-2xl p-5 shadow-xs border border-surface-container-high space-y-3">
+        <PatientBanner patient={patient} onChangePatient={() => onPatientChange(null)} />
+        <AllergyBanner allergies={patient.allergies} />
       </section>
 
-      {/* ALERTA DINAMICA DE UMBRALES FISIOLOGICOS (INTERCEPTOR DE RIESGO) */}
-      <div className="bg-red-50 border-l-4 border-red-600 p-4 rounded-xl flex items-start justify-between shadow-xs gap-3">
-        <div className="flex items-center gap-3">
-          <ShieldAlert className="w-6 h-6 text-red-600 shrink-0" />
-          <div>
-            <span className="font-bold text-xs uppercase tracking-wider text-red-900 block">
-              Alerta Critica de Constantes Fisiologicas:
+      {activeTriage && (
+        <section
+          aria-label="Triaje vigente del paciente"
+          className={`bg-white rounded-2xl p-5 shadow-xs border border-surface-container-high border-l-4 ${activeLevel.borderColor}`}
+        >
+          <div className="flex flex-wrap items-center gap-3">
+            <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${activeLevel.color}`}>
+              {activeLevel.number} {activeLevel.name && `| ${activeLevel.name}`}
             </span>
-            <p className="text-xs text-red-800 mt-0.5">
-              Los valores registrados de <strong>SpO2 ({spO2}%)</strong> y <strong>Presion Arterial ({systolic}/{diastolic} mmHg)</strong> sobrepasan los umbrales seguros para Triage Nivel III/IV. Exige categorizacion prioritaria bajo Protocolo Valle-URG-102.
-            </p>
+            <span className="text-xs font-semibold text-on-surface">
+              {TRIAGE_STATUS_LABELS[activeTriage.status] ?? activeTriage.status}
+            </span>
+            <span className="text-xs text-on-surface-variant flex items-center gap-1">
+              <Clock className="w-3.5 h-3.5" /> {formatDateTime(activeTriage.created_at)}
+            </span>
           </div>
-        </div>
-        <span className="hidden md:inline-flex px-2 py-1 rounded bg-white text-red-700 font-mono text-[10px] font-bold tracking-tight shadow-xs border border-red-200 shrink-0">
-          PROTOCOLO VALLE-URG-102
-        </span>
-      </div>
+          <p className="mt-2 text-xs font-mono text-on-surface">
+            PA {activeTriage.systolic_bp}/{activeTriage.diastolic_bp} | FC {activeTriage.heart_rate} | FR{' '}
+            {activeTriage.respiratory_rate} | SpO2 {activeTriage.oxygen_saturation}% | Temp {activeTriage.body_temperature}°C | Glasgow{' '}
+            {activeTriage.glasgow_score}
+          </p>
+          <p className="mt-1 text-xs text-on-surface-variant">{activeTriage.reason_for_consultation}</p>
+        </section>
+      )}
 
-      {/* GRID BENTO: 2 COLUMNAS ERGONOMICAS */}
-      <form onSubmit={handleSaveTriage} className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-        {/* COLUMNA IZQUIERDA: SIGNOS VITALES (7 COLS) */}
+      <form onSubmit={handleSubmit} noValidate className="grid grid-cols-1 xl:grid-cols-12 gap-6">
         <div className="xl:col-span-7 flex flex-col gap-6">
           <div className="bg-white rounded-2xl p-6 shadow-xs border border-surface-container-high flex flex-col gap-5">
-            <div className="flex items-center justify-between border-b border-surface-container-high pb-3">
-              <div className="flex items-center gap-2">
-                <HeartPulse className="w-5 h-5 text-primary" />
-                <h2 className="text-base font-bold text-on-surface">Captura de Signos Vitales y Parametros</h2>
-              </div>
-              <span className="text-xs font-mono text-outline">Entrada Digital Haptica</span>
+            <div className="flex items-center gap-2 border-b border-surface-container-high pb-3">
+              <HeartPulse className="w-5 h-5 text-primary" />
+              <h2 className="text-base font-bold text-on-surface">Captura de Signos Vitales</h2>
             </div>
 
-            {/* GRID DE ENTRADAS NUMERICAS */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
-              {/* Presion Arterial */}
-              <div className="p-3.5 rounded-xl bg-surface-container-low border-2 border-red-500 shadow-2xs">
-                <div className="flex justify-between items-start text-xs font-semibold mb-1">
-                  <span>P. Arterial (Sist/Diast)</span>
-                  <span className="px-1.5 py-0.2 rounded bg-red-600 text-white text-[10px] font-bold">HTA Est. 2</span>
+            <fieldset disabled={submitting || Boolean(savedTriage)} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5 min-w-0">
+              <legend className="sr-only">Signos vitales</legend>
+              {VITAL_FIELDS.map((field) => (
+                <div
+                  key={field.name}
+                  className={`p-3.5 rounded-xl bg-surface-container-low border-2 ${
+                    fieldErrors[field.name] ? 'border-red-600 bg-red-50' : 'border-outline-variant/30'
+                  }`}
+                >
+                  <label htmlFor={`triage-${field.name}`} className="block text-xs font-semibold mb-1">
+                    {field.label}
+                  </label>
+                  <div className="flex items-baseline gap-1 my-1">
+                    <input
+                      id={`triage-${field.name}`}
+                      type="number"
+                      name={field.name}
+                      min={field.min}
+                      max={field.max}
+                      step={field.step}
+                      value={form[field.name]}
+                      onChange={handleChange}
+                      aria-invalid={Boolean(fieldErrors[field.name])}
+                      aria-describedby={fieldErrors[field.name] ? `triage-${field.name}-error` : undefined}
+                      className="w-24 bg-white font-bold text-base px-2 py-1 rounded border border-outline-variant/40 outline-none focus:border-primary text-center"
+                    />
+                    <span className="text-xs font-mono font-bold text-on-surface-variant ml-1">{field.unit}</span>
+                  </div>
+                  {fieldErrors[field.name] ? (
+                    <div id={`triage-${field.name}-error`} role="alert" className="text-[10px] font-bold text-red-700">
+                      {fieldErrors[field.name]}
+                    </div>
+                  ) : (
+                    <div className="text-[10px] text-on-surface-variant">
+                      Rango: {field.min} - {field.max}
+                    </div>
+                  )}
                 </div>
-                <div className="flex items-baseline gap-1 my-1">
-                  <input
-                    type="number"
-                    value={systolic}
-                    onChange={(e) => setSystolic(e.target.value)}
-                    className="w-16 bg-white font-bold text-base px-2 py-1 rounded border border-outline-variant/40 outline-none focus:border-primary text-center"
-                  />
-                  <span className="text-outline font-bold">/</span>
-                  <input
-                    type="number"
-                    value={diastolic}
-                    onChange={(e) => setDiastolic(e.target.value)}
-                    className="w-16 bg-white font-bold text-base px-2 py-1 rounded border border-outline-variant/40 outline-none focus:border-primary text-center"
-                  />
-                  <span className="text-xs font-mono font-bold text-on-surface-variant ml-1">mmHg</span>
-                </div>
-                <div className="text-[10px] text-on-surface-variant">Norma: 90/60 - 120/80</div>
-              </div>
-
-              {/* Frecuencia Cardiaca */}
-              <div className="p-3.5 rounded-xl bg-surface-container-low border-2 border-orange-500 shadow-2xs">
-                <div className="flex justify-between items-start text-xs font-semibold mb-1">
-                  <span>Frecuencia Cardiaca</span>
-                  <span className="px-1.5 py-0.2 rounded bg-orange-600 text-white text-[10px] font-bold">Taquicardia</span>
-                </div>
-                <div className="flex items-baseline gap-1 my-1">
-                  <input
-                    type="number"
-                    value={heartRate}
-                    onChange={(e) => setHeartRate(e.target.value)}
-                    className="w-20 bg-white font-bold text-base px-2 py-1 rounded border border-outline-variant/40 outline-none focus:border-primary text-center"
-                  />
-                  <span className="text-xs font-mono font-bold text-on-surface-variant ml-1">lpm</span>
-                </div>
-                <div className="text-[10px] text-on-surface-variant">Norma: 60 - 100 lpm</div>
-              </div>
-
-              {/* SpO2 */}
-              <div className="p-3.5 rounded-xl bg-surface-container-low border-2 border-orange-500 shadow-2xs">
-                <div className="flex justify-between items-start text-xs font-semibold mb-1">
-                  <span>Saturacion O2</span>
-                  <span className="px-1.5 py-0.2 rounded bg-orange-600 text-white text-[10px] font-bold">Hipoxemia</span>
-                </div>
-                <div className="flex items-baseline gap-1 my-1">
-                  <input
-                    type="number"
-                    value={spO2}
-                    onChange={(e) => setSpO2(e.target.value)}
-                    className="w-20 bg-white font-bold text-base px-2 py-1 rounded border border-outline-variant/40 outline-none focus:border-primary text-center"
-                  />
-                  <span className="text-xs font-mono font-bold text-on-surface-variant ml-1">%</span>
-                </div>
-                <div className="text-[10px] text-on-surface-variant">Norma: &gt; 95% al aire ambiente</div>
-              </div>
-
-              {/* Frecuencia Respiratoria */}
-              <div className="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/30">
-                <div className="flex justify-between items-start text-xs font-semibold mb-1">
-                  <span>Frec. Respiratoria</span>
-                  <span className="text-[10px] text-outline font-mono">FR</span>
-                </div>
-                <div className="flex items-baseline gap-1 my-1">
-                  <input
-                    type="number"
-                    value={respRate}
-                    onChange={(e) => setRespRate(e.target.value)}
-                    className="w-20 bg-white font-bold text-base px-2 py-1 rounded border border-outline-variant/40 outline-none focus:border-primary text-center"
-                  />
-                  <span className="text-xs font-mono font-bold text-on-surface-variant ml-1">rpm</span>
-                </div>
-                <div className="text-[10px] text-on-surface-variant">Norma: 12 - 20 rpm</div>
-              </div>
-
-              {/* Temperatura */}
-              <div className="p-3.5 rounded-xl bg-surface-container-low border-2 border-red-400 shadow-2xs">
-                <div className="flex justify-between items-start text-xs font-semibold mb-1">
-                  <span>Temperatura</span>
-                  <span className="px-1.5 py-0.2 rounded bg-red-600 text-white text-[10px] font-bold">Febril</span>
-                </div>
-                <div className="flex items-baseline gap-1 my-1">
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={temp}
-                    onChange={(e) => setTemp(e.target.value)}
-                    className="w-20 bg-white font-bold text-base px-2 py-1 rounded border border-outline-variant/40 outline-none focus:border-primary text-center"
-                  />
-                  <span className="text-xs font-mono font-bold text-on-surface-variant ml-1">°C</span>
-                </div>
-                <div className="text-[10px] text-on-surface-variant">Norma: 36.5 - 37.5 °C</div>
-              </div>
-
-              {/* Glucometria Capilar */}
-              <div className="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/30">
-                <div className="flex justify-between items-start text-xs font-semibold mb-1">
-                  <span>Glucometria</span>
-                  <span className="text-[10px] text-outline font-mono">HGT</span>
-                </div>
-                <div className="flex items-baseline gap-1 my-1">
-                  <input
-                    type="number"
-                    value={glycemia}
-                    onChange={(e) => setGlycemia(e.target.value)}
-                    className="w-20 bg-white font-bold text-base px-2 py-1 rounded border border-outline-variant/40 outline-none focus:border-primary text-center"
-                  />
-                  <span className="text-xs font-mono font-bold text-on-surface-variant ml-1">mg/dL</span>
-                </div>
-                <div className="text-[10px] text-on-surface-variant">Norma: 70 - 140 mg/dL</div>
-              </div>
-
-              {/* Escala de Glasgow con Validacion Estricta de Limites [3, 15] */}
-              <div className={`p-3.5 rounded-xl bg-surface-container-low border-2 ${isGlasgowInvalid ? 'border-red-600 bg-red-50' : 'border-outline-variant/30'}`}>
-                <div className="flex justify-between items-start text-xs font-semibold mb-1">
-                  <span>Escala Glasgow</span>
-                  <span className="text-[10px] font-mono font-bold text-outline">Particion [3, 15]</span>
-                </div>
-                <div className="flex items-baseline gap-1 my-1">
-                  <input
-                    type="number"
-                    min="3"
-                    max="15"
-                    value={glasgow}
-                    onChange={(e) => setGlasgow(e.target.value)}
-                    className="w-20 bg-white font-bold text-base px-2 py-1 rounded border border-outline-variant/40 outline-none focus:border-primary text-center"
-                  />
-                  <span className="text-xs font-mono font-bold text-on-surface-variant ml-1">/ 15</span>
-                </div>
-                {isGlasgowInvalid ? (
-                  <div className="text-[10px] font-bold text-red-700">Invalido: rango [3 a 15]</div>
-                ) : (
-                  <div className="text-[10px] text-emerald-700 font-semibold">Respuesta verbal/motora integra</div>
-                )}
-              </div>
-
-              {/* Escala Visual Analogica del Dolor EVA */}
-              <div className="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/30 col-span-1 sm:col-span-2">
-                <div className="flex justify-between items-start text-xs font-semibold mb-1">
-                  <span>Escala de Dolor (EVA: {evaPain}/10)</span>
-                  <span className="px-2 py-0.5 rounded bg-orange-100 text-orange-950 font-bold text-[10px]">
-                    Dolor Severo
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="10"
-                  value={evaPain}
-                  onChange={(e) => setEvaPain(e.target.value)}
-                  className="w-full accent-primary cursor-pointer my-2"
-                />
-                <div className="flex justify-between text-[10px] font-mono text-outline">
-                  <span>0 (Sin Dolor)</span>
-                  <span>5 (Moderado)</span>
-                  <span>10 (Maximo Insuperable)</span>
-                </div>
-              </div>
-            </div>
+              ))}
+            </fieldset>
           </div>
         </div>
 
-        {/* COLUMNA DERECHA: FLUJOGRAMA MANCHESTER Y CATEGORIZACION (5 COLS) */}
         <div className="xl:col-span-5 flex flex-col gap-6">
           <div className="bg-white rounded-2xl p-6 shadow-xs border border-surface-container-high flex flex-col gap-5">
-            <div className="border-b border-surface-container-high pb-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Stethoscope className="w-5 h-5 text-primary" />
-                <h2 className="text-base font-bold text-on-surface">Flujograma y Discriminador</h2>
-              </div>
-              <span className="text-[11px] font-bold text-primary bg-primary-fixed px-2 py-0.5 rounded">
-                Manchester v2.4
-              </span>
+            <div className="flex items-center gap-2 border-b border-surface-container-high pb-3">
+              <Stethoscope className="w-5 h-5 text-primary" />
+              <h2 className="text-base font-bold text-on-surface">Motivo y Categorización</h2>
             </div>
 
-            {/* Selector de Flujograma */}
             <div>
-              <label className="block text-xs font-semibold text-on-surface mb-1">
-                Flujograma Sintomatico Principal
+              <label htmlFor="triage-reason" className="block text-xs font-semibold text-on-surface mb-1">
+                Motivo de consulta
+              </label>
+              <textarea
+                id="triage-reason"
+                name="reason_for_consultation"
+                rows={4}
+                value={form.reason_for_consultation}
+                onChange={handleChange}
+                disabled={submitting || Boolean(savedTriage)}
+                aria-invalid={Boolean(fieldErrors.reason_for_consultation)}
+                aria-describedby={fieldErrors.reason_for_consultation ? 'triage-reason-error' : undefined}
+                className="w-full p-3 rounded-xl border border-outline-variant text-xs outline-none focus:border-primary disabled:bg-surface-container-low"
+              />
+              {fieldErrors.reason_for_consultation && (
+                <p id="triage-reason-error" role="alert" className="mt-1 text-[11px] text-red-700">
+                  {fieldErrors.reason_for_consultation}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="triage-escalation" className="block text-xs font-semibold text-on-surface mb-1">
+                Escalamiento clínico (opcional)
               </label>
               <select
-                value={flowchart}
-                onChange={(e) => setFlowchart(e.target.value)}
-                className="w-full h-11 px-3 rounded-lg bg-surface-container-low text-xs font-semibold border border-outline-variant/40 outline-none focus:border-primary cursor-pointer"
+                id="triage-escalation"
+                name="manchester_level"
+                value={form.manchester_level}
+                onChange={handleChange}
+                disabled={submitting || Boolean(savedTriage)}
+                className="w-full h-10 px-3 rounded-lg bg-surface-container-low text-xs font-semibold border border-outline-variant/40 outline-none focus:border-primary cursor-pointer"
               >
-                <option>Dolor Toracico Agudo</option>
-                <option>Dificultad Respiratoria en Adultos</option>
-                <option>Cefalea y Signos Neurologicos</option>
-                <option>Dolor Abdominal Agudo</option>
-                <option>Trauma Mayor / Extremidades</option>
-                <option>Sintomas Infecciosos / Sepsis</option>
-              </select>
-            </div>
-
-            {/* Discriminadores Criticos */}
-            <div>
-              <label className="block text-xs font-semibold text-on-surface mb-1.5">
-                Discriminador de Riesgo Clinico
-              </label>
-              <div className="space-y-2 text-xs">
-                {[
-                  'Compromiso evidente de via aerea o estridor (Nivel I)',
-                  'Dolor irradiado a cuello/mandibula con diaforesis (Nivel II)',
-                  'Dolor precordial pleuritico sin disnea en reposo (Nivel III)',
-                  'Dolor muscular de pared toracica reproducible a la palpacion (Nivel IV)',
-                ].map((disc, idx) => (
-                  <label
-                    key={idx}
-                    className={`flex items-start gap-2.5 p-3 rounded-xl border text-xs cursor-pointer transition-all ${
-                      selectedDiscriminator === disc
-                        ? 'bg-primary/10 border-primary font-semibold text-primary'
-                        : 'bg-surface-container-low border-outline-variant/30 text-on-surface hover:bg-surface-container'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="discriminator"
-                      checked={selectedDiscriminator === disc}
-                      onChange={() => setSelectedDiscriminator(disc)}
-                      className="mt-0.5 accent-primary"
-                    />
-                    <span>{disc}</span>
-                  </label>
+                <option value="">Sin escalamiento (nivel calculado por el servidor)</option>
+                {Object.entries(MANCHESTER_LEVELS).map(([key, info]) => (
+                  <option key={key} value={key}>
+                    {info.number} - {info.name}
+                  </option>
                 ))}
-              </div>
-            </div>
-
-            {/* TARJETA DE RESULTADO DE CLASIFICACION */}
-            <div className={`p-4 rounded-xl border-2 ${calculatedLevel.badgeColor} space-y-2 shadow-xs`}>
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider font-mono">
-                  Categorizacion Determinada
-                </span>
-                <span className="text-xs font-bold font-mono">Tiempo Max: {calculatedLevel.maxWait}</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className={`px-3 py-1.5 rounded-lg text-sm font-extrabold uppercase tracking-wide ${calculatedLevel.color}`}>
-                  {calculatedLevel.number} • {calculatedLevel.name}
-                </div>
-              </div>
-              <p className="text-[11px] text-on-surface-variant leading-relaxed">
-                Derivacion obligatoria a <strong>Box de Atencion Medica Prioritaria</strong>. Parametros hemodinamicos transmitidos a central de monitoreo.
+              </select>
+              <p className="mt-1 text-[11px] text-on-surface-variant">
+                El servidor determina el nivel Manchester a partir de los signos vitales. Solo se acepta un nivel
+                igual o más urgente que el calculado.
               </p>
             </div>
 
-            {triageSaved ? (
+            {submitError && (
+              <div role="alert" className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                <span>{submitError}</span>
+              </div>
+            )}
+
+            {savedTriage ? (
               <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-950 space-y-3">
                 <div className="flex items-center gap-2 font-bold text-xs">
                   <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                  <span>Triaje Manchester Guardado y Manilla Digital Emitida</span>
+                  <span>Triaje registrado</span>
                 </div>
-                <p className="text-xs text-emerald-900 leading-snug">
-                  El paciente ha sido priorizado como {calculatedLevel.number} en la cola de atencion.
-                </p>
+                <div className={`p-3 rounded-xl border-2 ${savedLevel.badgeColor} space-y-1`}>
+                  <span className="text-[10px] font-bold uppercase tracking-wider font-mono block">
+                    Nivel determinado por el servidor
+                  </span>
+                  <span
+                    data-testid="triage-server-level"
+                    className={`inline-block px-3 py-1.5 rounded-lg text-sm font-extrabold uppercase ${savedLevel.color}`}
+                  >
+                    {savedLevel.number} {savedLevel.name && `| ${savedLevel.name}`}
+                  </span>
+                  {savedLevel.maxWait && (
+                    <p className="text-[11px] font-mono font-bold">Tiempo máximo de espera: {savedLevel.maxWait}</p>
+                  )}
+                </div>
                 <button
                   type="button"
                   onClick={() => onNavigate('hce')}
                   className="w-full py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-lg shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-all"
                 >
-                  <span>Proceder a Historia Clinica (HCE)</span>
+                  <span>Proceder a Historia Clínica (HCE)</span>
                   <ArrowRight className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSavedTriage(null);
+                    setForm(INITIAL_FORM);
+                  }}
+                  className="w-full py-2 bg-white hover:bg-surface-container text-primary border border-primary/30 font-bold text-xs rounded-lg cursor-pointer"
+                >
+                  Registrar un nuevo triaje
                 </button>
               </div>
             ) : (
               <button
                 type="submit"
-                className="w-full h-12 bg-primary hover:bg-primary-container text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
+                disabled={submitting}
+                className="w-full h-12 bg-primary hover:bg-primary-container text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Send className="w-4 h-4" />
-                <span>Confirmar Categorizacion Manchester & Manilla</span>
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                <span>{submitting ? 'Registrando triaje...' : 'Confirmar Triaje Manchester'}</span>
               </button>
             )}
+
+            <div className="flex items-center gap-2 text-[11px] text-on-surface-variant">
+              <Activity className="w-4 h-4 text-outline" />
+              <span>El triaje queda registrado a nombre del profesional autenticado.</span>
+            </div>
           </div>
         </div>
       </form>
@@ -443,4 +342,3 @@ export const TriageScreen = ({ onNavigate }) => {
 };
 
 export default TriageScreen;
-
