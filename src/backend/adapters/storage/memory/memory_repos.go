@@ -475,7 +475,10 @@ func (r *PrescriptionMemoryRepo) GetMedicationByID(_ context.Context, id int) (*
 	if !ok {
 		return nil, domain.ErrMedicationNotFound
 	}
-	return med, nil
+	// DEF-46: se devuelve una copia; el puntero interno lo modifica DeductStock bajo el candado
+	// mientras el servicio y la serializacion JSON lo leian sin el, lo que producia una carrera de datos.
+	copia := *med
+	return &copia, nil
 }
 
 func (r *PrescriptionMemoryRepo) SearchMedications(_ context.Context, query string) ([]domain.MedicationCatalog, error) {
