@@ -1,10 +1,11 @@
 # Pipeline de aseguramiento de calidad (docs/calidad/01-plan-aseguramiento-calidad.md).
 #
 # Bloqueantes: compilacion, go vet, golangci-lint (solo hallazgos nuevos), pruebas con -race,
-# umbral de cobertura, ESLint (errores), vitest y npm audit de dependencias de produccion.
-# Informativos (continue-on-error): staticcheck, gosec, govulncheck, gocyclo, npm audit completo
-# y la suite de defectos abiertos. Pasan a bloqueantes al cerrar los defectos de la linea base
-# (DEF-11, DEF-24, DEF-44, DEF-45); ver docs/calidad/06-plan-mantenimiento.md.
+# umbral de cobertura, control de defectos abiertos (fallos esperados), ESLint (errores), vitest
+# y npm audit de dependencias de produccion.
+# Informativos (continue-on-error): staticcheck, gosec, govulncheck, gocyclo y npm audit completo.
+# Pasan a bloqueantes al cerrar los defectos de la linea base (DEF-11, DEF-24, DEF-44, DEF-45);
+# ver docs/calidad/06-plan-mantenimiento.md.
 name: calidad
 
 on:
@@ -141,27 +142,36 @@ jobs:
             tests/backend/coverage-tests.out
           if-no-files-found: ignore
 
-  backend-defectos-abiertos:
-    name: Backend - reproduccion de defectos abiertos (informativo)
+  backend-control-defectos:
+    name: Backend - control de defectos abiertos
     runs-on: ubuntu-24.04
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4.2.2
       - uses: actions/setup-go@v5.2.0
         with:
           go-version: ${{ env.GO_VERSION }}
           cache-dependency-path: tests/backend/go.sum
-      - name: Ejecutar pruebas TestDEF con el detector de carreras
+      # Fuente: docs/calidad/defectos-abiertos.txt. Las pruebas de esa lista fallan a proposito,
+      # por eso este paso no evalua el codigo de salida de go test; el veredicto lo da el siguiente.
+      - name: Ejecutar con -race las pruebas de los defectos abiertos
         working-directory: tests/backend
         env:
           CGO_ENABLED: '1'
           CALIDAD_DEFECTOS_ABIERTOS: '1'
-        run: go test -race -count=1 -run 'TestDEF' -v ./... | tee defectos-abiertos.txt
+        run: |
+          patron=$(go run ./herramientas/controldefectos -regex)
+          go test -race -count=1 -json -run "$patron" . > defectos-abiertos.json || true
+      # Verde: todas fallan por el defecto declarado. Rojo: alguna pasa («DEF-XX parece corregido»),
+      # falla por otra causa (panico, compilacion, preparacion, carrera no declarada) o la lista no
+      # coincide con la bitacora y con el codigo de pruebas.
+      - name: Verificar que cada defecto falla por su causa declarada
+        working-directory: tests/backend
+        run: go run ./herramientas/controldefectos -con-race < defectos-abiertos.json | tee -a "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@v4.5.0
         if: always()
         with:
-          name: defectos-abiertos
-          path: tests/backend/defectos-abiertos.txt
+          name: control-defectos-abiertos
+          path: tests/backend/defectos-abiertos.json
           if-no-files-found: ignore
 
   frontend:
