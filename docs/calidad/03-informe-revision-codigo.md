@@ -122,6 +122,7 @@ Riesgo: registros clínicos que «se guardan» y desaparecen al reiniciar. Recom
 | DEF-24 | `go.mod` (Fiber v2.52.5) | Caída del proceso con cuerpos manipulados | Actualizar dependencias |
 | DEF-25 | `schema.sql:224-253` | Inmutabilidad solo en un motor | DDL de PostgreSQL y aclaraciones |
 | DEF-26 | `router.go` | Flujo clínico no ejecutable por la API | Endpoints de admisión |
+| DEF-47 | `src/frontend/src/utils/totp.js:93-98` | Sin Web Crypto (HTTP en la red local) el cliente calculaba códigos ajenos al secreto | Corregido: HMAC-SHA1 local |
 
 ## 4. Fortalezas verificadas
 

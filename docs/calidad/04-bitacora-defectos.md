@@ -4,13 +4,13 @@
 - **Base auditada:** commit `6492f07`. Salvo indicación, las líneas citadas corresponden a ese commit.
 - **Ciclo de vida:** `Nuevo -> Confirmado -> En corrección -> En verificación -> Cerrado` / `Rechazado` (ver `01-plan-aseguramiento-calidad.md`, sección 6).
 - **Severidad** = impacto técnico; **prioridad** = urgencia de corrección (P1 inmediata … P4 cuando haya capacidad). Por definición del plan, todo defecto que pueda causar daño a un paciente es **Crítica**.
-- **Reproducción automatizada:** los defectos marcados con «prueba abierta» tienen una prueba en `tests/backend/calidad_defectos_abiertos_regression_test.go` que afirma el comportamiento correcto y por eso **falla mientras el defecto exista**. Se ejecuta con:
+- **Reproducción automatizada:** los defectos marcados con «prueba abierta» tienen una prueba en `tests/backend/calidad_defectos_abiertos_regression_test.go` que afirma el comportamiento correcto y por eso **falla mientras el defecto exista**. La lista vigente está en [`defectos-abiertos.txt`](defectos-abiertos.txt) y el job bloqueante «Backend - control de defectos abiertos» comprueba que cada prueba falle por su defecto (`01-plan-aseguramiento-calidad.md`, sección 5.4). Ejecución local:
 
 ```bash
-cd tests/backend && CALIDAD_DEFECTOS_ABIERTOS=1 go test -count=1 -v -run TestDEF ./...
+cd tests/backend && CALIDAD_DEFECTOS_ABIERTOS=1 go test -count=1 -json -run "$(go run ./herramientas/controldefectos -regex)" . | go run ./herramientas/controldefectos
 ```
 
-Salida registrada: `anexos/evidencias/43-defectos-abiertos.txt` (11 fallos reproducidos en local; DEF-37 requiere `-race` y se confirmó en CI, `anexos/evidencias/89b-ci-defectos-abiertos-race.txt`).
+Salidas registradas: `anexos/evidencias/43-defectos-abiertos.txt` (11 fallos reproducidos en local) y `anexos/evidencias/99-control-defectos-local.txt` (veredicto de la herramienta: 11 de 12 reproducidos y DEF-37 no evaluable sin `-race`). DEF-37 se confirmó con `-race` en CI (`anexos/evidencias/89b-ci-defectos-abiertos-race.txt`).
 
 ---
 
@@ -55,7 +55,7 @@ El contenido de las columnas originales se transcribe sin cambios desde `docs/in
 | DEF-26 | Carecer de API de admisión de pacientes y alergias (rol ADMISION sin rutas) | Backend | Alta | P2 | Confirmado |
 | DEF-27 | Aceptar frecuencia cardíaca superior a 300 lpm | Backend | Media | P3 | En verificación (corregido en rama) |
 | DEF-28 | Corromper la bitácora de auditoría por cadenas no copiadas del contexto Fiber | Backend | Media | P2 | En verificación (corregido en rama) |
-| DEF-29 | Producir colisiones de hash por separador `|` sin escapar | Backend | Media | P3 | Confirmado |
+| DEF-29 | Producir colisiones de hash por separador `\|` sin escapar | Backend | Media | P3 | Confirmado |
 | DEF-30 | Verificar la integridad sin validar el enlace con el folio anterior | Backend | Media | P2 | Confirmado |
 | DEF-31 | Revelar cuentas inactivas antes de validar la contraseña | Backend | Media | P3 | Confirmado |
 | DEF-32 | Responder el healthcheck sin verificar la base de datos | Backend / Infra | Media | P3 | Confirmado |
@@ -477,7 +477,7 @@ Los defectos DEF-46 a DEF-48 se detectaron en la primera ejecución del pipeline
 | Severidad / Prioridad | Media / P3 |
 | Pasos para reproducir | Calcular el hash con anamnesis `dolor|toracico` y examen `normal`, y luego con anamnesis `dolor` y examen `toracico|normal`. |
 | Resultado esperado / obtenido | Hashes distintos / Idénticos (`9ec71965…`). |
-| Evidencia | `crypto.go:56-68` concatena con `|` y aplica `TrimSpace`, que además hace que los espacios finales no queden protegidos. Prueba abierta `TestDEF29…`. H16 (determinismo): el orden de campos y el formato de fecha UTC son fijos, así que el hash **es reproducible**; el defecto es de unicidad, no de determinismo. |
+| Evidencia | `crypto.go:56-68` concatena con `\|` y aplica `TrimSpace`, que además hace que los espacios finales no queden protegidos. Prueba abierta `TestDEF29…`. H16 (determinismo): el orden de campos y el formato de fecha UTC son fijos, así que el hash **es reproducible**; el defecto es de unicidad, no de determinismo. |
 | Causa raíz | Serialización ambigua. |
 | Acción propuesta | M-25: serialización canónica con longitud prefijada o JSON canónico, con versión de algoritmo (`hash_version`) para no invalidar los folios ya sellados. |
 | Estado | Confirmado. |

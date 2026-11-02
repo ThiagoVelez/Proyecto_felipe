@@ -27,6 +27,7 @@ Anexos:
 - [`anexos/linea-base.md`](anexos/linea-base.md): Fase 0, con versiones, inventario y el estado inicial y final.
 - [`anexos/analisis-estatico.md`](anexos/analisis-estatico.md): Fase 1, con 10 herramientas y la clasificación de cada advertencia.
 - [`anexos/matriz-rbac.md`](anexos/matriz-rbac.md): matriz ruta x rol ejecutada contra el router real.
+- [`defectos-abiertos.txt`](defectos-abiertos.txt): lista de los defectos abiertos con prueba de reproducción, que usa el job «Backend - control de defectos abiertos».
 - [`anexos/evidencias/`](anexos/evidencias/): salidas de los comandos (`.txt`) numeradas por fase. Se eliminaron los fragmentos de código que contenían credenciales de semilla y las rutas locales del equipo de trabajo.
 
 ## 2. Cómo reproducir las mediciones
@@ -40,7 +41,7 @@ cd tests/backend && go test -count=1 -coverpkg=saludconecta-backend/... -coverpr
 ```
 
 ```bash
-cd tests/backend && CALIDAD_DEFECTOS_ABIERTOS=1 go test -count=1 -v -run TestDEF ./...
+cd tests/backend && CALIDAD_DEFECTOS_ABIERTOS=1 go test -count=1 -json -run "$(go run ./herramientas/controldefectos -regex)" . | go run ./herramientas/controldefectos
 ```
 
 ```bash
@@ -51,7 +52,7 @@ cd tests/backend && CALIDAD_MATRIZ_SALIDA=matriz.md go test -count=1 -run TestRB
 cd src/frontend && npm ci && npm i --no-save @vitest/coverage-v8@2.1.9 && npx vitest run --coverage
 ```
 
-La tercera orden ejecuta las pruebas de los defectos abiertos, que **deben fallar** mientras el defecto exista. Sin la variable se omiten, para no romper el pipeline. El pipeline [`.github/workflows/calidad.yml`](../../.github/workflows/calidad.yml) ejecuta todo lo anterior en Linux, incluido `go test -race`.
+La tercera orden ejecuta las pruebas de los defectos listados en [`defectos-abiertos.txt`](defectos-abiertos.txt), que **deben fallar** mientras el defecto exista, y la herramienta `controldefectos` termina con código 0 solo si cada una falla por su defecto. Si una pasa, informa «DEF-XX parece corregido: verifícalo y ciérralo en la bitácora»; si falla por otra causa (pánico, compilación, preparación), también termina en error. El mecanismo está descrito en `01-plan-aseguramiento-calidad.md`, sección 5.4. El pipeline [`.github/workflows/calidad.yml`](../../.github/workflows/calidad.yml) ejecuta todo lo anterior en Linux, incluido `go test -race`.
 
 ## 3. Cambios de código realizados por Calidad
 
@@ -59,7 +60,7 @@ Todos están en archivos nuevos o son correcciones pequeñas, una por commit:
 
 - **Correcciones (`fix(DEF-XX)`):** DEF-05, DEF-08, DEF-12, DEF-27, DEF-28, DEF-41, DEF-46 y DEF-47. Cada una tiene una prueba de regresión que falla antes y pasa después (evidencias `50` a `60` y `90` a `93`). DEF-46 y DEF-47 las detectó el pipeline en el PR (`evidencias/89-ci-run-41361540450.txt`).
 - **Pruebas nuevas (archivos `*_regression_test.go`):** matriz RBAC, defectos abiertos, H21, H23 y rendimiento RNF01.
-- **Automatización:** `calidad.yml`, `.golangci.yml`, `src/frontend/eslint.config.js`, `.github/PULL_REQUEST_TEMPLATE.md` y `.github/ISSUE_TEMPLATE/defecto.yml`.
+- **Automatización:** `calidad.yml` (incluido el control bloqueante de defectos abiertos con `tests/backend/herramientas/controldefectos`), `.golangci.yml`, `src/frontend/eslint.config.js`, `.github/PULL_REQUEST_TEMPLATE.md` y `.github/ISSUE_TEMPLATE/defecto.yml`.
 - **Documentación:** este paquete, `docs/informe-calidad.md` (reescrito) y, en `README.md`, solo las listas de Trello, el rango de requisitos y el badge.
 
 ## 4. Criterios de aceptación del trabajo de Calidad
