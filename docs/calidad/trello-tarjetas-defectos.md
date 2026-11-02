@@ -21,6 +21,7 @@ Reglas:
 2. Para entrar en revisión, la tarjeta debe enlazar el PR con el pipeline `calidad` en verde y la checklist del PR completa.
 3. Si la revisión falla, la tarjeta vuelve a «Tareas por realizar» con un comentario y, si corresponde, un `DEF-XX` nuevo en «Bugs encontrados para solucionar».
 4. Una tarjeta de defecto se archiva cuando su estado en la bitácora es «Cerrado».
+5. El PR que corrige un defecto de `docs/calidad/defectos-abiertos.txt` debe quitar su línea de esa lista; si no lo hace, el job «Backend - control de defectos abiertos» falla con «DEF-XX parece corregido».
 
 ## 2. Tarjetas Críticas (etiqueta roja)
 
@@ -41,7 +42,7 @@ Reglas:
   - [ ] Normalización Unicode de principios activos
   - [ ] Tabla de reactividad cruzada aprobada por LT
   - [ ] Fixtures con principios activos reales (RP)
-  - [ ] `TestDEF06…` en verde con `CALIDAD_DEFECTOS_ABIERTOS=1`
+  - [ ] Quitar DEF-06 de `defectos-abiertos.txt` y dejar `TestDEF06…` como regresión permanente
 - **Enlace:** [DEF-06 en la bitácora](https://github.com/ThiagoVelez/Proyecto_felipe/blob/main/docs/calidad/04-bitacora-defectos.md#def-06-omitir-la-reactividad-cruzada-y-las-variantes-de-escritura-en-el-cruce-de-alergias)
 
 ### [DEF-07] La sincronización sobrescribe folios cerrados

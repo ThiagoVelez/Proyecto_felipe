@@ -78,6 +78,58 @@ En verificación -> En corrección       (si la verificación falla)
 - **Severidad (impacto técnico):** Crítica, Alta, Media, Baja. Regla de dominio: **todo defecto que pueda causar daño a un paciente es Crítica** (prescripción peligrosa permitida, pérdida de registro clínico, triaje mal clasificado).
 - **Prioridad (urgencia):** P1 (antes de la próxima entrega), P2 (en la iteración), P3 (planificada), P4 (cuando haya capacidad). La prioridad puede diferir de la severidad: un defecto Crítico con mitigación operativa puede ser P2.
 
+### 5.4 Control de defectos abiertos (fallos esperados)
+
+Un defecto confirmado y todavía no corregido se demuestra con una prueba que afirma el comportamiento **correcto**, de modo que falla mientras el defecto exista. El job **«Backend - control de defectos abiertos»** de `calidad.yml` ejecuta esas pruebas y es **bloqueante**: el job queda en verde mientras cada prueba falle exactamente por su defecto, y en rojo en cualquier otro caso. Así quien revisa un PR ve verde cuando todo está como se espera y rojo solo cuando hay algo que atender.
+
+**Piezas:**
+
+| Pieza | Ubicación | Función |
+|---|---|---|
+| Lista de defectos abiertos | `docs/calidad/defectos-abiertos.txt` | Fuente única: `<ID> <prueba> <tipo>` por línea |
+| Pruebas de reproducción | `tests/backend/calidad_defectos_abiertos_regression_test.go` | Cada una llama a `requireDefectoAbierto(t, "DEF-XX")` (se omite salvo con `CALIDAD_DEFECTOS_ABIERTOS=1`) |
+| Marca de la aserción | Helper `defectoReproducido(t, "DEF-XX", …)` | Prefija el fallo con `DEFECTO-REPRODUCIDO DEF-XX:`; las fallas de preparación (`t.Fatalf`) no llevan marca |
+| Herramienta de control | `tests/backend/herramientas/controldefectos` | Lee la salida de `go test -json` y emite el veredicto |
+
+**Tipos de defecto:**
+
+- `marcador`: la prueba debe fallar con la marca de **su** identificador.
+- `carrera`: la prueba debe fallar porque el detector `-race` reporta `WARNING: DATA RACE`. Hoy solo es de este tipo DEF-37.
+
+**Veredicto por prueba:**
+
+| Situación | Resultado del job | Mensaje |
+|---|---|---|
+| Falla por el defecto declarado | Verde | «falla como se espera» |
+| Pasa | **Rojo** | «DEF-XX parece corregido: verifícalo y ciérralo en la bitácora» |
+| Falla sin la marca del defecto (por ejemplo, la preparación falló) o con la marca de otro defecto | **Rojo** | «falló por una causa distinta al defecto» |
+| Pánico, *timeout* o una prueba que no llegó a ejecutarse | **Rojo** | «falló por un pánico» / «no se ejecutó» |
+| Error de compilación | **Rojo** | «las pruebas no compilaron» |
+| Carrera de datos en un defecto de tipo `marcador` | **Rojo** | «carrera no declarada» |
+| Prueba omitida (falta la variable de entorno) | **Rojo** | «la prueba se omitió» |
+| Defecto de tipo `carrera` ejecutado sin `-race` (solo en local) | Informativo | «no evaluable» |
+
+**Coherencia:** el job también falla si la lista no concuerda con la bitácora y con el código. Las comprobaciones son tres:
+
+- Cada ID de la lista debe figurar en la tabla resumen de `04-bitacora-defectos.md` con un estado distinto de «En verificación», «Cerrado» o «Rechazado».
+- Cada prueba de la lista debe existir y declarar el mismo ID.
+- Toda prueba que use `requireDefectoAbierto` debe estar en la lista.
+
+**Procedimiento al corregir un defecto de la lista**, en el mismo PR que la corrección:
+
+1. Quitar su línea de `defectos-abiertos.txt`.
+2. Quitar `requireDefectoAbierto` de la prueba, que queda como regresión permanente (opcionalmente se mueve a un archivo propio).
+3. Cambiar el estado en la bitácora a «En verificación».
+4. Tras la revisión de Calidad y con el pipeline en verde, pasarlo a «Cerrado».
+
+Si el PR corrige el defecto pero omite el paso 1, el job lo señala con «parece corregido».
+
+**Ejecución local** (sin `-race` en Windows; en Linux con cgo se añade `-race` a `go test` y `-con-race` a la herramienta):
+
+```bash
+cd tests/backend && CALIDAD_DEFECTOS_ABIERTOS=1 go test -count=1 -json -run "$(go run ./herramientas/controldefectos -regex)" . | go run ./herramientas/controldefectos
+```
+
 ## 6. Herramientas
 
 | Ámbito | Herramienta | Versión fijada | Modo en CI |
@@ -89,6 +141,7 @@ En verificación -> En corrección       (si la verificación falla)
 | Go | govulncheck | v1.9.0 | Informativo hasta cerrar DEF-24 |
 | Go | gocyclo (umbral 15) | v0.6.0 | Informativo |
 | Go | `go test -race` y `go test -cover` | — | Bloqueante, umbral de cobertura (el paso `-race` excluye temporalmente la prueba de DEF-48) |
+| Go | `controldefectos` (sección 5.4) | código del repositorio | Bloqueante: fallos esperados de los defectos abiertos |
 | JS | ESLint (`src/frontend/eslint.config.js`) | 9.17.0 | Bloqueante (errores) |
 | JS | Vitest + `@vitest/coverage-v8` | 2.1.9 | Bloqueante |
 | JS | `npm audit --omit=dev --audit-level=high` | npm del runner | Bloqueante |

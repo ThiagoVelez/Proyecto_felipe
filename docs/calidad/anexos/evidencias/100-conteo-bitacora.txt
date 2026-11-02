@@ -1,0 +1,8 @@
+filas en tabla resumen: 44 | fichas: 44 | rango: DEF-05 a DEF-48
+ids consecutivos y unicos: true
+mismos ids en tabla y fichas: true
+por severidad: {"Crítica":7,"Alta":16,"Media":15,"Baja":6}
+corregidos en rama (En verificación): 8 DEF-05 DEF-08 DEF-12 DEF-27 DEF-28 DEF-41 DEF-46 DEF-47 {"Crítica":2,"Alta":2,"Media":3,"Baja":1}
+abiertos: 36 {"Crítica":5,"Alta":14,"Media":12,"Baja":5}
+estados de abiertos: {"Confirmado":33,"Nuevo":2,"En corrección":1}
+abiertos con prueba en defectos-abiertos.txt: 12 | todos abiertos en bitacora: true
