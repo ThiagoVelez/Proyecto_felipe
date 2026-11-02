@@ -1,0 +1,26 @@
+# Defectos abiertos con prueba de reproduccion automatizada.
+#
+# Fuente para el job «Backend - control de defectos abiertos» de .github/workflows/calidad.yml.
+# Cada prueba afirma el comportamiento correcto y por eso debe FALLAR mientras el defecto exista.
+# El job pasa si todas fallan por la causa declarada y falla si alguna pasa (el defecto parece
+# corregido) o si falla por otra causa (panico, error de compilacion, preparacion fallida).
+#
+# Formato: <ID> <prueba en tests/backend> <tipo>
+#   marcador: la prueba debe fallar con «DEFECTO-REPRODUCIDO <ID>» (helper defectoReproducido).
+#   carrera:  la prueba debe fallar porque el detector -race reporta «WARNING: DATA RACE».
+#
+# Al corregir un defecto: eliminar su linea en el mismo PR que la correccion, convertir la prueba
+# en regresion permanente (quitar requireDefectoAbierto) y actualizar 04-bitacora-defectos.md.
+
+DEF-06 TestDEF06CruceAlergiasReactividadCruzadaYTildes marcador
+DEF-07 TestDEF07SincronizacionNoSobrescribeFolioCerrado marcador
+DEF-09 TestDEF09HipotermiaSeveraNoEsNoUrgente marcador
+DEF-13 TestDEF13TokenDeUsuarioDesactivadoEsRechazado marcador
+DEF-14 TestDEF14SetupMFANoDesactivaSegundoFactor marcador
+DEF-16 TestDEF16CierreConcurrenteNoBifurcaCadena marcador
+DEF-17 TestDEF17MedicoNoCierraFolioAjeno marcador
+DEF-18 TestDEF18SincronizacionUsaMedicoAutenticado marcador
+DEF-29 TestDEF29HashSinColisionPorDelimitador marcador
+DEF-30 TestDEF30VerificacionValidaEnlaceConFolioAnterior marcador
+DEF-31 TestDEF31LoginNoRevelaCuentaInactivaConClaveErronea marcador
+DEF-37 TestDEF37LecturaConcurrenteDeFolioSinCarrera carrera

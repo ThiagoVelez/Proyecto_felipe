@@ -60,7 +60,7 @@ func TestDEF06CruceAlergiasReactividadCruzadaYTildes(t *testing.T) {
 		})
 		var conflicto *domain.AllergyConflictError
 		if !errors.As(err, &conflicto) {
-			t.Errorf("Alergia %q frente a %q: se esperaba bloqueo por alergia y se obtuvo err=%v", c.alergia, c.principio, err)
+			defectoReproducido(t, "DEF-06", "Alergia %q frente a %q: se esperaba bloqueo por alergia y se obtuvo err=%v", c.alergia, c.principio, err)
 		}
 	}
 }
@@ -84,7 +84,7 @@ func TestDEF07SincronizacionNoSobrescribeFolioCerrado(t *testing.T) {
 
 	rec, _ := recordRepo.GetByID(ctx, "cr-def07")
 	if rec.Anamnesis != "Anamnesis original" || !rec.IsClosed {
-		t.Errorf("El folio cerrado fue modificado por la sincronizacion: anamnesis=%q cerrado=%v", rec.Anamnesis, rec.IsClosed)
+		defectoReproducido(t, "DEF-07", "El folio cerrado fue modificado por la sincronizacion: anamnesis=%q cerrado=%v", rec.Anamnesis, rec.IsClosed)
 	}
 }
 
@@ -93,7 +93,7 @@ func TestDEF09HipotermiaSeveraNoEsNoUrgente(t *testing.T) {
 	requireDefectoAbierto(t, "DEF-09")
 	tr := &domain.TriageRecord{SystolicBP: 120, DiastolicBP: 80, HeartRate: 75, RespiratoryRate: 16, OxygenSaturation: 98, BodyTemperature: 30.0, GlasgowScore: 15}
 	if nivel := tr.SuggestManchesterPriority(); nivel == domain.ManchesterLevelV || nivel == domain.ManchesterLevelIV {
-		t.Errorf("Temperatura 30.0 °C clasificada como %s; se esperaba un nivel urgente", nivel)
+		defectoReproducido(t, "DEF-09", "Temperatura 30.0 °C clasificada como %s; se esperaba un nivel urgente", nivel)
 	}
 }
 
@@ -114,7 +114,7 @@ func TestDEF13TokenDeUsuarioDesactivadoEsRechazado(t *testing.T) {
 	}
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusUnauthorized && res.StatusCode != http.StatusForbidden {
-		t.Errorf("Usuario desactivado obtuvo estado %d con su token previo; se esperaba 401/403", res.StatusCode)
+		defectoReproducido(t, "DEF-13", "Usuario desactivado obtuvo estado %d con su token previo; se esperaba 401/403", res.StatusCode)
 	}
 }
 
@@ -138,7 +138,7 @@ func TestDEF14SetupMFANoDesactivaSegundoFactor(t *testing.T) {
 		t.Fatalf("SetupMFA fallo: %v", err)
 	}
 	if _, _, err := auth.Login(ctx, user.Email, clave, ""); !errors.Is(err, domain.ErrMFARequired) {
-		t.Errorf("Tras SetupMFA el login sin TOTP devolvio err=%v; se esperaba ErrMFARequired", err)
+		defectoReproducido(t, "DEF-14", "Tras SetupMFA el login sin TOTP devolvio err=%v; se esperaba ErrMFARequired", err)
 	}
 }
 
@@ -186,7 +186,7 @@ func TestDEF16CierreConcurrenteNoBifurcaCadena(t *testing.T) {
 	a, _ := recordRepo.GetByID(ctx, "cr-def16-a")
 	b, _ := recordRepo.GetByID(ctx, "cr-def16-b")
 	if a.PreviousHash != nil && b.PreviousHash != nil && *a.PreviousHash == *b.PreviousHash {
-		t.Errorf("Ambos folios encadenan al mismo hash previo (%s...); la cadena se bifurco", (*a.PreviousHash)[:16])
+		defectoReproducido(t, "DEF-16", "Ambos folios encadenan al mismo hash previo (%s...); la cadena se bifurco", (*a.PreviousHash)[:16])
 	}
 }
 
@@ -203,7 +203,7 @@ func TestDEF17MedicoNoCierraFolioAjeno(t *testing.T) {
 	_, err := svc.CloseAndSign(ctx, "cr-def17", "usr-def17-b", "firma")
 	if err == nil {
 		ok, _ := svc.VerifyIntegrity(ctx, "cr-def17")
-		t.Errorf("Otro medico cerro el folio ajeno sin error; VerifyIntegrity posterior=%v", ok)
+		defectoReproducido(t, "DEF-17", "Otro medico cerro el folio ajeno sin error; VerifyIntegrity posterior=%v", ok)
 	}
 }
 
@@ -227,7 +227,7 @@ func TestDEF18SincronizacionUsaMedicoAutenticado(t *testing.T) {
 	}
 	rec, _ := memory.NewClinicalRecordMemoryRepo(env.ds).GetByID(context.Background(), "cr-def18")
 	if rec.DoctorID != medicoSemillaID {
-		t.Errorf("El folio sincronizado quedo firmado por %q; se esperaba el medico autenticado %q", rec.DoctorID, medicoSemillaID)
+		defectoReproducido(t, "DEF-18", "El folio sincronizado quedo firmado por %q; se esperaba el medico autenticado %q", rec.DoctorID, medicoSemillaID)
 	}
 }
 
@@ -237,7 +237,7 @@ func TestDEF29HashSinColisionPorDelimitador(t *testing.T) {
 	h1 := crypto.CalculateChainedRecordHash("prev", "pac", "doc", "dolor|toracico", "normal", "BA00", "dx", "plan", "2026-01-01T00:00:00Z")
 	h2 := crypto.CalculateChainedRecordHash("prev", "pac", "doc", "dolor", "toracico|normal", "BA00", "dx", "plan", "2026-01-01T00:00:00Z")
 	if h1 == h2 {
-		t.Errorf("Dos folios con anamnesis y examen fisico distintos producen el mismo hash: %s", h1)
+		defectoReproducido(t, "DEF-29", "Dos folios con anamnesis y examen fisico distintos producen el mismo hash: %s", h1)
 	}
 }
 
@@ -260,7 +260,7 @@ func TestDEF30VerificacionValidaEnlaceConFolioAnterior(t *testing.T) {
 
 	svc := services.NewClinicalRecordService(recordRepo, memory.NewPatientMemoryRepo(ds), memory.NewUserMemoryRepo(ds))
 	if ok, _ := svc.VerifyIntegrity(ctx, "cr-def30"); ok {
-		t.Errorf("Un folio cuyo previous_hash no corresponde a ningun folio anterior se reporta como integro")
+		defectoReproducido(t, "DEF-30", "Un folio cuyo previous_hash no corresponde a ningun folio anterior se reporta como integro")
 	}
 }
 
@@ -271,7 +271,7 @@ func TestDEF31LoginNoRevelaCuentaInactivaConClaveErronea(t *testing.T) {
 	auth := services.NewAuthService(memory.NewUserMemoryRepo(ds), calidadJWTSecret, time.Hour)
 	_, _, err := auth.Login(context.Background(), "cyaima@saludconecta.ips.gov.co", "clave-incorrecta", "")
 	if !errors.Is(err, domain.ErrInvalidCredentials) {
-		t.Errorf("Login con clave incorrecta sobre cuenta inactiva devolvio %v; se esperaba ErrInvalidCredentials", err)
+		defectoReproducido(t, "DEF-31", "Login con clave incorrecta sobre cuenta inactiva devolvio %v; se esperaba ErrInvalidCredentials", err)
 	}
 }
 
