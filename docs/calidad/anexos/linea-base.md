@@ -62,10 +62,10 @@ Archivos de más de 500 líneas: `AdminDashboardScreen.jsx` (2 233), `UserProfil
 
 | Medida | Línea base | Cierre | Evidencia |
 |---|---|---|---|
-| Pruebas `tests/backend` | 6 pasan | 14 pasan, 12 omitidas (defectos abiertos reproducibles con `CALIDAD_DEFECTOS_ABIERTOS=1`) | `71-final-go-test-tests.txt`, `43-defectos-abiertos.txt` |
+| Pruebas `tests/backend` | 6 pasan | 17 pasan, 12 omitidas (defectos abiertos reproducibles con `CALIDAD_DEFECTOS_ABIERTOS=1`) | `95-final-go-test-tests.txt`, `43-defectos-abiertos.txt` |
 | Cobertura backend (`-coverpkg`) | 38,7 % | 60,3 % | `08-…`, `71-final-go-test-tests.txt`, `72-final-cover-por-paquete.txt` |
 | Cobertura `src/backend` (pruebas internas) | 0,8 % | 1,4 % | `07-…`, `70-final-go-test-src.txt` |
-| Cobertura frontend (sentencias / ramas / funciones) | No medible | 40,9 % / 58,42 % / 25,86 % (con `@vitest/coverage-v8@2.1.9` instalado con `--no-save`) | `34-vitest-coverage.txt` |
+| Cobertura frontend (sentencias / ramas / funciones) | No medible | 41,51 % / 60,4 % / 27,52 % (con `@vitest/coverage-v8@2.1.9` instalado con `--no-save`; 31 pruebas) | `96-final-vitest-coverage.txt` |
 | Latencia p95 en proceso (memoria, 20 concurrentes, 1 000 peticiones) | No medido | 1,81–2,99 ms según escenario y corrida | `74-rendimiento-corrida{1,2,3}.txt` |
 
 Nota sobre la cobertura: el aumento de 38,7 % a 60,3 % se debe a las pruebas de regresión que añadió Calidad (matriz RBAC, DEF-05, DEF-08, DEF-27, DEF-28, DEF-41, H23 y RNF01); no se modificó ninguna prueba existente.

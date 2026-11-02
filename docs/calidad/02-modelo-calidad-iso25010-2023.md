@@ -48,7 +48,7 @@
 
 | Subcaracterística | Métrica | Fórmula | Umbral objetivo | Valor medido | Evidencia | Veredicto |
 |---|---|---|---|---|---|---|
-| Ausencia de fallos | Densidad de defectos (ISO 25023 RMa-1) | Defectos nuevos / KLOC productivas | ≤ 1,0 | 41 / 14,779 = **2,77** | `04-bitacora-defectos.md`, sección 4 | No cumple |
+| Ausencia de fallos | Densidad de defectos (ISO 25023 RMa-1) | Defectos nuevos / KLOC productivas | ≤ 1,0 | 44 / 14,779 = **2,98** | `04-bitacora-defectos.md`, sección 4 | No cumple |
 | Disponibilidad | Dependencias críticas verificadas por el healthcheck | Dependencias verificadas / críticas | 100 % | 0 / 1 = **0 %** | DEF-32 | No cumple |
 | Tolerancia a fallos | Escenarios de caída de la base de datos que terminan en fallo seguro | Seguros / evaluados | 100 % | 0 / 1 = **0 %** | DEF-10 | No cumple |
 | Recuperabilidad | Tiempo de restauración desde respaldo | Medición | Definir RTO | **No medido** (no hay procedimiento de respaldo) | — | Sin dato |
@@ -74,7 +74,7 @@
 | Analizabilidad | Complejidad ciclomática media y funciones por encima de 15 | Media de gocyclo / conteo | ≤ 10 / 0 | **3,5 / 1** | `evidencias/73-final-analisis.txt` | Parcial |
 | Modificabilidad | Código duplicado (jscpd, ≥ 70 tokens) | Líneas duplicadas / líneas | ≤ 5 % | Go **14,46 %**; frontend **3,26 %** | `evidencias/32-jscpd.txt` | Parcial |
 | Capacidad de prueba | Cobertura de sentencias del backend (ISO 25023 MTe) | `go tool cover` total | ≥ 70 % (meta del plan) | **60,3 %** (línea base 38,7 %) | `evidencias/71-final-go-test-tests.txt` | Parcial |
-| Capacidad de prueba | Cobertura de sentencias del frontend | vitest + v8 | ≥ 60 % | **40,9 %** (ramas 58,42 %, funciones 25,86 %) | `evidencias/34-vitest-coverage.txt` | No cumple |
+| Capacidad de prueba | Cobertura de sentencias del frontend | vitest + v8 | ≥ 60 % | **41,5 %** (ramas 60,4 %, funciones 27,5 %) | `evidencias/96-final-vitest-coverage.txt` | No cumple |
 | Reutilización | — | — | — | **No medido** | — | Sin dato |
 
 ### 2.8 Flexibilidad

@@ -14,15 +14,15 @@ Métricas, fórmulas y umbrales: [`calidad/02-modelo-calidad-iso25010-2023.md`](
 | 2. Eficiencia de desempeño | Verde | p95 entre 1,81 y 2,99 ms con 20 clientes concurrentes en proceso y almacén en memoria (emisión de prescripción, intercepción de alergia y lectura de historia). Las cifras anteriores (< 10 ms en memoria y < 35 ms con BD) no tenían registro de medición; la de memoria es compatible con lo medido y la de base de datos queda **No medida** (sin MySQL en el entorno de evaluación). | `calidad/anexos/evidencias/74-rendimiento-corrida*.txt` |
 | 3. Compatibilidad | Amarillo | Existen exportadores RIPS JSON y HL7 FHIR R4, con 10,5 % de cobertura de pruebas; la conformidad con los esquemas oficiales queda **No medida**. | `calidad/anexos/evidencias/72-final-cover-por-paquete.txt` |
 | 4. Capacidad de interacción | Rojo | El contraste mínimo de texto sobre los banners es 1,85:1, frente al 7:1 de WCAG AAA declarado en RF09 (DEF-36); 6 de 8 operaciones del cliente ocultan errores del servidor (DEF-22). | `calidad/anexos/evidencias/40-contraste-banners.txt` |
-| 5. Fiabilidad | Rojo | La conmutación automática a memoria cuando MySQL no responde, que la versión anterior presentaba como fortaleza, provoca pérdida silenciosa de registros (DEF-10). El healthcheck no verifica la base de datos (DEF-32). Densidad de defectos: 2,77 por KLOC. | `calidad/04-bitacora-defectos.md` |
+| 5. Fiabilidad | Rojo | La conmutación automática a memoria cuando MySQL no responde, que la versión anterior presentaba como fortaleza, provoca pérdida silenciosa de registros (DEF-10). El healthcheck no verifica la base de datos (DEF-32). Densidad de defectos: 2,98 por KLOC. | `calidad/04-bitacora-defectos.md` |
 | 6. Seguridad | Rojo | Cumplimiento estricto de OWASP ASVS 4.0.3 L2 del 34,0 % sobre 53 requisitos. Bcrypt, JWT firmado y TOTP existen, pero con credenciales sembradas (DEF-11), tokens no revocables (DEF-13) y MFA desactivable (DEF-14). La matriz RBAC es correcta en 110 de 110 combinaciones. | `calidad/05-auditoria-owasp-asvs-l2.md`, `calidad/anexos/matriz-rbac.md` |
-| 7. Mantenibilidad | Amarillo | Se verificó la arquitectura hexagonal: el dominio no importa adaptadores. Complejidad ciclomática media de 3,5. Duplicación del 14,46 % entre adaptadores MySQL y PostgreSQL. Cobertura del backend: 60,3 % (38,7 % antes de la auditoría); del frontend: 40,9 %. | `calidad/anexos/analisis-estatico.md` |
+| 7. Mantenibilidad | Amarillo | Se verificó la arquitectura hexagonal: el dominio no importa adaptadores. Complejidad ciclomática media de 3,5. Duplicación del 14,46 % entre adaptadores MySQL y PostgreSQL. Cobertura del backend: 60,3 % (38,7 % antes de la auditoría); del frontend: 41,5 %. | `calidad/anexos/analisis-estatico.md` |
 | 8. Flexibilidad | Amarillo | El adaptador de persistencia se reemplaza por configuración, pero los triggers de inmutabilidad solo existen en MySQL (DEF-25). Compila y se ejecuta en Windows; Docker Compose queda **No medido**. | `calidad/anexos/linea-base.md` |
 | 9. Seguridad operacional (*Safety*) | Rojo | El cruce de alergias no detecta reactividad cruzada (DEF-06) y la hipotermia severa se clasifica como no urgente (DEF-09). Se corrigieron en la rama la prescripción con un paciente distinto al del folio (DEF-05), los niveles Manchester inválidos (DEF-08) y la frecuencia cardíaca mayor de 300 lpm (DEF-27). | `calidad/04-bitacora-defectos.md` |
 
 ## 2. Bitácora de defectos
 
-La bitácora completa, con DEF-05 a DEF-45 y la verificación de las correcciones históricas, está en [`calidad/04-bitacora-defectos.md`](calidad/04-bitacora-defectos.md). Los registros DEF-01 a DEF-04 se conservan abajo **sin modificar su contenido original**, incluida su ortografía, porque forman parte del historial del proyecto.
+La bitácora completa, con DEF-05 a DEF-48 y la verificación de las correcciones históricas, está en [`calidad/04-bitacora-defectos.md`](calidad/04-bitacora-defectos.md). Los registros DEF-01 a DEF-04 se conservan abajo **sin modificar su contenido original**, incluida su ortografía, porque forman parte del historial del proyecto.
 
 | ID Defecto | Modulo Afectado | Severidad | Descripcion | Causa Raiz | Estrategia de Solucion |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -40,7 +40,7 @@ La bitácora completa, con DEF-05 a DEF-45 y la verificación de las correccione
 
 Detalle en la bitácora.
 
-Resumen de los defectos nuevos: 41, de los cuales 7 son Críticos, 15 Altos, 14 Medios y 5 Bajos; 6 se corrigieron en la rama de auditoría con una prueba de regresión que falla antes y pasa después.
+Resumen de los defectos nuevos: 44, de los cuales 7 son Críticos, 16 Altos, 15 Medios y 6 Bajos; 8 se corrigieron en la rama de auditoría con una prueba de regresión que falla antes y pasa después.
 
 ## 3. Acciones de mantenimiento
 
@@ -52,6 +52,6 @@ Resumen de los defectos nuevos: 41, de los cuales 7 son Críticos, 15 Altos, 14 
 
 ### 3.2 Acciones ejecutadas en la auditoría de calidad
 
-- Correcciones con prueba de regresión: DEF-05, DEF-08 (parcial), DEF-12, DEF-27, DEF-28 y DEF-41.
+- Correcciones con prueba de regresión: DEF-05, DEF-08 (parcial), DEF-12, DEF-27, DEF-28, DEF-41, DEF-46 y DEF-47 (las dos últimas, detectadas por el propio pipeline).
 - Pipeline de calidad [`.github/workflows/calidad.yml`](../.github/workflows/calidad.yml), configuración [`.golangci.yml`](../.golangci.yml), ESLint del frontend y plantillas de PR y de defecto.
-- Plan de mantenimiento ISO/IEC 14764 con 44 acciones priorizadas: [`calidad/06-plan-mantenimiento.md`](calidad/06-plan-mantenimiento.md).
+- Plan de mantenimiento ISO/IEC 14764 con 47 acciones priorizadas: [`calidad/06-plan-mantenimiento.md`](calidad/06-plan-mantenimiento.md).

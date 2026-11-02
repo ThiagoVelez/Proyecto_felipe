@@ -18,11 +18,12 @@ Todas las cifras tienen su comando y su salida en `anexos/evidencias/`.
 
 | Indicador | Valor |
 |---|---|
-| Defectos nuevos registrados | 41: 7 Críticos, 15 Altos, 14 Medios, 5 Bajos (2,77 por KLOC) |
-| Corregidos en esta rama, con prueba que falla antes y pasa después | 6 (DEF-05, 08, 12, 27, 28, 41) |
-| Defectos reproducidos por una prueba automatizada | 17 de 41 |
+| Defectos nuevos registrados | 44: 7 Críticos, 16 Altos, 15 Medios, 6 Bajos (2,98 por KLOC) |
+| Corregidos en esta rama, con prueba que falla antes y pasa después | 8 (DEF-05, 08, 12, 27, 28, 41, 46, 47) |
+| Detectados por el pipeline de CI | 3: una carrera de datos real (DEF-46), un TOTP falso sin Web Crypto (DEF-47) y una prueba frágil bajo `-race` (DEF-48) |
+| Defectos reproducidos por una prueba automatizada | 21 de 44 |
 | Cobertura de pruebas del backend | 38,7 % -> 60,3 % |
-| Cobertura de pruebas del frontend | 40,9 % (antes no era medible) |
+| Cobertura de pruebas del frontend | 41,5 % (antes no era medible) |
 | Cumplimiento OWASP ASVS L2 (muestra de 53 requisitos) | 34,0 % (el README afirma nivel 2) |
 | Matriz de permisos ruta x rol | 110 de 110 combinaciones correctas |
 | Latencia p95 en proceso (prescripción y lectura) | ≤ 2,99 ms (meta < 400 ms; sin red ni MySQL) |

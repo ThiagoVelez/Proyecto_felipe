@@ -1,0 +1,17 @@
+$ npx vitest run ../../tests/frontend/totp.regression.test.js  (ANTES)
+   × DEF-47 - TOTP sin Web Crypto disponible > cumple los vectores RFC 6238 cuando importKey falla 16ms
+   × DEF-47 - TOTP sin Web Crypto disponible > cumple los vectores RFC 6238 cuando crypto.subtle no existe (contexto no seguro) 2ms
+   × DEF-47 - TOTP sin Web Crypto disponible > depende del instante solicitado y no del reloj actual 2ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  ../../tests/frontend/totp.regression.test.js > DEF-47 - TOTP sin Web Crypto disponible > cumple los vectores RFC 6238 cuando importKey falla
+AssertionError: expected '677088' to be '287082' // Object.is equality
+Expected: "287082"
+Received: "677088"
+ FAIL  ../../tests/frontend/totp.regression.test.js > DEF-47 - TOTP sin Web Crypto disponible > cumple los vectores RFC 6238 cuando crypto.subtle no existe (contexto no seguro)
+AssertionError: expected '677088' to be '287082' // Object.is equality
+Expected: "287082"
+Received: "677088"
+ FAIL  ../../tests/frontend/totp.regression.test.js > DEF-47 - TOTP sin Web Crypto disponible > depende del instante solicitado y no del reloj actual
+AssertionError: expected '677088' not to be '677088' // Object.is equality
+      Tests  3 failed (3)
+exit=1

@@ -56,6 +56,9 @@
 | M-42 | Auditoría | Preventiva | Pipeline `calidad.yml`, `.golangci.yml`, ESLint y plantillas de PR y de defecto | S | Regresiones sin detectar | RC | P1 | Hecho (rama) |
 | M-43 | Auditoría | Preventiva | Lista «En revisión de calidad» en Trello (ver `trello-tarjetas-defectos.md`) | S | Tarjetas cerradas sin verificación | RC | P2 | Propuesto (Trello) |
 | M-44 | Auditoría | Preventiva | Volver bloqueantes gosec, govulncheck, staticcheck y `npm audit` completo cuando se cierren DEF-11, 24, 44 y 45; subir el umbral de cobertura del 60 % al 70 % | S | Deuda de seguridad aceptada indefinidamente | RC | P3 | Propuesto |
+| M-45 | DEF-46 | Correctiva | Devolver copias del catálogo de medicamentos en el adaptador en memoria | S | Carrera de datos en prescripciones concurrentes | RC | P2 | Hecho (rama) |
+| M-46 | DEF-47 | Correctiva | HMAC-SHA1 local para TOTP cuando Web Crypto no está disponible | S | Códigos MFA falsos fuera de contexto seguro | RC | P2 | Hecho (rama) |
+| M-47 | DEF-48 | Preventiva | Usar `app.Test(req, -1)` en `staff_register_routes_test.go` y retirar el `-skip` del paso `-race` de `calidad.yml` | S | Prueba excluida del detector de carreras | RP | P3 | Propuesto (a RP) |
 
 ## 3. Matriz impacto x esfuerzo
 
@@ -63,9 +66,9 @@ El impacto se deriva de la severidad del defecto de origen (Crítica o Alta = al
 
 | | **Esfuerzo S** | **Esfuerzo M** | **Esfuerzo L** |
 |---|---|---|---|
-| **Impacto alto** | M-01 (H), M-05 (H), M-08, M-09, M-10 (H), M-13, M-15, M-17, M-20, M-24 (H), M-42 (H) | M-03, M-04, M-07, M-11, M-12, M-14, M-21, M-22 | M-16, M-18 |
-| **Impacto medio** | M-02, M-06, M-23 (H), M-27, M-28, M-30, M-31, M-32, M-33, M-34, M-36 | M-25, M-26, M-29, M-35 | — |
-| **Impacto bajo** | M-37 (H), M-38, M-39, M-43, M-44 | M-40, M-41 | M-19 |
+| **Impacto alto** | M-01 (H), M-05 (H), M-08, M-09, M-10 (H), M-13, M-15, M-17, M-20, M-24 (H), M-42 (H), M-46 (H) | M-03, M-04, M-07, M-11, M-12, M-14, M-21, M-22 | M-16, M-18 |
+| **Impacto medio** | M-02, M-06, M-23 (H), M-27, M-28, M-30, M-31, M-32, M-33, M-34, M-36, M-45 (H) | M-25, M-26, M-29, M-35 | — |
+| **Impacto bajo** | M-37 (H), M-38, M-39, M-43, M-44, M-47 | M-40, M-41 | M-19 |
 
 (H) = hecho en la rama.
 
@@ -85,4 +88,4 @@ Siguiente candidata, por su bajo esfuerzo: **M-18 parcial**, es decir, solo `str
 
 | Hecho por Calidad | Propuesto (requiere al equipo) |
 |---|---|
-| M-01, M-05, M-10, M-23, M-24, M-37, M-42, parte de M-35 | El resto. Las que requieren decisión del equipo por esquema, API, arquitectura o comportamiento documentado son M-02, M-03, M-04, M-06, M-08, M-11, M-12, M-14, M-16, M-19, M-21, M-22, M-25, M-26 y M-29. |
+| M-01, M-05, M-10, M-23, M-24, M-37, M-42, M-45, M-46, parte de M-35 | El resto. Las que requieren decisión del equipo por esquema, API, arquitectura o comportamiento documentado son M-02, M-03, M-04, M-06, M-08, M-11, M-12, M-14, M-16, M-19, M-21, M-22, M-25, M-26 y M-29. |

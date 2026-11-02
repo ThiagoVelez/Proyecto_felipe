@@ -41,7 +41,7 @@
 | H23 | Valores límite de triaje | **Confirmada (DEF-27)**, corregida para FC | Glasgow 2/3/15/16 correctos (`TestH23…` y `triage_test.go`); FC 0 rechazada, FC 1 y 300 aceptadas, FC 301 aceptada antes de la corrección. Hallazgo colateral: DEF-09. |
 | H24 | Conmutación silenciosa a memoria | **Confirmada (DEF-10)** | Registro de arranque real en `evidencias/59-def12-antes.txt`. |
 | H25 | Idempotencia, atomicidad, conflictos y firma en lotes | **Confirmada (DEF-07, DEF-18, DEF-19)** | Reenvío destructivo en memoria y fallido en MySQL; los registros con paciente inexistente se omiten en silencio (`sync_service.go:40-42`) y la respuesta solo informa el total; en conflictos entre dispositivos gana la última escritura; no hay validación de firma. Atomicidad: transacción única en MySQL (`clinical_record_repo.go:210`). |
-| H26 | DEF-03: la goroutine ya no lee `fiber.Ctx` | **Confirmada parcialmente (DEF-28)**, corregida | La goroutine no recibe `Ctx`, pero las cadenas apuntaban a búferes reciclados. `-race`: **No verificable** en local (sin cgo); se ejecuta en CI. |
+| H26 | DEF-03: la goroutine ya no lee `fiber.Ctx` | **Confirmada parcialmente (DEF-28)**, corregida | La goroutine no recibe `Ctx`, pero las cadenas apuntaban a búferes reciclados. `-race` en CI (run `41361540450`) no reportó carreras en el middleware de auditoría, pero sí dos carreras reales del adaptador en memoria: DEF-37 y DEF-46 (`evidencias/89-…`). |
 | H27 | Healthcheck sin base de datos | **Confirmada (DEF-32)** | `router.go:24-30`. |
 | H28 | `core/` importa adaptadores o drivers | **Refutada** | `go list` muestra que `core/*` importa solo `domain`, `ports`, `pkg/crypto`, `uuid` y la biblioteca estándar. `database/sql/driver` entra como dependencia transitiva de `google/uuid` (solo interfaces), no por uso directo (`evidencias/41-arquitectura.txt`). |
 | H29 | `tests/backend` usa copias o *mocks* triviales | **Refutada**, con observación | Importa los paquetes reales mediante `replace ../../src/backend`; sin embargo, algunos *fixtures* hacen pasar los casos de forma trivial (DEF-40). |
@@ -146,5 +146,7 @@ Riesgo: registros clínicos que «se guardan» y desaparecen al reiniciar. Recom
 | `fix(DEF-28)` | DEF-28 | `middlewares/audit_middleware.go` | `tests/backend/auditoria_concurrencia_regression_test.go` |
 | `fix(DEF-41)` | DEF-41 | `middlewares/audit_middleware.go` | `tests/backend/correlacion_id_regression_test.go` |
 | `fix(DEF-12)` | DEF-12 | `cmd/api/main.go`, `.env.example` | `src/backend/cmd/api/main_regression_test.go` |
+| `fix(DEF-46)` | DEF-46 | `storage/memory/memory_repos.go` | `tests/backend/catalogo_aliasing_regression_test.go` |
+| `fix(DEF-47)` | DEF-47 | `src/frontend/src/utils/totp.js` | `tests/frontend/totp.regression.test.js` |
 
 Ninguna corrección cambia el esquema de base de datos ni la arquitectura. DEF-05 y DEF-08 agregan respuestas 422 nuevas ante entradas que antes se aceptaban por error; el contrato de las peticiones válidas no cambia.
