@@ -1,0 +1,11 @@
+$ go test -count=1 -v -run TestDEF46 ./...  (DESPUES)
+=== RUN   TestDEF46CatalogoNoExponePunteroInterno
+--- PASS: TestDEF46CatalogoNoExponePunteroInterno (0.74s)
+=== RUN   TestDEF46PrescripcionesConcurrentesSinCarrera
+--- PASS: TestDEF46PrescripcionesConcurrentesSinCarrera (0.65s)
+PASS
+ok  	saludconecta-tests	1.457s
+exit=0
+$ go test -count=1 ./...
+ok  	saludconecta-tests	10.275s
+exit=0

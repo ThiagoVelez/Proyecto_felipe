@@ -88,7 +88,7 @@ En verificación -> En corrección       (si la verificación falla)
 | Go | gosec | v2.30.0 | Informativo hasta cerrar DEF-11 |
 | Go | govulncheck | v1.9.0 | Informativo hasta cerrar DEF-24 |
 | Go | gocyclo (umbral 15) | v0.6.0 | Informativo |
-| Go | `go test -race -cover` | — | Bloqueante, umbral de cobertura |
+| Go | `go test -race` y `go test -cover` | — | Bloqueante, umbral de cobertura (el paso `-race` excluye temporalmente la prueba de DEF-48) |
 | JS | ESLint (`src/frontend/eslint.config.js`) | 9.17.0 | Bloqueante (errores) |
 | JS | Vitest + `@vitest/coverage-v8` | 2.1.9 | Bloqueante |
 | JS | `npm audit --omit=dev --audit-level=high` | npm del runner | Bloqueante |
@@ -101,10 +101,10 @@ En verificación -> En corrección       (si la verificación falla)
 | Métrica | Valor al cierre de la auditoría | Objetivo de la entrega final | Objetivo a mediano plazo |
 |---|---|---|---|
 | Cobertura de sentencias del backend | 60,3 % | ≥ 60 % (umbral del pipeline) | ≥ 70 % |
-| Cobertura de sentencias del frontend | 40,9 % | ≥ 40 % | ≥ 60 % |
+| Cobertura de sentencias del frontend | 41,5 % | ≥ 40 % | ≥ 60 % |
 | Defectos Críticos abiertos | 5 abiertos y 2 en verificación | 0 | 0 |
-| Defectos Altos abiertos | 14 abiertos y 1 en verificación | ≤ 5, con plan | 0 |
-| Densidad de defectos | 2,77 / KLOC | — | ≤ 1,0 / KLOC |
+| Defectos Altos abiertos | 14 abiertos y 2 en verificación | ≤ 5, con plan | 0 |
+| Densidad de defectos | 2,98 / KLOC | — | ≤ 1,0 / KLOC |
 | Cumplimiento estricto ASVS L2 (muestra) | 34,0 % | ≥ 60 % | 100 % |
 | Vulnerabilidades alcanzables (govulncheck) | 1 | 0 | 0 |
 | Vulnerabilidades de producción (npm) | 0 | 0 | 0 |

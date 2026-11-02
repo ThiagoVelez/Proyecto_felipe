@@ -10,7 +10,7 @@
 cd tests/backend && CALIDAD_DEFECTOS_ABIERTOS=1 go test -count=1 -v -run TestDEF ./...
 ```
 
-Salida registrada: `anexos/evidencias/43-defectos-abiertos.txt` (11 fallos reproducidos; DEF-37 requiere `-race`).
+Salida registrada: `anexos/evidencias/43-defectos-abiertos.txt` (11 fallos reproducidos en local; DEF-37 requiere `-race` y se confirmó en CI, `anexos/evidencias/89b-ci-defectos-abiertos-race.txt`).
 
 ---
 
@@ -63,7 +63,7 @@ El contenido de las columnas originales se transcribe sin cambios desde `docs/in
 | DEF-34 | Exponer MySQL y el backend al host con credenciales en texto plano | Infra | Media | P2 | Confirmado |
 | DEF-35 | Omitir CSP y HSTS y perder cabeceras de seguridad en activos estáticos | Infra | Media | P3 | Confirmado |
 | DEF-36 | Incumplir el contraste WCAG AAA declarado en los banners de perfil | Frontend | Media | P3 | Confirmado |
-| DEF-37 | Escribir bajo `RLock` en `ClinicalRecordMemoryRepo.GetByID` | Backend | Media | P3 | Nuevo (requiere `-race`) |
+| DEF-37 | Escribir bajo `RLock` en `ClinicalRecordMemoryRepo.GetByID` | Backend | Media | P3 | Confirmado (con `-race` en CI) |
 | DEF-38 | Ignorar errores del descuento de inventario y validar stock sin atomicidad | Backend | Media | P3 | Confirmado |
 | DEF-39 | Publicar documentación inconsistente y cifras no medidas | Documentación | Media | P2 | En corrección (parcial en rama) |
 | DEF-40 | Mantener pruebas que pasan de forma trivial y cobertura frontend no ejecutable | Pruebas | Media | P2 | Confirmado |
@@ -72,6 +72,11 @@ El contenido de las columnas originales se transcribe sin cambios desde `docs/in
 | DEF-43 | Usar datos personales de apariencia real en semillas y simulaciones | Documentación / Datos | Baja | P3 | Confirmado |
 | DEF-44 | Acumular deuda técnica estática (errcheck, complejidad, duplicación, archivos grandes) | Backend / Frontend | Baja | P4 | Confirmado |
 | DEF-45 | Mantener vulnerabilidades en dependencias de desarrollo JS | Frontend | Baja | P4 | Confirmado |
+| DEF-46 | Exponer el puntero interno del catálogo de medicamentos y provocar una carrera de datos | Backend | Media | P2 | En verificación (corregido en rama) |
+| DEF-47 | Calcular un TOTP ajeno al secreto cuando Web Crypto no está disponible | Frontend | Alta | P2 | En verificación (corregido en rama) |
+| DEF-48 | Mantener una prueba con timeout fijo de 1 s que falla bajo `-race` | Pruebas | Baja | P3 | Confirmado (mitigado en CI; corrección propuesta a Pruebas) |
+
+Los defectos DEF-46 a DEF-48 se detectaron en la primera ejecución del pipeline `calidad` sobre el PR (run `41361540450`, `anexos/evidencias/89-ci-run-41361540450.txt`).
 
 ---
 
@@ -599,11 +604,11 @@ El contenido de las columnas originales se transcribe sin cambios desde `docs/in
 | Tipo (IEEE 1044) | Lógica (concurrencia) |
 | Severidad / Prioridad | Media / P3 |
 | Pasos para reproducir | Lecturas concurrentes de un folio con aclaraciones bajo `go test -race`. |
-| Resultado esperado / obtenido | Sin carreras / Por análisis, carrera de datos: `rec.Clarifications = clar` (`memory_repos.go:368`) escribe en el registro compartido con un candado de lectura; además, `GetByID` devuelve el puntero interno, de modo que el llamador puede mutar el almacén. |
-| Evidencia | Prueba abierta `TestDEF37…`, que solo detecta el defecto con `-race`. **No verificado** en local (sin cgo); el job `backend-defectos-abiertos` de `calidad.yml` la ejecuta con `-race`. |
-| Causa raíz | Mutación dentro de una lectura. |
+| Resultado esperado / obtenido | Sin carreras / `WARNING: DATA RACE` en `rec.Clarifications = clar` (`memory_repos.go:368`), que escribe en el registro compartido con un candado de lectura; además, `GetByID` devuelve el puntero interno, de modo que el llamador puede mutar el almacén. |
+| Evidencia | Prueba abierta `TestDEF37…`. No reproducible en local (sin cgo). **Confirmado en CI** por el job `backend-defectos-abiertos` con `-race`: «race detected during execution of test» (`evidencias/89b-ci-defectos-abiertos-race.txt`). |
+| Causa raíz | Mutación dentro de una lectura. Es el mismo patrón de puntero compartido que DEF-46. |
 | Acción propuesta | M-33: devolver una copia y adjuntar las aclaraciones a la copia. |
-| Estado | Nuevo (pendiente de confirmar en CI). |
+| Estado | Confirmado. |
 
 ### DEF-38. Ignorar errores del descuento de inventario y validar stock sin atomicidad
 
@@ -733,35 +738,83 @@ El contenido de las columnas originales se transcribe sin cambios desde `docs/in
 | Acción propuesta | M-41: migrar a Vite y Vitest vigentes en una rama dedicada (cambio mayor que puede romper la configuración de pruebas). |
 | Estado | Confirmado. |
 
+### DEF-46. Exponer el puntero interno del catálogo de medicamentos y provocar una carrera de datos
+
+| Campo | Contenido |
+|---|---|
+| Módulo | Backend |
+| Requisito afectado | RF05, RNF01 |
+| Característica ISO 25010:2023 | Fiabilidad -> Madurez; Adecuación funcional -> Corrección |
+| Tipo (IEEE 1044) | Lógica (concurrencia) |
+| Severidad / Prioridad | Media / P2 (el adaptador en memoria es el que queda activo en producción por DEF-10) |
+| Pasos para reproducir | 1. `cd tests/backend && go test -race -run TestRNF01 ./...` con prescripciones concurrentes del mismo medicamento. 2. Alternativa determinista: modificar el `StockQuantity` del medicamento devuelto por `GetMedicationByID` y volver a consultarlo. |
+| Resultado esperado / obtenido | Sin carreras; el inventario no cambia al modificar la copia / `WARNING: DATA RACE`: `DeductStock` escribe `StockQuantity` bajo `Lock` (`memory_repos.go:506`) mientras el servicio lo lee sin candado (`prescription_service.go:79`) y `c.JSON` serializa el mismo struct (`prescription_handler.go:106`); son líneas de la rama según la traza de CI, que equivalen a `:72` y `:101` en `6492f07`. En la prueba determinista, el inventario almacenado pasa de 10 a 0. |
+| Evidencia | CI, run `41361540450` (`evidencias/89-ci-run-41361540450.txt`); prueba `TestDEF46…`: falla antes (`90-def46-antes.txt`) y pasa después (`91-def46-despues.txt`). La verificación con `-race` corresponde al pipeline (no hay cgo en el entorno local). |
+| Causa raíz | `GetMedicationByID` (`memory_repos.go:471-479` en `6492f07`) devolvía el puntero almacenado, así que el candado no protegía las lecturas posteriores. |
+| Acción propuesta | M-45 (corregido): devolver una copia. La validación de stock sigue sin ser atómica (DEF-38, M-34). |
+| Estado | En verificación: commit `fix(DEF-46)`; queda pendiente confirmar el pipeline en verde. |
+
+### DEF-47. Calcular un TOTP ajeno al secreto cuando Web Crypto no está disponible
+
+| Campo | Contenido |
+|---|---|
+| Módulo | Frontend |
+| Requisito afectado | RF01 |
+| Característica ISO 25010:2023 | Seguridad -> Autenticidad; Fiabilidad -> Ausencia de fallos |
+| Tipo (IEEE 1044) | Lógica (cálculo) |
+| Severidad / Prioridad | Alta / P2 |
+| Pasos para reproducir | 1. Ejecutar `calculateTotpCode('GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ', 59000)` en un entorno donde `crypto.subtle` no existe o falla: Node 20.18.1 con jsdom (CI) o un navegador que abre la aplicación por `http://<ip-de-la-red-local>`, que no es un contexto seguro. 2. Comparar con el vector RFC 6238 `287082`. |
+| Resultado esperado / obtenido | `287082` / Un valor distinto en cada ejecución (`988480` y `747488` en dos corridas de CI; `677088` en local), porque el respaldo calculaba `(Date.now()/30000 * 2654435761) % 1000000` sin usar el secreto ni el instante solicitado. |
+| Evidencia | `src/frontend/src/utils/totp.js:93-98` (base). Prueba existente `tests/frontend/totp.test.js:23`, que falla en CI (`89-ci-run-41361540450.txt`); prueba nueva `tests/frontend/totp.regression.test.js` con 4 vectores RFC 6238: falla antes (`92-def47-antes.txt`) y pasa después (`93-def47-despues.txt`). |
+| Causa raíz | Un «fallback matemático» de demostración en lugar de una implementación de HMAC-SHA1. Agrava DEF-23: fuera de contexto seguro, la validación previa del cliente rechaza todos los códigos reales y la pantalla de MFA muestra códigos falsos. |
+| Acción propuesta | M-46 (corregido): HMAC-SHA1 local (RFC 2104 y FIPS 180-4) cuando Web Crypto falta o falla, y contador de 64 bits. M-18 sigue vigente: el servidor debe ser la única fuente de verdad del TOTP. |
+| Estado | En verificación: commit `fix(DEF-47)`. |
+
+### DEF-48. Mantener una prueba con timeout fijo de 1 s que falla bajo `-race`
+
+| Campo | Contenido |
+|---|---|
+| Módulo | Pruebas |
+| Requisito afectado | RF07 |
+| Característica ISO 25010:2023 | Mantenibilidad -> Capacidad de ser probado |
+| Tipo (IEEE 1044) | Lógica de prueba |
+| Severidad / Prioridad | Baja / P3 |
+| Pasos para reproducir | `cd tests/backend && CGO_ENABLED=1 go test -race -run TestStaffRegisterRequiresAdmin ./...` en Linux. |
+| Resultado esperado / obtenido | La prueba pasa / `test: timeout error 1000ms` en el caso «admin con rol admin», y en consecuencia «El registro del administrador no creo la cuenta». |
+| Evidencia | `tests/backend/staff_register_routes_test.go:66` usa `app.Test(req)`, cuyo timeout por defecto es de 1 s. El registro ejecuta Bcrypt con coste 12, que bajo la instrumentación de `-race` supera ese límite (en el mismo run, cada prueba que crea `memory.NewDataStore()`, con dos hashes de coste 12, tarda unos 4,7 s). Falló igual en los runs `41356845373` y `41361540450`. **No es una condición de carrera:** el detector no reportó ningún acceso concurrente en esa prueba. |
+| Causa raíz | Timeout de prueba acoplado al rendimiento del entorno. |
+| Acción propuesta | M-47 (propuesta al Responsable de Pruebas; Calidad no modifica sus pruebas): usar `app.Test(req, -1)` o un timeout explícito amplio. Mitigación en CI: el paso con `-race` excluye solo esa prueba (`-skip '^TestStaffRegisterRequiresAdmin$'`) y el paso siguiente ejecuta la suite completa sin `-race`, del que se toma la cobertura. Al corregirse la prueba se debe retirar el `-skip`. |
+| Estado | Confirmado (mitigado). |
+
 ---
 
 ## 4. Métricas de la bitácora
 
-Universo: 41 defectos nuevos (DEF-05 a DEF-45). Tamaño del código productivo: 14,779 KLOC (`anexos/linea-base.md`, A.2).
+Universo: 44 defectos nuevos (DEF-05 a DEF-48). Tamaño del código productivo: 14,779 KLOC (`anexos/linea-base.md`, A.2).
 
 ### 4.1 Por severidad
 
 | Severidad | Cantidad | % |
 |---|---|---|
-| Crítica | 7 | 17,1 % |
-| Alta | 15 | 36,6 % |
-| Media | 14 | 34,1 % |
-| Baja | 5 | 12,2 % |
-| **Total** | **41** | 100 % |
+| Crítica | 7 | 15,9 % |
+| Alta | 16 | 36,4 % |
+| Media | 15 | 34,1 % |
+| Baja | 6 | 13,6 % |
+| **Total** | **44** | 100 % |
 
 ### 4.2 Por módulo (módulo principal)
 
 | Módulo | Cantidad | Defectos |
 |---|---|---|
-| Backend | 22 | 05, 06, 07, 08, 09, 10, 12, 13, 14, 16, 17, 18, 24, 26, 27, 28, 29, 30, 31, 37, 38, 41 |
+| Backend | 23 | 05, 06, 07, 08, 09, 10, 12, 13, 14, 16, 17, 18, 24, 26, 27, 28, 29, 30, 31, 37, 38, 41, 46 |
 | Backend / Infra | 2 | 15, 32 |
-| Frontend | 6 | 21, 22, 23, 33, 36, 45 |
+| Frontend | 7 | 21, 22, 23, 33, 36, 45, 47 |
 | BD | 5 | 11, 19, 20, 25, 42 |
 | Infra | 2 | 34, 35 |
 | Documentación / datos | 2 | 39, 43 |
-| Pruebas | 1 | 40 |
+| Pruebas | 2 | 40, 48 |
 | Backend / Frontend | 1 | 44 |
-| **Total** | **41** | |
+| **Total** | **44** | |
 
 ### 4.3 Por característica ISO/IEC 25010:2023
 
@@ -769,14 +822,14 @@ Se cuenta la característica principal, que es la primera indicada en cada ficha
 
 | Característica | Cantidad | Defectos |
 |---|---|---|
-| Seguridad | 24 | 07, 11, 12, 13, 14, 15, 16, 17, 18, 20, 22, 24, 25, 28, 29, 30, 31, 33, 34, 35, 41, 42, 43, 45 |
+| Seguridad | 25 | 07, 11, 12, 13, 14, 15, 16, 17, 18, 20, 22, 24, 25, 28, 29, 30, 31, 33, 34, 35, 41, 42, 43, 45, 47 |
 | Adecuación funcional | 5 | 21, 23, 26, 27, 38 |
+| Fiabilidad | 5 | 10, 19, 32, 37, 46 |
 | Seguridad operacional (*Safety*) | 4 | 05, 06, 08, 09 |
-| Fiabilidad | 4 | 10, 19, 32, 37 |
-| Mantenibilidad | 3 | 39, 40, 44 |
+| Mantenibilidad | 4 | 39, 40, 44, 48 |
 | Capacidad de interacción | 1 | 36 |
 | Eficiencia de desempeño, Compatibilidad, Flexibilidad | 0 | — (Flexibilidad aparece como secundaria en DEF-25) |
-| **Total** | **41** | |
+| **Total** | **44** | |
 
 Si se cuenta también la característica secundaria, la Seguridad operacional (*Safety*) afecta a 8 defectos: 05, 06, 07, 08, 09, 10, 21 y 27. Seis de los siete defectos Críticos tienen impacto directo de *Safety*; la excepción es DEF-11, cuyo impacto es de autenticidad.
 
@@ -784,9 +837,10 @@ Si se cuenta también la característica secundaria, la Seguridad operacional (*
 
 | Indicador | Fórmula | Valor |
 |---|---|---|
-| Densidad de defectos nuevos | 41 / 14,779 KLOC | **2,77 defectos/KLOC** |
-| Densidad total (incluye DEF-01 a DEF-04) | 45 / 14,779 | 3,04 defectos/KLOC |
-| Densidad de Crítica + Alta | 22 / 14,779 | 1,49 defectos/KLOC |
-| Defectos corregidos en esta rama | 6 de 41 | 14,6 % (DEF-05, 08 parcial, 12, 27, 28, 41) |
-| Defectos con prueba que los reproduce | 17 de 41 | 41,5 % (11 abiertos + 6 corregidos) |
+| Densidad de defectos nuevos | 44 / 14,779 KLOC | **2,98 defectos/KLOC** |
+| Densidad total (incluye DEF-01 a DEF-04) | 48 / 14,779 | 3,25 defectos/KLOC |
+| Densidad de Crítica + Alta | 23 / 14,779 | 1,56 defectos/KLOC |
+| Defectos corregidos en esta rama | 8 de 44 | 18,2 % (DEF-05, 08 parcial, 12, 27, 28, 41, 46, 47) |
+| Defectos con prueba que los reproduce | 21 de 44 | 47,7 % (11 abiertos reproducidos en local, DEF-37 y DEF-48 en CI, 8 corregidos) |
+| Defectos detectados por el pipeline de CI | 3 | DEF-46, DEF-47 y DEF-48, más la confirmación de DEF-37 |
 | Correcciones históricas verificadas como completas | 1 de 4 | DEF-04 (DEF-01, 02 y 03 parciales) |

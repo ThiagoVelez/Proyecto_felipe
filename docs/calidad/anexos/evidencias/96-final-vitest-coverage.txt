@@ -1,0 +1,8 @@
+$ npx vitest run --coverage --coverage.reporter=text-summary
+ Test Files  5 passed (5)
+      Tests  31 passed (31)
+Statements   : 41.51% ( 2907/7002 )
+Branches     : 60.4% ( 241/399 )
+Functions    : 27.52% ( 49/178 )
+Lines        : 41.51% ( 2907/7002 )
+exit=0

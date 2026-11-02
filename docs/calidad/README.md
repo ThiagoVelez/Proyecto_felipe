@@ -57,7 +57,7 @@ La tercera orden ejecuta las pruebas de los defectos abiertos, que **deben falla
 
 Todos están en archivos nuevos o son correcciones pequeñas, una por commit:
 
-- **Correcciones (`fix(DEF-XX)`):** DEF-05, DEF-08, DEF-12, DEF-27, DEF-28 y DEF-41. Cada una tiene una prueba de regresión que falla antes y pasa después (evidencias `50` a `60`).
+- **Correcciones (`fix(DEF-XX)`):** DEF-05, DEF-08, DEF-12, DEF-27, DEF-28, DEF-41, DEF-46 y DEF-47. Cada una tiene una prueba de regresión que falla antes y pasa después (evidencias `50` a `60` y `90` a `93`). DEF-46 y DEF-47 las detectó el pipeline en el PR (`evidencias/89-ci-run-41361540450.txt`).
 - **Pruebas nuevas (archivos `*_regression_test.go`):** matriz RBAC, defectos abiertos, H21, H23 y rendimiento RNF01.
 - **Automatización:** `calidad.yml`, `.golangci.yml`, `src/frontend/eslint.config.js`, `.github/PULL_REQUEST_TEMPLATE.md` y `.github/ISSUE_TEMPLATE/defecto.yml`.
 - **Documentación:** este paquete, `docs/informe-calidad.md` (reescrito) y, en `README.md`, solo las listas de Trello, el rango de requisitos y el badge.
@@ -68,9 +68,9 @@ Todos están en archivos nuevos o son correcciones pequeñas, una por commit:
 |---|---|---|
 | [x] Cada cifra de los entregables tiene comando y evidencia, o está marcada como «No medido» | Cumplido | Columnas «Evidencia» de cada documento; `anexos/evidencias/` |
 | [x] Las 33 hipótesis tienen veredicto | Cumplido: 22 confirmadas (3 parcialmente), 10 refutadas y 1 dividida | `03-informe-revision-codigo.md`, sección 2 |
-| [ ] Cada defecto nuevo es reproducible y trazable a un RF/RNF y a una característica ISO 25010:2023 | **Parcial.** Los 41 tienen pasos, RF/RNF y característica. 17 se reproducen con una prueba automatizada; DEF-19 y DEF-20 (requieren MySQL) y DEF-37 (requiere `-race`) quedan como «Nuevo» hasta reproducirse en CI o Docker | `04-bitacora-defectos.md` |
-| [x] Las correcciones aplicadas tienen una prueba de regresión que falla antes y pasa después | Cumplido para las 6 | `evidencias/50-…` a `60-…` |
-| [ ] `go test -race ./...` y `vitest` pasan en la rama al finalizar | **Parcial.** `go test` sin `-race` pasa en ambos módulos y `vitest` pasa (28 de 28). `-race` **no es ejecutable** en el entorno del agente (sin compilador C); el job `backend-pruebas` lo ejecuta en Linux. No hay fallos preexistentes | `evidencias/81-gate-final.txt` |
+| [ ] Cada defecto nuevo es reproducible y trazable a un RF/RNF y a una característica ISO 25010:2023 | **Parcial.** Los 44 tienen pasos, RF/RNF y característica. 21 se reproducen con una prueba automatizada (DEF-37 y DEF-48 confirmados en CI); DEF-19 y DEF-20 (requieren MySQL) quedan como «Nuevo» hasta reproducirse en Docker | `04-bitacora-defectos.md` |
+| [x] Las correcciones aplicadas tienen una prueba de regresión que falla antes y pasa después | Cumplido para las 8 | `evidencias/50-…` a `60-…` y `90-…` a `93-…` |
+| [ ] `go test -race ./...` y `vitest` pasan en la rama al finalizar | **Pendiente de la nueva ejecución del pipeline.** La primera ejecución en CI detectó una carrera real (DEF-46, corregida), un fallo de TOTP en Node 20 (DEF-47, corregido) y un timeout de una prueba existente bajo `-race` (DEF-48, preexistente, aislado del paso `-race` y ejecutado completo sin él). En local, `go test` sin `-race` (17 pasan, 12 omitidas) y `vitest` (31 de 31) pasan; `-race` no se puede ejecutar en local (sin compilador C) | `evidencias/89-…`, `95-…`, `96-…` |
 | [x] No se modificaron pruebas existentes del Responsable de Pruebas | Cumplido: `git diff --stat 6492f07` sobre los 13 archivos de prueba originales está vacío | `evidencias/80-verificacion-roles-secretos.txt` |
 | [x] No hay secretos nuevos en el historial | Cumplido. Las dos coincidencias son un secreto de prueba (`calidadJWTSecret`) y el valor por defecto que ya era público en `main.go:39`, conservado solo para rechazarlo. Las evidencias no reproducen credenciales | `evidencias/80-verificacion-roles-secretos.txt` |
 | [x] Ortografía revisada en todos los documentos nuevos | Cumplido | Este paquete |
