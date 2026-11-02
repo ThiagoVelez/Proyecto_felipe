@@ -20,6 +20,12 @@ concurrency:
   group: calidad-${{ github.ref }}
   cancel-in-progress: true
 
+# Sin shell explicito, GitHub usa `bash -e` sin pipefail y un `| tee` ocultaba el codigo de salida
+# de go test, staticcheck y govulncheck (los pasos informativos aparecian en verde aunque fallaran).
+defaults:
+  run:
+    shell: bash
+
 env:
   # Version verificada en la linea base (docs/calidad/anexos/linea-base.md). go.mod declara go 1.22 como minimo.
   GO_VERSION: '1.27.3'
@@ -107,11 +113,17 @@ jobs:
         env:
           CGO_ENABLED: '1'
         run: go test -race -count=1 -coverprofile=coverage-src.out ./...
-      - name: Pruebas de integracion de tests/backend (cobertura sobre los paquetes reales)
+      # DEF-48: TestStaffRegisterRequiresAdmin usa el timeout por defecto de 1 s de fiber.App.Test y,
+      # bajo -race, Bcrypt coste 12 supera ese limite. No es una carrera: se excluye solo de este paso
+      # y se ejecuta completa en el siguiente, sin -race, hasta que Pruebas ajuste el timeout.
+      - name: Pruebas de integracion de tests/backend con detector de carreras
         working-directory: tests/backend
         env:
           CGO_ENABLED: '1'
-        run: go test -race -count=1 -coverpkg=saludconecta-backend/... -coverprofile=coverage-tests.out ./...
+        run: go test -race -count=1 -skip '^TestStaffRegisterRequiresAdmin$' ./...
+      - name: Pruebas de integracion de tests/backend completas (cobertura sobre los paquetes reales)
+        working-directory: tests/backend
+        run: go test -count=1 -coverpkg=saludconecta-backend/... -coverprofile=coverage-tests.out ./...
       - name: Verificar umbral de cobertura
         working-directory: tests/backend
         run: |
