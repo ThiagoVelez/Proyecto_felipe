@@ -103,10 +103,11 @@ export function App() {
   };
 
   const handleLogout = () => {
-    apiClient.setAuth('', null);
+    apiClient.logout();
     localStorage.removeItem('saludconecta_session_active');
     localStorage.removeItem('saludconecta_user');
     localStorage.removeItem('saludconecta_token');
+    localStorage.removeItem('saludconecta_refresh_token');
     localStorage.removeItem('saludconecta_current_view');
     setIsAuthenticated(false);
     setCurrentUser(null);

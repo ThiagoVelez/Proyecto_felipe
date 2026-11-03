@@ -57,7 +57,7 @@ El flujo de trabajo, la priorización de requisitos y el ciclo de vida del desar
 
 | Código   | Nombre del Requisito                                   | Descripción Detallada                                                                                                                                                                                                                                                                                       | Prioridad MoSCoW |
 | :------- | :----------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------- |
-| **RF01** | Autenticación, MFA y Roles RBAC | Control de acceso por roles (MEDICO, ENFERMERO, ADMISION, AUDITOR, ADMIN) con tokens JWT (HS256) firmados con un `JWT_SECRET` obligatorio de al menos 32 caracteres y MFA TOTP (RFC 6238) con QR escaneable. El código TOTP se valida siempre en el servidor. Reemplazar o retirar un segundo factor activo exige el código vigente. Tras 5 intentos fallidos la cuenta se bloquea 15 minutos y las rutas de verificación tienen además un límite por IP real del cliente. En cada solicitud se revalida que la cuenta siga activa: suspender a un usuario revoca sus tokens de inmediato y el rol efectivo es el almacenado, no el declarado en el token. | **Must Have** |
+| **RF01** | Autenticación, MFA y Esquema Dual de Tokens | Control de acceso por roles (MEDICO, ENFERMERO, ADMISION, AUDITOR, ADMIN) mediante esquema dual de tokens JWT (HS256) con Access Token de 15 minutos y Refresh Token de 7 días con rotación automática y detección de reuso conforme a OWASP ASVS v4. Firma con `JWT_SECRET` obligatorio de al menos 32 caracteres y MFA TOTP (RFC 6238) con QR escaneable. El código TOTP se valida siempre en el servidor. Reemplazar o retirar un segundo factor activo exige el código vigente. Tras 5 intentos fallidos la cuenta se bloquea 15 minutos y las rutas de verificación tienen además un límite por IP real del cliente. En cada solicitud se revalida que la cuenta siga activa: suspender a un usuario revoca sus tokens de inmediato y el rol efectivo es el almacenado, no el declarado en el token. Renovación transparente en segundo plano vía `POST /auth/refresh` sin interrumpir la atención médica. | **Must Have** |
 | **RF02** | Triaje Manchester y Guardia Fisiológica | Semaforización automática en 5 niveles calculada **siempre en el servidor** a partir de Glasgow, SpO2, FC, FR, PAS/PAD y temperatura (incluidas hipotermia e hipertermia: 30 °C es NIVEL_II, nunca NIVEL_V). Rangos plausibles: Glasgow 3-15, SpO2 0-100, FC 1-300, FR 1-80, PAS 1-300, PAD 1-200 y temperatura 20-45 °C (HTTP 422 fuera de rango). El cliente solo puede escalar a un nivel más urgente; un nivel fuera del catálogo o menos urgente que el clínico se rechaza. | **Must Have** |
 | **RF03** | HCE e Inmutabilidad Absoluta | Registro de atención clínica con bloqueo de modificación post-cierre: un folio firmado no se reabre ni se reemplaza (tampoco al reenviar un lote de sincronización) y cualquier mutación se rechaza y está protegida por triggers a nivel de base de datos (MySQL y PostgreSQL), incluidas las notas aclaratorias, que son solo de anexo. Solo el médico autor del folio puede firmarlo o anexar notas (HTTP 403 en otro caso) (Resolución 1995 de 1999). | **Must Have** |
 | **RF04** | Cadena Criptográfica SHA-256 | Hash SHA-256 encadenado que incorpora el hash del folio previo del paciente. La cabeza de la cadena es el último eslabón no referenciado; un índice único (paciente, hash previo) y un bloqueo por paciente con reintento impiden bifurcaciones cuando se cierran folios simultáneamente. La hora de cierre se sella con precisión de segundos para que lo firmado coincida con lo persistido y la verificación de integridad no falle. | **Must Have** |
@@ -76,7 +76,7 @@ El flujo de trabajo, la priorización de requisitos y el ciclo de vida del desar
 | :-------- | :--------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **RNF01** | Latencia de Respuesta (Eficiencia)             | El percentil 95 (p95) de la latencia en operaciones de lectura y emisión de prescripciones debe ser inferior a 400 ms bajo concurrencia asistencial estándar.                                                                    |
 | **RNF02** | Trazabilidad y Auditoría Forense               | Cada petición debe portar y propagar un encabezado `X-Correlation-ID` único (UUID v4). Las operaciones de mutación quedan persistidas en bitácora inalterable con IP, marca de tiempo UTC y actor institucional (ISO/IEC 27001). |
-| **RNF03** | Seguridad en Aplicaciones (OWASP ASVS Nivel 2) | Protección contra inyección SQL mediante sentencias preparadas, hashing de contraseñas con Bcrypt (coste 12), expiración de tokens JWT, revocación inmediata de sesiones de cuentas suspendidas, bloqueo por cuenta tras 5 intentos fallidos, limitación de tasa por IP real del cliente (cabecera `X-Real-IP` solo desde proxies de confianza) y sanitización de cabeceras CORS. |
+| **RNF03** | Seguridad en Aplicaciones (OWASP ASVS Nivel 2) | Esquema dual de tokens (Access Token 15 min / Refresh Token 7 días) con rotación automática (Refresh Token Rotation) y detección de reuso fraudulento, protección contra inyección SQL mediante sentencias preparadas, hashing de contraseñas con Bcrypt (coste 12), revocación inmediata de sesiones de cuentas suspendidas, bloqueo por cuenta tras 5 intentos fallidos, limitación de tasa por IP real del cliente (cabecera `X-Real-IP` solo desde proxies de confianza) y sanitización de cabeceras CORS. |
 | **RNF04** | Inmutabilidad Criptográfica de Datos           | Toda modificación física a folios cerrados debe ser prevenida tanto en la capa de aplicación como en el motor de base de datos relacional mediante disparadores `BEFORE UPDATE` y `BEFORE DELETE`.                               |
 | **RNF05** | Resiliencia y Disponibilidad en Zonas Rurales  | Operación asistencial autónoma en ausencia de conexión a internet mediante almacenamiento local PWA y resolución determinista de duplicados al sincronizar con la sede central.                                                  |
 | **RNF06** | Configuración y Persistencia a Prueba de Fallos | El servicio no arranca sin `JWT_SECRET` seguro (mínimo 32 caracteres, distinto de cualquier valor publicado) y, si el motor de base de datos configurado no responde, termina con error: nunca conmuta en silencio a memoria, porque los registros clínicos se perderían al reiniciar. |
@@ -170,348 +170,6 @@ Ilustra la separación estricta entre la capa de presentación web (React 18 PWA
 
 ```mermaid
 flowchart TD
-    subgraph Frontend ["Capa de Presentación - Cliente Web React 18 PWA"]
-        UI["Componentes UI & Pantallas (Tailwind CSS + Lucide)"]
-        AdminUI["AdminLayout & AdminDashboardScreen (Gobernanza ReTHUS)"]
-        State["Estado React, Hooks & Offline Storage (IndexedDB/Local)"]
-        APIClient["Cliente API Fetch REST (src/services/api.js)"]
-        UI --> State
-        AdminUI --> State
-        State --> APIClient
-    end
-
-    subgraph PrimaryAdapters ["Adaptadores Primarios (Driving / Entrada)"]
-        FiberServer["Servidor HTTP GoFiber v2 (Puerto :8080)"]
-        AuthHandler["AuthHandler & MFA Controller (Registro de Personal ReTHUS)"]
-        AdminHandler["AdminHandler (Gobernanza de Personal & Auditoría)"]
-        PatientHandler["PatientHandler (Admisión y Alergias)"]
-        TriageHandler["TriageHandler"]
-        RecordHandler["ClinicalRecordHandler"]
-        PrescHandler["PrescriptionHandler"]
-        SyncHandler["SyncHandler (Lotes Offline UUID v4)"]
-        Middlewares["Middlewares: JWT + Sesión Vigente, RBAC, RateLimit (IP real tras proxy), Audit & CorrelationID"]
-    end
-
-    subgraph CoreHexagon ["Núcleo de Negocio (Core Domain & Puertos)"]
-        direction TB
-        subgraph InPorts ["Puertos de Entrada (Driving Interfaces)"]
-            AuthServicePort["AuthService Port"]
-            AdminServicePort["AdminService Port"]
-            PatientServicePort["PatientService Port"]
-            TriageServicePort["TriageService Port"]
-            RecordServicePort["ClinicalRecordService Port"]
-            PrescServicePort["PrescriptionService Port"]
-            SyncServicePort["SyncService Port"]
-        end
-
-        subgraph DomainServices ["Servicios de Dominio (Casos de Uso Puros)"]
-            AuthLogic["Autenticación, TOTP, Bloqueo por Intentos & Revalidación de Sesión"]
-            AdminLogic["Gobernanza ReTHUS, Activación & Auditoría Forense"]
-            PatientLogic["Admisión de Pacientes & Validación de Alergias"]
-            ManchesterEngine["Motor Triaje Manchester (nivel calculado en servidor)"]
-            HCEImmutability["Inmutabilidad HCE, Autor del Folio & Cadena SHA-256 sin Bifurcación"]
-            AllergyInterceptor["Interceptor de Alergias por Familia y sin Tildes (< 150 ms)"]
-            SyncIdempotency["Consolidador Idempotente (autoría y hashes en servidor)"]
-        end
-
-        subgraph OutPorts ["Puertos de Salida (Driven Interfaces)"]
-            UserRepoPort["UserRepository Port"]
-            PatientRepoPort["PatientRepository Port"]
-            TriageRepoPort["TriageRepository Port"]
-            RecordRepoPort["ClinicalRecordRepository Port"]
-            PrescRepoPort["PrescriptionRepository Port"]
-            AuditRepoPort["AuditRepository Port"]
-            RIPSGenPort["RIPSGenerator Port"]
-            FHIRMapPort["FHIRMapper Port"]
-        end
-    end
-
-    subgraph SecondaryAdapters ["Adaptadores Secundarios (Driven / Salida)"]
-        direction TB
-        MySQLAdapter["MySQL 8.0 Repository (InnoDB + Migración Idempotente)"]
-        PostgresAdapter["PostgreSQL Repository (Opcional, esquema y triggers propios)"]
-        MemoryAdapter["In-Memory Repository (Solo pruebas, DB_DRIVER=memory)"]
-        RIPSJsonAdapter["RIPS JSON Generator (Res. 2275 de 2023)"]
-        HL7FHIRAdapter["HL7 FHIR R4 Mapper (Interoperabilidad Internacional)"]
-        CryptoAdapter["Crypto Package (Bcrypt Cost 12, SHA-256, HMAC-SHA1 TOTP)"]
-    end
-
-    APIClient -->|JSON / HTTPS| FiberServer
-    FiberServer --> Middlewares
-    Middlewares --> AuthHandler
-    Middlewares --> AdminHandler
-    Middlewares --> PatientHandler
-    Middlewares --> TriageHandler
-    Middlewares --> RecordHandler
-    Middlewares --> PrescHandler
-    Middlewares --> SyncHandler
-
-    AuthHandler --> AuthServicePort
-    AdminHandler --> AdminServicePort
-    PatientHandler --> PatientServicePort
-    TriageHandler --> TriageServicePort
-    RecordHandler --> RecordServicePort
-    PrescHandler --> PrescServicePort
-    SyncHandler --> SyncServicePort
-
-    AuthServicePort --> AuthLogic
-    AdminServicePort --> AdminLogic
-    PatientServicePort --> PatientLogic
-    TriageServicePort --> ManchesterEngine
-    RecordServicePort --> HCEImmutability
-    PrescServicePort --> AllergyInterceptor
-    SyncServicePort --> SyncIdempotency
-
-    DomainServices --> OutPorts
-
-    UserRepoPort --> MySQLAdapter
-    PatientRepoPort --> MySQLAdapter
-    TriageRepoPort --> MySQLAdapter
-    RecordRepoPort --> MySQLAdapter
-    PrescRepoPort --> MySQLAdapter
-    AuditRepoPort --> MySQLAdapter
-
-    UserRepoPort -.-> MemoryAdapter
-    PatientRepoPort -.-> MemoryAdapter
-    TriageRepoPort -.-> MemoryAdapter
-    RecordRepoPort -.-> MemoryAdapter
-    PrescRepoPort -.-> MemoryAdapter
-    AuditRepoPort -.-> MemoryAdapter
-
-    RIPSGenPort --> RIPSJsonAdapter
-    FHIRMapPort --> HL7FHIRAdapter
-    AuthLogic --> CryptoAdapter
-    HCEImmutability --> CryptoAdapter
-```
-
-- Archivo fuente: [`docs/diagrams/02_arquitectura_hexagonal.mmd`](docs/diagrams/02_arquitectura_hexagonal.mmd)
-- Imagen de alta resolución: [`docs/diagrams/02_arquitectura_hexagonal.png`](docs/diagrams/02_arquitectura_hexagonal.png) | Vectorial: [`docs/diagrams/02_arquitectura_hexagonal.svg`](docs/diagrams/02_arquitectura_hexagonal.svg)
-
----
-
-### 5.3. Diagrama de Base de Datos y Modelo Entidad-Relación (ERD)
-
-Estructura relacional implementada en MySQL 8.0 (motor InnoDB) con llaves primarias, foráneas, restricciones de integridad referencial, campos de habilitación profesional (`document_type`, `document_number`, `phone`, `specialty`, `branch`, `professional_card`, `is_active`) disparadores de inmutabilidad (folios cerrados y notas aclaratorias) y el índice único `uq_cr_patient_chain (patient_id, previous_hash)` que impide bifurcar la cadena SHA-256:
-
-![Diagrama de Entidad-Relación ERD](docs/diagrams/03_modelo_entidad_relacion.png)
-
-```mermaid
-erDiagram
-    ROLES ||--|{ USERS : "posee"
-    USERS ||--o{ APPOINTMENTS : "atiende"
-    USERS ||--o{ TRIAGE_RECORDS : "evalua"
-    USERS ||--o{ CLINICAL_RECORDS : "firma"
-    USERS ||--o{ CLINICAL_RECORD_CLARIFICATIONS : "anexa"
-    USERS ||--o{ PRESCRIPTIONS : "formula"
-    USERS ||--o{ AUDIT_LOGS : "genera"
-
-    PATIENTS ||--o{ PATIENT_ALLERGIES : "registra"
-    PATIENTS ||--o{ APPOINTMENTS : "solicita"
-    PATIENTS ||--o{ TRIAGE_RECORDS : "recibe"
-    PATIENTS ||--o{ CLINICAL_RECORDS : "tiene"
-    PATIENTS ||--o{ PRESCRIPTIONS : "destinatario"
-
-    TRIAGE_RECORDS ||--o| CLINICAL_RECORDS : "antecede"
-
-    CLINICAL_RECORDS ||--o{ CLINICAL_RECORD_CLARIFICATIONS : "modificada_por"
-    CLINICAL_RECORDS ||--o{ PRESCRIPTIONS : "emite"
-
-    PRESCRIPTIONS ||--|{ PRESCRIPTION_ITEMS : "contiene"
-    MEDICATIONS_CATALOG ||--o{ PRESCRIPTION_ITEMS : "incluido_en"
-
-    ROLES {
-        int id PK
-        string name UK
-        string description
-        timestamp created_at
-    }
-
-    USERS {
-        uuid id PK
-        int role_id FK
-        string full_name
-        string document_type
-        string document_number
-        string email UK
-        string password_hash
-        string phone
-        string professional_card "ReTHUS Mandatorio"
-        string specialty
-        string branch
-        string mfa_secret
-        boolean mfa_enabled
-        boolean is_active "Gobernanza"
-        timestamp created_at
-        timestamp updated_at
-    }
-
-    PATIENTS {
-        uuid id PK
-        string document_type
-        string document_number UK
-        string first_name
-        string last_name
-        date birth_date
-        string gender
-        string blood_type
-        string eps_name
-        string affiliation_status
-        string phone
-        boolean is_rural_zone
-        timestamp created_at
-        timestamp updated_at
-    }
-
-    PATIENT_ALLERGIES {
-        int id PK
-        uuid patient_id FK
-        string active_ingredient
-        string severity
-        text notes
-        timestamp created_at
-    }
-
-    APPOINTMENTS {
-        uuid id PK
-        uuid patient_id FK
-        uuid doctor_id FK
-        datetime appointment_date
-        string specialty
-        string status
-        decimal copayment_amount
-        timestamp created_at
-    }
-
-    TRIAGE_RECORDS {
-        uuid id PK
-        uuid patient_id FK
-        uuid evaluated_by FK
-        int systolic_bp
-        int diastolic_bp
-        int heart_rate
-        int respiratory_rate
-        decimal temperature
-        decimal oxygen_saturation
-        int glasgow_coma_scale
-        string pain_scale
-        int manchester_level
-        string discriminator
-        timestamp evaluated_at
-        string status
-    }
-
-    CLINICAL_RECORDS {
-        uuid id PK
-        uuid patient_id FK
-        uuid doctor_id FK
-        text anamnesis
-        text physical_exam
-        string cie11_code
-        string diagnosis_description
-        text treatment_plan
-        boolean is_closed
-        string signature_token
-        string previous_hash "UK compuesto (patient_id, previous_hash)"
-        string hash_sha256 UK
-        datetime closed_at "sellado a segundos"
-        timestamp created_at
-    }
-
-    CLINICAL_RECORD_CLARIFICATIONS {
-        int id PK
-        uuid clinical_record_id FK
-        uuid doctor_id FK
-        text note
-        datetime clarification_at
-    }
-
-    PRESCRIPTIONS {
-        uuid id PK
-        uuid clinical_record_id FK
-        uuid patient_id FK
-        uuid doctor_id FK
-        string dispensation_status
-        timestamp created_at
-    }
-
-    PRESCRIPTION_ITEMS {
-        int id PK
-        uuid prescription_id FK
-        int medication_id FK
-        string dosage
-        string frequency
-        int duration_days
-        int quantity_prescribed
-    }
-
-    MEDICATIONS_CATALOG {
-        int id PK
-        string cum_code UK
-        string generic_name
-        string commercial_name
-        string active_ingredient
-        string pharmaceutical_form
-        string concentration
-        int stock_quantity
-    }
-
-    AUDIT_LOGS {
-        bigint id PK
-        uuid user_id FK
-        string role
-        string action
-        string resource
-        string ip_address
-        string correlation_id
-        json details
-        timestamp created_at
-    }
-```
-
-- Archivo fuente: [`docs/diagrams/03_modelo_entidad_relacion.mmd`](docs/diagrams/03_modelo_entidad_relacion.mmd)
-- Imagen de alta resolución: [`docs/diagrams/03_modelo_entidad_relacion.png`](docs/diagrams/03_modelo_entidad_relacion.png) | Vectorial: [`docs/diagrams/03_modelo_entidad_relacion.svg`](docs/diagrams/03_modelo_entidad_relacion.svg)
-
----
-
-### 5.4. Diagramas de Secuencia UML (Procesos Asistenciales Clave)
-
-#### A. Triaje Manchester y Detección de Rangos Fisiológicos Inválidos
-
-Describe la captura de constantes vitales, la validación de rangos plausibles y la clasificación según el protocolo internacional de 5 niveles, que **calcula siempre el servidor** (el cliente solo puede escalar a un nivel más urgente; un nivel fuera del catálogo se rechaza con HTTP 422):
-
-![Secuencia Triaje Manchester](docs/diagrams/04_secuencia_triaje.png)
-
-- Archivo fuente: [`docs/diagrams/04_secuencia_triaje.mmd`](docs/diagrams/04_secuencia_triaje.mmd)
-- Imagen de alta resolución: [`docs/diagrams/04_secuencia_triaje.png`](docs/diagrams/04_secuencia_triaje.png) | Vectorial: [`docs/diagrams/04_secuencia_triaje.svg`](docs/diagrams/04_secuencia_triaje.svg)
-
-#### B. Inmutabilidad de Historia Clínica, Cierre Criptográfico y Notas Aclaratorias
-
-Detalla el cierre de folio por su médico autor (HTTP 403 si otro médico lo intenta), el sellado de la hora a segundos, la generación del hash SHA-256 encadenado con bloqueo por paciente y reintento ante conflicto, el rechazo de cualquier mutación sobre un folio cerrado y el anexo normativo de notas aclaratorias según la Resolución 1995 de 1999:
-
-![Secuencia Inmutabilidad HCE](docs/diagrams/05_secuencia_hce_inmutabilidad.png)
-
-- Archivo fuente: [`docs/diagrams/05_secuencia_hce_inmutabilidad.mmd`](docs/diagrams/05_secuencia_hce_inmutabilidad.mmd)
-- Imagen de alta resolución: [`docs/diagrams/05_secuencia_hce_inmutabilidad.png`](docs/diagrams/05_secuencia_hce_inmutabilidad.png) | Vectorial: [`docs/diagrams/05_secuencia_hce_inmutabilidad.svg`](docs/diagrams/05_secuencia_hce_inmutabilidad.svg)
-
-#### C. Intercepción de Alergias Farmacológicas Cruzadas (< 150 ms)
-
-Muestra el cruce entre los medicamentos del catálogo CUM y los antecedentes alérgicos del paciente **del folio** (no el que declare el cliente), con normalización de tildes y coincidencia por familia farmacológica (penicilina frente a amoxicilina), deteniendo la emisión ante riesgo de anafilaxia:
-
-![Secuencia Prescripción Alergias](docs/diagrams/06_secuencia_prescripcion_alergias.png)
-
-- Archivo fuente: [`docs/diagrams/06_secuencia_prescripcion_alergias.mmd`](docs/diagrams/06_secuencia_prescripcion_alergias.mmd)
-- Imagen de alta resolución: [`docs/diagrams/06_secuencia_prescripcion_alergias.png`](docs/diagrams/06_secuencia_prescripcion_alergias.png) | Vectorial: [`docs/diagrams/06_secuencia_prescripcion_alergias.svg`](docs/diagrams/06_secuencia_prescripcion_alergias.svg)
-
----
-
-### 5.5. Arquitectura de Seguridad, Criptografía y Control de Acceso
-
-Modela los tres pilares de defensa institucional: Autenticación Multi-Factor (MFA TOTP RFC 6238 con QR escaneable), Control de Acceso Basado en Roles (RBAC) y Cadena Inmutable de Hashes SHA-256 con Triggers SQL e índice único anti-bifurcación. Cada solicitud autenticada revalida en base de datos que la cuenta siga activa, de modo que una suspensión revoca los tokens de inmediato, y la verificación de contraseñas y códigos TOTP está protegida por bloqueo de cuenta y límite por IP:
-
-![Arquitectura de Seguridad y Criptografía](docs/diagrams/07_seguridad_mfa_sha256.png)
-
-```mermaid
-flowchart TD
     subgraph MFAFlow ["1. Autenticación Multi-Factor (MFA TOTP - RFC 6238)"]
         Credentials["Credenciales (Email + Password Bcrypt Coste 12)"]
         Lockout["Bloqueo por cuenta: 5 fallos = 15 min + límite por IP real"]
@@ -532,9 +190,10 @@ flowchart TD
         HMACEngine -->|Verifica coincidencia con tolerancia +/- 1 intervalo| UserOTP
     end
 
-    subgraph RBACEngine ["2. Control de Acceso Basado en Roles (RBAC)"]
-        JWTToken["Token JWT Firmado (HS256) con Claims de Rol"]
-        SessionCheck["Middleware: firma JWT + cuenta activa y rol vigentes en base de datos"]
+    subgraph RBACEngine ["2. Control de Acceso Dual (Access 15 min + Refresh 7 días) y RBAC"]
+        TokensPair["Par de Tokens: Access Token (15 min) + Refresh Token (7 días)"]
+        SessionCheck["Middleware: firma Access Token + cuenta activa y rol vigentes"]
+        RefreshFlow["Renovación Transparente: POST /auth/refresh con rotación y detección de reuso"]
         RoleGuard["Middleware de Autorización por Ruta (RequireRoles)"]
         RoleMedico["Rol MEDICO: HCE, Prescripción, RIPS, Cierre"]
         RoleEnfermero["Rol ENFERMERO: Triaje Manchester, Consulta"]
@@ -542,8 +201,10 @@ flowchart TD
         RoleAuditor["Rol AUDITOR: Revisión RIPS, Logs, Hashes"]
         RoleAdmin["Rol ADMIN: Gobernanza ReTHUS, Auditoría, Sedes"]
 
-        UserOTP -->|Aprobado| JWTToken
-        JWTToken --> SessionCheck
+        UserOTP -->|Aprobado| TokensPair
+        TokensPair -->|Petición con Access Token| SessionCheck
+        TokensPair -.->|Al expirar Access Token| RefreshFlow
+        RefreshFlow -->|Nuevo Access Token| SessionCheck
         SessionCheck --> RoleGuard
         RoleGuard --> RoleMedico & RoleEnfermero & RoleAdmision & RoleAuditor & RoleAdmin
     end
@@ -591,255 +252,6 @@ Detalla el ciclo completo de registro de personal (exclusivo del Administrador),
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Personal as Personal Asistencial
-    participant PWA as Cliente React PWA (Stitch)
-    participant API as GoFiber v2 (Auth & Admin)
-    participant Core as Dominio Hexagonal (Auth & Admin Service)
-    participant DB as MySQL 8.0 (Users & Audit)
-    actor Admin as Administrador TI (ReTHUS)
-
-    %% Fase 1: Registro Seguro de Personal
-    Note over Personal,DB: FASE 1: Registro desde el Perfil del Administrador con Inactividad Mandatoria (Res. 1995/1999)
-    Admin->>PWA: Diligencia formulario en StaffRegisterModal (Nombre, CC, ReTHUS, Especialidad)
-    PWA->>API: POST /api/v1/admin/users (payload asistencial, JWT rol ADMIN)
-    API->>Core: RegisterStaff(user, password)
-    alt Tarjeta Profesional vacía para Médico o Enfermero
-        Core-->>API: ErrMissingProfessionalCard
-        API-->>PWA: 400 Bad Request ("Tarjeta Profesional obligatoria según Res. 1995")
-    else Tarjeta Profesional válida
-        Core->>Core: Forzar user.IsActive = FALSE (No repudio)
-        Core->>DB: INSERT INTO users (is_active=FALSE, professional_card, role_id)
-        DB-->>Core: OK (Registro almacenado inactivo)
-        Core-->>API: Usuario registrado en espera
-        API-->>PWA: 201 Created ("Pendiente de verificación ReTHUS por Administrador")
-        PWA-->>Admin: Muestra confirmación de cuenta bloqueada preventivamente
-    end
-
-    %% Fase 2: Bloqueo de Acceso No Habilitado
-    Note over Personal,API: FASE 2: Intento de Acceso Preventivo Bloqueado
-    Personal->>PWA: Intenta iniciar sesión con credenciales
-    PWA->>API: POST /api/v1/auth/login { email, password, totp_code }
-    API->>Core: Login(email, password, totp_code)
-    Core->>DB: SELECT * FROM users WHERE email = ?
-    DB-->>Core: Usuario encontrado con is_active = FALSE
-    Core-->>API: ErrUserInactive
-    API-->>PWA: 403 Forbidden ("Cuenta pendiente de validación ReTHUS")
-    PWA-->>Personal: Alerta: Requiere aprobación administrativa antes de expedir token
-
-    %% Fase 3: Gobernanza y Habilitación por el Administrador
-    Note over Admin,DB: FASE 3: Gobernanza, Cotejo y Activación ReTHUS
-    Admin->>PWA: Ingresa al AdminLayout (Módulo Gobernanza)
-    PWA->>API: GET /api/v1/admin/users?is_active=false (JWT Admin)
-    API->>Core: ListUsers(roleID=nil, isActive=false)
-    Core->>DB: SELECT * FROM users WHERE is_active = FALSE
-    DB-->>Core: Lista de profesionales en espera
-    Core-->>API: Usuarios pendientes
-    API-->>PWA: 200 OK con solicitudes ReTHUS
-    PWA-->>Admin: Renderiza tabla con botón "Aprobar ReTHUS"
-
-    Admin->>PWA: Click "Aprobar ReTHUS" tras cotejo formal
-    PWA->>API: PATCH /api/v1/admin/users/:id/status { is_active: true }
-    API->>Core: ActivateUser(userID)
-    Core->>Core: Validar presencia inmutable de professional_card
-    Core->>DB: UPDATE users SET is_active = TRUE WHERE id = ?
-    API->>DB: AuditMiddleware: INSERT INTO audit_logs (action=UPDATE, resource=/api/v1/admin/users/:id/status, usuario, IP, Correlation-ID)
-    DB-->>Core: OK (Transacción confirmada)
-    Core-->>API: Usuario habilitado
-    API-->>PWA: 200 OK ("Usuario habilitado y verificado ante ReTHUS")
-    PWA-->>Admin: Actualiza la tabla solo tras la confirmación del servidor (si falla, muestra el error real)
-
-    %% Fase 4: Sesión Habilitada
-    Note over Personal,DB: FASE 4: Ingreso Asistencial Habilitado
-    Personal->>PWA: Reintenta login con TOTP RFC 6238
-    PWA->>API: POST /api/v1/auth/login
-    API->>Core: Login(email, password, totp)
-    Core->>DB: SELECT * FROM users WHERE is_active = TRUE
-    DB-->>Core: Usuario activo y habilitado
-    Core-->>API: Genera JWT (role: MEDICO, license: RM-XXXXX)
-    API-->>PWA: 200 OK { token, user }
-    PWA-->>Personal: Acceso concedido al Portal Clínico Asistencial
-
-    %% Fase 5: Suspensión con efecto inmediato
-    Note over Admin,DB: FASE 5: Suspensión con Revocación Inmediata
-    Admin->>PWA: Click "Suspender"
-    PWA->>API: PATCH /api/v1/admin/users/:id/status { is_active: false }
-    API->>Core: DeactivateUser(userID)
-    Core->>DB: UPDATE users SET is_active = FALSE WHERE id = ?
-    Personal->>PWA: Cualquier acción con el token aún vigente
-    PWA->>API: Solicitud con Authorization Bearer
-    API->>Core: ValidateSession(userID)
-    Core-->>API: ErrUserInactive
-    API-->>PWA: 401 Unauthorized (La cuenta se encuentra desactivada)
-    PWA-->>Personal: Cierra la sesión y vuelve al login
-```
-
-- Archivo fuente: [`docs/diagrams/09_secuencia_gobernanza_rethus.mmd`](docs/diagrams/09_secuencia_gobernanza_rethus.mmd)
-- Imagen de alta resolución: [`docs/diagrams/09_secuencia_gobernanza_rethus.png`](docs/diagrams/09_secuencia_gobernanza_rethus.png) | Vectorial: [`docs/diagrams/09_secuencia_gobernanza_rethus.svg`](docs/diagrams/09_secuencia_gobernanza_rethus.svg)
-
----
-
-### 5.8. Diagrama de Arquitectura: Aislamiento de Vistas RBAC y Desacoplamiento Administrativo
-
-Ilustra la separación absoluta de interfaces por perfil según la Ley 1581 de 2012 e ISO/IEC 25010: el Administrador TI opera exclusivamente en el `AdminLayout` (sin acceso a datos clínicos de pacientes ni consulta médica), mientras que el personal asistencial opera en el entorno clínico protegido y el personal de admisión accede únicamente a pacientes y alergias:
-
-![Diagrama de Aislamiento RBAC y AdminLayout](docs/diagrams/10_arquitectura_rbac_aislamiento_admin.png)
-
-```mermaid
-flowchart TB
-    subgraph Usuarios ["Usuarios del Sistema (RBAC)"]
-        UserAdmin["Usuario con Rol ADMIN (role_id = 1)"]
-        UserMedico["Facultativo Médico (role_id = 2)"]
-        UserEnfermero["Personal de Enfermería (role_id = 3)"]
-        UserAdmision["Personal de Admisión (role_id = 4)"]
-    end
-
-    subgraph FrontendApp ["Frontend React 18 PWA (App.jsx Dispatcher)"]
-        AuthFilter{"Evaluación de Rol de Sesión"}
-
-        subgraph AdminScope ["Entorno Exclusivo Administrativo (AdminLayout)"]
-            AdminDash["AdminDashboardScreen"]
-            ModGobernanza["Gobernanza de Personal (Cotejo ReTHUS & Habilitación)"]
-            ModAuditoria["Bitácora Forense Inmutable (Trazas SHA-256)"]
-            ModSedes["Catálogo Local de Sedes (Cartago, La Unión, Tuluá, Rural)"]
-            AdminDash --> ModGobernanza
-            AdminDash --> ModAuditoria
-            AdminDash --> ModSedes
-        end
-
-        subgraph ClinicalScope ["Entorno Clínico Asistencial Protegido (Clinical Layout)"]
-            ClinicalDash["Dashboard y Sala de Espera de Urgencias"]
-            ModTriage["Triaje Manchester (Niveles I-V & Constantes Vitales)"]
-            ModHCE["Historia Clínica Electrónica Unificada (Folios Inmutables)"]
-            ModPresc["Prescripción Médica con Cruce de Alergias"]
-            ModMFA["Centro de Seguridad Criptográfica y TOTP QR"]
-        end
-    end
-
-    subgraph BackendGateway ["API Gateway GoFiber v2 (Control RBAC Estricto)"]
-        AuthMiddleware["AuthMiddleware: JWT Bearer + cuenta activa y rol vigentes"]
-        RBACCheck{"RequireRoles Middleware"}
-
-        subgraph EndpointsAdmin ["Rutas Administrativas (/api/v1/admin/*)"]
-            RouteUsers["GET /api/v1/admin/users"]
-            RouteStatus["PATCH /api/v1/admin/users/:id/status"]
-            RouteLogs["GET /api/v1/admin/audit-logs"]
-        end
-
-        subgraph EndpointsClinicos ["Rutas Clínicas Asistenciales Protegidas"]
-            RouteTriage["/api/v1/triage/*"]
-            RouteHCE["/api/v1/clinical-records/*"]
-            RoutePresc["/api/v1/prescriptions/*"]
-            RouteSync["/api/v1/sync/*"]
-            RoutePatients["/api/v1/patients/* - ADMISION, ENFERMERO, MEDICO"]
-            RouteMeds["/api/v1/medications"]
-        end
-    end
-
-    %% Enrutamiento Frontend
-    UserAdmin --> AuthFilter
-    UserMedico --> AuthFilter
-    UserEnfermero --> AuthFilter
-    UserAdmision --> AuthFilter
-
-    AuthFilter -->|Rol ADMIN| AdminScope
-    AuthFilter -->|Rol Asistencial MEDICO, ENFERMERO o ADMISION| ClinicalScope
-
-    %% Llamadas de Red Seguras
-    AdminScope -->|Token JWT ADMIN| AuthMiddleware
-    ClinicalScope -->|Token JWT Asistencial| AuthMiddleware
-
-    AuthMiddleware --> RBACCheck
-
-    RBACCheck -->|Permitido ADMIN| EndpointsAdmin
-    RBACCheck -->|Permitido MEDICO, ENFERMERO y ADMISION según la ruta| EndpointsClinicos
-
-    %% Restricciones de Ley y Bloqueos
-    RBACCheck -.->|403 Forbidden: ADMIN bloqueado de datos clínicos| EndpointsClinicos
-    RBACCheck -.->|403 Forbidden: MEDICO bloqueado de gobernanza TI| EndpointsAdmin
-```
-
-- Archivo fuente: [`docs/diagrams/10_arquitectura_rbac_aislamiento_admin.mmd`](docs/diagrams/10_arquitectura_rbac_aislamiento_admin.mmd)
-- Imagen de alta resolución: [`docs/diagrams/10_arquitectura_rbac_aislamiento_admin.png`](docs/diagrams/10_arquitectura_rbac_aislamiento_admin.png) | Vectorial: [`docs/diagrams/10_arquitectura_rbac_aislamiento_admin.svg`](docs/diagrams/10_arquitectura_rbac_aislamiento_admin.svg)
-
----
-
-### 5.9. Diagrama de Arquitectura de Contenedores Docker (Docker Compose Multi-Stage & Networking)
-
-Representa la topología de virtualización ligera basada en contenedores Docker para despliegue ágil del equipo de trabajo. Modela la red puente aislada (`saludconecta_network`), los 3 contenedores multi-stage (`saludconecta-mysql`, `saludconecta-backend` en Go 1.22+ y `saludconecta-frontend` en React + Nginx Alpine), los puntos de enlace (MySQL y backend publicados solo en loopback), los healthchecks nativos, el volumen persistente y la inyección de secretos desde un `.env` privado:
-
-![Diagrama de Arquitectura Docker](docs/diagrams/11_arquitectura_contenedores_docker.png)
-
-```mermaid
-flowchart TB
-    subgraph HostEnvironment ["Entorno Host del Desarrollador / Evaluador"]
-        Developer["Navegador Web del Usuario / Equipo"]
-        EnvFile["Archivo .env privado: JWT_SECRET, DB_*, ADMIN_INITIAL_*"]
-        DockerCLI["Docker CLI: docker compose up --build"]
-    end
-
-    subgraph DockerPlatform ["Plataforma de Contenedores Docker (Orquestación Multi-Servicio)"]
-        subgraph NetBridge ["Red Aislada: saludconecta_network (Bridge Driver)"]
-
-            subgraph FrontContainer ["Contenedor 1: saludconecta-frontend (React PWA + Nginx Alpine)"]
-                NginxSrv["Servidor Web Nginx (Puerto 80 Interno)"]
-                StaticFiles["Archivos Estáticos SPA: HTML5, CSS3, JS Chunks, Assets"]
-                ReverseProxy["Proxy Inverso Integrado (/api/ -> http://backend:8080/api/, informa X-Real-IP)"]
-                GzipEngine["Compresión Gzip & Cabeceras de Seguridad (ISO 27001)"]
-            end
-
-            subgraph BackContainer ["Contenedor 2: saludconecta-backend (Go 1.22+ Multi-Stage)"]
-                GoFiberAPI["API REST GoFiber v2 (Puerto 8080, publicado solo en 127.0.0.1)"]
-                AppUser["Usuario sin privilegios: appuser (Alpine 3.20)"]
-                HealthProbe["Healthcheck Nativo: /api/v1/health"]
-                HexEngine["Arquitectura Hexagonal (Core de Dominio & Migración)"]
-            end
-
-            subgraph DBContainer ["Contenedor 3: saludconecta-mysql (MySQL 8.0 Motor InnoDB)"]
-                MySQLCore["Motor MySQL 8.0 (Puerto 3306, publicado solo en 127.0.0.1)"]
-                SchemaInit["Auto-Migración DDL: 01_schema.sql (Triggers & Tablas)"]
-                MySQLHealth["Healthcheck: mysqladmin ping"]
-            end
-
-        end
-
-        subgraph PersistentVolumes ["Almacenamiento Persistente en Host"]
-            VolMySQL[("Volumen Docker: saludconecta_mysql_data")]
-        end
-    end
-
-    Developer -->|Acceso HTTP: http://localhost:5173 o :80| NginxSrv
-    EnvFile -->|Inyecta secretos; compose se detiene si faltan| DockerCLI
-    DockerCLI -->|Construye e Inicia el Stack| DockerPlatform
-
-    NginxSrv --> StaticFiles
-    NginxSrv --> GzipEngine
-    NginxSrv -->|Reenvío Transparente de Peticiones API| ReverseProxy
-    ReverseProxy -->|Llamadas HTTP Internas: Puerto 8080| GoFiberAPI
-
-    GoFiberAPI --> AppUser
-    GoFiberAPI --> HexEngine
-    GoFiberAPI --> HealthProbe
-    HexEngine -->|TCP Pool con Reintentos: Puerto 3306| MySQLCore
-
-    DBContainer --> SchemaInit
-    DBContainer --> MySQLHealth
-    MySQLCore --> VolMySQL
-```
-
-- Archivo fuente: [`docs/diagrams/11_arquitectura_contenedores_docker.mmd`](docs/diagrams/11_arquitectura_contenedores_docker.mmd)
-- Imagen de alta resolución: [`docs/diagrams/11_arquitectura_contenedores_docker.png`](docs/diagrams/11_arquitectura_contenedores_docker.png) | Vectorial: [`docs/diagrams/11_arquitectura_contenedores_docker.svg`](docs/diagrams/11_arquitectura_contenedores_docker.svg)
-
----
-
-### 5.10. Diagrama de Secuencia: Ciclo de Vida y Persistencia de Sesión Resistente a Recargas (F5)
-
-Describe la gestión de ciclo de vida de la sesión del usuario médico o administrativo. Demuestra cómo el estado de autenticación y la pantalla activa persisten de forma transparente ante recargas del navegador (F5 / Refresh), manteniendo la sesión activa y aislando el cierre a la acción explícita del botón de salida o a la revocación por el servidor. Al recargar, el cliente revalida la sesión con `GET /auth/me`; ante un 401 (token vencido o cuenta suspendida) limpia el almacenamiento y vuelve al login con un aviso:
-
-![Diagrama de Persistencia de Sesión F5](docs/diagrams/12_persistencia_sesion_f5.png)
-
-```mermaid
-sequenceDiagram
-    autonumber
     actor User as Usuario Clínico / Admin
     participant Browser as Navegador Web (DOM & PWA)
     participant App as React App (Estado en Memoria)
@@ -850,11 +262,12 @@ sequenceDiagram
     Note over User,Storage: FASE 1: Autenticación Exitosa Inicial
     User->>Browser: Ingresa credenciales (y TOTP de 6 dígitos si la cuenta tiene MFA)
     Browser->>API: POST /api/v1/auth/login { email, password, totp_code }
-    API-->>Browser: 200 OK { token, user: { role, full_name, professional_card } }
+    API-->>Browser: 200 OK { access_token (15 min), refresh_token (7 días), token, user }
     Browser->>App: handleLoginSuccess(data)
     App->>Storage: setItem('saludconecta_session_active', 'true')
     App->>Storage: setItem('saludconecta_user', JSON.stringify(user))
-    App->>Storage: setItem('saludconecta_token', token)
+    App->>Storage: setItem('saludconecta_token', access_token)
+    App->>Storage: setItem('saludconecta_refresh_token', refresh_token)
     App->>Storage: setItem('saludconecta_current_view', 'dashboard')
     App-->>Browser: Renderiza Entorno Autorizado (Clínico o AdminLayout)
 
@@ -872,22 +285,36 @@ sequenceDiagram
     API-->>App: 200 OK { user }
     App-->>Browser: Restaura exactamente la pantalla de trabajo previa (Sin ir a Login)
 
-    %% Fase 3: Cierre de Sesion Seguro
-    Note over User,Storage: FASE 3: Finalización Explícita de Sesión
+    %% Fase 3: Renovacion Silenciosa en Segundo Plano (Refresh Token)
+    Note over User,API: FASE 3: Renovación Transparente de Token de Acceso (Cada 15 min)
+    App->>API: Solicitud con Access Token vencido (15 min)
+    API-->>App: 401 Unauthorized
+    Note over App: Interceptor silencioso en background (sin interrumpir al médico)
+    App->>API: POST /api/v1/auth/refresh { refresh_token }
+    API-->>App: 200 OK { access_token, refresh_token (rotado) }
+    App->>Storage: setItem('saludconecta_token', access_token)
+    App->>Storage: setItem('saludconecta_refresh_token', refresh_token)
+    App->>API: Reintenta solicitud clínica original con el nuevo token
+    API-->>App: 200 OK (Datos clínicos devueltos sin interrupción)
+
+    %% Fase 4: Cierre de Sesion Seguro
+    Note over User,Storage: FASE 4: Finalización Explícita de Sesión
     User->>Browser: Hace clic en botón 'Salir' / 'Cerrar Sesión'
     Browser->>App: handleLogout()
+    App->>API: POST /api/v1/auth/logout { refresh_token }
     App->>Storage: removeItem('saludconecta_session_active')
     App->>Storage: removeItem('saludconecta_user')
     App->>Storage: removeItem('saludconecta_token')
+    App->>Storage: removeItem('saludconecta_refresh_token')
     App->>Storage: removeItem('saludconecta_current_view')
     App->>App: setIsAuthenticated(false), setCurrentUser(null)
     App-->>Browser: Redirige limpiamente a AuthScreen (Login con fondo ECG animado)
 
-    %% Fase 4: Revocacion por el servidor
-    Note over User,API: FASE 4: Sesión Vencida o Cuenta Suspendida
-    App->>API: Cualquier solicitud con el token vigente
-    API-->>App: 401 Unauthorized
-    App->>Storage: Limpia sesión, usuario, token y vista
+    %% Fase 5: Revocacion por el servidor o inactividad prolongada
+    Note over User,API: FASE 5: Sesión Vencida (7 días de inactividad) o Cuenta Suspendida
+    App->>API: Solicitud con Refresh Token vencido o cuenta inactiva
+    API-->>App: 401 / 403 Unauthorized
+    App->>Storage: Limpia sesión, usuario, tokens y vista
     App-->>Browser: Evento saludconecta:session-expired y aviso en AuthScreen
 ```
 
@@ -1129,6 +556,8 @@ Siguiendo la política de protección de infraestructura sensible (Regla 27), to
 | `DB_PASSWORD`            | Clave de acceso a la base de datos                        | `secret_password`                             |
 | `DB_NAME`                | Nombre de la base de datos clínica                        | `saludconecta_db`                             |
 | `JWT_SECRET`             | Obligatoria: firma de tokens HS256 (mínimo 32 caracteres aleatorios; el servicio no arranca sin ella) | `defina_un_secreto_aleatorio_de_32_o_mas` |
+| `JWT_ACCESS_TTL_MINUTES` | Vigencia del Access Token de corta duración (por defecto 15 minutos) | `15` |
+| `JWT_REFRESH_TTL_HOURS`  | Vigencia del Refresh Token rotado de larga duración (por defecto 7 días) | `168` |
 | `CORS_ALLOWED_ORIGINS`   | Orígenes web autorizados para consumo de la API           | `http://localhost:5173,http://localhost:5174` |
 | `ADMIN_INITIAL_EMAIL`    | Correo del administrador inicial (se crea solo si no hay ninguno) | `admin@su-institucion.example`        |
 | `ADMIN_INITIAL_PASSWORD` | Clave inicial para inicialización automática              | `defina_una_clave_privada_larga`              |

@@ -9,6 +9,9 @@ import (
 // AuthService define el contrato de casos de uso para autenticacion, roles y MFA.
 type AuthService interface {
 	Login(ctx context.Context, email, password, totpCode string) (token string, user *domain.User, err error)
+	LoginWithTokens(ctx context.Context, email, password, totpCode string) (tokens *domain.TokenPair, user *domain.User, err error)
+	RefreshToken(ctx context.Context, refreshToken string) (tokens *domain.TokenPair, user *domain.User, err error)
+	RevokeToken(ctx context.Context, refreshToken string) error
 	Register(ctx context.Context, user *domain.User, plainPassword string) error
 	RegisterStaff(ctx context.Context, user *domain.User, plainPassword string) error
 	RegisterAdmin(ctx context.Context, user *domain.User, plainPassword string) error

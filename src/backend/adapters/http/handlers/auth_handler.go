@@ -44,7 +44,7 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 
 	c.Locals("audit_action", string(domain.ActionLogin))
 
-	token, user, err := h.authService.Login(c.Context(), req.Email, req.Password, req.TOTPCode)
+	pair, user, err := h.authService.LoginWithTokens(c.Context(), req.Email, req.Password, req.TOTPCode)
 	if err != nil {
 		if errors.Is(err, domain.ErrTooManyAttempts) {
 			return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{
@@ -82,11 +82,71 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 	c.Locals("role", user.RoleName)
 
 	return c.JSON(fiber.Map{
-		"token": token,
-		"user":  userView(user),
+		"token":         pair.AccessToken,
+		"access_token":  pair.AccessToken,
+		"refresh_token": pair.RefreshToken,
+		"token_type":    pair.TokenType,
+		"expires_in":    pair.ExpiresIn,
+		"user":          userView(user),
 	})
 }
 
+
+// RefreshTokenRequest estructura el cuerpo para la renovacion del token de acceso.
+type RefreshTokenRequest struct {
+	RefreshToken string `json:"refresh_token"`
+}
+
+// RefreshToken renueva el Access Token y entrega un nuevo Refresh Token rotado.
+func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
+	var req RefreshTokenRequest
+	if err := c.BodyParser(&req); err != nil || strings.TrimSpace(req.RefreshToken) == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "El token de renovacion (refresh_token) es obligatorio",
+		})
+	}
+
+	pair, user, err := h.authService.RefreshToken(c.Context(), strings.TrimSpace(req.RefreshToken))
+	if err != nil {
+		if errors.Is(err, domain.ErrSessionCompromised) {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": "Posible compromiso de sesion por reutilizacion de token. Todas las sesiones activas han sido revocadas. Inicie sesion nuevamente.",
+				"code":  "SESSION_COMPROMISED",
+			})
+		}
+		if errors.Is(err, domain.ErrUserInactive) {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+				"error": "Cuenta inactiva o deshabilitada por administracion",
+				"code":  "ACCOUNT_DISABLED",
+			})
+		}
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Token de renovacion invalido o expirado",
+			"code":  "TOKEN_EXPIRED",
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"token":         pair.AccessToken,
+		"access_token":  pair.AccessToken,
+		"refresh_token": pair.RefreshToken,
+		"token_type":    pair.TokenType,
+		"expires_in":    pair.ExpiresIn,
+		"user":          userView(user),
+	})
+}
+
+// Logout invalida el refresh token del usuario de manera explicita.
+func (h *AuthHandler) Logout(c *fiber.Ctx) error {
+	var req RefreshTokenRequest
+	_ = c.BodyParser(&req)
+	if token := strings.TrimSpace(req.RefreshToken); token != "" {
+		_ = h.authService.RevokeToken(c.Context(), token)
+	}
+	return c.JSON(fiber.Map{
+		"message": "Sesion cerrada exitosamente",
+	})
+}
 // userView arma la representacion publica de la cuenta autenticada.
 func userView(user *domain.User) fiber.Map {
 	return fiber.Map{

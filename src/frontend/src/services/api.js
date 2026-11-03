@@ -18,17 +18,29 @@ if (localStorage.getItem('saludconecta_token')?.startsWith('simulated-')) {
 export const apiClient = {
   // Estado de sesion en memoria / local cache
   token: localStorage.getItem('saludconecta_token') || '',
+  refreshToken: localStorage.getItem('saludconecta_refresh_token') || '',
   user: JSON.parse(localStorage.getItem('saludconecta_user') || 'null'),
+  _refreshPromise: null,
 
-  setAuth(token, user) {
-    this.token = token;
+  setAuth(token, user, refreshToken) {
+    this.token = token || '';
     this.user = user;
-    if (token) {
-      localStorage.setItem('saludconecta_token', token);
+    if (refreshToken !== undefined) {
+      this.refreshToken = refreshToken || '';
+    }
+    if (this.token) {
+      localStorage.setItem('saludconecta_token', this.token);
       localStorage.setItem('saludconecta_user', JSON.stringify(user));
+      if (this.refreshToken) {
+        localStorage.setItem('saludconecta_refresh_token', this.refreshToken);
+      } else {
+        localStorage.removeItem('saludconecta_refresh_token');
+      }
     } else {
+      this.refreshToken = '';
       localStorage.removeItem('saludconecta_token');
       localStorage.removeItem('saludconecta_user');
+      localStorage.removeItem('saludconecta_refresh_token');
     }
   },
 
@@ -51,8 +63,30 @@ export const apiClient = {
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
 
+        const isAuthEndpoint =
+          endpoint === '/auth/login' ||
+          endpoint === '/auth/refresh' ||
+          endpoint === '/auth/logout';
+
+        // Intento de renovacion transparente ante expiracion del Access Token (401)
+        if (res.status === 401 && !isAuthEndpoint && this.refreshToken) {
+          try {
+            await this.refreshSession();
+            // Reintenta la peticion con el nuevo access token
+            return await this.request(endpoint, { strict, ...options });
+          } catch {
+            const error = new Error(
+              errorData.error || (res.status >= 500 ? UNAVAILABLE_MESSAGE : `Error HTTP ${res.status}`)
+            );
+            error.status = 401;
+            error.data = errorData;
+            if (strict) throw error;
+            return null;
+          }
+        }
+
         // Un 401 fuera del login indica token invalido, expirado o cuenta desactivada
-        if (res.status === 401 && endpoint !== '/auth/login' && this.token) {
+        if (res.status === 401 && !isAuthEndpoint && this.token) {
           this.expireSession();
         }
 
@@ -73,8 +107,44 @@ export const apiClient = {
     }
   },
 
+  async refreshSession() {
+    if (this._refreshPromise) {
+      return this._refreshPromise;
+    }
+
+    this._refreshPromise = (async () => {
+      try {
+        if (!this.refreshToken) {
+          throw new Error('No hay refresh token disponible');
+        }
+
+        const res = await fetch(`${API_BASE}/auth/refresh`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refresh_token: this.refreshToken }),
+        });
+
+        if (!res.ok) {
+          throw new Error('Token de renovacion rechazado o expirado');
+        }
+
+        const data = await res.json();
+        const nextAccess = data.access_token || data.token;
+        this.setAuth(nextAccess, data.user, data.refresh_token);
+        return data;
+      } catch (err) {
+        this.expireSession();
+        throw err;
+      } finally {
+        this._refreshPromise = null;
+      }
+    })();
+
+    return this._refreshPromise;
+  },
+
   expireSession() {
-    this.setAuth('', null);
+    this.setAuth('', null, '');
     localStorage.removeItem('saludconecta_session_active');
     window.dispatchEvent(new CustomEvent(SESSION_EXPIRED_EVENT));
   },
@@ -86,8 +156,24 @@ export const apiClient = {
       body: JSON.stringify(credentials),
     });
 
-    this.setAuth(res.token, res.user);
+    this.setAuth(res.token || res.access_token, res.user, res.refresh_token);
     return res;
+  },
+
+  async logout() {
+    try {
+      if (this.refreshToken) {
+        await fetch(`${API_BASE}/auth/logout`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refresh_token: this.refreshToken }),
+        });
+      }
+    } catch {
+      // Ignora error de red en cierre
+    } finally {
+      this.setAuth('', null, '');
+    }
   },
 
   async me() {

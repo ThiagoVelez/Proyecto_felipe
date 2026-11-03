@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -25,9 +26,10 @@ var (
 
 // JWTClaims encapsula la informacion de identidad en el token de acceso.
 type JWTClaims struct {
-	UserID string `json:"user_id"`
-	Role   string `json:"role"`
-	Email  string `json:"email"`
+	UserID    string `json:"user_id"`
+	Role      string `json:"role"`
+	Email     string `json:"email"`
+	TokenType string `json:"token_type,omitempty"`
 	jwt.RegisteredClaims
 }
 
@@ -69,23 +71,73 @@ func CalculateChainedRecordHash(previousHash, patientID, doctorID, anamnesis, ph
 	return ComputeSHA256(normalized)
 }
 
-// GenerateJWT firma un nuevo token de sesion con vigencia configurable.
-func GenerateJWT(userID, role, email, secret string, ttl time.Duration) (string, error) {
+// GenerateAccessToken firma un nuevo token de acceso de corta duracion (ej: 15 minutos).
+func GenerateAccessToken(userID, role, email, secret string, ttl time.Duration) (string, error) {
 	claims := JWTClaims{
-		UserID: userID,
-		Role:   role,
-		Email:  email,
+		UserID:    userID,
+		Role:      role,
+		Email:     email,
+		TokenType: "access",
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(ttl)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),
 			Issuer:    "saludconecta-ips",
 			Subject:   userID,
+			ID:        uuid.New().String(),
 		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(secret))
+}
+
+// GenerateRefreshToken firma un token de renovacion de larga duracion con identificador unico (JTI).
+func GenerateRefreshToken(userID, jti, secret string, ttl time.Duration) (string, error) {
+	claims := JWTClaims{
+		UserID:    userID,
+		TokenType: "refresh",
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(ttl)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			NotBefore: jwt.NewNumericDate(time.Now()),
+			Issuer:    "saludconecta-ips",
+			Subject:   userID,
+			ID:        jti,
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(secret))
+}
+
+// GenerateJWT mantiene compatibilidad hacia atras delegando a GenerateAccessToken.
+func GenerateJWT(userID, role, email, secret string, ttl time.Duration) (string, error) {
+	return GenerateAccessToken(userID, role, email, secret, ttl)
+}
+
+// ValidateAccessToken valida la firma, vigencia y rechaza tokens que declaren un tipo distinto de "access".
+func ValidateAccessToken(tokenStr, secret string) (*JWTClaims, error) {
+	claims, err := ValidateJWT(tokenStr, secret)
+	if err != nil {
+		return nil, err
+	}
+	if claims.TokenType != "" && claims.TokenType != "access" {
+		return nil, ErrInvalidToken
+	}
+	return claims, nil
+}
+
+// ValidateRefreshToken valida la firma, vigencia y asegura que el token sea de tipo "refresh" con JTI valido.
+func ValidateRefreshToken(tokenStr, secret string) (*JWTClaims, error) {
+	claims, err := ValidateJWT(tokenStr, secret)
+	if err != nil {
+		return nil, err
+	}
+	if claims.TokenType != "refresh" || claims.ID == "" || claims.UserID == "" {
+		return nil, ErrInvalidToken
+	}
+	return claims, nil
 }
 
 // ValidateJWT valida la firma y vigencia del token extrayendo sus claims.

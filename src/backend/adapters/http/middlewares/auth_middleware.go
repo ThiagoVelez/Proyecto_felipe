@@ -37,7 +37,7 @@ func AuthMiddleware(jwtSecret string, sessions SessionValidator) fiber.Handler {
 			return unauthorized(c, "Formato de cabecera invalido; se requiere 'Bearer <token>'")
 		}
 
-		claims, err := crypto.ValidateJWT(parts[1], jwtSecret)
+		claims, err := crypto.ValidateAccessToken(parts[1], jwtSecret)
 		if err != nil {
 			return unauthorized(c, "Token de acceso invalido o expirado")
 		}

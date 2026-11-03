@@ -261,4 +261,63 @@ describe('Cliente HTTP - Manejo central de sesión', () => {
       );
     });
   });
+  it('renueva transparentemente el token de acceso cuando recibe un 401 y reintenta la peticion con exito', async () => {
+    apiClient.setAuth('access-viejo', { id: 'u1' }, 'refresh-valido');
+
+    let callCount = 0;
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url, init) => {
+      callCount++;
+      const urlStr = String(url);
+      if (urlStr.includes('/auth/refresh')) {
+        return jsonResponse({
+          access_token: 'access-nuevo-rotado',
+          refresh_token: 'refresh-nuevo-rotado',
+          user: { id: 'u1', role: 'MEDICO' },
+        });
+      }
+      if (urlStr.includes('/auth/me')) {
+        if (init?.headers?.Authorization === 'Bearer access-viejo') {
+          return jsonResponse({ error: 'Token expirado' }, 401);
+        }
+        if (init?.headers?.Authorization === 'Bearer access-nuevo-rotado') {
+          return jsonResponse({ user: { id: 'u1', role: 'MEDICO' } });
+        }
+      }
+      return jsonResponse({}, 404);
+    });
+
+    const user = await apiClient.me();
+    expect(user).toEqual({ id: 'u1', role: 'MEDICO' });
+    expect(apiClient.token).toBe('access-nuevo-rotado');
+    expect(apiClient.refreshToken).toBe('refresh-nuevo-rotado');
+    expect(localStorage.getItem('saludconecta_token')).toBe('access-nuevo-rotado');
+    expect(localStorage.getItem('saludconecta_refresh_token')).toBe('refresh-nuevo-rotado');
+  });
+
+  it('almacena refresh_token en login y lo remueve por completo en logout', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      const urlStr = String(url);
+      if (urlStr.includes('/auth/login')) {
+        return jsonResponse({
+          token: 'acc-1',
+          refresh_token: 'ref-1',
+          user: { id: 'u2', role: 'MEDICO' },
+        });
+      }
+      if (urlStr.includes('/auth/logout')) {
+        return jsonResponse({ message: 'Sesion cerrada' });
+      }
+      return jsonResponse({}, 200);
+    });
+
+    await apiClient.login({ email: 'dr@ips.gov.co', password: '123' });
+    expect(localStorage.getItem('saludconecta_token')).toBe('acc-1');
+    expect(localStorage.getItem('saludconecta_refresh_token')).toBe('ref-1');
+
+    await apiClient.logout();
+    expect(apiClient.token).toBe('');
+    expect(apiClient.refreshToken).toBe('');
+    expect(localStorage.getItem('saludconecta_token')).toBeNull();
+    expect(localStorage.getItem('saludconecta_refresh_token')).toBeNull();
+  });
 });
