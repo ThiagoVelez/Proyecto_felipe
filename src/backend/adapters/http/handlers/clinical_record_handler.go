@@ -106,7 +106,10 @@ func (h *ClinicalRecordHandler) CloseAndSign(c *fiber.Ctx) error {
 
 	closed, err := h.recordService.CloseAndSign(c.Context(), recordID, doctorID, req.SignatureToken)
 	if err != nil {
-		if errors.Is(err, domain.ErrRecordAlreadyClosed) || errors.Is(err, domain.ErrChainConflict) {
+		if errors.Is(err, domain.ErrRecordAlreadyClosed) {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": err.Error()})
+		}
+		if errors.Is(err, domain.ErrChainConflict) {
 			return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": err.Error()})
 		}
 		if errors.Is(err, domain.ErrNotRecordOwner) {

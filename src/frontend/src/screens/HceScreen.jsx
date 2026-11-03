@@ -430,9 +430,11 @@ export const HceScreen = ({ patient, onPatientChange, triage, onNavigate }) => {
                 </label>
                 <textarea
                   id="hce-anamnesis"
+                  data-testid="hce-anamnesis"
                   name="anamnesis"
                   rows={4}
                   readOnly={readOnly}
+                  disabled={readOnly}
                   value={view.anamnesis ?? ''}
                   onChange={handleFieldChange}
                   aria-invalid={Boolean(fieldErrors.anamnesis)}
@@ -446,9 +448,11 @@ export const HceScreen = ({ patient, onPatientChange, triage, onNavigate }) => {
                 </label>
                 <textarea
                   id="hce-physical-exam"
+                  data-testid="hce-physical-exam"
                   name="physical_exam"
                   rows={4}
                   readOnly={readOnly}
+                  disabled={readOnly}
                   value={view.physical_exam ?? ''}
                   onChange={handleFieldChange}
                   aria-invalid={Boolean(fieldErrors.physical_exam)}
@@ -467,9 +471,11 @@ export const HceScreen = ({ patient, onPatientChange, triage, onNavigate }) => {
                 </label>
                 <input
                   id="hce-cie11"
+                  data-testid="hce-cie11"
                   type="text"
                   name="cie11_code"
                   readOnly={readOnly}
+                  disabled={readOnly}
                   value={view.cie11_code ?? ''}
                   onChange={handleFieldChange}
                   aria-invalid={Boolean(fieldErrors.cie11_code)}
@@ -483,9 +489,11 @@ export const HceScreen = ({ patient, onPatientChange, triage, onNavigate }) => {
                 </label>
                 <input
                   id="hce-diagnosis"
+                  data-testid="hce-diagnosis"
                   type="text"
                   name="diagnosis_description"
                   readOnly={readOnly}
+                  disabled={readOnly}
                   value={view.diagnosis_description ?? ''}
                   onChange={handleFieldChange}
                   aria-invalid={Boolean(fieldErrors.diagnosis_description)}
@@ -505,9 +513,11 @@ export const HceScreen = ({ patient, onPatientChange, triage, onNavigate }) => {
               </label>
               <textarea
                 id="hce-plan"
+                data-testid="hce-plan"
                 name="treatment_plan"
                 rows={6}
                 readOnly={readOnly}
+                disabled={readOnly}
                 value={view.treatment_plan ?? ''}
                 onChange={handleFieldChange}
                 aria-invalid={Boolean(fieldErrors.treatment_plan)}
