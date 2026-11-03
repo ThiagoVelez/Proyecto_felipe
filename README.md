@@ -979,6 +979,7 @@ proyecto-final/
 │           │   ├── PatientBanner.jsx / AllergyBanner.jsx # Cabecera del paciente y alergias reales
 │           │   ├── SignFolioModal.jsx # Confirmación de firma y cierre de folio
 │           │   ├── MfaQrModal.jsx # Modal con QR escaneable en Google Authenticator/Authy
+│           │   ├── AdminRegisterModal.jsx # Registro de Administradores de Centros de Salud (Rol ADMIN, activación y QR exclusivo)
 │           │   └── StaffRegisterModal.jsx # Modal de registro de personal (perfil admin) con validación ReTHUS
 │           ├── screens/           # Pantallas asistenciales (Stitch Design System)
 │           │   ├── AuthScreen.jsx # Acceso, sede, fondo animado con pulso ECG y QR directo

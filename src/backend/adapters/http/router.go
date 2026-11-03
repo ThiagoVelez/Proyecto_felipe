@@ -37,6 +37,8 @@ func SetupRoutes(app *fiber.App, cfg RouterConfig) {
 	auth := api.Group("/auth")
 	authLimit := middlewares.AuthRateLimitMiddleware(10, 0)
 	auth.Post("/login", authLimit, cfg.AuthHandler.Login)
+	auth.Post("/register-admin", authLimit, cfg.AuthHandler.RegisterAdmin)
+	auth.Get("/mfa-seed", authLimit, cfg.AuthHandler.GetMFASeed)
 
 	authProtected := auth.Use(authMW)
 	authProtected.Get("/me", cfg.AuthHandler.Me)

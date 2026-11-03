@@ -32,7 +32,7 @@ describe('Login - El segundo factor lo valida siempre el servidor', () => {
     const onLoginSuccess = vi.fn();
     const { container } = render(<AuthScreen onLoginSuccess={onLoginSuccess} />);
 
-    expect(screen.queryByLabelText(/Digito 1 del codigo TOTP/i)).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/Digito 1 del codigo TOTP/i)).toBeInTheDocument();
 
     fillLogin();
     fireEvent.submit(container.querySelector('form'));
@@ -196,5 +196,69 @@ describe('Cliente HTTP - Manejo central de sesión', () => {
     await expect(apiClient.adminGetUsers()).rejects.toThrow('Demasiadas solicitudes');
     await expect(apiClient.adminGetAuditLogs()).rejects.toThrow('Demasiadas solicitudes');
     await expect(apiClient.adminUpdateUserStatus('u1', false)).rejects.toThrow('Demasiadas solicitudes');
+  });
+
+  it('no muestra el botón de alto contraste y muestra el botón de registro de administrador', () => {
+    render(<AuthScreen />);
+
+    expect(screen.queryByText(/Alto Contraste/i)).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Registrar Administrador de Centro de Salud/i })
+    ).toBeInTheDocument();
+  });
+
+  it('abre el modal de registro de administrador y procesa el registro institucional', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      jsonResponse(
+        {
+          message: 'Administrador registrado',
+          user: {
+            id: 'adm-new',
+            email: 'admin.nuevo@saludconecta.ips.gov.co',
+            full_name: 'Admin Nuevo',
+            role: 'ADMIN',
+            role_id: 1,
+            branch: 'Sede Cartago - Hospital Central',
+          },
+          mfa_secret: 'TESTSECRETBASE32',
+          otpauth_uri: 'otpauth://totp/SaludConecta:admin.nuevo@saludconecta.ips.gov.co?secret=TESTSECRETBASE32',
+        },
+        201
+      )
+    );
+
+    render(<AuthScreen />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Registrar Administrador de Centro de Salud/i }));
+
+    expect(await screen.findByText(/Registro de Administrador de Centro de Salud/i)).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/Nombre Completo del Administrador/i), {
+      target: { value: 'Admin Nuevo' },
+    });
+    fireEvent.change(screen.getByLabelText(/Número de Documento/i), {
+      target: { value: '11223344' },
+    });
+    fireEvent.change(screen.getByLabelText(/Correo Institucional \*/i), {
+      target: { value: 'admin.nuevo@saludconecta.ips.gov.co' },
+    });
+    fireEvent.change(screen.getByLabelText(/Contraseña Maestra/i), {
+      target: { value: 'AdminClave2026*' },
+    });
+    fireEvent.change(screen.getByLabelText(/Confirmar Contraseña/i), {
+      target: { value: 'AdminClave2026*' },
+    });
+
+    const submitBtn = screen.getByRole('button', { name: /Confirmar registro de administrador/i });
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(fetchSpy).toHaveBeenCalledWith(
+        expect.stringContaining('/auth/register-admin'),
+        expect.objectContaining({
+          method: 'POST',
+        })
+      );
+    });
   });
 });

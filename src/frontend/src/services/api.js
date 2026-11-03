@@ -114,6 +114,21 @@ export const apiClient = {
     });
   },
 
+  async getMfaSeed(email) {
+    return this.request(`/auth/mfa-seed?email=${encodeURIComponent(email || '')}`, {
+      strict: false,
+      method: 'GET',
+    });
+  },
+
+  async registerAdmin(adminData) {
+    return this.request('/auth/register-admin', {
+      strict: true,
+      method: 'POST',
+      body: JSON.stringify(adminData),
+    });
+  },
+
   async registerStaff(staffData) {
     return this.request('/admin/users', {
       strict: true,

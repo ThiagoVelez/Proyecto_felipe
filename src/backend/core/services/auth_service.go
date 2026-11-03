@@ -127,6 +127,64 @@ func (s *authService) RegisterStaff(ctx context.Context, user *domain.User, plai
 	return s.Register(ctx, user, plainPassword)
 }
 
+// RegisterAdmin implementa el registro de un nuevo Administrador de Centro de Salud (rol fijo ADMIN, role_id = 1).
+// La cuenta nace activa con su semilla criptográfica TOTP propia y exclusiva generada en el servidor.
+func (s *authService) RegisterAdmin(ctx context.Context, user *domain.User, plainPassword string) error {
+	user.RoleID = 1
+	user.RoleName = "ADMIN"
+	user.IsActive = true
+	user.MFAEnabled = true
+
+	if user.MFASecret == nil || *user.MFASecret == "" {
+		sec, err := crypto.GenerateMFASecret()
+		if err != nil {
+			return err
+		}
+		user.MFASecret = &sec
+	}
+
+	return s.Register(ctx, user, plainPassword)
+}
+
+// GetMFASeed consulta o aprovisiona el secreto TOTP único y la URI otpauth asociada a un correo institucional.
+// Garantiza que diferentes facultativos o administradores nunca compartan la misma semilla ni el mismo código TOTP.
+func (s *authService) GetMFASeed(ctx context.Context, email string) (string, string, error) {
+	normEmail := strings.ToLower(strings.TrimSpace(email))
+	if normEmail == "" {
+		normEmail = "usuario@saludconecta.ips.gov.co"
+	}
+
+	user, err := s.userRepo.GetByEmail(ctx, normEmail)
+	var secret string
+	if err == nil && user != nil {
+		if user.MFASecret != nil && *user.MFASecret != "" {
+			secret = *user.MFASecret
+		} else {
+			newSecret, genErr := crypto.GenerateMFASecret()
+			if genErr != nil {
+				return "", "", genErr
+			}
+			secret = newSecret
+			user.MFASecret = &newSecret
+			user.MFAEnabled = true
+			_ = s.userRepo.UpdateMFA(ctx, user.ID, newSecret, true)
+		}
+	} else {
+		// Semilla determinista Base32 calculada a partir del hash del correo para que cada cuenta tenga un QR único
+		sum := crypto.ComputeSHA256("saludconecta:mfa:seed:" + normEmail)
+		alphabet := "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
+		var sb strings.Builder
+		for i := 0; i < len(sum) && sb.Len() < 24; i++ {
+			idx := int(sum[i]) % len(alphabet)
+			sb.WriteByte(alphabet[idx])
+		}
+		secret = sb.String()
+	}
+
+	uri := crypto.BuildOTPAuthURI(secret, normEmail, "SaludConecta IPS")
+	return secret, uri, nil
+}
+
 // ValidateSession se consulta en cada solicitud autenticada: una cuenta suspendida pierde acceso de inmediato
 // aunque su token JWT siga vigente, y el rol efectivo es el almacenado, no el declarado en el token.
 func (s *authService) ValidateSession(ctx context.Context, userID string) (*domain.User, error) {
