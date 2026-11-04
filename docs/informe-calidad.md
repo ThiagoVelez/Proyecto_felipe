@@ -7,6 +7,7 @@
 **Docente:** Felipe Gutierrez Isaza  
 **Entregable:** Seguimiento 2 - Calidad y Mantenimiento  
 **Marco Normativo y Tecnico:** ISO/IEC 25010, Resolucion 1995 de 1999 (MinSalud), Resolucion 2275 de 2023 (RIPS), Ley 1581 de 2012 (Habeas Data Clinico)  
+**Herramientas y Modelos de Inteligencia Artificial (IA):** Google Antigravity con Gemini 3.8 Flash en High y Claude Code con Sonnet 5.5 en High  
 
 ---
 
