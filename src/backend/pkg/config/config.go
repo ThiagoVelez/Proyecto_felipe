@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -32,6 +33,8 @@ type Config struct {
 	DBName         string
 	JWTSecret      string
 	JWTTTL         time.Duration
+	JWTAccessTTL   time.Duration
+	JWTRefreshTTL  time.Duration
 	CORSOrigins    string
 	IPSNIT         string
 	CodPrestador   string
@@ -80,7 +83,9 @@ func LoadFrom(lookup func(string) string) (*Config, error) {
 		DBPassword:   lookup("DB_PASSWORD"),
 		DBName:       getEnv(lookup, "DB_NAME", "saludconecta_db"),
 		JWTSecret:    lookup("JWT_SECRET"),
-		JWTTTL:       8 * time.Hour,
+		JWTTTL:       15 * time.Minute,
+		JWTAccessTTL: 15 * time.Minute,
+		JWTRefreshTTL: 7 * 24 * time.Hour,
 		CORSOrigins:  getEnv(lookup, "CORS_ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000,http://localhost:5174"),
 		IPSNIT:       getEnv(lookup, "IPS_NIT", "000000000"),
 		CodPrestador: getEnv(lookup, "COD_PRESTADOR", "000000000000"),
@@ -88,6 +93,18 @@ func LoadFrom(lookup func(string) string) (*Config, error) {
 
 		AdminPassword:  lookup("ADMIN_INITIAL_PASSWORD"),
 		DBConnectTries: 10,
+	}
+
+	if accessMinsStr := lookup("JWT_ACCESS_TTL_MINUTES"); accessMinsStr != "" {
+		if val, err := strconv.Atoi(strings.TrimSpace(accessMinsStr)); err == nil && val > 0 {
+			cfg.JWTAccessTTL = time.Duration(val) * time.Minute
+			cfg.JWTTTL = cfg.JWTAccessTTL
+		}
+	}
+	if refreshHoursStr := lookup("JWT_REFRESH_TTL_HOURS"); refreshHoursStr != "" {
+		if val, err := strconv.Atoi(strings.TrimSpace(refreshHoursStr)); err == nil && val > 0 {
+			cfg.JWTRefreshTTL = time.Duration(val) * time.Hour
+		}
 	}
 
 	if err := ValidateJWTSecret(cfg.JWTSecret); err != nil {

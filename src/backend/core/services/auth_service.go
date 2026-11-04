@@ -8,13 +8,17 @@ import (
 
 	"saludconecta-backend/core/domain"
 	"saludconecta-backend/core/ports"
+	"github.com/google/uuid"
 	"saludconecta-backend/pkg/crypto"
 )
 
 type authService struct {
 	userRepo  ports.UserRepository
 	jwtSecret string
-	jwtTTL    time.Duration
+	jwtTTL     time.Duration
+	accessTTL  time.Duration
+	refreshTTL time.Duration
+	tokens     *refreshTokenTracker
 	attempts  *attemptTracker
 }
 
@@ -25,11 +29,25 @@ var (
 
 // NewAuthService construye la instancia del servicio de autenticacion y control de acceso.
 func NewAuthService(userRepo ports.UserRepository, jwtSecret string, jwtTTL time.Duration) ports.AuthService {
+	return NewAuthServiceWithTTL(userRepo, jwtSecret, jwtTTL, 7*24*time.Hour)
+}
+
+// NewAuthServiceWithTTL construye la instancia del servicio con vigencias configurables para token de acceso y de renovacion.
+func NewAuthServiceWithTTL(userRepo ports.UserRepository, jwtSecret string, accessTTL, refreshTTL time.Duration) ports.AuthService {
+	if accessTTL <= 0 {
+		accessTTL = 15 * time.Minute
+	}
+	if refreshTTL <= 0 {
+		refreshTTL = 7 * 24 * time.Hour
+	}
 	return &authService{
-		userRepo:  userRepo,
-		jwtSecret: jwtSecret,
-		jwtTTL:    jwtTTL,
-		attempts:  newDefaultAttemptTracker(),
+		userRepo:   userRepo,
+		jwtSecret:  jwtSecret,
+		jwtTTL:     accessTTL,
+		accessTTL:  accessTTL,
+		refreshTTL: refreshTTL,
+		attempts:   newDefaultAttemptTracker(),
+		tokens:     newRefreshTokenTracker(),
 	}
 }
 
@@ -50,46 +68,125 @@ func mfaKey(userID string) string {
 }
 
 func (s *authService) Login(ctx context.Context, email, password, totpCode string) (string, *domain.User, error) {
+	pair, user, err := s.LoginWithTokens(ctx, email, password, totpCode)
+	if err != nil {
+		return "", nil, err
+	}
+	return pair.AccessToken, user, nil
+}
+
+func (s *authService) LoginWithTokens(ctx context.Context, email, password, totpCode string) (*domain.TokenPair, *domain.User, error) {
 	normalizedEmail := strings.ToLower(strings.TrimSpace(email))
 	key := loginKey(normalizedEmail)
 
 	if s.attempts.Blocked(key) {
-		return "", nil, domain.ErrTooManyAttempts
+		return nil, nil, domain.ErrTooManyAttempts
 	}
 
 	user, err := s.userRepo.GetByEmail(ctx, normalizedEmail)
 	if err != nil {
 		burnPasswordCheck(password)
 		s.attempts.Fail(key)
-		return "", nil, domain.ErrInvalidCredentials
+		return nil, nil, domain.ErrInvalidCredentials
 	}
 
 	if !crypto.CheckPassword(password, user.PasswordHash) {
 		s.attempts.Fail(key)
-		return "", nil, domain.ErrInvalidCredentials
+		return nil, nil, domain.ErrInvalidCredentials
 	}
 
 	if !user.IsActive {
-		return "", nil, domain.ErrUserInactive
+		return nil, nil, domain.ErrUserInactive
 	}
 
 	if user.MFAEnabled {
 		if totpCode == "" {
-			return "", nil, domain.ErrMFARequired
+			return nil, nil, domain.ErrMFARequired
 		}
 		if user.MFASecret == nil || !crypto.VerifyTOTP(*user.MFASecret, totpCode) {
 			s.attempts.Fail(key)
-			return "", nil, domain.ErrMFAValidationFailed
+			return nil, nil, domain.ErrMFAValidationFailed
 		}
 	}
 
-	token, err := crypto.GenerateJWT(user.ID, user.RoleName, user.Email, s.jwtSecret, s.jwtTTL)
+	accessToken, err := crypto.GenerateAccessToken(user.ID, user.RoleName, user.Email, s.jwtSecret, s.accessTTL)
 	if err != nil {
-		return "", nil, err
+		return nil, nil, err
 	}
 
+	refreshJTI := uuid.New().String()
+	refreshToken, err := crypto.GenerateRefreshToken(user.ID, refreshJTI, s.jwtSecret, s.refreshTTL)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	s.tokens.Register(user.ID, refreshJTI, time.Now().Add(s.refreshTTL))
 	s.attempts.Reset(key)
-	return token, user, nil
+
+	pair := &domain.TokenPair{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		TokenType:    "Bearer",
+		ExpiresIn:    int64(s.accessTTL.Seconds()),
+	}
+	return pair, user, nil
+}
+
+func (s *authService) RefreshToken(ctx context.Context, refreshTokenStr string) (*domain.TokenPair, *domain.User, error) {
+	claims, err := crypto.ValidateRefreshToken(refreshTokenStr, s.jwtSecret)
+	if err != nil {
+		return nil, nil, domain.ErrInvalidRefreshToken
+	}
+
+	userID, valid, reuseDetected := s.tokens.ConsumeAndRotate(claims.ID)
+	if reuseDetected {
+		s.tokens.RevokeAllForUser(claims.UserID)
+		return nil, nil, domain.ErrSessionCompromised
+	}
+
+	if !valid || userID == "" {
+		return nil, nil, domain.ErrInvalidRefreshToken
+	}
+
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil || user == nil {
+		s.tokens.RevokeAllForUser(userID)
+		return nil, nil, domain.ErrUserNotFound
+	}
+
+	if !user.IsActive {
+		s.tokens.RevokeAllForUser(userID)
+		return nil, nil, domain.ErrUserInactive
+	}
+
+	newAccessToken, err := crypto.GenerateAccessToken(user.ID, user.RoleName, user.Email, s.jwtSecret, s.accessTTL)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	newRefreshJTI := uuid.New().String()
+	newRefreshToken, err := crypto.GenerateRefreshToken(user.ID, newRefreshJTI, s.jwtSecret, s.refreshTTL)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	s.tokens.Register(user.ID, newRefreshJTI, time.Now().Add(s.refreshTTL))
+
+	pair := &domain.TokenPair{
+		AccessToken:  newAccessToken,
+		RefreshToken: newRefreshToken,
+		TokenType:    "Bearer",
+		ExpiresIn:    int64(s.accessTTL.Seconds()),
+	}
+	return pair, user, nil
+}
+
+func (s *authService) RevokeToken(ctx context.Context, refreshTokenStr string) error {
+	claims, err := crypto.ValidateRefreshToken(refreshTokenStr, s.jwtSecret)
+	if err == nil && claims != nil && claims.ID != "" {
+		s.tokens.RevokeToken(claims.ID)
+	}
+	return nil
 }
 
 func (s *authService) Register(ctx context.Context, user *domain.User, plainPassword string) error {
@@ -125,6 +222,64 @@ func (s *authService) RegisterStaff(ctx context.Context, user *domain.User, plai
 	user.IsActive = false
 
 	return s.Register(ctx, user, plainPassword)
+}
+
+// RegisterAdmin implementa el registro de un nuevo Administrador de Centro de Salud (rol fijo ADMIN, role_id = 1).
+// La cuenta nace activa con su semilla criptográfica TOTP propia y exclusiva generada en el servidor.
+func (s *authService) RegisterAdmin(ctx context.Context, user *domain.User, plainPassword string) error {
+	user.RoleID = 1
+	user.RoleName = "ADMIN"
+	user.IsActive = true
+	user.MFAEnabled = true
+
+	if user.MFASecret == nil || *user.MFASecret == "" {
+		sec, err := crypto.GenerateMFASecret()
+		if err != nil {
+			return err
+		}
+		user.MFASecret = &sec
+	}
+
+	return s.Register(ctx, user, plainPassword)
+}
+
+// GetMFASeed consulta o aprovisiona el secreto TOTP único y la URI otpauth asociada a un correo institucional.
+// Garantiza que diferentes facultativos o administradores nunca compartan la misma semilla ni el mismo código TOTP.
+func (s *authService) GetMFASeed(ctx context.Context, email string) (string, string, error) {
+	normEmail := strings.ToLower(strings.TrimSpace(email))
+	if normEmail == "" {
+		normEmail = "usuario@saludconecta.ips.gov.co"
+	}
+
+	user, err := s.userRepo.GetByEmail(ctx, normEmail)
+	var secret string
+	if err == nil && user != nil {
+		if user.MFASecret != nil && *user.MFASecret != "" {
+			secret = *user.MFASecret
+		} else {
+			newSecret, genErr := crypto.GenerateMFASecret()
+			if genErr != nil {
+				return "", "", genErr
+			}
+			secret = newSecret
+			user.MFASecret = &newSecret
+			user.MFAEnabled = true
+			_ = s.userRepo.UpdateMFA(ctx, user.ID, newSecret, true)
+		}
+	} else {
+		// Semilla determinista Base32 calculada a partir del hash del correo para que cada cuenta tenga un QR único
+		sum := crypto.ComputeSHA256("saludconecta:mfa:seed:" + normEmail)
+		alphabet := "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
+		var sb strings.Builder
+		for i := 0; i < len(sum) && sb.Len() < 24; i++ {
+			idx := int(sum[i]) % len(alphabet)
+			sb.WriteByte(alphabet[idx])
+		}
+		secret = sb.String()
+	}
+
+	uri := crypto.BuildOTPAuthURI(secret, normEmail, "SaludConecta IPS")
+	return secret, uri, nil
 }
 
 // ValidateSession se consulta en cada solicitud autenticada: una cuenta suspendida pierde acceso de inmediato

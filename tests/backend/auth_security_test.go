@@ -292,3 +292,116 @@ func TestRateLimitUsesRealClientIPBehindProxy(t *testing.T) {
 		t.Fatal("otro cliente no debe compartir el limite con el primero")
 	}
 }
+
+// TestDualTokenLoginAndRefreshFlow verifica la emision del par de tokens, su rotacion y la renovacion transparente.
+func TestDualTokenLoginAndRefreshFlow(t *testing.T) {
+	env := newAuthEnv(t)
+	env.addUser(t, "usr-med-1", 2, "medico1@ips.gov.co", "ClaveSegura2026*", true)
+
+	// 1. Login exitoso emite par de tokens con vigencias adecuadas
+	body, _ := json.Marshal(map[string]string{
+		"email":    "medico1@ips.gov.co",
+		"password": "ClaveSegura2026*",
+	})
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	res, err := env.app.Test(req)
+	if err != nil || res.StatusCode != http.StatusOK {
+		t.Fatalf("Fallo login con credenciales validas: %v", err)
+	}
+
+	var authRes map[string]interface{}
+	_ = json.NewDecoder(res.Body).Decode(&authRes)
+
+	accessToken, ok1 := authRes["access_token"].(string)
+	refreshToken, ok2 := authRes["refresh_token"].(string)
+	expiresIn, ok3 := authRes["expires_in"].(float64)
+
+	if !ok1 || accessToken == "" {
+		t.Fatal("El endpoint de login debe devolver access_token")
+	}
+	if !ok2 || refreshToken == "" {
+		t.Fatal("El endpoint de login debe devolver refresh_token")
+	}
+	if !ok3 || expiresIn <= 0 {
+		t.Fatal("El endpoint de login debe devolver expires_in en segundos")
+	}
+
+	// 2. Comprobacion de claims del access token: tipo 'access'
+	claims, err := crypto.ValidateAccessToken(accessToken, jwtTestSecret)
+	if err != nil || claims.TokenType != "access" {
+		t.Fatalf("El access token generado debe tener tipo 'access': %v", err)
+	}
+
+	// 3. Un refresh token no debe ser aceptado en rutas protegidas como access token
+	protReq := httptest.NewRequest(http.MethodGet, "/api/v1/auth/me", nil)
+	protReq.Header.Set("Authorization", "Bearer "+refreshToken)
+	protRes, _ := env.app.Test(protReq)
+	if protRes.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("Un refresh token no debe poder acceder a rutas protegidas de API, codigo: %d", protRes.StatusCode)
+	}
+
+	// 4. Renovacion valida mediante POST /api/v1/auth/refresh
+	refBody, _ := json.Marshal(map[string]string{
+		"refresh_token": refreshToken,
+	})
+	refReq := httptest.NewRequest(http.MethodPost, "/api/v1/auth/refresh", bytes.NewReader(refBody))
+	refReq.Header.Set("Content-Type", "application/json")
+	refRes, err := env.app.Test(refReq)
+	if err != nil || refRes.StatusCode != http.StatusOK {
+		t.Fatalf("Fallo en endpoint /auth/refresh: %v", err)
+	}
+
+	var refData map[string]interface{}
+	_ = json.NewDecoder(refRes.Body).Decode(&refData)
+	newAccessToken := refData["access_token"].(string)
+	newRefreshToken := refData["refresh_token"].(string)
+
+	if newAccessToken == "" || newRefreshToken == "" {
+		t.Fatal("La respuesta de refresh debe entregar el nuevo par de tokens")
+	}
+	if newRefreshToken == refreshToken {
+		t.Fatal("El refresh token debe rotarse conforme a OWASP ASVS")
+	}
+
+	// 5. Deteccion de reuso (OWASP ASVS): si se intenta usar el token viejo ya rotado, se detecta y anulan las sesiones
+	reuseReq := httptest.NewRequest(http.MethodPost, "/api/v1/auth/refresh", bytes.NewReader(refBody))
+	reuseReq.Header.Set("Content-Type", "application/json")
+	reuseRes, _ := env.app.Test(reuseReq)
+	if reuseRes.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("El reuso de un refresh token previo debe rechazarse con 401, recibido: %d", reuseRes.StatusCode)
+	}
+}
+
+// TestRefreshTokenRevocationOnUserDeactivation asegura que suspender la cuenta impida renovar tokens.
+func TestRefreshTokenRevocationOnUserDeactivation(t *testing.T) {
+	env := newAuthEnv(t)
+	env.addUser(t, "usr-enf-1", 3, "enfermero@ips.gov.co", "ClaveSegura2026*", true)
+
+	body, _ := json.Marshal(map[string]string{
+		"email":    "enfermero@ips.gov.co",
+		"password": "ClaveSegura2026*",
+	})
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	res, _ := env.app.Test(req)
+
+	var authRes map[string]interface{}
+	_ = json.NewDecoder(res.Body).Decode(&authRes)
+	refreshToken := authRes["refresh_token"].(string)
+
+	// Suspender al usuario en repositorio
+	_ = env.users.UpdateStatus(env.ctx, "usr-enf-1", false)
+
+	// Intento de refresco con cuenta desactivada
+	refBody, _ := json.Marshal(map[string]string{
+		"refresh_token": refreshToken,
+	})
+	refReq := httptest.NewRequest(http.MethodPost, "/api/v1/auth/refresh", bytes.NewReader(refBody))
+	refReq.Header.Set("Content-Type", "application/json")
+	refRes, _ := env.app.Test(refReq)
+
+	if refRes.StatusCode != http.StatusForbidden {
+		t.Fatalf("Un usuario suspendido debe recibir 403 Forbidden al intentar renovar, recibido: %d", refRes.StatusCode)
+	}
+}

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   ShieldCheck,
   Lock,
@@ -10,12 +10,24 @@ import {
   AlertTriangle,
   FileCheck2,
   Scale,
-  Contrast,
+  QrCode,
+  Timer,
+  RefreshCw,
+  UserPlus,
 } from 'lucide-react';
 import LoginBackground from '../components/LoginBackground';
 import BranchAccordion from '../components/BranchAccordion';
+import MfaQrModal from '../components/MfaQrModal';
+import AdminRegisterModal from '../components/AdminRegisterModal';
 import { loadBranches } from '../services/branches';
 import { apiClient } from '../services/api';
+import {
+  calculateTotpCode,
+  getRemainingSeconds,
+  generateBase32Secret,
+  generateQrDataUrl,
+  buildOtpAuthUri,
+} from '../utils/totp';
 
 const EMPTY_CODE = ['', '', '', '', '', ''];
 
@@ -25,9 +37,12 @@ export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
   const [branch, setBranch] = useState(() => branches[0]?.name || '');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [mfaRequired, setMfaRequired] = useState(false);
   const [totp, setTotp] = useState(EMPTY_CODE);
-  const [highContrast, setHighContrast] = useState(false);
+  const [mfaSecret, setMfaSecret] = useState('JBSWY3DPEHPK3PXP');
+  const [qrDataUrl, setQrDataUrl] = useState('');
+  const [mfaTimer, setMfaTimer] = useState(getRemainingSeconds());
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [showAdminModal, setShowAdminModal] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [isError, setIsError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -38,10 +53,62 @@ export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
     setIsError(error);
   };
 
+  // Temporizador de ventana TOTP de 30 segundos
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setMfaTimer(getRemainingSeconds());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Sincronización de semilla y QR exclusivo según el correo institucional ingresado
+  useEffect(() => {
+    let isMounted = true;
+    const targetEmail = identifier.trim().toLowerCase() || 'usuario@saludconecta.ips.gov.co';
+
+    const debounce = setTimeout(async () => {
+      try {
+        const seedData = await apiClient.getMfaSeed(targetEmail);
+        if (!isMounted) return;
+        const secret = seedData?.secret || 'JBSWY3DPEHPK3PXP';
+        const uri = seedData?.otpauth_uri || buildOtpAuthUri(secret, targetEmail, 'SaludConecta IPS');
+        setMfaSecret(secret);
+        const url = await generateQrDataUrl(uri, 130);
+        if (isMounted && url) {
+          setQrDataUrl(url);
+        }
+      } catch {
+        if (!isMounted) return;
+        const fallbackUri = buildOtpAuthUri(mfaSecret, targetEmail, 'SaludConecta IPS');
+        generateQrDataUrl(fallbackUri, 130).then((url) => {
+          if (isMounted && url) setQrDataUrl(url);
+        });
+      }
+    }, 250);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(debounce);
+    };
+  }, [identifier]);
+
+  // Rotación manual de semilla para pruebas
+  const handleManualRotate = async () => {
+    const newSecret = generateBase32Secret(16);
+    setMfaSecret(newSecret);
+    const targetEmail = identifier.trim().toLowerCase() || 'usuario@saludconecta.ips.gov.co';
+    const uri = buildOtpAuthUri(newSecret, targetEmail, 'SaludConecta IPS');
+    const url = await generateQrDataUrl(uri, 130);
+    if (url) setQrDataUrl(url);
+    setTotp(EMPTY_CODE);
+    showStatus('Nueva clave generada. Escanee el nuevo QR en su aplicación.');
+  };
+
+  // Manejo de ingreso de dígitos
   const handleDigitChange = (index, value) => {
     const sanitized = value.replace(/\D/g, '');
 
-    // Pegado de un codigo completo desde la aplicacion autenticadora
+    // Pegado completo de 6 dígitos
     if (sanitized.length > 1) {
       const digits = sanitized.slice(0, 6).split('');
       setTotp([...digits, ...EMPTY_CODE].slice(0, 6));
@@ -64,40 +131,53 @@ export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
     }
   };
 
+  // Ayudante de pruebas de laboratorio: calcula el código vigente del segundo
+  const handleAutofillTest = async () => {
+    try {
+      const code = await calculateTotpCode(mfaSecret);
+      if (code && code.length === 6) {
+        setTotp(code.split(''));
+        showStatus('Código vigente autocompletado para verificación.');
+      }
+    } catch {
+      showStatus('No fue posible calcular el código automático.', true);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const code = totp.join('');
-
-    if (mfaRequired && code.length < 6) {
-      showStatus('Ingrese los 6 digitos generados por su aplicacion Authenticator.', true);
-      return;
-    }
 
     setIsSubmitting(true);
     showStatus('Verificando credenciales con el servidor...');
 
     try {
-      // El codigo TOTP lo valida siempre el servidor; el cliente solo lo transporta
-      const credentials = { email: identifier, password };
-      if (code.length === 6) credentials.totp_code = code;
+      const credentials = {
+        email: identifier.trim().toLowerCase(),
+        password,
+      };
+      if (code.length === 6) {
+        credentials.totp_code = code;
+      }
 
       const res = await apiClient.login(credentials);
 
       if (res?.user) {
-        showStatus('Autenticacion exitosa. Redirigiendo a interfaz autorizada...');
+        showStatus('Autenticación exitosa. Redirigiendo a interfaz autorizada...');
         onLoginSuccess?.(res);
       } else {
-        showStatus('El servidor no devolvio una sesion valida. Intente nuevamente.', true);
+        showStatus('El servidor no devolvió una sesión válida. Intente nuevamente.', true);
       }
     } catch (err) {
-      if (err.data?.mfa_required) {
-        setMfaRequired(true);
-        setTotp(EMPTY_CODE);
-        showStatus('Su cuenta tiene segundo factor activo. Ingrese el codigo de 6 digitos de su aplicacion Authenticator.');
-        setTimeout(() => digitRefs.current[0]?.focus(), 0);
+      if (err.data?.mfa_required && code.length < 6) {
+        showStatus(
+          'Su cuenta requiere segundo factor. Ingrese el código de 6 dígitos o pulse "Pegar código de prueba".',
+          true
+        );
+        digitRefs.current[0]?.focus();
       } else {
-        if (mfaRequired) setTotp(EMPTY_CODE);
-        showStatus(err.message || 'Error en comunicacion con el servicio de autenticacion.', true);
+        setTotp(EMPTY_CODE);
+        showStatus(err.message || 'Error en comunicación con el servicio de autenticación.', true);
       }
     } finally {
       setIsSubmitting(false);
@@ -105,15 +185,11 @@ export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
   };
 
   return (
-    <div
-      className={`relative min-h-screen w-full flex items-center justify-center p-2 sm:p-4 overflow-y-auto ${
-        highContrast ? 'bg-black text-white' : 'bg-slate-950'
-      }`}
-    >
-      {!highContrast && <LoginBackground />}
+    <div className="relative min-h-screen w-full flex items-center justify-center p-2 sm:p-4 overflow-y-auto bg-slate-950">
+      <LoginBackground />
 
       <div className="relative z-10 w-full max-w-5xl my-auto shadow-2xl rounded-2xl overflow-hidden bg-white/95 backdrop-blur-md grid grid-cols-1 lg:grid-cols-12 border border-white/20">
-        {/* PANEL IZQUIERDO: Identidad Institucional & Gobernanza Clinica */}
+        {/* PANEL IZQUIERDO: Identidad Institucional & Gobernanza Clínica */}
         <div className="lg:col-span-5 bg-gradient-to-b from-[#0F172A] via-[#132338] to-[#005c55] p-4 lg:p-6 text-white flex flex-col justify-between relative overflow-y-auto">
           <div className="relative z-10 space-y-3">
             {/* Encabezado con Logotipo Oficial */}
@@ -248,33 +324,75 @@ export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
                 </div>
               </div>
 
-              {/* SEGUNDO FACTOR: solo se solicita cuando el servidor responde mfa_required */}
-              {mfaRequired && (
-                <div className="p-2.5 rounded-xl bg-surface-container-low border border-primary/25 shadow-xs space-y-2">
+              {/* SEGUNDO FACTOR (MFA TOTP) CON CÓDIGO QR Y CASILLAS DIRECTAS */}
+              <div className="p-2.5 rounded-xl bg-surface-container-low border border-primary/25 shadow-xs space-y-2">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <div className="w-6 h-6 rounded-lg bg-primary-container text-white flex items-center justify-center shrink-0">
+                    <div className="w-6 h-6 rounded-lg bg-primary text-white flex items-center justify-center shrink-0">
                       <Smartphone className="w-3.5 h-3.5" />
                     </div>
                     <div>
-                      <h3 className="text-xs font-bold text-on-surface">Segundo Factor de Autenticacion (TOTP)</h3>
-                      <p className="text-[10px] text-on-surface-variant">Ingrese el codigo vigente de Google Authenticator, Microsoft Authenticator o Authy</p>
+                      <h3 className="text-xs font-bold text-on-surface">Segundo Factor Obligatorio (TOTP)</h3>
+                      <p className="text-[10px] text-on-surface-variant">
+                        Escanee el QR con Google Authenticator, Microsoft Authenticator o Authy
+                      </p>
                     </div>
                   </div>
-
-                  <div className="space-y-1" role="group" aria-labelledby="totp-group-label">
-                    <span id="totp-group-label" className="text-[10px] font-semibold text-on-surface leading-tight block">
-                      Código de 6 dígitos de su aplicación:
+                  <div className="flex items-center space-x-1 px-2 py-0.5 bg-white rounded-full shadow-xs text-primary font-mono text-[11px]">
+                    <Timer className="w-3 h-3" />
+                    <span>
+                      Ventana: <strong>00:{mfaTimer.toString().padStart(2, '0')}s</strong>
                     </span>
+                  </div>
+                </div>
+
+                {/* FILA: QR A LA IZQUIERDA Y CASILLAS DE 6 DÍGITOS A LA DERECHA */}
+                <div className="flex items-center justify-between gap-3 pt-0.5">
+                  {/* CÓDIGO QR DIRECTO */}
+                  <div className="flex flex-col items-center shrink-0">
+                    <div className="p-1 bg-white rounded-xl border-2 border-primary shadow-xs">
+                      {qrDataUrl ? (
+                        <img
+                          src={qrDataUrl}
+                          alt="Código QR TOTP SaludConecta"
+                          className="w-20 h-20 rounded cursor-pointer transition-transform hover:scale-105"
+                          title="Haz clic para ampliar QR"
+                          onClick={() => setShowQrModal(true)}
+                        />
+                      ) : (
+                        <div className="w-20 h-20 flex items-center justify-center text-[10px] text-outline">
+                          Generando QR...
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowQrModal(true)}
+                      className="text-[9px] font-bold text-primary hover:underline mt-0.5 flex items-center gap-0.5 cursor-pointer"
+                    >
+                      <QrCode className="w-2.5 h-2.5" />
+                      Ampliar QR
+                    </button>
+                  </div>
+
+                  {/* CASILLAS VACÍAS PARA LOS 6 DÍGITOS */}
+                  <div className="flex-1 flex flex-col justify-center space-y-1 min-w-0">
+                    <label id="totp-group-label" className="text-[10px] font-semibold text-on-surface leading-tight block">
+                      Código de 6 dígitos de su aplicación:
+                    </label>
+
                     <div className="flex items-center gap-1">
                       {totp.map((digit, idx) => (
                         <React.Fragment key={idx}>
                           {idx === 3 && <span className="text-outline font-bold text-xs">-</span>}
                           <input
+                            id={`totp-input-${idx}`}
                             ref={(el) => {
                               digitRefs.current[idx] = el;
                             }}
                             type="text"
                             inputMode="numeric"
+                            maxLength={1}
                             autoComplete="one-time-code"
                             aria-label={`Digito ${idx + 1} del codigo TOTP`}
                             value={digit}
@@ -286,9 +404,30 @@ export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
                         </React.Fragment>
                       ))}
                     </div>
+
+                    <div className="flex items-center justify-between text-[10px] text-on-surface-variant pt-0.5">
+                      <button
+                        type="button"
+                        onClick={handleAutofillTest}
+                        className="text-primary hover:underline font-medium text-[10px] cursor-pointer"
+                        title="Opción de prueba: pega el código actual sincronizado"
+                      >
+                        Pegar código de prueba
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleManualRotate}
+                        className="text-on-surface-variant hover:text-primary flex items-center gap-1 cursor-pointer"
+                        title="Generar nueva clave aleatoria"
+                      >
+                        <RefreshCw className="w-3 h-3" />
+                        <span>Rotar QR</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
-              )}
+              </div>
 
               {/* Advertencia de Bloqueo */}
               <div className="p-2 bg-amber-50 rounded-lg flex items-center space-x-2 border border-amber-200">
@@ -322,36 +461,46 @@ export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
                 className="w-full h-10 bg-primary hover:bg-primary-container text-white font-bold text-xs rounded-xl shadow-sm hover:shadow-md flex items-center justify-center space-x-1.5 transition-all cursor-pointer active:scale-[0.99] disabled:opacity-50"
               >
                 <Lock className="w-3.5 h-3.5" />
-                <span>{isSubmitting ? 'Verificando con Servidor...' : mfaRequired ? 'Verificar y Firmar Acceso Asistencial' : 'Iniciar Sesión'}</span>
+                <span>{isSubmitting ? 'Verificando con Servidor...' : 'Iniciar Sesión y Firmar'}</span>
               </button>
             </form>
           </div>
 
-          {/* Pie de Página */}
+          {/* Pie de Página: Botón de Registro de Administrador y Versión */}
           <div className="pt-2 mt-2 border-t border-surface-container-high flex items-center justify-between text-[11px] text-on-surface-variant">
-            <span className="font-mono text-[9px] text-outline">Build 2026.02-prod</span>
+            <button
+              type="button"
+              onClick={() => setShowAdminModal(true)}
+              className="text-primary hover:underline font-semibold cursor-pointer text-[11px] flex items-center gap-1.5"
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              <span>Registrar Administrador de Centro de Salud</span>
+            </button>
 
-            {/* Switch Accesibilidad WCAG AAA */}
-            <div className="flex items-center space-x-1.5 bg-surface-container-low px-2 py-0.5 rounded-full border border-outline-variant/30">
-              <Contrast className="w-3 h-3 text-on-surface" />
-              <span className="text-[9px] font-bold uppercase text-on-surface">Alto Contraste</span>
-              <button
-                type="button"
-                onClick={() => setHighContrast(!highContrast)}
-                className={`w-6 h-3.5 rounded-full relative transition-colors focus:outline-none p-0.5 flex items-center cursor-pointer ${
-                  highContrast ? 'bg-primary' : 'bg-outline-variant'
-                }`}
-              >
-                <div
-                  className={`w-2.5 h-2.5 bg-white rounded-full shadow transition-transform ${
-                    highContrast ? 'translate-x-2.5' : 'translate-x-0'
-                  }`}
-                ></div>
-              </button>
-            </div>
+            <span className="font-mono text-[9px] text-outline">Build 2026.02-prod</span>
           </div>
         </div>
       </div>
+
+      {/* Modal QR Ampliado */}
+      <MfaQrModal
+        isOpen={showQrModal}
+        onClose={() => setShowQrModal(false)}
+        secret={mfaSecret}
+        otpauthUri={buildOtpAuthUri(mfaSecret, identifier || 'usuario@saludconecta.ips.gov.co', 'SaludConecta IPS')}
+      />
+
+      {/* Modal de Registro de Administrador de Centro de Salud */}
+      <AdminRegisterModal
+        isOpen={showAdminModal}
+        onClose={() => setShowAdminModal(false)}
+        onRegisterSuccess={(data) => {
+          if (data?.user?.email) {
+            setIdentifier(data.user.email);
+            showStatus('Administrador registrado con éxito. Ingrese su contraseña para acceder.');
+          }
+        }}
+      />
     </div>
   );
 };

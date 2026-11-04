@@ -32,7 +32,7 @@ describe('Login - El segundo factor lo valida siempre el servidor', () => {
     const onLoginSuccess = vi.fn();
     const { container } = render(<AuthScreen onLoginSuccess={onLoginSuccess} />);
 
-    expect(screen.queryByLabelText(/Digito 1 del codigo TOTP/i)).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/Digito 1 del codigo TOTP/i)).toBeInTheDocument();
 
     fillLogin();
     fireEvent.submit(container.querySelector('form'));
@@ -196,5 +196,128 @@ describe('Cliente HTTP - Manejo central de sesión', () => {
     await expect(apiClient.adminGetUsers()).rejects.toThrow('Demasiadas solicitudes');
     await expect(apiClient.adminGetAuditLogs()).rejects.toThrow('Demasiadas solicitudes');
     await expect(apiClient.adminUpdateUserStatus('u1', false)).rejects.toThrow('Demasiadas solicitudes');
+  });
+
+  it('no muestra el botón de alto contraste y muestra el botón de registro de administrador', () => {
+    render(<AuthScreen />);
+
+    expect(screen.queryByText(/Alto Contraste/i)).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Registrar Administrador de Centro de Salud/i })
+    ).toBeInTheDocument();
+  });
+
+  it('abre el modal de registro de administrador y procesa el registro institucional', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      jsonResponse(
+        {
+          message: 'Administrador registrado',
+          user: {
+            id: 'adm-new',
+            email: 'admin.nuevo@saludconecta.ips.gov.co',
+            full_name: 'Admin Nuevo',
+            role: 'ADMIN',
+            role_id: 1,
+            branch: 'Sede Cartago - Hospital Central',
+          },
+          mfa_secret: 'TESTSECRETBASE32',
+          otpauth_uri: 'otpauth://totp/SaludConecta:admin.nuevo@saludconecta.ips.gov.co?secret=TESTSECRETBASE32',
+        },
+        201
+      )
+    );
+
+    render(<AuthScreen />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Registrar Administrador de Centro de Salud/i }));
+
+    expect(await screen.findByText(/Registro de Administrador de Centro de Salud/i)).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/Nombre Completo del Administrador/i), {
+      target: { value: 'Admin Nuevo' },
+    });
+    fireEvent.change(screen.getByLabelText(/Número de Documento/i), {
+      target: { value: '11223344' },
+    });
+    fireEvent.change(screen.getByLabelText(/Correo Institucional \*/i), {
+      target: { value: 'admin.nuevo@saludconecta.ips.gov.co' },
+    });
+    fireEvent.change(screen.getByLabelText(/Contraseña Maestra/i), {
+      target: { value: 'AdminClave2026*' },
+    });
+    fireEvent.change(screen.getByLabelText(/Confirmar Contraseña/i), {
+      target: { value: 'AdminClave2026*' },
+    });
+
+    const submitBtn = screen.getByRole('button', { name: /Confirmar registro de administrador/i });
+    fireEvent.click(submitBtn);
+
+    await waitFor(() => {
+      expect(fetchSpy).toHaveBeenCalledWith(
+        expect.stringContaining('/auth/register-admin'),
+        expect.objectContaining({
+          method: 'POST',
+        })
+      );
+    });
+  });
+  it('renueva transparentemente el token de acceso cuando recibe un 401 y reintenta la peticion con exito', async () => {
+    apiClient.setAuth('access-viejo', { id: 'u1' }, 'refresh-valido');
+
+    let callCount = 0;
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url, init) => {
+      callCount++;
+      const urlStr = String(url);
+      if (urlStr.includes('/auth/refresh')) {
+        return jsonResponse({
+          access_token: 'access-nuevo-rotado',
+          refresh_token: 'refresh-nuevo-rotado',
+          user: { id: 'u1', role: 'MEDICO' },
+        });
+      }
+      if (urlStr.includes('/auth/me')) {
+        if (init?.headers?.Authorization === 'Bearer access-viejo') {
+          return jsonResponse({ error: 'Token expirado' }, 401);
+        }
+        if (init?.headers?.Authorization === 'Bearer access-nuevo-rotado') {
+          return jsonResponse({ user: { id: 'u1', role: 'MEDICO' } });
+        }
+      }
+      return jsonResponse({}, 404);
+    });
+
+    const user = await apiClient.me();
+    expect(user).toEqual({ id: 'u1', role: 'MEDICO' });
+    expect(apiClient.token).toBe('access-nuevo-rotado');
+    expect(apiClient.refreshToken).toBe('refresh-nuevo-rotado');
+    expect(localStorage.getItem('saludconecta_token')).toBe('access-nuevo-rotado');
+    expect(localStorage.getItem('saludconecta_refresh_token')).toBe('refresh-nuevo-rotado');
+  });
+
+  it('almacena refresh_token en login y lo remueve por completo en logout', async () => {
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      const urlStr = String(url);
+      if (urlStr.includes('/auth/login')) {
+        return jsonResponse({
+          token: 'acc-1',
+          refresh_token: 'ref-1',
+          user: { id: 'u2', role: 'MEDICO' },
+        });
+      }
+      if (urlStr.includes('/auth/logout')) {
+        return jsonResponse({ message: 'Sesion cerrada' });
+      }
+      return jsonResponse({}, 200);
+    });
+
+    await apiClient.login({ email: 'dr@ips.gov.co', password: '123' });
+    expect(localStorage.getItem('saludconecta_token')).toBe('acc-1');
+    expect(localStorage.getItem('saludconecta_refresh_token')).toBe('ref-1');
+
+    await apiClient.logout();
+    expect(apiClient.token).toBe('');
+    expect(apiClient.refreshToken).toBe('');
+    expect(localStorage.getItem('saludconecta_token')).toBeNull();
+    expect(localStorage.getItem('saludconecta_refresh_token')).toBeNull();
   });
 });

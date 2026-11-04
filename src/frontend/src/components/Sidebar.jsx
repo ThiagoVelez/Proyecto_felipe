@@ -7,7 +7,6 @@ import {
   ShieldCheck,
   CheckCircle2,
   Lock,
-  UserCheck,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
@@ -42,12 +41,6 @@ export const Sidebar = ({
       label: 'Prescripcion & Farmacia',
       icon: Pill,
       badge: 'Seguridad',
-    },
-    {
-      id: 'profile',
-      label: 'Mi Perfil Asistencial',
-      icon: UserCheck,
-      badge: 'ReTHUS',
     },
     {
       id: 'security',

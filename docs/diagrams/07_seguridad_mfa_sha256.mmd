@@ -19,9 +19,10 @@ flowchart TD
         HMACEngine -->|Verifica coincidencia con tolerancia +/- 1 intervalo| UserOTP
     end
 
-    subgraph RBACEngine ["2. Control de Acceso Basado en Roles (RBAC)"]
-        JWTToken["Token JWT Firmado (HS256) con Claims de Rol"]
-        SessionCheck["Middleware: firma JWT + cuenta activa y rol vigentes en base de datos"]
+    subgraph RBACEngine ["2. Control de Acceso Dual (Access 15 min + Refresh 7 días) y RBAC"]
+        TokensPair["Par de Tokens: Access Token (15 min) + Refresh Token (7 días)"]
+        SessionCheck["Middleware: firma Access Token + cuenta activa y rol vigentes"]
+        RefreshFlow["Renovación Transparente: POST /auth/refresh con rotación y detección de reuso"]
         RoleGuard["Middleware de Autorización por Ruta (RequireRoles)"]
         RoleMedico["Rol MEDICO: HCE, Prescripción, RIPS, Cierre"]
         RoleEnfermero["Rol ENFERMERO: Triaje Manchester, Consulta"]
@@ -29,8 +30,10 @@ flowchart TD
         RoleAuditor["Rol AUDITOR: Revisión RIPS, Logs, Hashes"]
         RoleAdmin["Rol ADMIN: Gobernanza ReTHUS, Auditoría, Sedes"]
 
-        UserOTP -->|Aprobado| JWTToken
-        JWTToken --> SessionCheck
+        UserOTP -->|Aprobado| TokensPair
+        TokensPair -->|Petición con Access Token| SessionCheck
+        TokensPair -.->|Al expirar Access Token| RefreshFlow
+        RefreshFlow -->|Nuevo Access Token| SessionCheck
         SessionCheck --> RoleGuard
         RoleGuard --> RoleMedico & RoleEnfermero & RoleAdmision & RoleAuditor & RoleAdmin
     end

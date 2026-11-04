@@ -72,7 +72,7 @@ func main() {
 	}
 
 	// 5. Instanciacion de Servicios de Dominio (Casos de Uso Puros)
-	authService := services.NewAuthService(repos.User, cfg.JWTSecret, cfg.JWTTTL)
+	authService := services.NewAuthServiceWithTTL(repos.User, cfg.JWTSecret, cfg.JWTAccessTTL, cfg.JWTRefreshTTL)
 	adminService := services.NewAdminService(repos.User, repos.Audit)
 	patientService := services.NewPatientService(repos.Patient)
 	triageService := services.NewTriageService(repos.Triage, repos.Patient)

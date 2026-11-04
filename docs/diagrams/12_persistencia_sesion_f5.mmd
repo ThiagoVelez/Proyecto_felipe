@@ -10,11 +10,12 @@ sequenceDiagram
     Note over User,Storage: FASE 1: Autenticación Exitosa Inicial
     User->>Browser: Ingresa credenciales (y TOTP de 6 dígitos si la cuenta tiene MFA)
     Browser->>API: POST /api/v1/auth/login { email, password, totp_code }
-    API-->>Browser: 200 OK { token, user: { role, full_name, professional_card } }
+    API-->>Browser: 200 OK { access_token (15 min), refresh_token (7 días), token, user }
     Browser->>App: handleLoginSuccess(data)
     App->>Storage: setItem('saludconecta_session_active', 'true')
     App->>Storage: setItem('saludconecta_user', JSON.stringify(user))
-    App->>Storage: setItem('saludconecta_token', token)
+    App->>Storage: setItem('saludconecta_token', access_token)
+    App->>Storage: setItem('saludconecta_refresh_token', refresh_token)
     App->>Storage: setItem('saludconecta_current_view', 'dashboard')
     App-->>Browser: Renderiza Entorno Autorizado (Clínico o AdminLayout)
 
@@ -32,20 +33,34 @@ sequenceDiagram
     API-->>App: 200 OK { user }
     App-->>Browser: Restaura exactamente la pantalla de trabajo previa (Sin ir a Login)
 
-    %% Fase 3: Cierre de Sesion Seguro
-    Note over User,Storage: FASE 3: Finalización Explícita de Sesión
+    %% Fase 3: Renovacion Silenciosa en Segundo Plano (Refresh Token)
+    Note over User,API: FASE 3: Renovación Transparente de Token de Acceso (Cada 15 min)
+    App->>API: Solicitud con Access Token vencido (15 min)
+    API-->>App: 401 Unauthorized
+    Note over App: Interceptor silencioso en background (sin interrumpir al médico)
+    App->>API: POST /api/v1/auth/refresh { refresh_token }
+    API-->>App: 200 OK { access_token, refresh_token (rotado) }
+    App->>Storage: setItem('saludconecta_token', access_token)
+    App->>Storage: setItem('saludconecta_refresh_token', refresh_token)
+    App->>API: Reintenta solicitud clínica original con el nuevo token
+    API-->>App: 200 OK (Datos clínicos devueltos sin interrupción)
+
+    %% Fase 4: Cierre de Sesion Seguro
+    Note over User,Storage: FASE 4: Finalización Explícita de Sesión
     User->>Browser: Hace clic en botón 'Salir' / 'Cerrar Sesión'
     Browser->>App: handleLogout()
+    App->>API: POST /api/v1/auth/logout { refresh_token }
     App->>Storage: removeItem('saludconecta_session_active')
     App->>Storage: removeItem('saludconecta_user')
     App->>Storage: removeItem('saludconecta_token')
+    App->>Storage: removeItem('saludconecta_refresh_token')
     App->>Storage: removeItem('saludconecta_current_view')
     App->>App: setIsAuthenticated(false), setCurrentUser(null)
     App-->>Browser: Redirige limpiamente a AuthScreen (Login con fondo ECG animado)
 
-    %% Fase 4: Revocacion por el servidor
-    Note over User,API: FASE 4: Sesión Vencida o Cuenta Suspendida
-    App->>API: Cualquier solicitud con el token vigente
-    API-->>App: 401 Unauthorized
-    App->>Storage: Limpia sesión, usuario, token y vista
+    %% Fase 5: Revocacion por el servidor o inactividad prolongada
+    Note over User,API: FASE 5: Sesión Vencida (7 días de inactividad) o Cuenta Suspendida
+    App->>API: Solicitud con Refresh Token vencido o cuenta inactiva
+    API-->>App: 401 / 403 Unauthorized
+    App->>Storage: Limpia sesión, usuario, tokens y vista
     App-->>Browser: Evento saludconecta:session-expired y aviso en AuthScreen

@@ -9,8 +9,13 @@ import (
 // AuthService define el contrato de casos de uso para autenticacion, roles y MFA.
 type AuthService interface {
 	Login(ctx context.Context, email, password, totpCode string) (token string, user *domain.User, err error)
+	LoginWithTokens(ctx context.Context, email, password, totpCode string) (tokens *domain.TokenPair, user *domain.User, err error)
+	RefreshToken(ctx context.Context, refreshToken string) (tokens *domain.TokenPair, user *domain.User, err error)
+	RevokeToken(ctx context.Context, refreshToken string) error
 	Register(ctx context.Context, user *domain.User, plainPassword string) error
 	RegisterStaff(ctx context.Context, user *domain.User, plainPassword string) error
+	RegisterAdmin(ctx context.Context, user *domain.User, plainPassword string) error
+	GetMFASeed(ctx context.Context, email string) (secret string, uri string, err error)
 	// ValidateSession verifica que la cuenta del token siga existiendo y activa, y retorna su estado vigente.
 	ValidateSession(ctx context.Context, userID string) (*domain.User, error)
 	// SetupMFA genera un nuevo secreto TOTP; si el usuario ya tiene MFA habilitado exige el codigo vigente.

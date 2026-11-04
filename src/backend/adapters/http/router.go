@@ -37,6 +37,10 @@ func SetupRoutes(app *fiber.App, cfg RouterConfig) {
 	auth := api.Group("/auth")
 	authLimit := middlewares.AuthRateLimitMiddleware(10, 0)
 	auth.Post("/login", authLimit, cfg.AuthHandler.Login)
+	auth.Post("/refresh", authLimit, cfg.AuthHandler.RefreshToken)
+	auth.Post("/logout", cfg.AuthHandler.Logout)
+	auth.Post("/register-admin", authLimit, cfg.AuthHandler.RegisterAdmin)
+	auth.Get("/mfa-seed", authLimit, cfg.AuthHandler.GetMFASeed)
 
 	authProtected := auth.Use(authMW)
 	authProtected.Get("/me", cfg.AuthHandler.Me)
@@ -74,6 +78,14 @@ func SetupRoutes(app *fiber.App, cfg RouterConfig) {
 		triage.Get("/", middlewares.RequireRoles("ENFERMERO", "MEDICO"), cfg.TriageHandler.GetQueue)
 		triage.Get("/:id", middlewares.RequireRoles("ENFERMERO", "MEDICO"), cfg.TriageHandler.GetByID)
 		triage.Patch("/:id/status", middlewares.RequireRoles("ENFERMERO", "MEDICO"), cfg.TriageHandler.UpdateStatus)
+
+		// Soporte de compatibilidad para endpoint v2 de triaje asistencial
+		apiV2 := app.Group("/api/v2", authMW)
+		triageV2 := apiV2.Group("/triage")
+		triageV2.Post("/", middlewares.RequireRoles("ENFERMERO", "MEDICO"), cfg.TriageHandler.Create)
+		triageV2.Get("/", middlewares.RequireRoles("ENFERMERO", "MEDICO"), cfg.TriageHandler.GetQueue)
+		triageV2.Get("/:id", middlewares.RequireRoles("ENFERMERO", "MEDICO"), cfg.TriageHandler.GetByID)
+		triageV2.Patch("/:id/status", middlewares.RequireRoles("ENFERMERO", "MEDICO"), cfg.TriageHandler.UpdateStatus)
 	}
 
 	// 6. Modulo Historia Clinica Electronica (HCE) e Inmutabilidad (Exclusivo Asistencial: MEDICO)

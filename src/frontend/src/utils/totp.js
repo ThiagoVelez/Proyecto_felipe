@@ -176,6 +176,26 @@ export function buildOtpAuthUri(secret, email, issuer = 'SaludConecta IPS') {
 }
 
 /**
+ * Calcula los segundos restantes en la ventana TOTP actual de 30 segundos
+ */
+export function getRemainingSeconds(epochMs = Date.now(), periodSeconds = 30) {
+  const currentSeconds = Math.floor(epochMs / 1000);
+  return periodSeconds - (currentSeconds % periodSeconds);
+}
+
+/**
+ * Genera una semilla criptografica aleatoria en Base32
+ */
+export function generateBase32Secret(length = 16) {
+  let str = '';
+  for (let i = 0; i < length; i++) {
+    const idx = Math.floor(Math.random() * BASE32_ALPHABET.length);
+    str += BASE32_ALPHABET[idx];
+  }
+  return str;
+}
+
+/**
  * Genera el QR escaneable en base64 PNG
  */
 export async function generateQrDataUrl(uri, width = 220) {

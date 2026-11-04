@@ -16,7 +16,17 @@ var (
 	ErrMissingProfessionalCard = errors.New("la tarjeta profesional o registro rethus es obligatoria para personal medico y asistencial")
 	ErrTooManyAttempts         = errors.New("demasiados intentos fallidos; intente nuevamente mas tarde")
 	ErrCurrentCodeRequired     = errors.New("se requiere el codigo TOTP vigente para reemplazar el segundo factor")
+	ErrInvalidRefreshToken     = errors.New("token de renovacion invalido o expirado")
+	ErrSessionCompromised      = errors.New("posible compromiso de sesion por reutilizacion de token")
 )
+
+// TokenPair encapsula la dupla de acceso de corta duracion y renovacion de larga duracion.
+type TokenPair struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	TokenType    string `json:"token_type"`
+	ExpiresIn    int64  `json:"expires_in"`
+}
 
 // Role representa los perfiles de acceso bajo control RBAC.
 type Role struct {
