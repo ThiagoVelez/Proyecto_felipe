@@ -6,7 +6,7 @@ import Header from '../../src/frontend/src/components/Header';
 import ProfileScreen from '../../src/frontend/src/screens/ProfileScreen';
 
 describe('Doctor Clinical Layout & Sidebar', () => {
-  it('renderiza el Sidebar asistencial con todos sus iconos y el perfil asistencial sin errores', () => {
+  it('renderiza el Sidebar asistencial con sus accesos clinicos directos sin duplicidad de perfil', () => {
     const handleSetView = vi.fn();
     render(<Sidebar currentView="dashboard" setCurrentView={handleSetView} />);
 
@@ -14,15 +14,15 @@ describe('Doctor Clinical Layout & Sidebar', () => {
     expect(screen.getByText('Triaje Manchester')).toBeInTheDocument();
     expect(screen.getByText('Historia Clinica (HCE)')).toBeInTheDocument();
     expect(screen.getByText('Prescripcion & Farmacia')).toBeInTheDocument();
-    expect(screen.getByText('Mi Perfil Asistencial')).toBeInTheDocument();
     expect(screen.getByText('Seguridad & MFA')).toBeInTheDocument();
+    expect(screen.queryByText('Mi Perfil Asistencial')).not.toBeInTheDocument();
 
-    const profileBtn = screen.getByText('Mi Perfil Asistencial').closest('button');
-    fireEvent.click(profileBtn);
-    expect(handleSetView).toHaveBeenCalledWith('profile');
+    const hceBtn = screen.getByText('Historia Clinica (HCE)').closest('button');
+    fireEvent.click(hceBtn);
+    expect(handleSetView).toHaveBeenCalledWith('hce');
   });
 
-  it('renderiza el Header asistencial con datos del Dr. Santiago Vélez', () => {
+  it('renderiza el Header asistencial con datos del Dr. Santiago Vélez y navega al perfil al hacer clic', () => {
     const mockUser = {
       id: 'usr-med-01',
       role: 'MEDICO',
@@ -49,6 +49,10 @@ describe('Doctor Clinical Layout & Sidebar', () => {
     expect(screen.getByText('Dr. Santiago Vélez')).toBeInTheDocument();
     expect(screen.getByText('MEDICO')).toBeInTheDocument();
     expect(screen.getByText('RM-94821-VALLE')).toBeInTheDocument();
+
+    const profileTrigger = screen.getByTitle(/Abrir pantalla de perfil asistencial/i);
+    fireEvent.click(profileTrigger);
+    expect(handleNavigate).toHaveBeenCalledWith('profile');
   });
 
   it('renderiza ProfileScreen en pantalla completa con los 5 banners medicos', () => {
