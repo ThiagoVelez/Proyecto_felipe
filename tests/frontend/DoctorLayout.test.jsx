@@ -118,4 +118,30 @@ describe('Doctor Clinical Layout & Sidebar', () => {
     const collapseBtn = screen.getByTitle('Ocultar menú lateral asistencial');
     expect(collapseBtn).toBeInTheDocument();
   });
+
+  it('renderiza el Sidebar diferenciado de Gestión Farmacéutica para rol FARMACIA', () => {
+    const handleSetView = vi.fn();
+    const pharmacistUser = {
+      id: 'usr-pharm-01',
+      role: 'FARMACIA',
+      role_id: 6,
+      full_name: 'Farmaseutico Santiago Arcos',
+      specialty: 'farmacia',
+    };
+    render(<Sidebar currentView="pharmacy" setCurrentView={handleSetView} user={pharmacistUser} />);
+
+    expect(screen.getByText('GESTIÓN FARMACÉUTICA')).toBeInTheDocument();
+    expect(screen.getByText('Buzón & Dispensación')).toBeInTheDocument();
+    expect(screen.getByText('Inventario de Medicamentos')).toBeInTheDocument();
+    expect(screen.getByText('Seguimiento de Tratamiento')).toBeInTheDocument();
+    expect(screen.getByText('Seguridad & MFA')).toBeInTheDocument();
+
+    expect(screen.queryByText('Agenda & Citas Médicas')).not.toBeInTheDocument();
+    expect(screen.queryByText('Triaje Manchester')).not.toBeInTheDocument();
+    expect(screen.queryByText('Historia Clinica (HCE)')).not.toBeInTheDocument();
+
+    const invBtn = screen.getByText('Inventario de Medicamentos').closest('button');
+    fireEvent.click(invBtn);
+    expect(handleSetView).toHaveBeenCalledWith('inventory');
+  });
 });

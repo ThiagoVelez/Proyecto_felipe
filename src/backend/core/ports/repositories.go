@@ -64,3 +64,34 @@ type AuditRepository interface {
 	SaveRIPSTransaction(ctx context.Context, tx *domain.RIPSTransaction) error
 	GetRIPSTransactionByID(ctx context.Context, id string) (*domain.RIPSTransaction, error)
 }
+
+// AppointmentRepository define el contrato para el agendamiento y calendario medico.
+type AppointmentRepository interface {
+	Create(ctx context.Context, appointment *domain.Appointment) error
+	GetByID(ctx context.Context, id string) (*domain.Appointment, error)
+	GetByDoctorID(ctx context.Context, doctorID string) ([]domain.Appointment, error)
+	GetByDateRange(ctx context.Context, doctorID string, start, end time.Time) ([]domain.Appointment, error)
+	HasOverlap(ctx context.Context, doctorID string, date time.Time) (bool, error)
+	UpdatePDFAndEmailStatus(ctx context.Context, id, pdfPath string, emailSent bool) error
+}
+
+// InventoryRepository define el contrato de persistencia para el inventario de farmacia diferenciado por dosis.
+type InventoryRepository interface {
+	GetAll(ctx context.Context) ([]domain.InventoryItem, error)
+	GetByID(ctx context.Context, id string) (*domain.InventoryItem, error)
+	Create(ctx context.Context, item *domain.InventoryItem) error
+	Update(ctx context.Context, item *domain.InventoryItem) error
+	Delete(ctx context.Context, id string) error
+	UpdateStock(ctx context.Context, id string, quantityChange int) error
+	AdjustStock(ctx context.Context, id string, newStock int, batch string) error
+}
+
+// PrescriptionV2Repository define el contrato para el buzon de farmacia y dispensacion atomica con escaner PDF417.
+type PrescriptionV2Repository interface {
+	CreateWithItemsTx(ctx context.Context, presc *domain.PrescriptionV2) error
+	GetPendingInbox(ctx context.Context) ([]domain.PrescriptionV2, error)
+	GetAllInbox(ctx context.Context, status *domain.PrescriptionStatusV2, query string) ([]domain.PrescriptionV2, error)
+	GetByID(ctx context.Context, id string) (*domain.PrescriptionV2, error)
+	GetByUniqueCodeOrDocument(ctx context.Context, term string) (*domain.PrescriptionV2, error)
+	MarkAsDispensedTx(ctx context.Context, req domain.DispenseRequestDTO, items []domain.PrescriptionItemV2) error
+}

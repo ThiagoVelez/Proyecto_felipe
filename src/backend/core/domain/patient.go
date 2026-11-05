@@ -78,8 +78,10 @@ type Patient struct {
 	Gender            Gender            `json:"gender"`
 	BloodType         BloodType         `json:"blood_type"`
 	EPSName           string            `json:"eps_name"`
+	AffiliationType   string            `json:"affiliation_type"`
 	AffiliationStatus AffiliationStatus `json:"affiliation_status"`
 	Phone             *string           `json:"phone"`
+	Email             string            `json:"email"`
 	IsRuralZone       bool              `json:"is_rural_zone"`
 	CreatedAt         time.Time         `json:"created_at"`
 	UpdatedAt         time.Time         `json:"updated_at"`

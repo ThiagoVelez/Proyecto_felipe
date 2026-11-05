@@ -49,7 +49,7 @@ export const StaffRegisterModal = ({ isOpen, onClose, onRegisterSuccess }) => {
     setErrorMsg('');
 
     // Validacion de Tarjeta Profesional ReTHUS mandatoria segun Res. 1995 de 1999
-    if ((formData.role_id === 2 || formData.role_id === 3) && !formData.professional_card.trim()) {
+    if ((formData.role_id === 2 || formData.role_id === 3 || formData.role_id === 6) && !formData.professional_card.trim()) {
       setErrorMsg('La Tarjeta Profesional o registro ReTHUS es de carácter obligatorio para médicos y enfermeros.');
       return;
     }
@@ -128,7 +128,7 @@ export const StaffRegisterModal = ({ isOpen, onClose, onRegisterSuccess }) => {
                 </p>
                 <div className="pt-2 border-t border-outline-variant/20 flex items-center justify-between text-[11px] font-mono text-outline">
                   <span>Tarjeta: {formData.professional_card}</span>
-                  <span>Rol: {formData.role_id === 2 ? 'MEDICO' : 'ENFERMERO'}</span>
+                  <span>Rol: {formData.role_id === 2 ? 'MEDICO' : formData.role_id === 6 ? 'FARMACIA' : 'ENFERMERO'}</span>
                 </div>
               </div>
 
@@ -175,6 +175,7 @@ export const StaffRegisterModal = ({ isOpen, onClose, onRegisterSuccess }) => {
                   >
                     <option value={2}>Médico Asistencial (General / Especialista)</option>
                     <option value={3}>Personal de Enfermería y Triaje</option>
+                    <option value={6}>Químico Farmacéutico / Farmacia e Inventario</option>
                   </select>
                 </div>
 

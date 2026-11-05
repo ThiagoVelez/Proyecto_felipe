@@ -9,6 +9,9 @@ import {
   Lock,
   ChevronLeft,
   ChevronRight,
+  Calendar,
+  Package,
+  Boxes,
 } from 'lucide-react';
 
 export const Sidebar = ({
@@ -16,13 +19,53 @@ export const Sidebar = ({
   setCurrentView,
   isCollapsed = false,
   onToggleCollapse,
+  user,
 }) => {
-  const menuItems = [
+  const isPharmacist =
+    user?.role === 'FARMACIA' ||
+    user?.role_id === 6 ||
+    user?.specialty?.toLowerCase().includes('farmac') ||
+    (user?.full_name || user?.name || '').toLowerCase().includes('farma');
+
+  const pharmacyMenuItems = [
+    {
+      id: 'pharmacy',
+      label: 'Buzón & Dispensación',
+      icon: Package,
+      badge: 'PDF417',
+    },
+    {
+      id: 'inventory',
+      label: 'Inventario de Medicamentos',
+      icon: Boxes,
+      badge: 'Stock',
+    },
+    {
+      id: 'treatment',
+      label: 'Seguimiento de Tratamiento',
+      icon: Pill,
+      badge: 'Tripartita',
+    },
+    {
+      id: 'security',
+      label: 'Seguridad & MFA',
+      icon: ShieldCheck,
+      badge: 'Activo',
+    },
+  ];
+
+  const doctorMenuItems = [
     {
       id: 'dashboard',
       label: 'Sala de Espera & Dashboard',
       icon: LayoutDashboard,
       badge: null,
+    },
+    {
+      id: 'appointments',
+      label: 'Agenda & Citas Médicas',
+      icon: Calendar,
+      badge: 'Calendario',
     },
     {
       id: 'triage',
@@ -37,10 +80,16 @@ export const Sidebar = ({
       badge: 'Inmutable',
     },
     {
+      id: 'treatment',
+      label: 'Seguimiento de Tratamiento',
+      icon: Pill,
+      badge: 'Tripartita',
+    },
+    {
       id: 'prescription',
       label: 'Prescripcion & Farmacia',
-      icon: Pill,
-      badge: 'Seguridad',
+      icon: Package,
+      badge: 'PDF417',
     },
     {
       id: 'security',
@@ -49,6 +98,8 @@ export const Sidebar = ({
       badge: 'Activo',
     },
   ];
+
+  const menuItems = isPharmacist ? pharmacyMenuItems : doctorMenuItems;
 
   return (
     <aside
@@ -74,10 +125,10 @@ export const Sidebar = ({
           <div className="px-2 flex items-center justify-between">
             <div className="flex flex-col">
               <span className="text-[10px] font-bold uppercase tracking-wider text-outline font-mono">
-                NAVEGACION CLINICA
+                {isPharmacist ? 'GESTIÓN FARMACÉUTICA' : 'NAVEGACION CLINICA'}
               </span>
               <span className="text-xs text-on-surface-variant font-medium">
-                Valle del Cauca Norte
+                {isPharmacist ? 'Dispensación & Stock' : 'Valle del Cauca Norte'}
               </span>
             </div>
             <button
@@ -95,7 +146,10 @@ export const Sidebar = ({
         <nav className="flex flex-col gap-1.5">
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isActive = currentView === item.id;
+            const isActive =
+              currentView === item.id ||
+              (item.id === 'pharmacy' && (currentView === 'pharmacy' || currentView === 'prescription')) ||
+              (item.id === 'prescription' && (currentView === 'prescription' || currentView === 'pharmacy'));
 
             if (isCollapsed) {
               return (
@@ -150,28 +204,26 @@ export const Sidebar = ({
         </nav>
       </div>
 
-      {/* PIE DEL SIDEBAR: WIDGET DE AUDITORIA FORENSE */}
-      <div className={`${isCollapsed ? 'px-2' : 'px-4'} flex flex-col gap-2`}>
+      {/* PIE DE SIDEBAR CON GOBERNANZA HOSPITALARIA */}
+      <div className={`pt-4 border-t border-surface-container ${isCollapsed ? 'px-2' : 'px-4'}`}>
         {isCollapsed ? (
-          <div
-            title="SHA-256 Audit Log #HASH-7a9f...e412 • Firma Forense activa bajo Ley 527/1999"
-            className="p-2.5 rounded-xl bg-surface-container-low border border-outline-variant/30 flex items-center justify-center text-primary cursor-help shadow-xs"
-          >
-            <CheckCircle2 className="w-4 h-4 text-primary" />
+          <div className="flex flex-col items-center gap-2 text-outline">
+            <span className="w-2 h-2 rounded-full bg-emerald-500" title="Sistema Conectado" />
+            <Lock className="w-4 h-4 opacity-70" title="Inmutabilidad Res. 1995" />
           </div>
         ) : (
-          <div className="p-3 rounded-xl bg-surface-container-low border border-outline-variant/30 flex flex-col gap-1.5 shadow-xs">
-            <div className="flex items-center justify-between text-on-surface-variant">
-              <span className="text-[10px] font-bold font-mono tracking-wider text-outline uppercase">
-                SHA-256 AUDIT LOG
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs text-outline font-mono">
+              <span>Sede Cartago</span>
+              <span className="inline-flex items-center gap-1 font-semibold text-emerald-800">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Online
               </span>
-              <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
             </div>
-            <div className="font-mono text-xs text-on-surface font-semibold truncate">
-              #HASH-7a9f...e412
-            </div>
-            <div className="text-[10px] text-on-surface-variant leading-tight">
-              Firma Forense activa bajo Ley 527/1999 y Res. 1995/1999.
+            <div className="p-2 rounded-lg bg-surface-container-lowest border border-surface-container text-[11px] text-on-surface-variant flex items-center gap-2">
+              <Lock className="w-4 h-4 text-primary shrink-0" />
+              <span className="truncate">
+                {isPharmacist ? 'Inventario CUM & PDF417' : 'HCE Inmutable (Res. 1995)'}
+              </span>
             </div>
           </div>
         )}
@@ -181,4 +233,3 @@ export const Sidebar = ({
 };
 
 export default Sidebar;
-

@@ -144,3 +144,20 @@ export const downloadJson = (fileName, data) => {
   link.remove();
   URL.revokeObjectURL(url);
 };
+
+/** Formatea el nombre del facultativo o personal asistencial respetando su rol. */
+export const formatDoctorName = (name, role = '') => {
+  if (!name) return 'Dr. Santiago Vélez';
+  const roleUpper = String(role).toUpperCase();
+  const lowerName = String(name).toLowerCase();
+  if (roleUpper === 'FARMACIA' || roleUpper.includes('FARMAC') || lowerName.includes('farma')) {
+    return String(name).replace(/^dr\.\s*/i, '').trim();
+  }
+  if (roleUpper === 'ENFERMERO' || roleUpper.includes('ENFERM')) {
+    const clean = String(name).replace(/^(dr\.|enf\.)\s*/i, '').trim();
+    return `Enf. ${clean}`;
+  }
+  const clean = String(name).replace(/^dr\.\s*/i, '').trim();
+  return `Dr. ${clean}`;
+};
+

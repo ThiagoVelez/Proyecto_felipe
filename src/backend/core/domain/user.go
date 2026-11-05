@@ -75,6 +75,8 @@ func RoleNameByID(id int) string {
 		return "ADMISION"
 	case 5:
 		return "AUDITOR"
+	case 6:
+		return "FARMACIA"
 	default:
 		return ""
 	}

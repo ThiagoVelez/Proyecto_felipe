@@ -19,6 +19,7 @@ import LoginBackground from '../components/LoginBackground';
 import BranchAccordion from '../components/BranchAccordion';
 import MfaQrModal from '../components/MfaQrModal';
 import AdminRegisterModal from '../components/AdminRegisterModal';
+import BrandLogo from '../components/BrandLogo';
 import { loadBranches } from '../services/branches';
 import { apiClient } from '../services/api';
 import {
@@ -194,9 +195,7 @@ export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
           <div className="relative z-10 space-y-3">
             {/* Encabezado con Logotipo Oficial */}
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-xl bg-white p-1.5 shadow-md flex items-center justify-center font-bold text-primary text-base shrink-0">
-                SC
-              </div>
+              <BrandLogo size="md" />
               <div className="min-w-0">
                 <span className="inline-block px-2 py-0.2 rounded-full bg-secondary-fixed text-on-secondary-fixed text-[9px] font-bold uppercase tracking-wider">
                   Red Integrada Valle del Cauca

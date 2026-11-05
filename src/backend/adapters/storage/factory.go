@@ -20,6 +20,9 @@ type RepositoryBundle struct {
 	ClinicalRecord ports.ClinicalRecordRepository
 	Prescription   ports.PrescriptionRepository
 	Audit          ports.AuditRepository
+	Appointment    ports.AppointmentRepository
+	Inventory      ports.InventoryRepository
+	PrescriptionV2 ports.PrescriptionV2Repository
 	Close          func() error
 }
 
@@ -56,6 +59,9 @@ func NewRepositoryBundle(cfg Config, log *logger.Logger) (*RepositoryBundle, err
 			ClinicalRecord: memory.NewClinicalRecordMemoryRepo(ds),
 			Prescription:   memory.NewPrescriptionMemoryRepo(ds),
 			Audit:          memory.NewAuditMemoryRepo(ds),
+			Appointment:    memory.NewAppointmentMemoryRepo(ds),
+			Inventory:      memory.NewInventoryMemoryRepo(ds),
+			PrescriptionV2: memory.NewPrescriptionV2MemoryRepo(ds),
 			Close: func() error {
 				return nil
 			},
@@ -102,6 +108,9 @@ func NewRepositoryBundle(cfg Config, log *logger.Logger) (*RepositoryBundle, err
 			ClinicalRecord: mysql.NewClinicalRecordRepository(db),
 			Prescription:   mysql.NewPrescriptionRepository(db),
 			Audit:          mysql.NewAuditRepository(db),
+			Appointment:    mysql.NewAppointmentRepository(db),
+			Inventory:      mysql.NewInventoryRepository(db),
+			PrescriptionV2: mysql.NewPrescriptionV2Repository(db),
 			Close: func() error {
 				return db.Close()
 			},
@@ -137,6 +146,7 @@ func NewRepositoryBundle(cfg Config, log *logger.Logger) (*RepositoryBundle, err
 			return nil, fmt.Errorf("fallo la migracion de esquema postgresql: %w", err)
 		}
 
+		ds := memory.NewDataStore()
 		return &RepositoryBundle{
 			User:           postgres.NewUserRepository(db),
 			Patient:        postgres.NewPatientRepository(db),
@@ -144,6 +154,9 @@ func NewRepositoryBundle(cfg Config, log *logger.Logger) (*RepositoryBundle, err
 			ClinicalRecord: postgres.NewClinicalRecordRepository(db),
 			Prescription:   postgres.NewPrescriptionRepository(db),
 			Audit:          postgres.NewAuditRepository(db),
+			Appointment:    memory.NewAppointmentMemoryRepo(ds),
+			Inventory:      memory.NewInventoryMemoryRepo(ds),
+			PrescriptionV2: memory.NewPrescriptionV2MemoryRepo(ds),
 			Close: func() error {
 				return db.Close()
 			},

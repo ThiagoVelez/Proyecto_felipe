@@ -9,6 +9,9 @@ import PrescriptionScreen from './screens/PrescriptionScreen';
 import SecurityMfaScreen from './screens/SecurityMfaScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import AdminLayout from './screens/admin/AdminLayout';
+import DoctorAppointmentsView from './screens/DoctorAppointmentsView';
+import TreatmentFollowUpView from './screens/TreatmentFollowUpView';
+import PharmacyDashboard from './screens/PharmacyDashboard';
 import { apiClient, SESSION_EXPIRED_EVENT } from './services/api';
 
 export function App() {
@@ -50,17 +53,18 @@ export function App() {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [selectedTriage, setSelectedTriage] = useState(null);
 
-  // El contexto clinico no debe sobrevivir al cierre de sesion (privacidad de datos del paciente)
+  // El contexto clinico no debe sobrevivir al cierre de sesion
   useEffect(() => {
     if (!isAuthenticated) {
       setSelectedPatient(null);
       setSelectedTriage(null);
     }
   }, [isAuthenticated]);
+
   const [isOffline, setIsOffline] = useState(false);
   const [sessionNotice, setSessionNotice] = useState('');
 
-  // Cierre de sesion centralizado: el cliente HTTP emite el evento ante cualquier 401 fuera del login
+  // Cierre de sesion centralizado
   useEffect(() => {
     const handleSessionExpired = () => {
       localStorage.removeItem('saludconecta_current_view');
@@ -82,13 +86,27 @@ export function App() {
       .then((user) => {
         if (!cancelled && user) setCurrentUser(user);
       })
-      .catch(() => {
-        // Un 401 ya dispara el cierre de sesion; ante fallos de red se conserva la sesion local
-      });
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
   }, []);
+
+  // Redirección de rol: si el usuario es farmacéutico y está en una vista clínica médica, situarlo en farmacia
+  useEffect(() => {
+    if (currentUser) {
+      const isPharmacist =
+        currentUser.role === 'FARMACIA' ||
+        Number(currentUser.role_id) === 6 ||
+        currentUser.specialty?.toLowerCase().includes('farmac') ||
+        (currentUser.full_name || currentUser.name || '').toLowerCase().includes('farma');
+
+      if (isPharmacist && ['dashboard', 'appointments', 'triage', 'hce'].includes(currentView)) {
+        setCurrentView('pharmacy');
+        localStorage.setItem('saludconecta_current_view', 'pharmacy');
+      }
+    }
+  }, [currentUser, currentView]);
 
   const handleLoginSuccess = (data) => {
     setSessionNotice('');
@@ -97,9 +115,22 @@ export function App() {
     if (data && data.user) {
       setCurrentUser(data.user);
       localStorage.setItem('saludconecta_user', JSON.stringify(data.user));
+
+      // Vista inicial según rol
+      const isPharm =
+        data.user.role === 'FARMACIA' ||
+        Number(data.user.role_id) === 6 ||
+        data.user.specialty?.toLowerCase().includes('farmac') ||
+        (data.user.full_name || data.user.name || '').toLowerCase().includes('farma');
+
+      if (isPharm) {
+        setCurrentView('pharmacy');
+        localStorage.setItem('saludconecta_current_view', 'pharmacy');
+      } else {
+        setCurrentView('dashboard');
+        localStorage.setItem('saludconecta_current_view', 'dashboard');
+      }
     }
-    setCurrentView('dashboard');
-    localStorage.setItem('saludconecta_current_view', 'dashboard');
   };
 
   const handleLogout = () => {
@@ -124,7 +155,6 @@ export function App() {
     setSelectedTriage(triage);
   };
 
-  // Busqueda global por documento: el error se propaga al Header para mostrarlo al usuario
   const handleHeaderSearch = async (documentType, documentNumber) => {
     const found = await apiClient.lookupPatient(documentType, documentNumber);
     const detail = await apiClient.getPatient(found.id);
@@ -150,8 +180,7 @@ export function App() {
     return <AuthScreen onLoginSuccess={handleLoginSuccess} sessionNotice={sessionNotice} />;
   }
 
-  // REGLA RBAC ESTRICTA (ISO/IEC 25010): El usuario con rol ADMIN dispone de su propio entorno
-  // desacoplado (AdminLayout) y NO tiene acceso a historias clinicas ni consulta asistencial
+  // REGLA RBAC ESTRICTA: El usuario con rol ADMIN dispone de su propio entorno
   if (currentUser && (currentUser.role === 'ADMIN' || Number(currentUser.role_id) === 1)) {
     return (
       <AdminLayout
@@ -185,9 +214,10 @@ export function App() {
           setCurrentView={handleNavigate}
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={handleToggleSidebar}
+          user={currentUser}
         />
 
-        {/* CONTENEDOR PRINCIPAL: Margen dinamico sincronizado con el estado colapsado del sidebar */}
+        {/* CONTENEDOR PRINCIPAL */}
         <main
           className={`flex-1 transition-all duration-300 ease-in-out ${
             isSidebarCollapsed ? 'ml-20' : 'ml-64'
@@ -196,6 +226,13 @@ export function App() {
           {currentView === 'dashboard' && (
             <DashboardScreen
               onSelectPatient={handleSelectPatient}
+              onNavigate={handleNavigate}
+            />
+          )}
+
+          {currentView === 'appointments' && (
+            <DoctorAppointmentsView
+              user={currentUser}
               onNavigate={handleNavigate}
             />
           )}
@@ -219,11 +256,18 @@ export function App() {
             />
           )}
 
-          {currentView === 'prescription' && (
-            <PrescriptionScreen
+          {currentView === 'treatment' && (
+            <TreatmentFollowUpView
+              user={currentUser}
               patient={selectedPatient}
-              onPatientChange={handleSelectPatient}
               onNavigate={handleNavigate}
+            />
+          )}
+
+          {(currentView === 'pharmacy' || currentView === 'inventory' || currentView === 'prescription') && (
+            <PharmacyDashboard
+              user={currentUser}
+              initialTab={currentView === 'inventory' ? 'inventory' : 'inbox'}
             />
           )}
 

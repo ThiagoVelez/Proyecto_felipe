@@ -208,7 +208,7 @@ func (h *AuthHandler) RegisterStaff(c *fiber.Ctx) error {
 		})
 	}
 
-	if (req.RoleID == 2 || req.RoleID == 3) && req.ProfessionalCard == "" {
+	if (req.RoleID == 2 || req.RoleID == 3 || req.RoleID == 6) && req.ProfessionalCard == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "La tarjeta profesional / registro ReTHUS es obligatorio para médicos y enfermeros",
 		})

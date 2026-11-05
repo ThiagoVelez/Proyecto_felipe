@@ -8,9 +8,11 @@ import (
 	"syscall"
 	"time"
 
+	"saludconecta-backend/adapters/email"
 	"saludconecta-backend/adapters/http"
 	"saludconecta-backend/adapters/http/handlers"
 	"saludconecta-backend/adapters/interoperability"
+	"saludconecta-backend/adapters/pdf"
 	"saludconecta-backend/adapters/storage"
 	"saludconecta-backend/core/services"
 	"saludconecta-backend/pkg/config"
@@ -46,8 +48,6 @@ func main() {
 		ConnMaxIdleTime: 2 * time.Minute,
 	}
 
-	// Si el motor configurado no responde el servicio termina: nunca se conmuta en silencio a memoria,
-	// porque los registros clinicos se perderian al reiniciar. La memoria solo se usa si DB_DRIVER=memory.
 	repos, err := connectWithRetry(storageCfg, log, cfg.DBConnectTries)
 	if err != nil {
 		log.Error("No fue posible inicializar el adaptador de persistencia configurado; el servicio no se inicia", map[string]interface{}{
@@ -62,7 +62,7 @@ func main() {
 		log.Warn("Persistencia EN MEMORIA activa: los datos clinicos se perderan al reiniciar. Uso exclusivo de desarrollo y pruebas")
 	}
 
-	// 4. Administrador inicial: solo con credenciales definidas por el operador, sin valores por defecto
+	// 4. Administrador inicial
 	created, err := services.BootstrapAdmin(context.Background(), repos.User, cfg.AdminEmail, cfg.AdminPassword)
 	switch {
 	case err != nil:
@@ -71,7 +71,17 @@ func main() {
 		log.Info("Administrador inicial creado con las credenciales definidas por el operador", map[string]interface{}{"email": cfg.AdminEmail})
 	}
 
-	// 5. Instanciacion de Servicios de Dominio (Casos de Uso Puros)
+	// 5. Adaptadores de Salida (PDF, SMTP y Comunicaciones en segundo plano)
+	pdfGen := pdf.NewGenerator("storage/documents")
+	emailSvc := email.NewService(email.Config{
+		Host:     os.Getenv("SMTP_HOST"),
+		Port:     os.Getenv("SMTP_PORT"),
+		Username: os.Getenv("SMTP_USER"),
+		Password: os.Getenv("SMTP_PASSWORD"),
+		From:     os.Getenv("SMTP_FROM"),
+	}, log)
+
+	// 6. Instanciacion de Servicios de Dominio (Casos de Uso Puros)
 	authService := services.NewAuthServiceWithTTL(repos.User, cfg.JWTSecret, cfg.JWTAccessTTL, cfg.JWTRefreshTTL)
 	adminService := services.NewAdminService(repos.User, repos.Audit)
 	patientService := services.NewPatientService(repos.Patient)
@@ -80,11 +90,15 @@ func main() {
 	prescService := services.NewPrescriptionService(repos.Prescription, repos.ClinicalRecord, repos.Patient)
 	syncService := services.NewSyncService(repos.ClinicalRecord, repos.Patient)
 
-	// 6. Adaptadores de Interoperabilidad Normativa (MinSalud & HL7)
+	appointmentService := services.NewAppointmentService(repos.Appointment, repos.Patient, repos.User, pdfGen, emailSvc, log)
+	treatmentService := services.NewTreatmentService(repos.PrescriptionV2, repos.Patient, repos.User, pdfGen, emailSvc, log)
+	pharmacyService := services.NewPharmacyService(repos.Inventory, repos.PrescriptionV2, log)
+
+	// 7. Adaptadores de Interoperabilidad Normativa (MinSalud & HL7)
 	ripsGen := interoperability.NewRIPSGenerator(cfg.IPSNIT, cfg.CodPrestador)
 	fhirMap := interoperability.NewFHIRMapper()
 
-	// 7. Instanciacion de Controladores HTTP (Adaptadores Primarios)
+	// 8. Instanciacion de Controladores HTTP (Adaptadores Primarios)
 	authHandler := handlers.NewAuthHandler(authService)
 	adminHandler := handlers.NewAdminHandler(adminService)
 	patientHandler := handlers.NewPatientHandler(patientService)
@@ -93,7 +107,11 @@ func main() {
 	prescHandler := handlers.NewPrescriptionHandler(prescService)
 	syncHandler := handlers.NewSyncHandler(syncService)
 
-	// 8. Configuracion del Servidor HTTP Fiber v2
+	appointmentHandler := handlers.NewAppointmentHandler(appointmentService)
+	treatmentHandler := handlers.NewTreatmentHandler(treatmentService)
+	pharmacyHandler := handlers.NewPharmacyHandler(pharmacyService)
+
+	// 9. Configuracion del Servidor HTTP Fiber v2
 	serverCfg := http.ServerConfig{
 		AllowedOrigins: cfg.CORSOrigins,
 		RateLimitMax:   120,
@@ -110,6 +128,9 @@ func main() {
 			ClinicalRecordHandler: recordHandler,
 			PrescriptionHandler:   prescHandler,
 			SyncHandler:           syncHandler,
+			AppointmentHandler:    appointmentHandler,
+			TreatmentHandler:      treatmentHandler,
+			PharmacyHandler:       pharmacyHandler,
 			Sessions:              authService,
 			JWTSecret:             cfg.JWTSecret,
 		},
@@ -117,7 +138,7 @@ func main() {
 
 	server := http.NewServer(serverCfg)
 
-	// 9. Inicio del servidor en segundo plano y captura de senales para apagado elegante
+	// 10. Inicio del servidor en segundo plano y captura de senales para apagado elegante
 	shutdownChan := make(chan os.Signal, 1)
 	signal.Notify(shutdownChan, os.Interrupt, syscall.SIGTERM)
 
@@ -149,21 +170,27 @@ func connectWithRetry(cfg storage.Config, log *logger.Logger, attempts int) (*st
 	if attempts <= 0 {
 		attempts = 1
 	}
+
 	var lastErr error
-	for attempt := 1; attempt <= attempts; attempt++ {
+	for i := 1; i <= attempts; i++ {
 		repos, err := storage.NewRepositoryBundle(cfg, log)
 		if err == nil {
 			return repos, nil
 		}
+
 		lastErr = err
-		log.Warn("Conexion a la base de datos no disponible", map[string]interface{}{
-			"intento": attempt,
-			"maximo":  attempts,
-			"error":   err.Error(),
-		})
-		if attempt < attempts {
-			time.Sleep(connectRetryDelay)
+		if i == attempts {
+			break
 		}
+
+		log.Warn("El motor de base de datos aun no esta listo; reintentando conexion", map[string]interface{}{
+			"intento":   i,
+			"limite":    attempts,
+			"espera_ms": connectRetryDelay.Milliseconds(),
+			"error":     err.Error(),
+		})
+		time.Sleep(connectRetryDelay)
 	}
-	return nil, lastErr
+
+	return nil, fmt.Errorf("se agotaron los %d intentos de conexion a %s: %w", attempts, cfg.Driver, lastErr)
 }
