@@ -119,3 +119,4 @@ describe('Módulo Asistencial de Enfermería - Resumen Clínico & Lista de Chequ
     expect(await screen.findByText(/Paciente hemodinámicamente estable/i)).toBeInTheDocument();
   });
 });
+

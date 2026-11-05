@@ -695,3 +695,4 @@ export const NurseChecklistView = ({ user, patient, onSelectPatient, onNavigate 
 };
 
 export default NurseChecklistView;
+

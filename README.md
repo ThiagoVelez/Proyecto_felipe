@@ -1234,10 +1234,15 @@ PASS
 ### 14.6. Módulos y Mejoras Consolidadas en la Plataforma Maestro
 
 1. **Gobernanza de Personal Asistencial (ReTHUS):** Flujo de registro administrativo donde toda cuenta nace inactiva y requiere habilitación explícita previa validación de Tarjeta Profesional.
-2. **Panel Administrativo Desacoplado (`AdminLayout`):** Entorno administrativo aislado absolutamente de historias clínicas y datos sensibles de pacientes (Ley 1581 de 2012).
-3. **Perfil de Usuario Estilo Red Social:** Con selector de 5 banners médicos temáticos (Pediatría, Farmacia, Urgencias, Cirugía y Cardiología), carga reactiva de avatar y óvalo de alta luminosidad protector de contraste WCAG AAA.
-4. **Menú Lateral Colapsable:** Con modo compacto enfocado en íconos con tooltips y persistencia de sesión completa ante recargas del navegador (F5).
-5. **Fondo Multimedia Hospitalario:** Video institucional en bucle continuo integrado en la pantalla de acceso.
+2. **Panel Administrativo Desacoplado (AdminLayout):** Entorno administrativo aislado absolutamente de historias clínicas y datos sensibles de pacientes (Ley 1581 de 2012).
+3. **Menú Lateral Administrativo (AdminSidebar):** Navegación institucional desacoplada para el administrador TI con gestión de gobernanza, organigrama, bitácora forense inmutable y sedes.
+4. **Organigrama Jerárquico Didáctico (AdminOrgChartView):** Árbol administrativo interactivo con la Gerencia General en la cúspide y ramificaciones jerárquicas dinámicas por rol. Soporta zoom mediante rueda del ratón (0.4x a 2.0x), paneo interactivo con arrastre sostenido, controles flotantes de navegación, fotos de perfil en cada nodo y apertura de ficha técnica detallada al pulsar sobre cualquier integrante del equipo asistencial.
+5. **Registro Dinámico de Sedes Operativas:** En el formulario de registro de personal (StaffRegisterModal), el administrador puede registrar y asignar sedes operativas en caliente si la sede requerida no figura en el catálogo inicial, sincronizándose de inmediato en la red asistencial.
+6. **Módulo Asistencial de Enfermería:** Vistas especializadas de Resumen Clínico Básico (datos del paciente, diagnóstico CIE-11, observaciones y medicamentos activos) y Lista de Chequeo Interactiva con tareas asistenciales por paciente, notas de evolución y métricas de cumplimiento.
+7. **Farmacia, Inventario por Dosis y Lector PDF417:** Gestión de inventario valorizado discriminado por concentración y código CUM, cálculo de cobertura (PBS 100% vs. copago/particular), dispensación atómica ACID en MySQL y lectura de código de barras PDF417 de cédula colombiana.
+8. **Perfil de Usuario Estilo Red Social:** Con selector de 5 banners médicos temáticos (Pediatría, Farmacia, Urgencias, Cirugía y Cardiología), carga reactiva de avatar, persistencia de foto de perfil y óvalo protector de contraste WCAG AAA.
+9. **Menú Lateral Colapsable:** Con modo compacto enfocado en íconos con tooltips y persistencia de sesión completa ante recargas del navegador (F5).
+10. **Fondo Multimedia Hospitalario:** Video institucional en bucle continuo integrado en la pantalla de acceso.
 
 ---
 

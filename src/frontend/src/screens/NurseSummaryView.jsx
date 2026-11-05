@@ -512,3 +512,4 @@ export const NurseSummaryView = ({ user, patient, onNavigate, onSelectPatient })
 };
 
 export default NurseSummaryView;
+
