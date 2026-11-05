@@ -8,18 +8,17 @@ import {
   EyeOff,
   Smartphone,
   AlertTriangle,
-  FileCheck2,
-  Scale,
   QrCode,
   Timer,
   RefreshCw,
   UserPlus,
+  Info,
+  X,
 } from 'lucide-react';
-import LoginBackground from '../components/LoginBackground';
 import BranchAccordion from '../components/BranchAccordion';
 import MfaQrModal from '../components/MfaQrModal';
 import AdminRegisterModal from '../components/AdminRegisterModal';
-import BrandLogo from '../components/BrandLogo';
+import ClinicalBiometricVisualizer from '../components/ClinicalBiometricVisualizer';
 import { loadBranches } from '../services/branches';
 import { apiClient } from '../services/api';
 import {
@@ -44,6 +43,7 @@ export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
   const [mfaTimer, setMfaTimer] = useState(getRemainingSeconds());
   const [showQrModal, setShowQrModal] = useState(false);
   const [showAdminModal, setShowAdminModal] = useState(false);
+  const [showForgotModal, setShowForgotModal] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [isError, setIsError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -74,18 +74,18 @@ export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
         const secret = seedData?.secret || 'JBSWY3DPEHPK3PXP';
         const uri = seedData?.otpauth_uri || buildOtpAuthUri(secret, targetEmail, 'SaludConecta IPS');
         setMfaSecret(secret);
-        const url = await generateQrDataUrl(uri, 130);
+        const url = await generateQrDataUrl(uri, 140);
         if (isMounted && url) {
           setQrDataUrl(url);
         }
       } catch {
         if (!isMounted) return;
         const fallbackUri = buildOtpAuthUri(mfaSecret, targetEmail, 'SaludConecta IPS');
-        generateQrDataUrl(fallbackUri, 130).then((url) => {
+        generateQrDataUrl(fallbackUri, 140).then((url) => {
           if (isMounted && url) setQrDataUrl(url);
         });
       }
-    }, 250);
+    }, 600);
 
     return () => {
       isMounted = false;
@@ -93,13 +93,13 @@ export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
     };
   }, [identifier]);
 
-  // Rotación manual de semilla para pruebas
+  // Rotación manual de semilla para pruebas de laboratorio
   const handleManualRotate = async () => {
     const newSecret = generateBase32Secret(16);
     setMfaSecret(newSecret);
     const targetEmail = identifier.trim().toLowerCase() || 'usuario@saludconecta.ips.gov.co';
     const uri = buildOtpAuthUri(newSecret, targetEmail, 'SaludConecta IPS');
-    const url = await generateQrDataUrl(uri, 130);
+    const url = await generateQrDataUrl(uri, 140);
     if (url) setQrDataUrl(url);
     setTotp(EMPTY_CODE);
     showStatus('Nueva clave generada. Escanee el nuevo QR en su aplicación.');
@@ -112,6 +112,11 @@ export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
     // Pegado completo de 6 dígitos
     if (sanitized.length > 1) {
       const digits = sanitized.slice(0, 6).split('');
+      digits.forEach((d, i) => {
+        if (digitRefs.current[i]) {
+          digitRefs.current[i].value = d;
+        }
+      });
       setTotp([...digits, ...EMPTY_CODE].slice(0, 6));
       digitRefs.current[Math.min(digits.length, 5)]?.focus();
       return;
@@ -132,7 +137,7 @@ export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
     }
   };
 
-  // Ayudante de pruebas de laboratorio: calcula el código vigente del segundo
+  // Ayudante de pruebas: calcula el código vigente del segundo
   const handleAutofillTest = async () => {
     try {
       const code = await calculateTotpCode(mfaSecret);
@@ -147,7 +152,9 @@ export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const code = totp.join('');
+    const domDigits = digitRefs.current.map((el) => el?.value || '').join('');
+    const stateCode = totp.join('');
+    const code = domDigits.length === 6 ? domDigits : stateCode;
 
     setIsSubmitting(true);
     showStatus('Verificando credenciales con el servidor...');
@@ -186,105 +193,95 @@ export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
   };
 
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center p-2 sm:p-4 overflow-y-auto bg-slate-950">
-      <LoginBackground />
-
-      <div className="relative z-10 w-full max-w-5xl my-auto shadow-2xl rounded-2xl overflow-hidden bg-white/95 backdrop-blur-md grid grid-cols-1 lg:grid-cols-12 border border-white/20">
-        {/* PANEL IZQUIERDO: Identidad Institucional & Gobernanza Clínica */}
-        <div className="lg:col-span-5 bg-gradient-to-b from-[#0F172A] via-[#132338] to-[#005c55] p-4 lg:p-6 text-white flex flex-col justify-between relative overflow-y-auto">
-          <div className="relative z-10 space-y-3">
-            {/* Encabezado con Logotipo Oficial */}
-            <div className="flex items-center space-x-3">
-              <BrandLogo size="md" />
-              <div className="min-w-0">
-                <span className="inline-block px-2 py-0.2 rounded-full bg-secondary-fixed text-on-secondary-fixed text-[9px] font-bold uppercase tracking-wider">
-                  Red Integrada Valle del Cauca
-                </span>
-                <h1 className="text-lg font-bold text-white leading-tight">
-                  SaludConecta IPS
-                </h1>
-                <p className="text-[10px] text-secondary-fixed-dim">
-                  Portal Clínico Asistencial y Gobernanza Hospitalaria
-                </p>
-              </div>
-            </div>
-
-            {/* Sello de Calidad ISO/IEC 25010 */}
-            <div className="bg-white/10 backdrop-blur-md rounded-xl p-3 space-y-1 border border-white/10">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-1.5">
-                  <FileCheck2 className="w-4 h-4 text-secondary-container" />
-                  <span className="font-semibold text-xs text-white">
-                    Certificado ISO/IEC 25010
-                  </span>
+    <main className="min-h-screen w-full flex flex-col lg:flex-row overflow-x-hidden bg-slate-900">
+      {/* PANEL IZQUIERDO: Formulario Clínico & ReTHUS */}
+      <section
+        data-purpose="clinical-auth-panel"
+        className="w-full lg:w-[48%] xl:w-[45%] min-h-screen bg-white flex flex-col justify-between border-r border-slate-200 shadow-2xl relative z-20 overflow-y-auto custom-scroll"
+      >
+        <div className="px-6 sm:px-10 xl:px-12 py-8 flex flex-col justify-between min-h-full">
+          <div>
+            {/* Top Header & Branding Institucional */}
+            <header className="flex items-center justify-between pb-5 border-b border-slate-100">
+              <div className="flex items-center gap-3.5">
+                {/* Logotipo Isotipo Cruz Asistencial Digital */}
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#005c55] via-teal-600 to-cyan-700 flex items-center justify-center text-white shadow-md shadow-teal-900/20 ring-1 ring-emerald-500/30">
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2.5"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M12 4v16m-8-8h16" />
+                    <circle className="stroke-white/40" cx="12" cy="12" r="3" strokeWidth="1.5" />
+                  </svg>
                 </div>
-                <span className="px-1.5 py-0.2 bg-primary-container text-on-primary-container text-[9px] font-bold rounded">
-                  Grado Médico
-                </span>
-              </div>
-              <p className="text-[11px] text-white/80 leading-normal">
-                Protocolo de auditoría continua y trazabilidad inmutable mediante funciones resumen hash SHA-256 según estándar MinSalud.
-              </p>
-            </div>
-
-            {/* Advertencia Legal & Forense */}
-            <div className="bg-red-950/40 border border-red-500/30 rounded-xl p-3 space-y-1">
-              <div className="flex items-center space-x-1.5 text-red-200">
-                <Scale className="w-4 h-4" />
-                <span className="font-bold text-[11px] uppercase tracking-wider">
-                  Advertencia Jurídica y Forense
-                </span>
-              </div>
-              <p className="text-[11px] text-red-100/80 leading-tight">
-                Acceso restringido exclusivamente a profesionales autorizados por ReTHUS y MinSalud. Toda acción queda registrada bajo bitácora inalterable (Ley 1581 de 2012 y Res. 1995 de 1999).
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* PANEL DERECHO: Formulario de Autenticación y Firma Biométrica/TOTP */}
-        <div className="lg:col-span-7 p-4 lg:p-6 flex flex-col justify-between bg-surface-container-lowest">
-          <div className="space-y-3">
-            {/* Header del Formulario de Autenticación */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-surface-container pb-2.5">
-              <div>
-                <h2 className="text-base font-bold text-on-surface">
-                  Inicio de Sesión y Firma Biométrica
-                </h2>
-                <p className="text-[11px] text-on-surface-variant">
-                  Ingrese credenciales habilitadas ante el ReTHUS y MinSalud
-                </p>
-              </div>
-
-              <div className="flex items-center gap-1.5 text-[11px] text-primary font-semibold bg-primary/5 px-2.5 py-1 rounded-lg border border-primary/10">
-                <ShieldCheck className="w-3.5 h-3.5 text-primary" />
-                <span>Acceso Seguro TLS 1.3</span>
-              </div>
-            </div>
-
-            {/* Formulario */}
-            <form onSubmit={handleSubmit} className="space-y-3">
-              {/* Identificador y Sede Operativa */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
-                  <label htmlFor="login-email" className="block text-[11px] font-semibold text-on-surface mb-1">
-                    Correo Institucional
-                  </label>
-                  <div className="relative">
-                    <input
-                      id="login-email"
-                      type="email"
-                      autoComplete="username"
-                      value={identifier}
-                      onChange={(e) => setIdentifier(e.target.value)}
-                      required
-                      placeholder="Ej: usuario@saludconecta.ips.gov.co"
-                      className="w-full h-8 pl-8 pr-3 text-xs bg-surface-container-low border border-outline-variant rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-on-surface"
-                    />
-                    <Mail className="w-3.5 h-3.5 text-outline absolute left-2.5 top-2.5" />
+                  <div className="flex items-center gap-2">
+                    <span className="inline-block text-[10px] tracking-wider uppercase font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-200/70">
+                      Red Integrada Valle del Cauca
+                    </span>
                   </div>
+                  <h1 className="text-lg font-extrabold tracking-tight text-slate-900 leading-tight">
+                    SaludConecta <span className="text-[#005c55] font-black">IPS</span>
+                  </h1>
+                  <p className="text-[11px] font-medium text-slate-500 leading-none mt-0.5">
+                    Portal Clínico Asistencial y Gobernanza Hospitalaria
+                  </p>
                 </div>
+              </div>
 
+              {/* Badge de Seguridad Cifrada */}
+              <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-[11px] font-medium shadow-2xs">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                <span className="font-semibold">TLS 1.3 / SHA-256</span>
+              </div>
+            </header>
+
+            {/* Título Principal del Login */}
+            <div className="mt-6 mb-5">
+              <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+                Inicio de Sesión y Firma Biométrica
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                Ingrese credenciales asistenciales validadas ante el{' '}
+                <strong className="text-slate-700 font-semibold">ReTHUS</strong> y{' '}
+                <strong className="text-slate-700 font-semibold">MinSalud</strong>.
+              </p>
+            </div>
+
+            {/* Formulario de Credenciales Asistenciales */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Campo: Correo Institucional */}
+              <div>
+                <label
+                  htmlFor="login-email"
+                  className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1"
+                >
+                  Correo Institucional
+                </label>
+                <div className="relative rounded-lg shadow-2xs">
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                    <Mail className="h-4 w-4" />
+                  </div>
+                  <input
+                    id="login-email"
+                    type="email"
+                    autoComplete="username"
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
+                    required
+                    placeholder="Ej: usuario@saludconecta.ips.gov.co"
+                    className="block w-full rounded-lg border border-slate-300 pl-10 pr-3.5 py-2.5 text-sm font-medium text-slate-800 placeholder-slate-400 focus:border-[#005c55] focus:ring-2 focus:ring-teal-500/20 transition-all bg-slate-50/40 hover:bg-white focus:bg-white"
+                  />
+                </div>
+              </div>
+
+              {/* Campo: Sede Operativa de Turno */}
+              <div>
                 <BranchAccordion
                   label="Sede Operativa de Turno"
                   branches={branches}
@@ -293,14 +290,27 @@ export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
                 />
               </div>
 
-              {/* Contraseña */}
+              {/* Campo: Contraseña Asistencial ReTHUS */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label htmlFor="login-password" className="text-[11px] font-semibold text-on-surface">
+                  <label
+                    htmlFor="login-password"
+                    className="block text-xs font-semibold uppercase tracking-wider text-slate-700"
+                  >
                     Contraseña Asistencial ReTHUS
                   </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotModal(true)}
+                    className="text-xs text-[#005c55] hover:text-teal-800 font-semibold hover:underline cursor-pointer"
+                  >
+                    ¿Olvidó contraseña?
+                  </button>
                 </div>
-                <div className="relative">
+                <div className="relative rounded-lg shadow-2xs">
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                    <KeyRound className="h-4 w-4" />
+                  </div>
                   <input
                     id="login-password"
                     autoComplete="current-password"
@@ -309,81 +319,93 @@ export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     placeholder="Ej: MiClave2026*"
-                    className="w-full h-8 pl-8 pr-9 text-xs bg-surface-container-low border border-outline-variant rounded-lg focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-on-surface"
+                    className="block w-full rounded-lg border border-slate-300 pl-10 pr-10 py-2.5 text-sm font-medium text-slate-800 placeholder-slate-400 focus:border-[#005c55] focus:ring-2 focus:ring-teal-500/20 transition-all bg-slate-50/40 hover:bg-white focus:bg-white"
                   />
-                  <KeyRound className="w-3.5 h-3.5 text-outline absolute left-2.5 top-2.5" />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                    className="absolute right-2.5 top-2 text-outline hover:text-on-surface cursor-pointer"
+                    className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 hover:text-slate-600 transition-colors focus:outline-none cursor-pointer"
                   >
-                    {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
 
-              {/* SEGUNDO FACTOR (MFA TOTP) CON CÓDIGO QR Y CASILLAS DIRECTAS */}
-              <div className="p-2.5 rounded-xl bg-surface-container-low border border-primary/25 shadow-xs space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-6 h-6 rounded-lg bg-primary text-white flex items-center justify-center shrink-0">
+              {/* SEGUNDO FACTOR OBLIGATORIO (TOTP) */}
+              <div
+                data-purpose="totp-card"
+                className="rounded-xl border border-teal-200/80 bg-gradient-to-b from-teal-50/60 to-emerald-50/30 p-4 transition-all shadow-2xs space-y-3"
+              >
+                {/* Encabezado con Contador Regresivo */}
+                <div className="flex items-center justify-between pb-2.5 border-b border-teal-100">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-md bg-teal-600/10 text-teal-700 flex items-center justify-center font-bold text-xs shrink-0">
                       <Smartphone className="w-3.5 h-3.5" />
                     </div>
                     <div>
-                      <h3 className="text-xs font-bold text-on-surface">Segundo Factor Obligatorio (TOTP)</h3>
-                      <p className="text-[10px] text-on-surface-variant">
-                        Escanee el QR con Google Authenticator, Microsoft Authenticator o Authy
+                      <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                        Segundo Factor Obligatorio (TOTP)
+                      </h3>
+                      <p className="text-[11px] text-slate-500">
+                        Google Authenticator, Microsoft Authenticator o Authy
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-1 px-2 py-0.5 bg-white rounded-full shadow-xs text-primary font-mono text-[11px]">
-                    <Timer className="w-3 h-3" />
-                    <span>
-                      Ventana: <strong>00:{mfaTimer.toString().padStart(2, '0')}s</strong>
-                    </span>
+
+                  <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-white border border-teal-200 text-teal-800 text-[11px] font-mono font-bold shadow-2xs">
+                    <Timer className="w-3 h-3 text-[#005c55]" />
+                    <span>00:{mfaTimer.toString().padStart(2, '0')}s</span>
                   </div>
                 </div>
 
-                {/* FILA: QR A LA IZQUIERDA Y CASILLAS DE 6 DÍGITOS A LA DERECHA */}
-                <div className="flex items-center justify-between gap-3 pt-0.5">
-                  {/* CÓDIGO QR DIRECTO */}
-                  <div className="flex flex-col items-center shrink-0">
-                    <div className="p-1 bg-white rounded-xl border-2 border-primary shadow-xs">
+                {/* QR y Cuadrícula de 6 dígitos */}
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  {/* QR Vectorial Directo */}
+                  <div className="relative group bg-white p-2 rounded-lg border border-slate-200 shadow-2xs shrink-0 cursor-pointer text-center">
+                    <div className="w-[72px] h-[72px] flex items-center justify-center bg-white overflow-hidden rounded">
                       {qrDataUrl ? (
                         <img
                           src={qrDataUrl}
                           alt="Código QR TOTP SaludConecta"
-                          className="w-20 h-20 rounded cursor-pointer transition-transform hover:scale-105"
+                          className="w-full h-full object-contain cursor-pointer transition-transform hover:scale-105"
                           title="Haz clic para ampliar QR"
                           onClick={() => setShowQrModal(true)}
                         />
                       ) : (
-                        <div className="w-20 h-20 flex items-center justify-center text-[10px] text-outline">
-                          Generando QR...
-                        </div>
+                        <div className="text-[10px] text-slate-400">Generando QR...</div>
                       )}
                     </div>
                     <button
                       type="button"
                       onClick={() => setShowQrModal(true)}
-                      className="text-[9px] font-bold text-primary hover:underline mt-0.5 flex items-center gap-0.5 cursor-pointer"
+                      className="block w-full text-[9px] font-semibold text-teal-700 mt-1 hover:underline cursor-pointer"
                     >
-                      <QrCode className="w-2.5 h-2.5" />
                       Ampliar QR
                     </button>
                   </div>
 
-                  {/* CASILLAS VACÍAS PARA LOS 6 DÍGITOS */}
-                  <div className="flex-1 flex flex-col justify-center space-y-1 min-w-0">
-                    <label id="totp-group-label" className="text-[10px] font-semibold text-on-surface leading-tight block">
-                      Código de 6 dígitos de su aplicación:
-                    </label>
+                  {/* Input de 6 Dígitos con salto automático */}
+                  <div className="flex-1 w-full">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[11px] font-semibold text-slate-600">
+                        Código de 6 dígitos:
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleAutofillTest}
+                        className="text-[11px] text-teal-700 font-semibold hover:text-teal-900 hover:underline cursor-pointer"
+                      >
+                        Pegar código de prueba
+                      </button>
+                    </div>
 
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center justify-between gap-1 sm:gap-1.5">
                       {totp.map((digit, idx) => (
                         <React.Fragment key={idx}>
-                          {idx === 3 && <span className="text-outline font-bold text-xs">-</span>}
+                          {idx === 3 && (
+                            <span className="text-slate-400 font-bold text-sm select-none">-</span>
+                          )}
                           <input
                             id={`totp-input-${idx}`}
                             ref={(el) => {
@@ -398,29 +420,23 @@ export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
                             onChange={(e) => handleDigitChange(idx, e.target.value)}
                             onKeyDown={(e) => handleKeyDown(idx, e)}
                             placeholder="•"
-                            className="w-7 h-8 text-center text-xs font-bold rounded-lg bg-white border border-outline-variant focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-primary shadow-xs"
+                            className="w-9 h-11 sm:w-10 sm:h-11 text-center font-mono font-bold text-lg rounded-lg border border-slate-300 focus:border-[#005c55] focus:ring-2 focus:ring-teal-500/30 bg-white shadow-2xs text-[#005c55]"
                           />
                         </React.Fragment>
                       ))}
                     </div>
 
-                    <div className="flex items-center justify-between text-[10px] text-on-surface-variant pt-0.5">
-                      <button
-                        type="button"
-                        onClick={handleAutofillTest}
-                        className="text-primary hover:underline font-medium text-[10px] cursor-pointer"
-                        title="Opción de prueba: pega el código actual sincronizado"
-                      >
-                        Pegar código de prueba
-                      </button>
-
+                    <div className="flex items-center justify-between mt-2 text-[10px] text-slate-500">
+                      <span className="flex items-center gap-1.5 font-medium">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        Semilla ReTHUS sincronizada
+                      </span>
                       <button
                         type="button"
                         onClick={handleManualRotate}
-                        className="text-on-surface-variant hover:text-primary flex items-center gap-1 cursor-pointer"
-                        title="Generar nueva clave aleatoria"
+                        className="flex items-center gap-1 text-slate-600 hover:text-slate-900 font-medium cursor-pointer"
                       >
-                        <RefreshCw className="w-3 h-3" />
+                        <RefreshCw className="w-3 h-3 text-slate-500" />
                         <span>Rotar QR</span>
                       </button>
                     </div>
@@ -428,16 +444,21 @@ export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
                 </div>
               </div>
 
-              {/* Advertencia de Bloqueo */}
-              <div className="p-2 bg-amber-50 rounded-lg flex items-center space-x-2 border border-amber-200">
-                <AlertTriangle className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-                <p className="text-[10px] text-amber-900 leading-tight">
-                  <strong>Control de Acceso:</strong> Bloqueo preventivo tras 5 intentos fallidos (Res. 1995 de 1999).
+              {/* Alerta Preventiva Legal de Auditoría */}
+              <div className="flex items-start gap-2.5 p-2.5 rounded-lg bg-amber-50/90 border border-amber-200/80 text-amber-900 text-xs">
+                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <p className="leading-relaxed text-[11px]">
+                  <strong className="font-semibold text-amber-950">Control de Acceso:</strong>{' '}
+                  Bloqueo preventivo tras 5 intentos fallidos (Res. 1995 de 1999 y Circular MinSalud
+                  024).
                 </p>
               </div>
 
               {sessionNotice && !statusMessage && (
-                <div role="alert" className="p-2 rounded-lg bg-amber-50 text-amber-900 border border-amber-200 text-[11px] font-medium text-center">
+                <div
+                  role="alert"
+                  className="p-2.5 rounded-lg bg-amber-50 text-amber-900 border border-amber-200 text-xs font-medium text-center"
+                >
                   {sessionNotice}
                 </div>
               )}
@@ -445,48 +466,68 @@ export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
               {statusMessage && (
                 <div
                   role={isError ? 'alert' : 'status'}
-                  className={`p-2 rounded-lg text-[11px] font-medium text-center ${
-                    isError ? 'bg-red-50 text-red-800 border border-red-200' : 'bg-primary/10 text-primary'
+                  className={`p-2.5 rounded-lg text-xs font-medium text-center ${
+                    isError
+                      ? 'bg-rose-50 text-rose-800 border border-rose-200'
+                      : 'bg-teal-50 text-teal-800 border border-teal-200'
                   }`}
                 >
                   {statusMessage}
                 </div>
               )}
 
-              {/* Botón Principal */}
+              {/* Botón de Envío / Firma Digital */}
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full h-10 bg-primary hover:bg-primary-container text-white font-bold text-xs rounded-xl shadow-sm hover:shadow-md flex items-center justify-center space-x-1.5 transition-all cursor-pointer active:scale-[0.99] disabled:opacity-50"
+                className="w-full py-3.5 px-6 rounded-xl font-bold text-sm tracking-wide text-white bg-gradient-to-r from-teal-800 via-[#005c55] to-teal-700 hover:from-teal-900 hover:via-teal-800 hover:to-teal-800 active:scale-[0.99] transition-all shadow-lg shadow-teal-900/25 flex items-center justify-center gap-2 group cursor-pointer disabled:opacity-50"
               >
-                <Lock className="w-3.5 h-3.5" />
-                <span>{isSubmitting ? 'Verificando con Servidor...' : 'Iniciar Sesión y Firmar'}</span>
+                <Lock className="w-4 h-4 text-emerald-300 group-hover:rotate-12 transition-transform duration-300" />
+                <span>
+                  {isSubmitting ? 'Verificando con Servidor...' : 'Iniciar Sesión y Firmar'}
+                </span>
               </button>
             </form>
           </div>
 
-          {/* Pie de Página: Botón de Registro de Administrador y Versión */}
-          <div className="pt-2 mt-2 border-t border-surface-container-high flex items-center justify-between text-[11px] text-on-surface-variant">
-            <button
-              type="button"
-              onClick={() => setShowAdminModal(true)}
-              className="text-primary hover:underline font-semibold cursor-pointer text-[11px] flex items-center gap-1.5"
-            >
-              <UserPlus className="w-3.5 h-3.5" />
-              <span>Registrar Administrador de Centro de Salud</span>
-            </button>
+          {/* Footer y Cumplimiento Normativo Asistencial */}
+          <footer className="pt-5 mt-4 border-t border-slate-100 flex flex-col gap-2.5">
+            <div className="flex items-center justify-between text-xs">
+              <button
+                type="button"
+                onClick={() => setShowAdminModal(true)}
+                className="flex items-center gap-1.5 text-teal-800 hover:text-teal-950 font-semibold hover:underline cursor-pointer"
+              >
+                <UserPlus className="w-3.5 h-3.5 text-teal-600" />
+                <span>Registrar Administrador de Centro de Salud</span>
+              </button>
+              <span className="text-[11px] font-mono text-slate-400">Build 2026.02-prod</span>
+            </div>
 
-            <span className="font-mono text-[9px] text-outline">Build 2026.02-prod</span>
-          </div>
+            <div className="flex items-center justify-between text-[10px] text-slate-400">
+              <span>Certificado ISO/IEC 25010 • Grado Médico</span>
+              <span className="flex items-center gap-1 text-emerald-600 font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                Nodo Departamental en línea
+              </span>
+            </div>
+          </footer>
         </div>
-      </div>
+      </section>
+
+      {/* PANEL DERECHO: Experiencia Visual Médica Inmersiva & Animada */}
+      <ClinicalBiometricVisualizer />
 
       {/* Modal QR Ampliado */}
       <MfaQrModal
         isOpen={showQrModal}
         onClose={() => setShowQrModal(false)}
         secret={mfaSecret}
-        otpauthUri={buildOtpAuthUri(mfaSecret, identifier || 'usuario@saludconecta.ips.gov.co', 'SaludConecta IPS')}
+        otpauthUri={buildOtpAuthUri(
+          mfaSecret,
+          identifier || 'usuario@saludconecta.ips.gov.co',
+          'SaludConecta IPS'
+        )}
       />
 
       {/* Modal de Registro de Administrador de Centro de Salud */}
@@ -500,7 +541,52 @@ export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
           }
         }}
       />
-    </div>
+
+      {/* Modal Informativo: Restablecimiento de Credenciales ReTHUS */}
+      {showForgotModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-scale-in">
+            <div className="px-5 py-4 bg-gradient-to-r from-teal-800 to-[#005c55] text-white flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Info className="w-5 h-5 text-emerald-300" />
+                <h3 className="font-bold text-sm">Restablecimiento de Credencial ReTHUS</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowForgotModal(false)}
+                className="text-white/80 hover:text-white cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-5 space-y-3 text-xs text-slate-600 leading-relaxed">
+              <p>
+                Por mandatos de la <strong className="text-slate-800">Resolución 1995 de 1999</strong> y{' '}
+                <strong className="text-slate-800">Ley 1581 de 2012</strong>, las credenciales
+                médicas asistenciales no pueden autogestionarse por correo electrónico externo no
+                certificado.
+              </p>
+              <p>
+                Para restablecer su contraseña institucional o sincronizar un nuevo dispositivo con
+                segundo factor TOTP, acérquese a la{' '}
+                <strong className="text-slate-800">Dirección Médica</strong> o contacte al{' '}
+                <strong className="text-slate-800">Administrador de Centro de Salud</strong> de su
+                sede operativa.
+              </p>
+            </div>
+            <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowForgotModal(false)}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-xs rounded-lg cursor-pointer"
+              >
+                Entendido
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </main>
   );
 };
 

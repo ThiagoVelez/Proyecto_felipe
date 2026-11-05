@@ -22,7 +22,7 @@ import { apiClient } from '../services/api';
 import { calculateAge, formatDoctorName, getFullName } from '../utils/clinical';
 
 export const NurseChecklistView = ({ user, patient, onSelectPatient, onNavigate }) => {
-  const [patientsList, setPatientsList] = useState([]);
+  const [patientsList, setPatientsList] = useState(() => (patient ? [patient] : []));
   const [nurseOrders, setNurseOrders] = useState([]);
   const [selectedPatientId, setSelectedPatientId] = useState(patient?.id || '');
   const [searchTerm, setSearchTerm] = useState('');
@@ -159,7 +159,8 @@ export const NurseChecklistView = ({ user, patient, onSelectPatient, onNavigate 
     init();
   }, [patient]);
 
-  const activePatient = patientsList.find((p) => p.id === selectedPatientId) || patientsList[0];
+  const activePatient =
+    patientsList.find((p) => p.id === selectedPatientId) || patient || patientsList[0];
   const activeOrder = nurseOrders.find((o) => o.patient_id === selectedPatientId);
   const activeChecklist = (activePatient && checklists[activePatient.id]) || { duties: [], notes: [] };
 

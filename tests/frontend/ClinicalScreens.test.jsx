@@ -40,7 +40,7 @@ describe('HceScreen - folios reales desde la API', () => {
 
     render(<HceScreen patient={TEST_PATIENT} onPatientChange={vi.fn()} onNavigate={vi.fn()} />);
 
-    expect(await screen.findByLabelText(/Motivo de Consulta/i)).toHaveValue('Dolor toracico de dos horas');
+    await waitFor(() => expect(screen.getByLabelText(/Motivo de Consulta/i)).toHaveValue('Dolor toracico de dos horas'));
     expect(calls.some((c) => c.path === '/clinical-records/patient/pat-1')).toBe(true);
 
     fireEvent.click(screen.getByRole('tab', { name: /Cadena Forense/i }));

@@ -1243,6 +1243,7 @@ PASS
 8. **Perfil de Usuario Estilo Red Social:** Con selector de 5 banners médicos temáticos (Pediatría, Farmacia, Urgencias, Cirugía y Cardiología), carga reactiva de avatar, persistencia de foto de perfil y óvalo protector de contraste WCAG AAA.
 9. **Menú Lateral Colapsable:** Con modo compacto enfocado en íconos con tooltips y persistencia de sesión completa ante recargas del navegador (F5).
 10. **Fondo Multimedia Hospitalario:** Video institucional en bucle continuo integrado en la pantalla de acceso.
+11. **Portal de Autenticación y Firma Biométrica (Split-Screen Clínico):** Rediseño integral de alta fidelidad según diseño Stitch (cb9a37de680f4ebabe8d5c27fe66547c). Dispone de panel izquierdo ergonómico (credenciales ReTHUS, selector dinámico de sedes, TOTP interactivo con autofoco y copiado seguro, advertencias legales y acceso a registro administrativo) y panel derecho inmersivo con holograma biométrico en radar giratorio concéntrico, trazado cardiovascular ECG animado en tiempo real, red de nodos interconectados y sellos de trazabilidad criptográfica SHA-256 e ISO/IEC 25010.
 
 ---
 

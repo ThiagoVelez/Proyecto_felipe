@@ -28,7 +28,7 @@ import {
 } from '../utils/clinical';
 
 export const NurseSummaryView = ({ user, patient, onNavigate, onSelectPatient }) => {
-  const [patientsList, setPatientsList] = useState([]);
+  const [patientsList, setPatientsList] = useState(() => (patient ? [patient] : []));
   const [nurseOrders, setNurseOrders] = useState([]);
   const [selectedPatientId, setSelectedPatientId] = useState(patient?.id || '');
   const [searchTerm, setSearchTerm] = useState('');
@@ -131,7 +131,8 @@ export const NurseSummaryView = ({ user, patient, onNavigate, onSelectPatient })
   }, [patient]);
 
   // Paciente seleccionado actualmente
-  const activePatient = patientsList.find((p) => p.id === selectedPatientId) || patientsList[0];
+  const activePatient =
+    patientsList.find((p) => p.id === selectedPatientId) || patient || patientsList[0];
   const activeOrder = nurseOrders.find((o) => o.patient_id === selectedPatientId);
 
   const patientAge = activePatient ? calculateAge(activePatient.birth_date) : null;

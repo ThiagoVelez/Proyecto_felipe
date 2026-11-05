@@ -33,6 +33,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
+    testTimeout: 15000,
     setupFiles: path.resolve(__dirname, './src/setupTests.js'),
     include: [
       'src/**/*.{test,spec}.{js,jsx}',

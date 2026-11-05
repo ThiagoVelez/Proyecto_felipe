@@ -1,15 +1,9 @@
 import React from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import NurseSummaryView from '../../src/frontend/src/screens/NurseSummaryView';
 import NurseChecklistView from '../../src/frontend/src/screens/NurseChecklistView';
 import { apiClient } from '../../src/frontend/src/services/api';
-
-vi.mock('../../src/frontend/src/services/api', () => ({
-  apiClient: {
-    listPatients: vi.fn(),
-  },
-}));
 
 describe('Módulo Asistencial de Enfermería - Resumen Clínico & Lista de Chequeo', () => {
   const mockNurseUser = {
@@ -49,10 +43,16 @@ describe('Módulo Asistencial de Enfermería - Resumen Clínico & Lista de Chequ
     },
   ];
 
+  let listSpy;
+
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
-    apiClient.listPatients.mockResolvedValue(mockPatients);
+    listSpy = vi.spyOn(apiClient, 'listPatients').mockResolvedValue(mockPatients);
+  });
+
+  afterEach(() => {
+    listSpy?.mockRestore();
   });
 
   it('renderiza NurseSummaryView con datos del paciente, diagnóstico y fármacos activos', async () => {
