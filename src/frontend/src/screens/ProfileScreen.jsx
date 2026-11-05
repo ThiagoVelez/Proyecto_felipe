@@ -91,20 +91,30 @@ const BannerArtwork = ({ bannerId }) => {
 
 export const ProfileScreen = ({ user, onUpdateUser, onNavigate }) => {
   const fileInputRef = useRef(null);
+  const userKey = user?.email || user?.document_number || user?.id || 'current';
 
   const savedProfile = (() => {
     try {
+      const userSpecific = localStorage.getItem(`saludconecta_profile_${userKey}`);
+      if (userSpecific) return JSON.parse(userSpecific);
       return JSON.parse(localStorage.getItem('saludconecta_profile_custom') || '{}');
     } catch {
       return {};
     }
   })();
 
+  const savedAvatarPersisted =
+    user?.avatar ||
+    localStorage.getItem(`saludconecta_avatar_${userKey}`) ||
+    localStorage.getItem('saludconecta_avatar') ||
+    savedProfile.avatarUrl ||
+    '';
+
   const [activeTab, setActiveTab] = useState('info'); // 'info' | 'banners' | 'rethus' | 'security'
   const [isEditing, setIsEditing] = useState(false);
 
   const [bannerId, setBannerId] = useState(savedProfile.bannerId || user?.bannerId || 'urgencias');
-  const [avatarUrl, setAvatarUrl] = useState(savedProfile.avatarUrl || user?.avatar || '');
+  const [avatarUrl, setAvatarUrl] = useState(savedAvatarPersisted);
   const [fullName, setFullName] = useState(user?.full_name || user?.name || 'Dr. Santiago Vélez');
   const [phone, setPhone] = useState(savedProfile.phone || user?.phone || '312 345 6789');
   const [specialty, setSpecialty] = useState(user?.specialty || 'Medicina de Urgencias');
@@ -133,7 +143,18 @@ export const ProfileScreen = ({ user, onUpdateUser, onNavigate }) => {
         const resultUrl = event.target?.result;
         if (resultUrl) {
           setAvatarUrl(resultUrl);
-          setSaveFeedback('Foto de perfil actualizada. Guarde los cambios para confirmar.');
+          // Persistencia inmediata para evitar pérdida al navegar o recargar
+          localStorage.setItem(`saludconecta_avatar_${userKey}`, resultUrl);
+          localStorage.setItem('saludconecta_avatar', resultUrl);
+          const updatedUser = {
+            ...user,
+            avatar: resultUrl,
+          };
+          localStorage.setItem('saludconecta_user', JSON.stringify(updatedUser));
+          if (onUpdateUser) {
+            onUpdateUser(updatedUser);
+          }
+          setSaveFeedback('Foto de perfil cargada y persistida exitosamente.');
         }
       };
       reader.readAsDataURL(file);
@@ -152,7 +173,12 @@ export const ProfileScreen = ({ user, onUpdateUser, onNavigate }) => {
       branch,
     };
 
+    localStorage.setItem(`saludconecta_profile_${userKey}`, JSON.stringify(updatedCustom));
     localStorage.setItem('saludconecta_profile_custom', JSON.stringify(updatedCustom));
+    if (avatarUrl) {
+      localStorage.setItem(`saludconecta_avatar_${userKey}`, avatarUrl);
+      localStorage.setItem('saludconecta_avatar', avatarUrl);
+    }
 
     const updatedUser = {
       ...user,
@@ -172,6 +198,7 @@ export const ProfileScreen = ({ user, onUpdateUser, onNavigate }) => {
     }
 
     setIsEditing(false);
+    if (activeTab === 'banners') setActiveTab('info');
     setSaveFeedback('Perfil actualizado exitosamente.');
     setTimeout(() => setSaveFeedback(''), 3500);
   };
@@ -246,15 +273,17 @@ export const ProfileScreen = ({ user, onUpdateUser, onNavigate }) => {
               </div>
             </div>
 
-            {/* Botón selector de banners */}
-            <button
-              type="button"
-              onClick={() => setActiveTab('banners')}
-              className="px-4 py-2 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-md text-white text-xs font-semibold flex items-center gap-2 border border-white/30 transition-all cursor-pointer shadow-sm"
-            >
-              <Sparkles className="w-4 h-4 text-amber-300" />
-              <span>Cambiar Portada ({MEDICAL_BANNERS.length} Banners)</span>
-            </button>
+            {/* Botón selector de banners (habilitado únicamente en modo edición) */}
+            {isEditing && (
+              <button
+                type="button"
+                onClick={() => setActiveTab('banners')}
+                className="px-4 py-2 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-md text-white text-xs font-semibold flex items-center gap-2 border border-white/30 transition-all cursor-pointer shadow-sm animate-fade-in"
+              >
+                <Sparkles className="w-4 h-4 text-amber-300" />
+                <span>Cambiar Portada ({MEDICAL_BANNERS.length} Banners)</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -281,15 +310,17 @@ export const ProfileScreen = ({ user, onUpdateUser, onNavigate }) => {
                   )}
                 </div>
 
-                {/* Botón flotante para cambiar foto */}
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  title="Cambiar foto de perfil desde su equipo"
-                  className="absolute bottom-1 right-1 p-2.5 rounded-full bg-primary hover:bg-primary-hover text-white shadow-lg border-2 border-white transition-all cursor-pointer"
-                >
-                  <Camera className="w-4 h-4" />
-                </button>
+                {/* Botón flotante para cambiar foto (habilitado únicamente en modo edición) */}
+                {isEditing && (
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    title="Cambiar foto de perfil desde su equipo"
+                    className="absolute bottom-1 right-1 p-2.5 rounded-full bg-primary hover:bg-primary-hover text-white shadow-lg border-2 border-white transition-all cursor-pointer animate-fade-in"
+                  >
+                    <Camera className="w-4 h-4" />
+                  </button>
+                )}
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -378,18 +409,20 @@ export const ProfileScreen = ({ user, onUpdateUser, onNavigate }) => {
             >
               Información Profesional
             </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab('banners')}
-              className={`px-4 py-2.5 rounded-xl transition-colors cursor-pointer shrink-0 flex items-center gap-1.5 ${
-                activeTab === 'banners'
-                  ? 'bg-primary text-white shadow-xs font-bold'
-                  : 'text-on-surface-variant hover:text-on-surface'
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Colección de Banners ({MEDICAL_BANNERS.length})</span>
-            </button>
+            {isEditing && (
+              <button
+                type="button"
+                onClick={() => setActiveTab('banners')}
+                className={`px-4 py-2.5 rounded-xl transition-colors cursor-pointer shrink-0 flex items-center gap-1.5 ${
+                  activeTab === 'banners'
+                    ? 'bg-primary text-white shadow-xs font-bold'
+                    : 'text-on-surface-variant hover:text-on-surface'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Colección de Banners ({MEDICAL_BANNERS.length})</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={() => setActiveTab('rethus')}
@@ -587,13 +620,19 @@ export const ProfileScreen = ({ user, onUpdateUser, onNavigate }) => {
                 <div
                   key={b.id}
                   onClick={() => {
+                    if (!isEditing) {
+                      setSaveFeedback('Active "Editar Perfil" para seleccionar una nueva portada.');
+                      setTimeout(() => setSaveFeedback(''), 3000);
+                      return;
+                    }
                     setBannerId(b.id);
-                    const currentPref = JSON.parse(localStorage.getItem('saludconecta_profile_custom') || '{}');
-                    localStorage.setItem(
-                      'saludconecta_profile_custom',
-                      JSON.stringify({ ...currentPref, bannerId: b.id })
+                    const currentPref = JSON.parse(
+                      localStorage.getItem(`saludconecta_profile_${userKey}`) || '{}'
                     );
-                    setSaveFeedback(`Portada actualizada: "${b.name}".`);
+                    const updated = { ...currentPref, bannerId: b.id };
+                    localStorage.setItem(`saludconecta_profile_${userKey}`, JSON.stringify(updated));
+                    localStorage.setItem('saludconecta_profile_custom', JSON.stringify(updated));
+                    setSaveFeedback(`Portada seleccionada: "${b.name}". Guarde los cambios para confirmar.`);
                     setTimeout(() => setSaveFeedback(''), 3000);
                   }}
                   className={`relative rounded-3xl overflow-hidden border-2 transition-all cursor-pointer shadow-xs hover:shadow-md ${

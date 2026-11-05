@@ -12,7 +12,67 @@ import AdminLayout from './screens/admin/AdminLayout';
 import DoctorAppointmentsView from './screens/DoctorAppointmentsView';
 import TreatmentFollowUpView from './screens/TreatmentFollowUpView';
 import PharmacyDashboard from './screens/PharmacyDashboard';
+import NurseSummaryView from './screens/NurseSummaryView';
+import NurseChecklistView from './screens/NurseChecklistView';
 import { apiClient, SESSION_EXPIRED_EVENT } from './services/api';
+
+/**
+ * Enriquecer el usuario con su foto de perfil y configuración personalizada persistida.
+ * Garantiza que la foto de perfil nunca se pierda en recargas (F5), navegación o reingreso.
+ */
+function enrichUserWithCustomProfile(rawUser) {
+  if (!rawUser) return rawUser;
+  const userKey = rawUser.id || rawUser.document_number || rawUser.email || 'current';
+
+  let customProfile = {};
+  try {
+    const rawCustom =
+      localStorage.getItem(`saludconecta_profile_${userKey}`) ||
+      (rawUser.email ? localStorage.getItem(`saludconecta_profile_${rawUser.email}`) : null) ||
+      (rawUser.document_number ? localStorage.getItem(`saludconecta_profile_${rawUser.document_number}`) : null) ||
+      localStorage.getItem('saludconecta_profile_custom');
+    if (rawCustom) {
+      customProfile = JSON.parse(rawCustom);
+    }
+  } catch {}
+
+  const savedAvatar =
+    rawUser.avatar ||
+    localStorage.getItem(`saludconecta_avatar_${userKey}`) ||
+    (rawUser.email ? localStorage.getItem(`saludconecta_avatar_${rawUser.email}`) : null) ||
+    (rawUser.document_number ? localStorage.getItem(`saludconecta_avatar_${rawUser.document_number}`) : null) ||
+    (rawUser.id ? localStorage.getItem(`saludconecta_avatar_${rawUser.id}`) : null) ||
+    customProfile.avatarUrl ||
+    localStorage.getItem('saludconecta_avatar') ||
+    '';
+
+  const merged = {
+    ...rawUser,
+    avatar: savedAvatar || '',
+    bannerId: rawUser.bannerId || customProfile.bannerId || 'urgencias',
+    phone: rawUser.phone || customProfile.phone || '',
+    bio: rawUser.bio || customProfile.bio || '',
+    specialty: rawUser.specialty || customProfile.specialty || rawUser.specialty,
+    branch: rawUser.branch || customProfile.branch || rawUser.branch,
+  };
+
+  try {
+    localStorage.setItem('saludconecta_user', JSON.stringify(merged));
+  } catch {}
+
+  return merged;
+}
+
+const isNurseUser = (u) => {
+  if (!u) return false;
+  return (
+    u.role === 'ENFERMERO' ||
+    u.role === 'ENFERMERA' ||
+    Number(u.role_id) === 3 ||
+    u.specialty?.toLowerCase().includes('enferm') ||
+    (u.full_name || u.name || '').toLowerCase().includes('enf')
+  );
+};
 
 export function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -28,7 +88,7 @@ export function App() {
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const stored = localStorage.getItem('saludconecta_user');
-      return stored ? JSON.parse(stored) : null;
+      return stored ? enrichUserWithCustomProfile(JSON.parse(stored)) : null;
     } catch {
       return null;
     }
@@ -84,7 +144,10 @@ export function App() {
     apiClient
       .me()
       .then((user) => {
-        if (!cancelled && user) setCurrentUser(user);
+        if (!cancelled && user) {
+          const enriched = enrichUserWithCustomProfile(user);
+          setCurrentUser(enriched);
+        }
       })
       .catch(() => {});
     return () => {
@@ -92,7 +155,7 @@ export function App() {
     };
   }, []);
 
-  // Redirección de rol: si el usuario es farmacéutico y está en una vista clínica médica, situarlo en farmacia
+  // Redirección de rol: situar a enfermeros y farmacéuticos en sus módulos especializados
   useEffect(() => {
     if (currentUser) {
       const isPharmacist =
@@ -101,9 +164,20 @@ export function App() {
         currentUser.specialty?.toLowerCase().includes('farmac') ||
         (currentUser.full_name || currentUser.name || '').toLowerCase().includes('farma');
 
-      if (isPharmacist && ['dashboard', 'appointments', 'triage', 'hce'].includes(currentView)) {
+      const isNurse = isNurseUser(currentUser);
+
+      if (
+        isPharmacist &&
+        ['dashboard', 'appointments', 'triage', 'hce', 'nurse_summary', 'nurse_checklist'].includes(currentView)
+      ) {
         setCurrentView('pharmacy');
         localStorage.setItem('saludconecta_current_view', 'pharmacy');
+      } else if (
+        isNurse &&
+        ['appointments', 'hce', 'treatment', 'pharmacy', 'inventory', 'prescription'].includes(currentView)
+      ) {
+        setCurrentView('nurse_summary');
+        localStorage.setItem('saludconecta_current_view', 'nurse_summary');
       }
     }
   }, [currentUser, currentView]);
@@ -113,19 +187,24 @@ export function App() {
     setIsAuthenticated(true);
     localStorage.setItem('saludconecta_session_active', 'true');
     if (data && data.user) {
-      setCurrentUser(data.user);
-      localStorage.setItem('saludconecta_user', JSON.stringify(data.user));
+      const enriched = enrichUserWithCustomProfile(data.user);
+      setCurrentUser(enriched);
 
       // Vista inicial según rol
       const isPharm =
-        data.user.role === 'FARMACIA' ||
-        Number(data.user.role_id) === 6 ||
-        data.user.specialty?.toLowerCase().includes('farmac') ||
-        (data.user.full_name || data.user.name || '').toLowerCase().includes('farma');
+        enriched.role === 'FARMACIA' ||
+        Number(enriched.role_id) === 6 ||
+        enriched.specialty?.toLowerCase().includes('farmac') ||
+        (enriched.full_name || enriched.name || '').toLowerCase().includes('farma');
+
+      const isNurse = isNurseUser(enriched);
 
       if (isPharm) {
         setCurrentView('pharmacy');
         localStorage.setItem('saludconecta_current_view', 'pharmacy');
+      } else if (isNurse) {
+        setCurrentView('nurse_summary');
+        localStorage.setItem('saludconecta_current_view', 'nurse_summary');
       } else {
         setCurrentView('dashboard');
         localStorage.setItem('saludconecta_current_view', 'dashboard');
@@ -171,8 +250,8 @@ export function App() {
   };
 
   const handleUpdateUser = (updated) => {
-    setCurrentUser(updated);
-    localStorage.setItem('saludconecta_user', JSON.stringify(updated));
+    const enriched = enrichUserWithCustomProfile(updated);
+    setCurrentUser(enriched);
   };
 
   // Si no esta autenticado, mostrar pantalla de Login / AuthScreen
@@ -260,6 +339,24 @@ export function App() {
             <TreatmentFollowUpView
               user={currentUser}
               patient={selectedPatient}
+              onNavigate={handleNavigate}
+            />
+          )}
+
+          {currentView === 'nurse_summary' && (
+            <NurseSummaryView
+              user={currentUser}
+              patient={selectedPatient}
+              onSelectPatient={handleSelectPatient}
+              onNavigate={handleNavigate}
+            />
+          )}
+
+          {currentView === 'nurse_checklist' && (
+            <NurseChecklistView
+              user={currentUser}
+              patient={selectedPatient}
+              onSelectPatient={handleSelectPatient}
               onNavigate={handleNavigate}
             />
           )}

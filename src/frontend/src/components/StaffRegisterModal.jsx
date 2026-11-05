@@ -12,10 +12,21 @@ import {
   FileCheck2,
   CheckCircle2,
   BadgeAlert,
+  Plus,
 } from 'lucide-react';
 import { apiClient } from '../services/api';
+import { loadBranches, saveBranches } from '../services/branches';
 
-export const StaffRegisterModal = ({ isOpen, onClose, onRegisterSuccess }) => {
+export const StaffRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onBranchCreated }) => {
+  const [branchesList, setBranchesList] = useState(() => loadBranches());
+  const [isCreatingBranch, setIsCreatingBranch] = useState(false);
+  const [newBranchData, setNewBranchData] = useState({
+    name: '',
+    level: 'Nivel I • Ambulatorio',
+    municipality: 'Cartago, Valle del Cauca',
+  });
+  const [branchNotice, setBranchNotice] = useState('');
+
   const [formData, setFormData] = useState({
     role_id: 2, // 2: MEDICO, 3: ENFERMERO
     full_name: '',
@@ -34,6 +45,49 @@ export const StaffRegisterModal = ({ isOpen, onClose, onRegisterSuccess }) => {
   const [successData, setSuccessData] = useState(null);
 
   if (!isOpen) return null;
+
+  const handleBranchSelectChange = (e) => {
+    const val = e.target.value;
+    if (val === '__CREATE_NEW__') {
+      setIsCreatingBranch(true);
+    } else {
+      setFormData((prev) => ({ ...prev, branch: val }));
+    }
+  };
+
+  const handleCreateBranch = (e) => {
+    e.preventDefault();
+    if (!newBranchData.name.trim()) {
+      setErrorMsg('Por favor ingrese el nombre de la nueva sede.');
+      return;
+    }
+
+    const createdBranch = {
+      id: `br-${Date.now()}`,
+      name: newBranchData.name.trim(),
+      level: newBranchData.level || 'Nivel I • Ambulatorio',
+      municipality: newBranchData.municipality.trim() || 'Valle del Cauca',
+      status: 'Operativo',
+      description: 'Sede institucional registrada desde el panel de habilitación de personal.',
+    };
+
+    const updated = [...branchesList, createdBranch];
+    saveBranches(updated);
+    setBranchesList(updated);
+    setFormData((prev) => ({ ...prev, branch: createdBranch.name }));
+    setIsCreatingBranch(false);
+    setNewBranchData({
+      name: '',
+      level: 'Nivel I • Ambulatorio',
+      municipality: 'Cartago, Valle del Cauca',
+    });
+    setBranchNotice(`Sede "${createdBranch.name}" registrada y asignada.`);
+    setTimeout(() => setBranchNotice(''), 4000);
+
+    if (onBranchCreated) {
+      onBranchCreated(createdBranch);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -303,25 +357,128 @@ export const StaffRegisterModal = ({ isOpen, onClose, onRegisterSuccess }) => {
                   </div>
                 </div>
 
-                {/* Sede Operativa */}
-                <div>
-                  <label className="block font-semibold text-on-surface mb-1">
-                    Sede Operativa Principal *
-                  </label>
+                {/* Sede Operativa con Capacidad de Crear Sede */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <label className="block font-semibold text-on-surface">
+                      Sede Operativa Principal *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setIsCreatingBranch((prev) => !prev)}
+                      className="text-[11px] font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>{isCreatingBranch ? 'Cerrar Registro' : '+ Nueva Sede'}</span>
+                    </button>
+                  </div>
+
                   <div className="relative">
                     <select
                       name="branch"
                       value={formData.branch}
-                      onChange={handleChange}
+                      onChange={handleBranchSelectChange}
                       className="w-full h-9 pl-8 pr-3 rounded-lg border border-outline-variant bg-surface-container-low text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
                     >
-                      <option value="Sede Cartago - Hospital Central (Nivel II)">Sede Cartago - Hospital Central (Nivel II)</option>
-                      <option value="Sede La Unión (Urgencias)">Sede La Unión (Urgencias)</option>
-                      <option value="Sede Tuluá (Ambulatoria)">Sede Tuluá (Ambulatoria)</option>
-                      <option value="Brigada Rural (PWA Sync)">Brigada Rural (PWA Sync)</option>
+                      {branchesList.map((b) => (
+                        <option key={b.id} value={b.name}>
+                          {b.name}
+                        </option>
+                      ))}
+                      <option value="__CREATE_NEW__">+ Crear y Registrar Nueva Sede Institucional...</option>
                     </select>
                     <Building2 className="w-3.5 h-3.5 text-outline absolute left-2.5 top-2.5" />
                   </div>
+
+                  {branchNotice && (
+                    <p className="text-[11px] text-emerald-700 font-semibold flex items-center gap-1 mt-1">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                      <span>{branchNotice}</span>
+                    </p>
+                  )}
+
+                  {/* Formulario Desplegable para Registrar Nueva Sede */}
+                  {isCreatingBranch && (
+                    <div className="p-3 rounded-xl bg-primary/5 border border-primary/20 space-y-2.5 animate-fade-in mt-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-bold text-primary uppercase tracking-wider flex items-center gap-1">
+                          <Building2 className="w-3.5 h-3.5" />
+                          <span>Registrar Nueva Sede</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setIsCreatingBranch(false)}
+                          className="text-outline hover:text-on-surface"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      <div className="space-y-2 text-xs">
+                        <div>
+                          <label className="text-[10px] font-bold text-outline uppercase block mb-0.5">
+                            Nombre de la Sede *
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Ej: Sede Ansermanuevo - Consulta Externa"
+                            value={newBranchData.name}
+                            onChange={(e) => setNewBranchData({ ...newBranchData, name: e.target.value })}
+                            className="w-full h-8 px-2.5 rounded-lg border border-outline-variant bg-white text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="text-[10px] font-bold text-outline uppercase block mb-0.5">
+                              Nivel / Complejidad
+                            </label>
+                            <select
+                              value={newBranchData.level}
+                              onChange={(e) => setNewBranchData({ ...newBranchData, level: e.target.value })}
+                              className="w-full h-8 px-2 rounded-lg border border-outline-variant bg-white text-xs text-on-surface"
+                            >
+                              <option value="Nivel I • Ambulatorio">Nivel I • Ambulatorio</option>
+                              <option value="Nivel I • Urgencias">Nivel I • Urgencias</option>
+                              <option value="Nivel II • Hospitalario">Nivel II • Hospitalario</option>
+                              <option value="Nivel III • Alta Complejidad">Nivel III • Alta Complejidad</option>
+                              <option value="PWA Sync • Atención en Terreno">PWA Sync • Terreno</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-[10px] font-bold text-outline uppercase block mb-0.5">
+                              Municipio
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="Ej: Ansermanuevo, Valle"
+                              value={newBranchData.municipality}
+                              onChange={(e) => setNewBranchData({ ...newBranchData, municipality: e.target.value })}
+                              className="w-full h-8 px-2.5 rounded-lg border border-outline-variant bg-white text-xs text-on-surface"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-end gap-2 pt-1 border-t border-primary/10">
+                        <button
+                          type="button"
+                          onClick={() => setIsCreatingBranch(false)}
+                          className="px-2.5 py-1 text-xs text-outline hover:text-on-surface"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleCreateBranch}
+                          className="px-3 py-1 rounded-lg bg-primary hover:bg-primary-hover text-white text-xs font-bold flex items-center gap-1 shadow-2xs cursor-pointer"
+                        >
+                          <CheckCircle2 className="w-3 h-3" />
+                          <span>Guardar y Asignar Sede</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Contraseña */}

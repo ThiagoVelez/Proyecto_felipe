@@ -27,6 +27,13 @@ export const Sidebar = ({
     user?.specialty?.toLowerCase().includes('farmac') ||
     (user?.full_name || user?.name || '').toLowerCase().includes('farma');
 
+  const isNurse =
+    user?.role === 'ENFERMERO' ||
+    user?.role === 'ENFERMERA' ||
+    Number(user?.role_id) === 3 ||
+    user?.specialty?.toLowerCase().includes('enferm') ||
+    (user?.full_name || user?.name || '').toLowerCase().includes('enf');
+
   const pharmacyMenuItems = [
     {
       id: 'pharmacy',
@@ -45,6 +52,39 @@ export const Sidebar = ({
       label: 'Seguimiento de Tratamiento',
       icon: Pill,
       badge: 'Tripartita',
+    },
+    {
+      id: 'security',
+      label: 'Seguridad & MFA',
+      icon: ShieldCheck,
+      badge: 'Activo',
+    },
+  ];
+
+  const nurseMenuItems = [
+    {
+      id: 'dashboard',
+      label: 'Sala de Espera & Triaje',
+      icon: LayoutDashboard,
+      badge: 'Triaje',
+    },
+    {
+      id: 'triage',
+      label: 'Triaje Manchester',
+      icon: HeartPulse,
+      badge: 'Proceso',
+    },
+    {
+      id: 'nurse_summary',
+      label: 'Resumen Clínico Asistencial',
+      icon: FileText,
+      badge: 'HCE Básica',
+    },
+    {
+      id: 'nurse_checklist',
+      label: 'Lista de Chequeo',
+      icon: CheckCircle2,
+      badge: 'Cuidados',
     },
     {
       id: 'security',
@@ -99,7 +139,7 @@ export const Sidebar = ({
     },
   ];
 
-  const menuItems = isPharmacist ? pharmacyMenuItems : doctorMenuItems;
+  const menuItems = isPharmacist ? pharmacyMenuItems : isNurse ? nurseMenuItems : doctorMenuItems;
 
   return (
     <aside
@@ -125,10 +165,18 @@ export const Sidebar = ({
           <div className="px-2 flex items-center justify-between">
             <div className="flex flex-col">
               <span className="text-[10px] font-bold uppercase tracking-wider text-outline font-mono">
-                {isPharmacist ? 'GESTIÓN FARMACÉUTICA' : 'NAVEGACION CLINICA'}
+                {isPharmacist
+                  ? 'GESTIÓN FARMACÉUTICA'
+                  : isNurse
+                  ? 'ENFERMERÍA & CUIDADOS'
+                  : 'NAVEGACION CLINICA'}
               </span>
               <span className="text-xs text-on-surface-variant font-medium">
-                {isPharmacist ? 'Dispensación & Stock' : 'Valle del Cauca Norte'}
+                {isPharmacist
+                  ? 'Dispensación & Stock'
+                  : isNurse
+                  ? 'Atención Asistencial'
+                  : 'Valle del Cauca Norte'}
               </span>
             </div>
             <button

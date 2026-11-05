@@ -386,13 +386,18 @@ describe('ProfileScreen - Pantalla Completa Desacoplada sin Ventana Flotante', (
 
     expect(screen.getByText(/Volver al Panel Principal/i)).toBeInTheDocument();
     expect(screen.getByText(/Trayectoria & Perfil Asistencial/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Cambiar Portada \(5 Banners\)/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Editar Perfil/i })).toBeInTheDocument();
+
+    // El botón de cambiar portada se habilita exclusivamente al entrar en modo edición
+    fireEvent.click(screen.getByRole('button', { name: /Editar Perfil/i }));
+    expect(screen.getByRole('button', { name: /Cambiar Portada \(5 Banners\)/i })).toBeInTheDocument();
   });
 
   it('permite navegar a la pestaña de banners y ver los 5 diseños en pantalla completa', async () => {
     render(<ProfileScreen user={mockUser} onUpdateUser={() => {}} onNavigate={() => {}} />);
 
+    // Al editar perfil se despliega la pestaña de banners
+    fireEvent.click(screen.getByRole('button', { name: /Editar Perfil/i }));
     const bannersBtn = screen.getByRole('button', { name: /Colección de Banners \(5\)/i });
     fireEvent.click(bannersBtn);
 

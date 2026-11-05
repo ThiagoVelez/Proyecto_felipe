@@ -137,14 +137,14 @@ func SetupRoutes(app *fiber.App, cfg RouterConfig) {
 	if cfg.TreatmentHandler != nil {
 		treatGroup := apiV2.Group("/treatments")
 		treatGroup.Post("/dispatch", middlewares.RequireRoles("MEDICO"), cfg.TreatmentHandler.Dispatch)
-		treatGroup.Get("/:id", middlewares.RequireRoles("MEDICO", "FARMACIA", "ADMIN"), cfg.TreatmentHandler.GetByID)
+		treatGroup.Get("/:id", middlewares.RequireRoles("MEDICO", "FARMACIA", "ADMIN", "ENFERMERO"), cfg.TreatmentHandler.GetByID)
 	}
 
 	// 11. Modulo de Farmacia, Inventario por Dosis y Dispensacion PDF417 (/api/v2/pharmacy)
 	if cfg.PharmacyHandler != nil {
 		pharmGroup := apiV2.Group("/pharmacy")
-		pharmGroup.Get("/inbox", middlewares.RequireRoles("FARMACIA", "ADMIN", "MEDICO"), cfg.PharmacyHandler.GetInbox)
-		pharmGroup.Get("/inventory", middlewares.RequireRoles("FARMACIA", "ADMIN", "MEDICO"), cfg.PharmacyHandler.GetInventory)
+		pharmGroup.Get("/inbox", middlewares.RequireRoles("FARMACIA", "ADMIN", "MEDICO", "ENFERMERO"), cfg.PharmacyHandler.GetInbox)
+		pharmGroup.Get("/inventory", middlewares.RequireRoles("FARMACIA", "ADMIN", "MEDICO", "ENFERMERO"), cfg.PharmacyHandler.GetInventory)
 		pharmGroup.Post("/inventory", middlewares.RequireRoles("FARMACIA", "ADMIN"), cfg.PharmacyHandler.AddInventoryItem)
 		pharmGroup.Put("/inventory/:id", middlewares.RequireRoles("FARMACIA", "ADMIN"), cfg.PharmacyHandler.UpdateInventoryItem)
 		pharmGroup.Delete("/inventory/:id", middlewares.RequireRoles("FARMACIA", "ADMIN"), cfg.PharmacyHandler.DeleteInventoryItem)

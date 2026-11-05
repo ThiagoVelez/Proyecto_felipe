@@ -16,10 +16,12 @@ import {
   Trash2,
   X,
   Loader2,
+  Network,
 } from 'lucide-react';
 import { apiClient } from '../../services/api';
 import { loadBranches, saveBranches } from '../../services/branches';
 import StaffRegisterModal from '../../components/StaffRegisterModal';
+import AdminOrgChartView from './AdminOrgChartView';
 
 const ROLE_NAMES = {
   1: 'ADMIN',
@@ -76,8 +78,14 @@ const ErrorPanel = ({ message, onRetry, retrying }) => (
   </div>
 );
 
-export const AdminDashboardScreen = () => {
-  const [activeTab, setActiveTab] = useState('governance'); // 'governance' | 'audit' | 'branches'
+export const AdminDashboardScreen = ({ initialTab = 'governance', onTabChange }) => {
+  const [internalTab, setInternalTab] = useState(initialTab);
+  const activeTab = onTabChange ? (initialTab === 'profile' ? 'governance' : initialTab) : internalTab;
+
+  const setActiveTab = (tab) => {
+    setInternalTab(tab);
+    if (onTabChange) onTabChange(tab);
+  };
   const [users, setUsers] = useState([]);
   const [usersStatus, setUsersStatus] = useState('loading'); // 'loading' | 'ready' | 'error'
   const [usersError, setUsersError] = useState('');
@@ -333,6 +341,11 @@ export const AdminDashboardScreen = () => {
           )}
         </button>
 
+        <button type="button" onClick={() => setActiveTab('org_chart')} className={tabClass('org_chart')}>
+          <Network className="w-4 h-4 text-emerald-600" />
+          <span>Diagrama Administrativo</span>
+        </button>
+
         <button type="button" onClick={() => setActiveTab('audit')} className={tabClass('audit')}>
           <Activity className="w-4 h-4" />
           <span>Auditoría Forense (ISO 25010 / Ley 1581)</span>
@@ -343,6 +356,10 @@ export const AdminDashboardScreen = () => {
           <span>Red Asistencial y Sedes ({branches.length})</span>
         </button>
       </div>
+
+      {activeTab === 'org_chart' && (
+        <AdminOrgChartView users={users} />
+      )}
 
       {activeTab === 'governance' && (
         <div className="bg-white rounded-2xl border border-surface-container-high shadow-xs overflow-hidden">
@@ -398,6 +415,15 @@ export const AdminDashboardScreen = () => {
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${usersStatus === 'loading' ? 'animate-spin' : ''}`} />
                 <span className="hidden sm:inline">Refrescar</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('org_chart')}
+                className="h-8 px-2.5 rounded-lg border border-primary/30 bg-primary/5 hover:bg-primary/10 text-primary font-bold text-xs flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+              >
+                <Network className="w-3.5 h-3.5" />
+                <span>Diagrama Jerárquico</span>
               </button>
 
               <button
@@ -715,6 +741,12 @@ export const AdminDashboardScreen = () => {
         isOpen={isRegisterOpen}
         onClose={() => setIsRegisterOpen(false)}
         onRegisterSuccess={handleRegisterSuccess}
+        onBranchCreated={(newBranch) => {
+          setBranches((prev) => {
+            const exists = prev.some((b) => b.id === newBranch.id || b.name === newBranch.name);
+            return exists ? prev : [...prev, newBranch];
+          });
+        }}
       />
 
       {isCreateBranchOpen && (

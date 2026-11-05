@@ -167,16 +167,12 @@ export const Header = ({
 
         {/* ACCIONES Y PERFIL CLINICO */}
         <div className="flex items-center gap-3 shrink-0">
-          {/* Toggle de Conectividad (Online / Offline Rural) */}
+          {/* Toggle de Conectividad (Online / Offline Rural) - Oculto visualmente pero operativo */}
           <button
             type="button"
             onClick={() => setIsOffline(!isOffline)}
             title="Alternar entre modo en linea y modo rural desconectado (PWA)"
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold cursor-pointer transition-all shadow-xs ${
-              isOffline
-                ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                : 'bg-emerald-50 text-emerald-900 border border-emerald-200 hover:bg-emerald-100'
-            }`}
+            className="hidden"
           >
             {isOffline ? (
               <>
@@ -195,8 +191,8 @@ export const Header = ({
             )}
           </button>
 
-          {/* Temporizador de Sesion */}
-          <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-container-low border border-outline-variant/30 text-xs text-on-surface-variant">
+          {/* Temporizador de Sesion - Oculto visualmente pero operativo en segundo plano */}
+          <div className="hidden">
             <Clock className="w-3.5 h-3.5 text-outline" />
             <span className="font-mono">
               Sesion: <strong className="text-red-700 font-semibold">{formatTimer(sessionSeconds)}</strong>

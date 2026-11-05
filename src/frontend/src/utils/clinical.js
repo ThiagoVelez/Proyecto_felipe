@@ -145,19 +145,18 @@ export const downloadJson = (fileName, data) => {
   URL.revokeObjectURL(url);
 };
 
-/** Formatea el nombre del facultativo o personal asistencial respetando su rol. */
+/** Formatea el nombre del facultativo o personal asistencial respetando su rol sin duplicar prefijos. */
 export const formatDoctorName = (name, role = '') => {
   if (!name) return 'Dr. Santiago Vélez';
   const roleUpper = String(role).toUpperCase();
   const lowerName = String(name).toLowerCase();
+  const clean = String(name).replace(/^(?:dr\.|enf\.)\s*/gi, '').replace(/^(?:dr\.|enf\.)\s*/gi, '').trim();
   if (roleUpper === 'FARMACIA' || roleUpper.includes('FARMAC') || lowerName.includes('farma')) {
-    return String(name).replace(/^dr\.\s*/i, '').trim();
+    return clean;
   }
-  if (roleUpper === 'ENFERMERO' || roleUpper.includes('ENFERM')) {
-    const clean = String(name).replace(/^(dr\.|enf\.)\s*/i, '').trim();
+  if (roleUpper === 'ENFERMERO' || roleUpper.includes('ENFERM') || lowerName.includes('enf')) {
     return `Enf. ${clean}`;
   }
-  const clean = String(name).replace(/^dr\.\s*/i, '').trim();
   return `Dr. ${clean}`;
 };
 
