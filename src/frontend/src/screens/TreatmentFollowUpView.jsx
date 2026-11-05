@@ -17,6 +17,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { apiClient } from '../services/api';
+import { formatDoctorName } from '../utils/clinical';
 
 export const TreatmentFollowUpView = ({ user, patient, onNavigate }) => {
   const [inventory, setInventory] = useState([]);
@@ -179,7 +180,7 @@ export const TreatmentFollowUpView = ({ user, patient, onNavigate }) => {
               Prescripción Tripartita
             </span>
             <span className="text-xs text-on-surface-variant font-mono">
-              Dr. {user?.full_name || 'Médico Asistencial'} • Sede Cartago
+              {formatDoctorName(user?.full_name || user?.name)} • Sede Cartago
             </span>
           </div>
           <h1 className="text-2xl font-bold text-on-surface flex items-center gap-2">

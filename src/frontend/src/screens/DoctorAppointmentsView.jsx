@@ -15,6 +15,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { apiClient } from '../services/api';
+import { formatDoctorName } from '../utils/clinical';
 
 export const DoctorAppointmentsView = ({ user, onNavigate }) => {
   const [appointments, setAppointments] = useState([]);
@@ -166,7 +167,7 @@ export const DoctorAppointmentsView = ({ user, onNavigate }) => {
               Módulo de Agendamiento
             </span>
             <span className="text-xs text-on-surface-variant font-mono">
-              Dr. {user?.full_name || 'Santiago Vélez'} • {user?.specialty || 'Medicina General'}
+              {formatDoctorName(user?.full_name || user?.name)} • {user?.specialty || 'Medicina General'}
             </span>
           </div>
           <h1 className="text-2xl font-bold text-on-surface flex items-center gap-2">

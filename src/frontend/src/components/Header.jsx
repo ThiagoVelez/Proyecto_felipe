@@ -10,10 +10,10 @@ import {
   Building2,
   RefreshCw,
   User,
-  Menu,
   Loader2,
 } from 'lucide-react';
-import { DOCUMENT_TYPES, getErrorMessage } from '../utils/clinical';
+import { DOCUMENT_TYPES, getErrorMessage, formatDoctorName } from '../utils/clinical';
+import BrandLogo from './BrandLogo';
 
 export const Header = ({
   onLogout,
@@ -97,19 +97,7 @@ export const Header = ({
       <div className="h-20 w-full px-6 lg:px-8 flex items-center justify-between gap-4">
         {/* LOGO & TITULO INSTITUCIONAL */}
         <div className="flex items-center gap-3 shrink-0">
-          {onToggleSidebar && (
-            <button
-              type="button"
-              onClick={onToggleSidebar}
-              title={isSidebarCollapsed ? 'Expandir menú lateral asistencial' : 'Ocultar menú lateral asistencial'}
-              className="p-2 rounded-xl text-outline hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-          )}
-          <div className="w-10 h-10 rounded-xl bg-primary-container text-white flex items-center justify-center font-bold text-lg shadow-sm">
-            SC
-          </div>
+          <BrandLogo size="md" />
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <span className="font-bold text-lg text-primary tracking-tight leading-none">
@@ -247,7 +235,7 @@ export const Header = ({
             <div className="hidden xl:flex flex-col text-left">
               <div className="flex items-center gap-1.5">
                 <span className="font-semibold text-xs text-on-surface">
-                  {currentUser.full_name || currentUser.name || (isAdmin ? 'Administrador del Sistema' : 'Dr. Santiago Vélez')}
+                  {isAdmin ? 'Administrador del Sistema' : formatDoctorName(currentUser.full_name || currentUser.name)}
                 </span>
                 <span
                   className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${

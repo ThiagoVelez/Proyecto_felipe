@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { LogOut, ShieldCheck } from 'lucide-react';
+import BrandLogo from '../../components/BrandLogo';
 import AdminDashboardScreen from './AdminDashboardScreen';
 import ProfileScreen from '../ProfileScreen';
 
@@ -14,9 +15,7 @@ export const AdminLayout = ({ user, onLogout, onUpdateUser }) => {
       <header className="h-16 border-b border-surface-container-high bg-white sticky top-0 z-30 px-4 sm:px-6 flex items-center justify-between shadow-xs">
         {/* Identidad Institucional */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0F172A] to-[#005c55] text-white flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
-            SC
-          </div>
+          <BrandLogo size="md" />
           <div>
             <div className="flex items-center gap-2">
               <span className="font-bold text-sm text-on-surface">SaludConecta IPS</span>

@@ -144,3 +144,11 @@ export const downloadJson = (fileName, data) => {
   link.remove();
   URL.revokeObjectURL(url);
 };
+
+/** Formatea el nombre del facultativo evitando duplicidades con el prefijo Dr. */
+export const formatDoctorName = (name) => {
+  if (!name) return 'Dr. Santiago Vélez';
+  const clean = String(name).replace(/^dr\.\s*/i, '').trim();
+  return `Dr. ${clean}`;
+};
+
