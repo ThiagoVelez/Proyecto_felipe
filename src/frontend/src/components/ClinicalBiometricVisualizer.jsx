@@ -119,7 +119,7 @@ export const ClinicalBiometricVisualizer = () => {
         className="absolute inset-0 w-full h-full pointer-events-none z-10 opacity-40"
       />
 
-      {/* TOP VISUAL: Estado Operativo y Hash Forense */}
+      {/* TOP VISUAL: Estado Operativo */}
       <div className="relative z-20 flex items-start justify-between w-full">
         <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/60 backdrop-blur-md border border-teal-500/30 shadow-md">
           <div className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
@@ -128,15 +128,6 @@ export const ClinicalBiometricVisualizer = () => {
           </span>
           <span className="text-slate-500 text-xs">|</span>
           <span className="text-[11px] text-slate-300 font-mono">12 Hospitales Conectados</span>
-        </div>
-
-        <div className="text-right hidden xl:block">
-          <div className="text-[9px] uppercase font-mono tracking-widest text-slate-400">
-            Hash Forense de Entrada
-          </div>
-          <div className="text-[11px] font-mono text-emerald-400/90 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-500/20 mt-0.5">
-            SHA256: 7f83b165...94c3d82a
-          </div>
         </div>
       </div>
 
