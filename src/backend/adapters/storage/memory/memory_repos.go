@@ -32,6 +32,9 @@ type DataStore struct {
 	prescriptions   map[string]*domain.Prescription
 	auditLogs       []*domain.AuditLog
 	rips            map[string]*domain.RIPSTransaction
+	appointments    map[string]*domain.Appointment
+	inventoryItems  map[string]*domain.InventoryItem
+	prescriptionsV2 map[string]*domain.PrescriptionV2
 }
 
 // NewDataStore crea el almacen en memoria. No siembra cuentas: el administrador inicial se crea con las
@@ -50,6 +53,27 @@ func NewDataStore() *DataStore {
 		prescriptions:   make(map[string]*domain.Prescription),
 		auditLogs:       make([]*domain.AuditLog, 0),
 		rips:            make(map[string]*domain.RIPSTransaction),
+		appointments:    make(map[string]*domain.Appointment),
+		inventoryItems:  make(map[string]*domain.InventoryItem),
+		prescriptionsV2: make(map[string]*domain.PrescriptionV2),
+	}
+
+	// Semilla de inventario diferenciado por concentracion
+	seedItems := []*domain.InventoryItem{
+		{ID: "inv-amox-250", CodeCUM: "CUM-199214-1", GenericName: "Amoxicilina", BrandName: "Amoxal 250mg", Dosage: "250 mg", Presentation: "Tableta", UnitPrice: 850.00, StockQuantity: 150, MinStock: 20, BatchNumber: "LOT-AMX-2026A", IsActive: true},
+		{ID: "inv-amox-500", CodeCUM: "CUM-199214-2", GenericName: "Amoxicilina", BrandName: "Amoxal 500mg", Dosage: "500 mg", Presentation: "Tableta", UnitPrice: 1200.00, StockQuantity: 200, MinStock: 30, BatchNumber: "LOT-AMX-2026B", IsActive: true},
+		{ID: "inv-risp-1", CodeCUM: "CUM-204112-1", GenericName: "Risperidona", BrandName: "Risperdal 1mg", Dosage: "1 mg", Presentation: "Tableta", UnitPrice: 3200.00, StockQuantity: 80, MinStock: 15, BatchNumber: "LOT-RSP-2026A", IsActive: true},
+		{ID: "inv-risp-3", CodeCUM: "CUM-204112-2", GenericName: "Risperidona", BrandName: "Risperdal 3mg", Dosage: "3 mg", Presentation: "Tableta", UnitPrice: 5800.00, StockQuantity: 95, MinStock: 15, BatchNumber: "LOT-RSP-2026B", IsActive: true},
+		{ID: "inv-ibup-400", CodeCUM: "CUM-192834-1", GenericName: "Ibuprofeno", BrandName: "Motrin 400mg", Dosage: "400 mg", Presentation: "Tableta", UnitPrice: 650.00, StockQuantity: 300, MinStock: 40, BatchNumber: "LOT-IBU-2026A", IsActive: true},
+		{ID: "inv-ibup-800", CodeCUM: "CUM-192834-2", GenericName: "Ibuprofeno", BrandName: "Motrin 800mg", Dosage: "800 mg", Presentation: "Tableta", UnitPrice: 1100.00, StockQuantity: 180, MinStock: 25, BatchNumber: "LOT-IBU-2026B", IsActive: true},
+		{ID: "inv-aceta-500", CodeCUM: "CUM-180021-1", GenericName: "Acetaminofen", BrandName: "Dolex 500mg", Dosage: "500 mg", Presentation: "Tableta", UnitPrice: 350.00, StockQuantity: 500, MinStock: 50, BatchNumber: "LOT-ACT-2026A", IsActive: true},
+		{ID: "inv-aceta-1000", CodeCUM: "CUM-180021-2", GenericName: "Acetaminofen", BrandName: "Dolex Forte 1g", Dosage: "1000 mg", Presentation: "Tableta", UnitPrice: 700.00, StockQuantity: 220, MinStock: 30, BatchNumber: "LOT-ACT-2026B", IsActive: true},
+		{ID: "inv-losar-50", CodeCUM: "CUM-210987-1", GenericName: "Losartan Potasico", BrandName: "Cozaar 50mg", Dosage: "50 mg", Presentation: "Tableta", UnitPrice: 1450.00, StockQuantity: 250, MinStock: 35, BatchNumber: "LOT-LOS-2026A", IsActive: true},
+		{ID: "inv-losar-100", CodeCUM: "CUM-210987-2", GenericName: "Losartan Potasico", BrandName: "Cozaar 100mg", Dosage: "100 mg", Presentation: "Tableta", UnitPrice: 2300.00, StockQuantity: 140, MinStock: 20, BatchNumber: "LOT-LOS-2026B", IsActive: true},
+	}
+	for _, it := range seedItems {
+		itemCopy := *it
+		ds.inventoryItems[itemCopy.ID] = &itemCopy
 	}
 
 	for i, med := range catalog.DemoMedications() {
@@ -645,4 +669,305 @@ func (r *AuditMemoryRepo) GetRIPSTransactionByID(_ context.Context, id string) (
 	}
 	out := *tx
 	return &out, nil
+}
+
+// -----------------------------------------------------------------------------
+// ADAPTADOR EN MEMORIA: CITAS MEDICAS Y CALENDARIO
+// -----------------------------------------------------------------------------
+
+type AppointmentMemoryRepo struct {
+	ds *DataStore
+}
+
+func NewAppointmentMemoryRepo(ds *DataStore) ports.AppointmentRepository {
+	return &AppointmentMemoryRepo{ds: ds}
+}
+
+func (r *AppointmentMemoryRepo) Create(_ context.Context, app *domain.Appointment) error {
+	r.ds.mu.Lock()
+	defer r.ds.mu.Unlock()
+	stored := *app
+	if stored.CreatedAt.IsZero() {
+		stored.CreatedAt = time.Now().UTC()
+	}
+	r.ds.appointments[stored.ID] = &stored
+	return nil
+}
+
+func (r *AppointmentMemoryRepo) GetByID(_ context.Context, id string) (*domain.Appointment, error) {
+	r.ds.mu.RLock()
+	defer r.ds.mu.RUnlock()
+	app, ok := r.ds.appointments[id]
+	if !ok {
+		return nil, domain.ErrAppointmentNotFound
+	}
+	out := *app
+	return &out, nil
+}
+
+func (r *AppointmentMemoryRepo) GetByDoctorID(_ context.Context, doctorID string) ([]domain.Appointment, error) {
+	r.ds.mu.RLock()
+	defer r.ds.mu.RUnlock()
+	var list []domain.Appointment
+	for _, app := range r.ds.appointments {
+		if app.DoctorID == doctorID {
+			list = append(list, *app)
+		}
+	}
+	sort.Slice(list, func(i, j int) bool {
+		return list[i].AppointmentDate.Before(list[j].AppointmentDate)
+	})
+	return list, nil
+}
+
+func (r *AppointmentMemoryRepo) GetByDateRange(_ context.Context, doctorID string, start, end time.Time) ([]domain.Appointment, error) {
+	r.ds.mu.RLock()
+	defer r.ds.mu.RUnlock()
+	var list []domain.Appointment
+	for _, app := range r.ds.appointments {
+		if app.DoctorID == doctorID && (app.AppointmentDate.Equal(start) || app.AppointmentDate.After(start)) && (app.AppointmentDate.Equal(end) || app.AppointmentDate.Before(end)) {
+			list = append(list, *app)
+		}
+	}
+	sort.Slice(list, func(i, j int) bool {
+		return list[i].AppointmentDate.Before(list[j].AppointmentDate)
+	})
+	return list, nil
+}
+
+func (r *AppointmentMemoryRepo) HasOverlap(_ context.Context, doctorID string, date time.Time) (bool, error) {
+	r.ds.mu.RLock()
+	defer r.ds.mu.RUnlock()
+	start := date.Add(-20 * time.Minute)
+	end := date.Add(20 * time.Minute)
+	for _, app := range r.ds.appointments {
+		if app.DoctorID == doctorID && app.Status != domain.AppointmentCancelled && app.AppointmentDate.After(start) && app.AppointmentDate.Before(end) {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func (r *AppointmentMemoryRepo) UpdatePDFAndEmailStatus(_ context.Context, id, pdfPath string, emailSent bool) error {
+	r.ds.mu.Lock()
+	defer r.ds.mu.Unlock()
+	app, ok := r.ds.appointments[id]
+	if !ok {
+		return domain.ErrAppointmentNotFound
+	}
+	app.PDFPath = pdfPath
+	app.EmailSent = emailSent
+	return nil
+}
+
+// -----------------------------------------------------------------------------
+// ADAPTADOR EN MEMORIA: INVENTARIO POR CONCENTRACION Y PRECIO
+// -----------------------------------------------------------------------------
+
+type InventoryMemoryRepo struct {
+	ds *DataStore
+}
+
+func NewInventoryMemoryRepo(ds *DataStore) ports.InventoryRepository {
+	return &InventoryMemoryRepo{ds: ds}
+}
+
+func (r *InventoryMemoryRepo) GetAll(_ context.Context) ([]domain.InventoryItem, error) {
+	r.ds.mu.RLock()
+	defer r.ds.mu.RUnlock()
+	var list []domain.InventoryItem
+	for _, item := range r.ds.inventoryItems {
+		if item.IsActive {
+			list = append(list, *item)
+		}
+	}
+	sort.Slice(list, func(i, j int) bool {
+		if list[i].GenericName == list[j].GenericName {
+			return list[i].Dosage < list[j].Dosage
+		}
+		return list[i].GenericName < list[j].GenericName
+	})
+	return list, nil
+}
+
+func (r *InventoryMemoryRepo) GetByID(_ context.Context, id string) (*domain.InventoryItem, error) {
+	r.ds.mu.RLock()
+	defer r.ds.mu.RUnlock()
+	it, ok := r.ds.inventoryItems[id]
+	if !ok {
+		return nil, domain.ErrInventoryItemNotFound
+	}
+	out := *it
+	return &out, nil
+}
+
+func (r *InventoryMemoryRepo) Create(_ context.Context, item *domain.InventoryItem) error {
+	r.ds.mu.Lock()
+	defer r.ds.mu.Unlock()
+	stored := *item
+	stored.CreatedAt = time.Now().UTC()
+	stored.UpdatedAt = stored.CreatedAt
+	r.ds.inventoryItems[stored.ID] = &stored
+	return nil
+}
+
+func (r *InventoryMemoryRepo) UpdateStock(_ context.Context, id string, quantityChange int) error {
+	r.ds.mu.Lock()
+	defer r.ds.mu.Unlock()
+	it, ok := r.ds.inventoryItems[id]
+	if !ok {
+		return domain.ErrInventoryItemNotFound
+	}
+	it.StockQuantity += quantityChange
+	it.UpdatedAt = time.Now().UTC()
+	return nil
+}
+
+func (r *InventoryMemoryRepo) AdjustStock(_ context.Context, id string, newStock int, batch string) error {
+	r.ds.mu.Lock()
+	defer r.ds.mu.Unlock()
+	it, ok := r.ds.inventoryItems[id]
+	if !ok {
+		return domain.ErrInventoryItemNotFound
+	}
+	it.StockQuantity = newStock
+	if batch != "" {
+		it.BatchNumber = batch
+	}
+	it.UpdatedAt = time.Now().UTC()
+	return nil
+}
+
+// -----------------------------------------------------------------------------
+// ADAPTADOR EN MEMORIA: BUZON Y DISPENSACION ATOMICA CON ESCANER PDF417
+// -----------------------------------------------------------------------------
+
+type PrescriptionV2MemoryRepo struct {
+	ds *DataStore
+}
+
+func NewPrescriptionV2MemoryRepo(ds *DataStore) ports.PrescriptionV2Repository {
+	return &PrescriptionV2MemoryRepo{ds: ds}
+}
+
+func (r *PrescriptionV2MemoryRepo) CreateWithItemsTx(_ context.Context, presc *domain.PrescriptionV2) error {
+	r.ds.mu.Lock()
+	defer r.ds.mu.Unlock()
+	stored := *presc
+	if stored.CreatedAt.IsZero() {
+		stored.CreatedAt = time.Now().UTC()
+	}
+	itemsCopy := make([]domain.PrescriptionItemV2, len(presc.Items))
+	copy(itemsCopy, presc.Items)
+	stored.Items = itemsCopy
+	r.ds.prescriptionsV2[stored.ID] = &stored
+	return nil
+}
+
+func (r *PrescriptionV2MemoryRepo) GetPendingInbox(ctx context.Context) ([]domain.PrescriptionV2, error) {
+	pending := domain.PrescriptionStatusPending
+	return r.GetAllInbox(ctx, &pending, "")
+}
+
+func (r *PrescriptionV2MemoryRepo) GetAllInbox(_ context.Context, statusFilter *domain.PrescriptionStatusV2, queryTerm string) ([]domain.PrescriptionV2, error) {
+	r.ds.mu.RLock()
+	defer r.ds.mu.RUnlock()
+	var list []domain.PrescriptionV2
+	for _, p := range r.ds.prescriptionsV2 {
+		if statusFilter != nil && *statusFilter != "" && p.Status != *statusFilter {
+			continue
+		}
+		if queryTerm != "" {
+			term := strings.ToLower(queryTerm)
+			if !strings.Contains(strings.ToLower(p.UniqueCode), term) &&
+				!strings.Contains(strings.ToLower(p.PatientDocument), term) &&
+				!strings.Contains(strings.ToLower(p.PatientName), term) {
+				continue
+			}
+		}
+		pCopy := *p
+		items := make([]domain.PrescriptionItemV2, len(p.Items))
+		copy(items, p.Items)
+		pCopy.Items = items
+		list = append(list, pCopy)
+	}
+	sort.Slice(list, func(i, j int) bool {
+		return list[i].CreatedAt.After(list[j].CreatedAt)
+	})
+	return list, nil
+}
+
+func (r *PrescriptionV2MemoryRepo) GetByID(_ context.Context, id string) (*domain.PrescriptionV2, error) {
+	r.ds.mu.RLock()
+	defer r.ds.mu.RUnlock()
+	p, ok := r.ds.prescriptionsV2[id]
+	if !ok {
+		return nil, domain.ErrPrescriptionNotFound
+	}
+	pCopy := *p
+	items := make([]domain.PrescriptionItemV2, len(p.Items))
+	copy(items, p.Items)
+	pCopy.Items = items
+	return &pCopy, nil
+}
+
+func (r *PrescriptionV2MemoryRepo) GetByUniqueCodeOrDocument(ctx context.Context, term string) (*domain.PrescriptionV2, error) {
+	r.ds.mu.RLock()
+	defer r.ds.mu.RUnlock()
+	for _, p := range r.ds.prescriptionsV2 {
+		if p.UniqueCode == term || p.PatientDocument == term {
+			pCopy := *p
+			items := make([]domain.PrescriptionItemV2, len(p.Items))
+			copy(items, p.Items)
+			pCopy.Items = items
+			return &pCopy, nil
+		}
+	}
+	return nil, domain.ErrPrescriptionNotFound
+}
+
+func (r *PrescriptionV2MemoryRepo) MarkAsDispensedTx(_ context.Context, req domain.DispenseRequestDTO, items []domain.PrescriptionItemV2) error {
+	r.ds.mu.Lock()
+	defer r.ds.mu.Unlock()
+
+	p, ok := r.ds.prescriptionsV2[req.PrescriptionID]
+	if !ok {
+		return domain.ErrPrescriptionNotFound
+	}
+	if p.Status == domain.PrescriptionStatusDispensed {
+		return domain.ErrAlreadyDispensed
+	}
+	if req.PatientDocument != "" && req.PatientDocument != p.PatientDocument {
+		return domain.ErrDocumentMismatch
+	}
+
+	// Verificar y descontar stock
+	for _, it := range items {
+		inv, ok := r.ds.inventoryItems[it.InventoryItemID]
+		if !ok {
+			return domain.ErrInventoryItemNotFound
+		}
+		if inv.StockQuantity < it.QuantityPrescribed {
+			return domain.ErrInsufficientStock
+		}
+	}
+	for _, it := range items {
+		inv := r.ds.inventoryItems[it.InventoryItemID]
+		inv.StockQuantity -= it.QuantityPrescribed
+	}
+
+	now := time.Now().UTC()
+	p.Status = domain.PrescriptionStatusDispensed
+	p.DispensedAt = &now
+	if req.DispensedByID != "" {
+		p.DispensedBy = &req.DispensedByID
+	}
+	if req.CoverageType != "" {
+		p.CoverageType = domain.CoverageType(req.CoverageType)
+	}
+	if req.PaymentMethod != "" {
+		p.PaymentMethod = domain.PaymentMethod(req.PaymentMethod)
+	}
+
+	return nil
 }

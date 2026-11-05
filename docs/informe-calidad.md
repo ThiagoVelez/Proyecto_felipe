@@ -19,7 +19,7 @@ La evaluacion de calidad de la plataforma «SaludConecta IPS v2.4» se fundament
 
 | Caracteristica ISO/IEC 25010 | Subcaracteristicas Evaluadas | Metrica Cuantitativa | Herramienta de Medicion | Valor Umbral / Meta | Resultado Obtenido | Estado |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Adecuacion Funcional** | Completitud, Correccion, Pertinencia | Tasa de exito transaccional en flujos clinicos (HCE, Triaje, Prescripcion, RIPS) | Go Test Runner / Vitest Suite | 100% de cumplimiento funcional | 100% (25/25 tests Go, 84/84 tests React aprobados) | Conforme |
+| **Adecuacion Funcional** | Completitud, Correccion, Pertinencia | Tasa de exito transaccional en flujos clinicos (HCE, Triaje, Prescripcion, RIPS) | Go Test Runner / Vitest Suite | 100% de cumplimiento funcional | 100% (30/30 tests Go, 87/87 tests React aprobados) | Conforme |
 | **Eficiencia de Desempeno** | Comportamiento temporal, Utilizacion de recursos | Latencia p95 peticiones HTTP API GoFiber | Go Benchmarks / HTTP Load Harness | p95 < 180 ms | p95 = 28.4 ms en endpoints asistenciales | Conforme |
 | **Eficiencia de Desempeno** | Capacidad, Asignacion de memoria | Consumo de memoria RAM en reposo del binario Go | Profiler `runtime.MemStats` / Task Manager | < 35 MB en reposo | 18.2 MB en reposo | Conforme |
 | **Eficiencia de Desempeno** | Velocidad de computo algoritmico | Tiempo de intercepcion y cruce de contraindicaciones por alergia | Go Benchmark (`BenchmarkAllergyInterception`) | < 90 ms | 3.35 µs por cruce completo (0.00335 ms) | Conforme |

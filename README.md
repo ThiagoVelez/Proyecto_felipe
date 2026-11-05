@@ -74,6 +74,9 @@ El flujo de trabajo, la priorización de requisitos y el ciclo de vida del desar
 | **RF10** | Menú Lateral Colapsable y Persistencia de Sesión F5    | Sidebar asistencial con modo colapsable (`w-20`) centrado exclusivamente en íconos con tooltips y margen reactivo (`ml-20`/`ml-64`). Persistencia local del estado de autenticación y vista activa que previene el cierre de sesión ante eventos de recarga del navegador (F5).                             | **Must Have**    |
 | **RF11** | Admisión de Pacientes y Antecedentes Alérgicos | API de admisión (`POST /patients`, listado y búsqueda por documento) y registro de alergias (`POST /patients/:id/allergies`) para los roles ADMISION, ENFERMERO y MEDICO, con validación de catálogos (tipo de documento, sexo, grupo sanguíneo, afiliación y severidad) y rechazo de documentos duplicados (HTTP 409). | **Must Have** |
 | **RF12** | Catálogo Farmacológico y Prescripción | Consulta del catálogo CUM institucional con stock (`GET /medications?q=`). El catálogo inicial de demostración usa códigos `CUM-DEMO-xxx` y debe sustituirse por la carga oficial del INVIMA. La prescripción descuenta inventario y rechaza stock insuficiente (HTTP 409). | **Should Have** |
+| **RF13** | Agendamiento y Calendario Médico Interactivo | Vista mensual interactiva de consulta externa (`DoctorAppointmentsView.jsx`) con contadores de citas por día, selector de paciente, validación de traslape horario (ventanas de 20 min) y rechazo de fechas pasadas. Generación de confirmación en PDF vectorial y despacho asíncrono vía SMTP mediante Goroutines desacopladas (`/api/v2/appointments`). | **Must Have** |
+| **RF14** | Seguimiento de Tratamiento y Prescripción Tripartita | Módulo clínico (`TreatmentFollowUpView.jsx`) con banner obligatorio de EPS/IPS del paciente (`eps_name`, `affiliation_type`), duración del tratamiento en días, formulación multiproducto por concentración exacta de inventario con precio unitario en COP, liquidación de cobertura (PBS 100%, Copago 15%, Particular con selector de medio de pago: Efectivo, Tarjeta, Transferencia) y emisión tripartita simultánea (HCE + Correo PDF al paciente + Buzón de Farmacia con código legible ej. `RX-2026-XXXXX`). | **Must Have** |
+| **RF15** | Farmacia, Inventario por Concentración y Dispensación PDF417 | Panel logístico (`PharmacyDashboard.jsx`) con buzón de recetas pendientes en tiempo real, inventario valorizado segregado por concentración exacta (ej. Amoxicilina 250mg vs 500mg, Risperidona 1mg vs 3mg), escáner de código de barras PDF417 de cédula con cámara web (`@zxing/library`) o búsqueda manual, y dispensación atómica ACID en MySQL con bloqueo de fila (`SELECT FOR UPDATE`), validación estricta de documento y prevención de doble despacho (HTTP 409 Conflict). | **Must Have** |
 
 ### 4.2. Requisitos No Funcionales (RNF)
 
@@ -618,6 +621,12 @@ Base: `/api/v1`. Todas las rutas, salvo `GET /health` y `POST /auth/login`, exig
 | Medicamentos | `GET /medications?q=` | MEDICO | Catálogo con stock (máximo 50) |
 | Prescripción | `POST /prescriptions`, `GET /prescriptions/:id`, `GET /prescriptions/record/:record_id` | MEDICO | 422 con `allergy_conflict` ante alergia; 409 stock o paciente distinto del folio; 403 si no es el autor |
 | Sincronización | `POST /sync/batch` | MEDICO | Idempotente; autoría y hashes los define el servidor |
+| Agendamiento v2 | `POST /api/v2/appointments`, `GET /api/v2/appointments/doctor/:id` | MEDICO | Agendamiento con PDF y SMTP asíncrono; 409 por traslape o fecha pasada |
+| Tratamiento v2 | `POST /api/v2/treatments/dispatch` | MEDICO | Prescripción tripartita con liquidación económica (PBS, Copago, Particular) y código RX |
+| Farmacia v2 | `GET /api/v2/pharmacy/inbox` | FARMACIA, MEDICO, ADMIN | Buzón de recetas pendientes en tiempo real |
+| Farmacia v2 | `GET /api/v2/pharmacy/inventory`, `PATCH /api/v2/pharmacy/inventory/:id/stock` | FARMACIA, ADMIN | Inventario valorizado segregado por concentración exacta (CUM, stock, precio) |
+| Farmacia v2 | `GET /api/v2/pharmacy/prescriptions/lookup` | FARMACIA | Búsqueda por documento (cédula PDF417) o código legible RX |
+| Farmacia v2 | `POST /api/v2/pharmacy/prescriptions/dispense` | FARMACIA | Dispensación atómica ACID con deducción de stock y 409 ante doble despacho |
 
 ---
 

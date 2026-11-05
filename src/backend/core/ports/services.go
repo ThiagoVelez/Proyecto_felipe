@@ -82,3 +82,26 @@ type RIPSGeneratorPort interface {
 type FHIRMapperPort interface {
 	MapToFHIRBundle(ctx context.Context, record *domain.ClinicalRecord, patient *domain.Patient, prescription *domain.Prescription) (map[string]interface{}, error)
 }
+
+// AppointmentService define los casos de uso para agendamiento, calendario y generacion asincrona de comprobante PDF.
+type AppointmentService interface {
+	ScheduleAppointment(ctx context.Context, app *domain.Appointment) (*domain.Appointment, error)
+	GetDoctorAppointments(ctx context.Context, doctorID string) ([]domain.Appointment, error)
+	GetDoctorAppointmentsByRange(ctx context.Context, doctorID string, start, end string) ([]domain.Appointment, error)
+}
+
+// TreatmentService define el seguimiento del tratamiento, generacion de codigo unico y emision tripartita.
+type TreatmentService interface {
+	DispatchTreatment(ctx context.Context, presc *domain.PrescriptionV2) (*domain.PrescriptionV2, error)
+	GetPrescriptionByID(ctx context.Context, id string) (*domain.PrescriptionV2, error)
+}
+
+// PharmacyService define la gestion del inventario diferenciado por dosis, buzon y dispensacion con escaner PDF417.
+type PharmacyService interface {
+	GetInventory(ctx context.Context) ([]domain.InventoryItem, error)
+	AddInventoryItem(ctx context.Context, item *domain.InventoryItem) (*domain.InventoryItem, error)
+	AdjustStock(ctx context.Context, id string, newStock int, batch string) error
+	GetInbox(ctx context.Context, status *domain.PrescriptionStatusV2, query string) ([]domain.PrescriptionV2, error)
+	GetPrescriptionByCodeOrDocument(ctx context.Context, term string) (*domain.PrescriptionV2, error)
+	DispensePrescription(ctx context.Context, req domain.DispenseRequestDTO) (*domain.PrescriptionV2, error)
+}

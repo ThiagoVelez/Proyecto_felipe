@@ -14,6 +14,9 @@ type RouterConfig struct {
 	ClinicalRecordHandler *handlers.ClinicalRecordHandler
 	PrescriptionHandler   *handlers.PrescriptionHandler
 	SyncHandler           *handlers.SyncHandler
+	AppointmentHandler    *handlers.AppointmentHandler
+	TreatmentHandler      *handlers.TreatmentHandler
+	PharmacyHandler       *handlers.PharmacyHandler
 	// Sessions valida en cada solicitud que la cuenta del token siga activa
 	Sessions  middlewares.SessionValidator
 	JWTSecret string
@@ -47,7 +50,7 @@ func SetupRoutes(app *fiber.App, cfg RouterConfig) {
 	authProtected.Post("/mfa/setup", authLimit, cfg.AuthHandler.SetupMFA)
 	authProtected.Post("/mfa/enable", authLimit, cfg.AuthHandler.EnableMFA)
 
-	// Proteccion global JWT
+	// Proteccion global JWT para v1
 	protected := api.Group("/", authMW)
 
 	// 3. Modulo Administrativo y Gobernanza ReTHUS (Exclusivo ADMIN)
@@ -78,14 +81,6 @@ func SetupRoutes(app *fiber.App, cfg RouterConfig) {
 		triage.Get("/", middlewares.RequireRoles("ENFERMERO", "MEDICO"), cfg.TriageHandler.GetQueue)
 		triage.Get("/:id", middlewares.RequireRoles("ENFERMERO", "MEDICO"), cfg.TriageHandler.GetByID)
 		triage.Patch("/:id/status", middlewares.RequireRoles("ENFERMERO", "MEDICO"), cfg.TriageHandler.UpdateStatus)
-
-		// Soporte de compatibilidad para endpoint v2 de triaje asistencial
-		apiV2 := app.Group("/api/v2", authMW)
-		triageV2 := apiV2.Group("/triage")
-		triageV2.Post("/", middlewares.RequireRoles("ENFERMERO", "MEDICO"), cfg.TriageHandler.Create)
-		triageV2.Get("/", middlewares.RequireRoles("ENFERMERO", "MEDICO"), cfg.TriageHandler.GetQueue)
-		triageV2.Get("/:id", middlewares.RequireRoles("ENFERMERO", "MEDICO"), cfg.TriageHandler.GetByID)
-		triageV2.Patch("/:id/status", middlewares.RequireRoles("ENFERMERO", "MEDICO"), cfg.TriageHandler.UpdateStatus)
 	}
 
 	// 6. Modulo Historia Clinica Electronica (HCE) e Inmutabilidad (Exclusivo Asistencial: MEDICO)
@@ -114,5 +109,45 @@ func SetupRoutes(app *fiber.App, cfg RouterConfig) {
 	if cfg.SyncHandler != nil {
 		syncGroup := protected.Group("/sync")
 		syncGroup.Post("/batch", middlewares.RequireRoles("MEDICO"), cfg.SyncHandler.ProcessBatch)
+	}
+
+	// =========================================================================
+	// RUTAS Y MODULOS DE DOMINIO V2 (AGENDAMIENTO, SEGUIMIENTO, FARMACIA PDF417)
+	// =========================================================================
+	apiV2 := app.Group("/api/v2", authMW)
+
+	// Compatibilidad triaje asistencial v2
+	if cfg.TriageHandler != nil {
+		triageV2 := apiV2.Group("/triage")
+		triageV2.Post("/", middlewares.RequireRoles("ENFERMERO", "MEDICO"), cfg.TriageHandler.Create)
+		triageV2.Get("/", middlewares.RequireRoles("ENFERMERO", "MEDICO"), cfg.TriageHandler.GetQueue)
+		triageV2.Get("/:id", middlewares.RequireRoles("ENFERMERO", "MEDICO"), cfg.TriageHandler.GetByID)
+		triageV2.Patch("/:id/status", middlewares.RequireRoles("ENFERMERO", "MEDICO"), cfg.TriageHandler.UpdateStatus)
+	}
+
+	// 9. Modulo de Agendamiento y Calendario Medico (/api/v2/appointments)
+	if cfg.AppointmentHandler != nil {
+		appGroup := apiV2.Group("/appointments")
+		appGroup.Post("/", middlewares.RequireRoles("MEDICO", "ADMIN", "ENFERMERO"), cfg.AppointmentHandler.Create)
+		appGroup.Get("/", middlewares.RequireRoles("MEDICO", "ADMIN", "ENFERMERO"), cfg.AppointmentHandler.GetByRange)
+		appGroup.Get("/doctor/:id", middlewares.RequireRoles("MEDICO", "ADMIN", "ENFERMERO"), cfg.AppointmentHandler.GetByDoctor)
+	}
+
+	// 10. Modulo de Seguimiento de Tratamiento y Prescripcion Tripartita (/api/v2/treatments)
+	if cfg.TreatmentHandler != nil {
+		treatGroup := apiV2.Group("/treatments")
+		treatGroup.Post("/dispatch", middlewares.RequireRoles("MEDICO"), cfg.TreatmentHandler.Dispatch)
+		treatGroup.Get("/:id", middlewares.RequireRoles("MEDICO", "FARMACIA", "ADMIN"), cfg.TreatmentHandler.GetByID)
+	}
+
+	// 11. Modulo de Farmacia, Inventario por Dosis y Dispensacion PDF417 (/api/v2/pharmacy)
+	if cfg.PharmacyHandler != nil {
+		pharmGroup := apiV2.Group("/pharmacy")
+		pharmGroup.Get("/inbox", middlewares.RequireRoles("FARMACIA", "ADMIN", "MEDICO"), cfg.PharmacyHandler.GetInbox)
+		pharmGroup.Get("/inventory", middlewares.RequireRoles("FARMACIA", "ADMIN", "MEDICO"), cfg.PharmacyHandler.GetInventory)
+		pharmGroup.Post("/inventory", middlewares.RequireRoles("FARMACIA", "ADMIN"), cfg.PharmacyHandler.AddInventoryItem)
+		pharmGroup.Patch("/inventory/:id/stock", middlewares.RequireRoles("FARMACIA", "ADMIN"), cfg.PharmacyHandler.AdjustStock)
+		pharmGroup.Get("/prescriptions/lookup", middlewares.RequireRoles("FARMACIA", "ADMIN"), cfg.PharmacyHandler.LookupPrescription)
+		pharmGroup.Post("/dispense", middlewares.RequireRoles("FARMACIA", "ADMIN"), cfg.PharmacyHandler.Dispense)
 	}
 }

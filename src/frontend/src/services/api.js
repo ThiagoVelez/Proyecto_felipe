@@ -354,4 +354,105 @@ export const apiClient = {
       body: JSON.stringify(batch),
     });
   },
+
+  // =========================================================================
+  // METODOS API V2: AGENDAMIENTO, SEGUIMIENTO TRIPARTITO Y FARMACIA PDF417
+  // =========================================================================
+
+  async requestV2(endpoint, { strict = false, ...options } = {}) {
+    const headers = {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    };
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`;
+    }
+    const res = await fetch(`/api/v2${endpoint}`, {
+      ...options,
+      headers,
+    });
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      const error = new Error(
+        errorData.error || (res.status >= 500 ? UNAVAILABLE_MESSAGE : `Error HTTP ${res.status}`)
+      );
+      error.status = res.status;
+      error.data = errorData;
+      throw error;
+    }
+    return res.json();
+  },
+
+  async createAppointment(data) {
+    return this.requestV2('/appointments', {
+      strict: true,
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async getDoctorAppointments(doctorId = '') {
+    const endpoint = doctorId ? `/appointments/doctor/${encodeURIComponent(doctorId)}` : '/appointments';
+    return this.requestV2(endpoint, { strict: true });
+  },
+
+  async getAppointmentsByRange(doctorId, start, end) {
+    const params = new URLSearchParams();
+    if (doctorId) params.set('doctor_id', doctorId);
+    if (start) params.set('start', start);
+    if (end) params.set('end', end);
+    return this.requestV2(`/appointments?${params.toString()}`, { strict: true });
+  },
+
+  async dispatchTreatment(data) {
+    return this.requestV2('/treatments/dispatch', {
+      strict: true,
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async getTreatment(id) {
+    return this.requestV2(`/treatments/${encodeURIComponent(id)}`, { strict: true });
+  },
+
+  async getPharmacyInbox(status = '', query = '') {
+    const params = new URLSearchParams();
+    if (status) params.set('status', status);
+    if (query) params.set('q', query);
+    const qs = params.toString();
+    return this.requestV2(`/pharmacy/inbox${qs ? `?${qs}` : ''}`, { strict: true });
+  },
+
+  async getPharmacyInventory() {
+    return this.requestV2('/pharmacy/inventory', { strict: true });
+  },
+
+  async addInventoryItem(data) {
+    return this.requestV2('/pharmacy/inventory', {
+      strict: true,
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async adjustInventoryStock(id, stockQuantity, batchNumber) {
+    return this.requestV2(`/pharmacy/inventory/${encodeURIComponent(id)}/stock`, {
+      strict: true,
+      method: 'PATCH',
+      body: JSON.stringify({ stock_quantity: stockQuantity, batch_number: batchNumber }),
+    });
+  },
+
+  async lookupPrescription(term) {
+    return this.requestV2(`/pharmacy/prescriptions/lookup?term=${encodeURIComponent(term)}`, { strict: true });
+  },
+
+  async dispensePrescription(data) {
+    return this.requestV2('/pharmacy/dispense', {
+      strict: true,
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
 };
