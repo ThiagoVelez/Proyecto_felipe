@@ -76,6 +76,7 @@ describe('Doctor Clinical Layout & Sidebar', () => {
     );
 
     expect(screen.getByText('Mi Perfil Asistencial')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Editar Perfil'));
     expect(screen.getByText(/Cambiar Portada/i)).toBeInTheDocument();
     expect(screen.getAllByText('Dr. Santiago Vélez').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('RM-94821-VALLE').length).toBeGreaterThanOrEqual(1);

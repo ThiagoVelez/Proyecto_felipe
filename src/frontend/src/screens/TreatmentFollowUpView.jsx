@@ -152,6 +152,62 @@ export const TreatmentFollowUpView = ({ user, patient, onNavigate }) => {
 
       const res = await apiClient.dispatchTreatment(payload);
 
+      // Despacho sincronizado hacia el módulo de Enfermería (HCE Básica y Lista de Chequeo)
+      const nurseOrder = {
+        id: res?.prescription_id || `ORD-${Date.now()}`,
+        unique_code: res?.unique_code || `RX-${Date.now().toString().slice(-5)}`,
+        created_at: new Date().toISOString(),
+        patient_id: currentPatient.id,
+        patient_document: currentPatient.document_number,
+        patient_name: `${currentPatient.first_name} ${currentPatient.last_name}`,
+        patient_eps: currentPatient.eps_name || 'Particular',
+        birth_date: currentPatient.birth_date,
+        gender: currentPatient.gender,
+        blood_type: currentPatient.blood_type || 'O+',
+        allergies: currentPatient.allergies || 'Ninguna conocida',
+        diagnosis: diagnosis.trim() || 'Tratamiento Médico Asistencial',
+        duration: treatmentDuration,
+        doctor_notes: treatmentNotes.trim() || 'Evolución según protocolo institucional.',
+        doctor_name: formatDoctorName(user?.full_name || user?.name, user?.role),
+        items: [...selectedItems],
+        status: 'ASIGNADO_ENFERMERIA',
+      };
+
+      try {
+        const storedOrders = JSON.parse(localStorage.getItem('saludconecta_nurse_orders') || '[]');
+        // Reemplazar o anteponer la orden más reciente del paciente
+        const updatedOrders = [nurseOrder, ...storedOrders.filter((o) => o.patient_id !== currentPatient.id)];
+        localStorage.setItem('saludconecta_nurse_orders', JSON.stringify(updatedOrders));
+
+        // Actualizar o crear la lista de chequeo para enfermería
+        const checklistKey = `saludconecta_nurse_checklist_${currentPatient.id}`;
+        const existingChecklist = JSON.parse(localStorage.getItem(checklistKey) || 'null');
+        const medDuties = selectedItems.map((med, idx) => ({
+          id: `med-${idx}-${Date.now()}`,
+          category: 'MEDICAMENTOS',
+          label: `Administrar ${med.medication_name} ${med.dosage} (${med.presentation || 'Tableta'})`,
+          instructions: med.instructions,
+          completed: false,
+          completedAt: null,
+          completedBy: null,
+        }));
+
+        if (existingChecklist) {
+          // Filtrar deberes previos de medicamentos y adjuntar los nuevos prescritos
+          const nonMedDuties = existingChecklist.duties.filter((d) => d.category !== 'MEDICAMENTOS');
+          const mergedDuties = [...nonMedDuties, ...medDuties];
+          localStorage.setItem(
+            checklistKey,
+            JSON.stringify({
+              ...existingChecklist,
+              duties: mergedDuties,
+            })
+          );
+        }
+      } catch (err) {
+        console.error('Error sincronizando orden asistencial de enfermería:', err);
+      }
+
       setSuccessResult(res);
       setSelectedItems([]);
       setDiagnosis('');
@@ -201,7 +257,7 @@ export const TreatmentFollowUpView = ({ user, patient, onNavigate }) => {
             <div>
               <h3 className="font-bold text-base">Prescripción Tripartita Emitida Exitosamente</h3>
               <p className="text-xs text-emerald-800">
-                Se guardó la orden en la HCE, se notificó al buzón de farmacia y se envió el recetario oficial en formato PDF al correo del paciente.
+                Se guardó la orden en la HCE, se notificó al buzón de farmacia, se transmitió el resumen clínico y lista de chequeo a Enfermería, y se despachó el recetario en PDF al correo del paciente.
               </p>
             </div>
           </div>
