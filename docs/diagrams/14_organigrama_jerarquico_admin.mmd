@@ -1,0 +1,51 @@
+flowchart TD
+    subgraph AdminTI ["Gobernanza TI & Panel Administrativo (AdminLayout)"]
+        AdminActor["Administrador del Sistema (TI-ADMIN-001)"]
+        Sidebar["Menú Lateral Administrativo (AdminSidebar)"]
+        Header["Cabecera Institucional & Perfil TI"]
+    end
+
+    subgraph OrgChartCanvas ["Lienzo Interactivo de Organigrama (AdminOrgChartView)"]
+        Toolbar["Barra de Herramientas: Buscador en tiempo real, Zoom (0.4x - 2.0x), Reset"]
+        CanvasDrag["Lienzo con Cuadrícula Gráfica: Soporte para arrastre (Pan) y scroll (Zoom)"]
+        
+        subgraph TopManagement ["Nivel 1: Alta Dirección"]
+            Gerente["Gerencia General & Dirección Médica\n(Dr. Felipe Gutiérrez Isaza)"]
+        end
+
+        subgraph Departments ["Nivel 2: Coordinaciones de Área"]
+            DepMed["Jefatura de Consulta Externa & Urgencias"]
+            DepFar["Dirección Técnica Farmacéutica"]
+            DepEnf["Coordinación Asistencial de Enfermería"]
+            DepAux["Cuerpo de Auxiliares Asistenciales"]
+            DepAdm["Admisiones, Auditoría & Soporte TI"]
+        end
+
+        subgraph StaffNodes ["Nivel 3: Personal Asistencial (Mini-Nodos Compactos)"]
+            DocNodes["Médicos Especialistas & Urgenciólogos\n(Dr. Santiago Vélez, Dra. Camila Yaima)"]
+            FarNodes["Farmacéuticos & Regentes\n(Santiago Arcos)"]
+            EnfNodes["Enfermeros de Turno\n(Enf. Elizabeth)"]
+            AuxNodes["Auxiliares Asistenciales"]
+            AdmNodes["Administradores & Admisiones"]
+        end
+
+        subgraph ModalDetail ["Modal Interactivo de Detalle (Ficha Institucional)"]
+            DetailCard["Ficha de Personal Completa:\nFoto HD, Cédula, Tarjeta ReTHUS,\nSede Asignada, Estado de Habilitación,\nContactos Corporativos y Biografía"]
+        end
+    end
+
+    AdminActor --> Sidebar
+    AdminActor --> Header
+    Sidebar -->|Selecciona Vista Jerarquía| OrgChartCanvas
+    
+    Toolbar --> CanvasDrag
+    CanvasDrag --> Gerente
+    Gerente --> DepMed & DepFar & DepEnf & DepAux & DepAdm
+    DepMed --> DocNodes
+    DepFar --> FarNodes
+    DepEnf --> EnfNodes
+    DepAux --> AuxNodes
+    DepAdm --> AdmNodes
+
+    DocNodes & FarNodes & EnfNodes & AuxNodes & AdmNodes -.->|Clic en tarjeta| DetailCard
+

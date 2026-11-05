@@ -1,0 +1,36 @@
+sequenceDiagram
+    autonumber
+    actor Medico as Médico Tratante (DoctorLayout)
+    participant API as Backend GoFiber (API REST)
+    participant DB as Base de Datos MySQL (Transacción ACID)
+    actor Enfermero as Enfermero de Turno (NurseModules)
+    actor Farmacia as Farmacéutico (PharmacyDashboard)
+    actor Paciente as Paciente / PDF417
+
+    %% Fase 1: Emision y Triparticion de la Prescripcion
+    Note over Medico,API: 1. Prescripción Médica y Envío Simultáneo
+    Medico->>API: POST /api/v1/prescriptions { patient_id, items: [medicamento, dosis, via], triage_id }
+    API->>API: Valida alergias cruzadas en tiempo real (< 150 ms)
+    API->>DB: INSERT into prescriptions & prescription_items (Estado: PENDIENTE)
+    API->>DB: Registra copia en bitácora de enfermería (NurseChecklist)
+    API-->>Medico: 201 Created (Comprobante PDF firmado digitalmente con hash SHA-256)
+
+    %% Fase 2: Ejecucion de Cuidados por Enfermeria
+    Note over API,Enfermero: 2. Notificación y Lista de Chequeo de Enfermería
+    Enfermero->>API: GET /api/v1/nurse/patients/{id}/summary
+    API-->>Enfermero: 200 OK (Resumen clínico básico, diagnósticos CIE-11 y fármacos activos)
+    Enfermero->>API: POST /api/v1/nurse/checklist { task_id, status: COMPLETED, notes: "Administrado según posología" }
+    API->>DB: UPDATE nurse_checklist_tasks (Trazabilidad y hora de administración)
+    API-->>Enfermero: 200 OK (Progreso asistencial actualizado 100%)
+
+    %% Fase 3: Dispensacion y Validacion en Farmacia con Lector PDF417
+    Note over Paciente,Farmacia: 3. Validación de Identidad y Dispensación en Farmacia
+    Paciente->>Farmacia: Presenta Cédula de Ciudadanía Colombiana
+    Farmacia->>Farmacia: Escaneo de código de barras PDF417 de la cédula
+    Farmacia->>API: GET /api/v1/pharmacy/inbox?document_number=...
+    API-->>Farmacia: 200 OK (Recetario pendiente, cobertura PBS 100% vs. copago)
+    Farmacia->>API: POST /api/v1/pharmacy/dispense { prescription_id, items }
+    API->>DB: Transacción ACID: Descuento atómico de stock por dosis y registro CUM
+    DB-->>API: Commit exitoso
+    API-->>Farmacia: 200 OK (Dispensación completada, inventario valorizado sincronizado)
+
