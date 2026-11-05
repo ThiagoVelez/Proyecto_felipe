@@ -11,6 +11,7 @@ import {
   ChevronRight,
   Calendar,
   Package,
+  Boxes,
 } from 'lucide-react';
 
 export const Sidebar = ({
@@ -18,8 +19,42 @@ export const Sidebar = ({
   setCurrentView,
   isCollapsed = false,
   onToggleCollapse,
+  user,
 }) => {
-  const menuItems = [
+  const isPharmacist =
+    user?.role === 'FARMACIA' ||
+    user?.role_id === 6 ||
+    user?.specialty?.toLowerCase().includes('farmac') ||
+    (user?.full_name || user?.name || '').toLowerCase().includes('farma');
+
+  const pharmacyMenuItems = [
+    {
+      id: 'pharmacy',
+      label: 'Buzón & Dispensación',
+      icon: Package,
+      badge: 'PDF417',
+    },
+    {
+      id: 'inventory',
+      label: 'Inventario de Medicamentos',
+      icon: Boxes,
+      badge: 'Stock',
+    },
+    {
+      id: 'treatment',
+      label: 'Seguimiento de Tratamiento',
+      icon: Pill,
+      badge: 'Tripartita',
+    },
+    {
+      id: 'security',
+      label: 'Seguridad & MFA',
+      icon: ShieldCheck,
+      badge: 'Activo',
+    },
+  ];
+
+  const doctorMenuItems = [
     {
       id: 'dashboard',
       label: 'Sala de Espera & Dashboard',
@@ -64,6 +99,8 @@ export const Sidebar = ({
     },
   ];
 
+  const menuItems = isPharmacist ? pharmacyMenuItems : doctorMenuItems;
+
   return (
     <aside
       className={`fixed left-0 top-20 bottom-0 bg-white z-40 flex flex-col justify-between py-5 border-r border-surface-container-high shadow-xs transition-all duration-300 ease-in-out ${
@@ -88,10 +125,10 @@ export const Sidebar = ({
           <div className="px-2 flex items-center justify-between">
             <div className="flex flex-col">
               <span className="text-[10px] font-bold uppercase tracking-wider text-outline font-mono">
-                NAVEGACION CLINICA
+                {isPharmacist ? 'GESTIÓN FARMACÉUTICA' : 'NAVEGACION CLINICA'}
               </span>
               <span className="text-xs text-on-surface-variant font-medium">
-                Valle del Cauca Norte
+                {isPharmacist ? 'Dispensación & Stock' : 'Valle del Cauca Norte'}
               </span>
             </div>
             <button
@@ -109,7 +146,10 @@ export const Sidebar = ({
         <nav className="flex flex-col gap-1.5">
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isActive = currentView === item.id;
+            const isActive =
+              currentView === item.id ||
+              (item.id === 'pharmacy' && (currentView === 'pharmacy' || currentView === 'prescription')) ||
+              (item.id === 'prescription' && (currentView === 'prescription' || currentView === 'pharmacy'));
 
             if (isCollapsed) {
               return (
@@ -181,7 +221,9 @@ export const Sidebar = ({
             </div>
             <div className="p-2 rounded-lg bg-surface-container-lowest border border-surface-container text-[11px] text-on-surface-variant flex items-center gap-2">
               <Lock className="w-4 h-4 text-primary shrink-0" />
-              <span className="truncate">HCE Inmutable (Res. 1995)</span>
+              <span className="truncate">
+                {isPharmacist ? 'Inventario CUM & PDF417' : 'HCE Inmutable (Res. 1995)'}
+              </span>
             </div>
           </div>
         )}

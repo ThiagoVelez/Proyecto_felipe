@@ -180,7 +180,7 @@ export const TreatmentFollowUpView = ({ user, patient, onNavigate }) => {
               Prescripción Tripartita
             </span>
             <span className="text-xs text-on-surface-variant font-mono">
-              {formatDoctorName(user?.full_name || user?.name)} • Sede Cartago
+              {formatDoctorName(user?.full_name || user?.name, user?.role)} • Sede Cartago
             </span>
           </div>
           <h1 className="text-2xl font-bold text-on-surface flex items-center gap-2">

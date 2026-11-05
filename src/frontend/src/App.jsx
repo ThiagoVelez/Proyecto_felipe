@@ -92,6 +92,22 @@ export function App() {
     };
   }, []);
 
+  // Redirección de rol: si el usuario es farmacéutico y está en una vista clínica médica, situarlo en farmacia
+  useEffect(() => {
+    if (currentUser) {
+      const isPharmacist =
+        currentUser.role === 'FARMACIA' ||
+        Number(currentUser.role_id) === 6 ||
+        currentUser.specialty?.toLowerCase().includes('farmac') ||
+        (currentUser.full_name || currentUser.name || '').toLowerCase().includes('farma');
+
+      if (isPharmacist && ['dashboard', 'appointments', 'triage', 'hce'].includes(currentView)) {
+        setCurrentView('pharmacy');
+        localStorage.setItem('saludconecta_current_view', 'pharmacy');
+      }
+    }
+  }, [currentUser, currentView]);
+
   const handleLoginSuccess = (data) => {
     setSessionNotice('');
     setIsAuthenticated(true);
@@ -101,7 +117,13 @@ export function App() {
       localStorage.setItem('saludconecta_user', JSON.stringify(data.user));
 
       // Vista inicial según rol
-      if (data.user.role === 'FARMACIA' || Number(data.user.role_id) === 6) {
+      const isPharm =
+        data.user.role === 'FARMACIA' ||
+        Number(data.user.role_id) === 6 ||
+        data.user.specialty?.toLowerCase().includes('farmac') ||
+        (data.user.full_name || data.user.name || '').toLowerCase().includes('farma');
+
+      if (isPharm) {
         setCurrentView('pharmacy');
         localStorage.setItem('saludconecta_current_view', 'pharmacy');
       } else {
@@ -192,6 +214,7 @@ export function App() {
           setCurrentView={handleNavigate}
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={handleToggleSidebar}
+          user={currentUser}
         />
 
         {/* CONTENEDOR PRINCIPAL */}
@@ -241,17 +264,10 @@ export function App() {
             />
           )}
 
-          {currentView === 'pharmacy' && (
+          {(currentView === 'pharmacy' || currentView === 'inventory' || currentView === 'prescription') && (
             <PharmacyDashboard
               user={currentUser}
-            />
-          )}
-
-          {currentView === 'prescription' && (
-            <PrescriptionScreen
-              patient={selectedPatient}
-              onPatientChange={handleSelectPatient}
-              onNavigate={handleNavigate}
+              initialTab={currentView === 'inventory' ? 'inventory' : 'inbox'}
             />
           )}
 

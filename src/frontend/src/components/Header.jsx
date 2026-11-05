@@ -53,6 +53,12 @@ export const Header = ({
     branch: 'Sede Cartago - Central',
   };
   const isAdmin = currentUser.role === 'ADMIN' || currentUser.role_id === 1;
+  const isPharmacist =
+    currentUser.role === 'FARMACIA' ||
+    currentUser.role_id === 6 ||
+    currentUser.specialty?.toLowerCase().includes('farmac') ||
+    (currentUser.full_name || currentUser.name || '').toLowerCase().includes('farma');
+  const roleLabel = isAdmin ? 'ADMIN TI' : isPharmacist ? 'FARMACIA' : currentUser.role || 'MEDICO';
 
   // Temporizador de sesion asistencial
   useEffect(() => {
@@ -235,14 +241,18 @@ export const Header = ({
             <div className="hidden xl:flex flex-col text-left">
               <div className="flex items-center gap-1.5">
                 <span className="font-semibold text-xs text-on-surface">
-                  {isAdmin ? 'Administrador del Sistema' : formatDoctorName(currentUser.full_name || currentUser.name)}
+                  {isAdmin ? 'Administrador del Sistema' : formatDoctorName(currentUser.full_name || currentUser.name, roleLabel)}
                 </span>
                 <span
                   className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${
-                    isAdmin ? 'bg-amber-200 text-amber-900' : 'bg-primary-fixed text-on-primary-fixed-variant'
+                    isAdmin
+                      ? 'bg-amber-200 text-amber-900'
+                      : isPharmacist
+                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                      : 'bg-primary-fixed text-on-primary-fixed-variant'
                   }`}
                 >
-                  {isAdmin ? 'ADMIN TI' : currentUser.role || 'MEDICO'}
+                  {roleLabel}
                 </span>
               </div>
               <div className="flex items-center gap-1 text-[11px] font-mono text-on-surface-variant">

@@ -22,8 +22,14 @@ import {
 import { BrowserPDF417Reader } from '@zxing/library';
 import { apiClient } from '../services/api';
 
-export const PharmacyDashboard = ({ user }) => {
-  const [activeTab, setActiveTab] = useState('inbox'); // 'inbox' | 'inventory'
+export const PharmacyDashboard = ({ user, initialTab = 'inbox' }) => {
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
 
   // Buzón de Recetas
   const [inbox, setInbox] = useState([]);

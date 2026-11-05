@@ -65,3 +65,4 @@ export const BrandLogo = ({ size = 'md', className = '' }) => {
 };
 
 export default BrandLogo;
+
