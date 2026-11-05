@@ -216,7 +216,7 @@ export const AdminOrgChartView = ({ users: initialUsers = [] }) => {
     },
   ];
 
-  // Componente de Tarjeta de Persona en el Árbol
+  // Componente de Tarjeta Pequeña / Nodo del Árbol Didáctico
   const PersonNode = ({ person, rankTitle, isTopLevel = false }) => {
     const avatarUrl = getPersonAvatar(person);
     const initials = (person.full_name || person.name || 'Personal')
@@ -233,78 +233,74 @@ export const AdminOrgChartView = ({ users: initialUsers = [] }) => {
         (person.document_number || '').includes(searchQuery));
 
     return (
-      <div
+      <button
+        type="button"
         onClick={() => setSelectedPerson(person)}
-        className={`interactive-card group relative p-3 sm:p-4 rounded-2xl bg-white border-2 transition-all cursor-pointer shadow-xs hover:shadow-xl text-left select-none ${
+        title="Clic para ver información completa del profesional"
+        className={`interactive-card group relative p-2 sm:p-2.5 rounded-xl bg-white border transition-all cursor-pointer shadow-2xs hover:shadow-md text-left select-none ${
           isTopLevel
-            ? 'border-amber-400 bg-gradient-to-b from-amber-50/40 to-white w-80 ring-4 ring-amber-100'
+            ? 'border-amber-400 bg-gradient-to-b from-amber-50/50 to-white w-60 sm:w-64 ring-2 ring-amber-200'
             : matchesSearch
-            ? 'border-primary ring-4 ring-primary/20 scale-105'
-            : 'border-surface-container-high hover:border-primary/60 w-64 sm:w-72'
+            ? 'border-primary ring-2 ring-primary/40 scale-105 w-44 sm:w-48'
+            : 'border-surface-container-high hover:border-primary w-44 sm:w-48'
         }`}
       >
-        <div className="flex items-start gap-3">
-          {/* Avatar con foto o iniciales */}
+        {isTopLevel && (
+          <span className="text-[8px] font-bold uppercase tracking-wider text-amber-800 font-mono block mb-1">
+            {rankTitle}
+          </span>
+        )}
+        <div className="flex items-center gap-2">
+          {/* Avatar compacto con foto o iniciales */}
           <div className="relative shrink-0">
             {avatarUrl ? (
               <img
                 src={avatarUrl}
                 alt={person.full_name}
-                className={`rounded-2xl object-cover border-2 shadow-xs ${
-                  isTopLevel ? 'w-14 h-14 border-amber-400' : 'w-12 h-12 border-primary/40'
+                className={`rounded-xl object-cover border shadow-2xs ${
+                  isTopLevel ? 'w-10 h-10 border-amber-400' : 'w-8 h-8 border-primary/30'
                 }`}
               />
             ) : (
               <div
-                className={`rounded-2xl font-bold flex items-center justify-center text-white shadow-xs ${
+                className={`rounded-xl font-bold flex items-center justify-center text-white shadow-2xs ${
                   isTopLevel
-                    ? 'w-14 h-14 bg-gradient-to-br from-amber-600 to-amber-800 text-lg border-2 border-amber-300'
-                    : 'w-12 h-12 bg-gradient-to-br from-primary to-primary-container text-sm border-2 border-primary/30'
+                    ? 'w-10 h-10 bg-gradient-to-br from-amber-600 to-amber-800 text-sm border border-amber-300'
+                    : 'w-8 h-8 bg-gradient-to-br from-primary to-primary-container text-xs border border-primary/30'
                 }`}
               >
                 {initials}
               </div>
             )}
             <span
-              className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-white ${
+              className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-white ${
                 person.is_active ? 'bg-emerald-500' : 'bg-amber-500'
               }`}
               title={person.is_active ? 'Habilitado ReTHUS' : 'Pendiente Habilitación'}
             />
           </div>
 
-          {/* Información */}
-          <div className="min-w-0 flex-1 space-y-0.5">
-            <span
-              className={`text-[9px] font-bold uppercase tracking-wider block font-mono ${
-                isTopLevel ? 'text-amber-800' : 'text-primary'
-              }`}
-            >
-              {rankTitle || person.role_name || person.role || 'ASISTENCIAL'}
-            </span>
-            <h4 className="text-xs font-bold text-on-surface truncate group-hover:text-primary transition-colors">
+          {/* Información esencial y compacta */}
+          <div className="min-w-0 flex-1">
+            <h4 className="text-[11px] sm:text-xs font-bold text-on-surface truncate group-hover:text-primary transition-colors leading-tight">
               {person.full_name || person.name}
             </h4>
-            <p className="text-[11px] text-outline truncate">{person.specialty || 'General'}</p>
-            <div className="flex items-center gap-1.5 pt-1 text-[10px] text-outline font-mono">
-              <span className="truncate max-w-[130px]">{person.branch || 'Sede Central'}</span>
-            </div>
+            <p className="text-[10px] text-outline truncate leading-tight mt-0.5">
+              {person.specialty || rankTitle || person.role || 'General'}
+            </p>
           </div>
         </div>
 
-        <div className="mt-2.5 pt-2 border-t border-surface-container flex items-center justify-between text-[10px]">
-          <span className="text-outline font-mono">
-            {person.professional_card || person.license || 'ReTHUS Activo'}
+        {/* Indicador sutil de clic para ver información */}
+        <div className="mt-1.5 pt-1 border-t border-slate-100 flex items-center justify-between text-[9px]">
+          <span className="text-slate-400 font-mono truncate max-w-[85px]">
+            {person.professional_card || 'ReTHUS'}
           </span>
-          <span
-            className={`px-2 py-0.2 rounded-full font-bold ${
-              person.is_active ? 'bg-emerald-50 text-emerald-800' : 'bg-amber-50 text-amber-800'
-            }`}
-          >
-            {person.is_active ? 'Habilitado' : 'Pendiente'}
+          <span className="text-primary font-semibold group-hover:underline flex items-center gap-0.5">
+            Ver info
           </span>
         </div>
-      </div>
+      </button>
     );
   };
 
@@ -426,35 +422,35 @@ export const AdminOrgChartView = ({ users: initialUsers = [] }) => {
           </div>
 
           {/* NIVEL 2 Y 3: DEPARTAMENTOS Y PERSONAL RAMIFICADO */}
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-8 mt-0 w-full max-w-7xl pt-2">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5 mt-0 w-full max-w-6xl pt-2">
             {departments.map((dept) => {
               const IconComp = dept.icon;
               return (
-                <div key={dept.id} className="flex flex-col items-center space-y-4">
+                <div key={dept.id} className="flex flex-col items-center space-y-3">
                   {/* Conector vertical hacia la línea maestra */}
-                  <div className="w-0.5 h-6 bg-slate-300" />
+                  <div className="w-0.5 h-5 bg-slate-300" />
 
-                  {/* Nodo de Jefatura de Área */}
-                  <div className="w-full bg-white p-3.5 rounded-2xl border border-surface-container-high shadow-xs text-center space-y-1">
-                    <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-1.5 shadow-2xs">
-                      <IconComp className="w-5 h-5" />
+                  {/* Nodo de Jefatura de Área Compacto */}
+                  <div className="w-44 sm:w-48 bg-white p-2.5 rounded-xl border border-surface-container-high shadow-2xs text-center space-y-1">
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center mx-auto mb-1 shadow-2xs">
+                      <IconComp className="w-4 h-4" />
                     </div>
-                    <span className="text-[9px] font-bold uppercase tracking-wider text-outline block font-mono">
+                    <span className="text-[8px] font-bold uppercase tracking-wider text-outline block font-mono">
                       {dept.leadTitle}
                     </span>
-                    <h3 className="text-xs font-bold text-on-surface leading-tight">
+                    <h3 className="text-[11px] font-bold text-on-surface leading-tight">
                       {dept.title}
                     </h3>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-surface-container-low text-outline inline-block">
+                    <span className="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-surface-container-low text-outline inline-block">
                       {dept.members.length} {dept.members.length === 1 ? 'colaborador' : 'colaboradores'}
                     </span>
                   </div>
 
                   {/* Conector vertical hacia los miembros */}
-                  <div className="w-0.5 h-4 bg-slate-300" />
+                  <div className="w-0.5 h-3 bg-slate-300" />
 
                   {/* Miembros del Departamento */}
-                  <div className="flex flex-col gap-3.5 w-full items-center">
+                  <div className="flex flex-col gap-2.5 w-full items-center">
                     {dept.members.length > 0 ? (
                       dept.members.map((member) => (
                         <PersonNode
@@ -464,7 +460,7 @@ export const AdminOrgChartView = ({ users: initialUsers = [] }) => {
                         />
                       ))
                     ) : (
-                      <div className="p-4 rounded-xl border border-dashed border-outline-variant/40 bg-white/60 text-center text-[11px] text-outline w-full">
+                      <div className="p-2.5 rounded-xl border border-dashed border-outline-variant/40 bg-white/60 text-center text-[10px] text-outline w-44 sm:w-48">
                         Sin personal asignado a este rango
                       </div>
                     )}

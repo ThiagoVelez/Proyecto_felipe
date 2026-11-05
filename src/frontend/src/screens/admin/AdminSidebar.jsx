@@ -48,13 +48,6 @@ export const AdminSidebar = ({
       badge: `${branchesCount} Sedes`,
       badgeColor: 'bg-surface-container-high text-on-surface',
     },
-    {
-      id: 'profile',
-      label: 'Mi Perfil Administrativo',
-      icon: ShieldCheck,
-      badge: 'ADMIN TI',
-      badgeColor: 'bg-amber-100 text-amber-900 border-amber-300',
-    },
   ];
 
   return (

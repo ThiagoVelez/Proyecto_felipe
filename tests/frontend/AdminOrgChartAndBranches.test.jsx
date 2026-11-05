@@ -26,7 +26,7 @@ describe('AdminSidebar - Menú Lateral Administrativo', () => {
     expect(screen.getByText(/Diagrama Administrativo/i)).toBeInTheDocument();
     expect(screen.getByText(/Auditoría Forense/i)).toBeInTheDocument();
     expect(screen.getByText(/Red Asistencial y Sedes/i)).toBeInTheDocument();
-    expect(screen.getByText(/Mi Perfil Administrativo/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Mi Perfil Administrativo/i)).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByText(/Diagrama Administrativo/i));
     expect(handleSetView).toHaveBeenCalledWith('org_chart');
