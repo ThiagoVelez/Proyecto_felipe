@@ -838,6 +838,27 @@ func (r *InventoryMemoryRepo) AdjustStock(_ context.Context, id string, newStock
 	return nil
 }
 
+func (r *InventoryMemoryRepo) Update(_ context.Context, item *domain.InventoryItem) error {
+	r.ds.mu.Lock()
+	defer r.ds.mu.Unlock()
+	it, ok := r.ds.inventoryItems[item.ID]
+	if !ok {
+		return domain.ErrInventoryItemNotFound
+	}
+	stored := *item
+	stored.CreatedAt = it.CreatedAt
+	stored.UpdatedAt = time.Now().UTC()
+	r.ds.inventoryItems[item.ID] = &stored
+	return nil
+}
+
+func (r *InventoryMemoryRepo) Delete(_ context.Context, id string) error {
+	r.ds.mu.Lock()
+	defer r.ds.mu.Unlock()
+	delete(r.ds.inventoryItems, id)
+	return nil
+}
+
 // -----------------------------------------------------------------------------
 // ADAPTADOR EN MEMORIA: BUZON Y DISPENSACION ATOMICA CON ESCANER PDF417
 // -----------------------------------------------------------------------------

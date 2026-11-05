@@ -98,3 +98,25 @@ func (r *inventoryRepository) AdjustStock(ctx context.Context, id string, newSto
 	return err
 }
 
+func (r *inventoryRepository) Update(ctx context.Context, item *domain.InventoryItem) error {
+	query := `
+		UPDATE inventory_items
+		SET code_cum = ?, generic_name = ?, brand_name = ?, dosage = ?, presentation = ?,
+		    unit_price = ?, stock_quantity = ?, min_stock = ?, batch_number = ?, expiry_date = ?, is_active = ?
+		WHERE id = ?
+	`
+	expiryStr := item.ExpiryDate.Format("2006-01-02")
+	_, err := r.db.ExecContext(ctx, query,
+		item.CodeCUM, item.GenericName, item.BrandName, item.Dosage, item.Presentation,
+		item.UnitPrice, item.StockQuantity, item.MinStock, item.BatchNumber, expiryStr, item.IsActive,
+		item.ID,
+	)
+	return err
+}
+
+func (r *inventoryRepository) Delete(ctx context.Context, id string) error {
+	query := `DELETE FROM inventory_items WHERE id = ?`
+	_, err := r.db.ExecContext(ctx, query, id)
+	return err
+}
+

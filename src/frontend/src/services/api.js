@@ -436,6 +436,21 @@ export const apiClient = {
     });
   },
 
+  async updateInventoryItem(id, data) {
+    return this.requestV2(`/pharmacy/inventory/${encodeURIComponent(id)}`, {
+      strict: true,
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async deleteInventoryItem(id) {
+    return this.requestV2(`/pharmacy/inventory/${encodeURIComponent(id)}`, {
+      strict: true,
+      method: 'DELETE',
+    });
+  },
+
   async adjustInventoryStock(id, stockQuantity, batchNumber) {
     return this.requestV2(`/pharmacy/inventory/${encodeURIComponent(id)}/stock`, {
       strict: true,

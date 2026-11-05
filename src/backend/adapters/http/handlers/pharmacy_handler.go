@@ -79,6 +79,30 @@ func (h *PharmacyHandler) AdjustStock(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"message": "Stock actualizado correctamente"})
 }
 
+// UpdateInventoryItem actualiza todos los parámetros de un medicamento en inventario
+func (h *PharmacyHandler) UpdateInventoryItem(c *fiber.Ctx) error {
+	id := c.Params("id")
+	var item domain.InventoryItem
+	if err := c.BodyParser(&item); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "cuerpo de ítem inválido"})
+	}
+	item.ID = id
+	updated, err := h.svc.UpdateInventoryItem(c.Context(), &item)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(updated)
+}
+
+// DeleteInventoryItem elimina un medicamento de inventario
+func (h *PharmacyHandler) DeleteInventoryItem(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if err := h.svc.DeleteInventoryItem(c.Context(), id); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(fiber.Map{"message": "Medicamento eliminado de inventario exitosamente"})
+}
+
 // LookupPrescription busca una receta pendiente por código único o documento de cédula decodificado
 func (h *PharmacyHandler) LookupPrescription(c *fiber.Ctx) error {
 	term := c.Query("term")

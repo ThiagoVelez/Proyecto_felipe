@@ -54,6 +54,34 @@ func (s *pharmacyService) AddInventoryItem(ctx context.Context, item *domain.Inv
 	return item, nil
 }
 
+func (s *pharmacyService) UpdateInventoryItem(ctx context.Context, item *domain.InventoryItem) (*domain.InventoryItem, error) {
+	if item.ID == "" {
+		return nil, fmt.Errorf("el id del medicamento es obligatorio")
+	}
+	item.GenericName = strings.TrimSpace(item.GenericName)
+	item.Dosage = strings.TrimSpace(item.Dosage)
+	if item.GenericName == "" || item.Dosage == "" {
+		return nil, fmt.Errorf("el nombre genérico y la dosificación/concentración son obligatorios")
+	}
+	if item.UnitPrice < 0 {
+		return nil, fmt.Errorf("el precio unitario no puede ser negativo")
+	}
+	item.IsActive = true
+
+	if err := s.inventoryRepo.Update(ctx, item); err != nil {
+		return nil, fmt.Errorf("error actualizando ítem de inventario: %w", err)
+	}
+	return item, nil
+}
+
+func (s *pharmacyService) DeleteInventoryItem(ctx context.Context, id string) error {
+	id = strings.TrimSpace(id)
+	if id == "" {
+		return fmt.Errorf("el id del medicamento es obligatorio")
+	}
+	return s.inventoryRepo.Delete(ctx, id)
+}
+
 func (s *pharmacyService) AdjustStock(ctx context.Context, id string, newStock int, batch string) error {
 	if newStock < 0 {
 		return fmt.Errorf("la cantidad de stock no puede ser negativa")

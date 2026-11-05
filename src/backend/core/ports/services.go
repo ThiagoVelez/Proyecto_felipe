@@ -100,6 +100,8 @@ type TreatmentService interface {
 type PharmacyService interface {
 	GetInventory(ctx context.Context) ([]domain.InventoryItem, error)
 	AddInventoryItem(ctx context.Context, item *domain.InventoryItem) (*domain.InventoryItem, error)
+	UpdateInventoryItem(ctx context.Context, item *domain.InventoryItem) (*domain.InventoryItem, error)
+	DeleteInventoryItem(ctx context.Context, id string) error
 	AdjustStock(ctx context.Context, id string, newStock int, batch string) error
 	GetInbox(ctx context.Context, status *domain.PrescriptionStatusV2, query string) ([]domain.PrescriptionV2, error)
 	GetPrescriptionByCodeOrDocument(ctx context.Context, term string) (*domain.PrescriptionV2, error)

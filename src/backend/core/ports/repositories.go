@@ -80,6 +80,8 @@ type InventoryRepository interface {
 	GetAll(ctx context.Context) ([]domain.InventoryItem, error)
 	GetByID(ctx context.Context, id string) (*domain.InventoryItem, error)
 	Create(ctx context.Context, item *domain.InventoryItem) error
+	Update(ctx context.Context, item *domain.InventoryItem) error
+	Delete(ctx context.Context, id string) error
 	UpdateStock(ctx context.Context, id string, quantityChange int) error
 	AdjustStock(ctx context.Context, id string, newStock int, batch string) error
 }
