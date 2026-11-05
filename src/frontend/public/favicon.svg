@@ -1,18 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
   <defs>
     <linearGradient id="scFaviconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#006A60" />
-      <stop offset="100%" stop-color="#059669" />
+      <stop offset="0%" stop-color="#007F73" />
+      <stop offset="100%" stop-color="#004F46" />
     </linearGradient>
   </defs>
   <!-- Fondo redondeado con gradiente clinico institucional -->
-  <rect width="48" height="48" rx="12" fill="url(#scFaviconGrad)" />
-  <rect width="48" height="48" rx="12" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" />
-  
-  <!-- Cruz medica blanca con extremos redondeados -->
-  <path d="M20 9.5C20 7.5 21.5 6 24 6C26.5 6 28 7.5 28 9.5V19.5H38.5C40.5 19.5 42 21 42 23.5C42 26 40.5 27.5 38.5 27.5H28V38.5C28 40.5 26.5 42 24 42C21.5 42 20 40.5 20 38.5V27.5H9.5C7.5 27.5 6 26 6 23.5C6 21 7.5 19.5 9.5 19.5H20V9.5Z" fill="#FFFFFF" />
-  
-  <!-- Pulso cardiaco / ECG integrado en el centro de la cruz -->
-  <path d="M11 23.5H18L21 16.5L26 31L29 23.5H37" fill="none" stroke="#006A60" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+  <rect width="48" height="48" rx="14" fill="url(#scFaviconGrad)" />
+  <!-- Halo circular central de biometria e integracion asistencial -->
+  <circle cx="24" cy="24" r="7.5" fill="rgba(255,255,255,0.22)" />
+  <!-- Cruz medica asistencial con extremos redondeados ergonomicos -->
+  <rect x="21.5" y="11" width="5" height="26" rx="2.5" fill="#FFFFFF" />
+  <rect x="11" y="21.5" width="26" height="5" rx="2.5" fill="#FFFFFF" />
 </svg>
-

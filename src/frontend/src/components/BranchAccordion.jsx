@@ -14,7 +14,7 @@ export const BranchAccordion = ({ label, branches = [], value, onChange }) => {
 
   return (
     <div className="relative">
-      <span id={labelId} className="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">
+      <span id={labelId} className="block text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-slate-700 mb-0.5">
         {label}
       </span>
       <button
@@ -23,14 +23,14 @@ export const BranchAccordion = ({ label, branches = [], value, onChange }) => {
         aria-controls={panelId}
         aria-labelledby={`${labelId} ${baseId}-value`}
         onClick={() => setIsOpen((open) => !open)}
-        className="w-full h-10 px-3.5 flex items-center gap-2.5 text-sm font-medium bg-slate-50/50 hover:bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-[#005c55] focus:ring-2 focus:ring-teal-500/20 text-slate-800 cursor-pointer shadow-2xs transition-all text-left"
+        className="w-full h-8 sm:h-9 px-3 flex items-center gap-2 text-xs sm:text-sm font-medium bg-slate-50/50 hover:bg-white border border-slate-300 rounded-lg focus:outline-none focus:border-[#005c55] focus:ring-2 focus:ring-teal-500/20 text-slate-800 cursor-pointer shadow-2xs transition-all text-left"
       >
-        <Building2 className="w-4 h-4 text-slate-400 shrink-0" />
+        <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
         <span id={`${baseId}-value`} className={`flex-1 min-w-0 truncate ${value ? 'text-slate-800' : 'text-slate-400'}`}>
           {value || 'Seleccione sede operativa...'}
         </span>
         <ChevronDown
-          className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${
+          className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200 ${
             isOpen ? 'rotate-180' : ''
           }`}
         />
@@ -47,7 +47,7 @@ export const BranchAccordion = ({ label, branches = [], value, onChange }) => {
         }`}
       >
         <div className="overflow-hidden min-h-0 shadow-xl rounded-xl">
-          <ul className="max-h-52 overflow-y-auto rounded-xl border border-slate-200 bg-white divide-y divide-slate-100 shadow-lg">
+          <ul className="max-h-48 overflow-y-auto rounded-xl border border-slate-200 bg-white divide-y divide-slate-100 shadow-lg">
             {branches.length === 0 && (
               <li className="px-3 py-2 text-xs text-slate-400">No hay sedes registradas</li>
             )}
@@ -57,7 +57,7 @@ export const BranchAccordion = ({ label, branches = [], value, onChange }) => {
                   type="button"
                   aria-pressed={branch.name === value}
                   onClick={() => handleSelect(branch.name)}
-                  className="w-full px-3.5 py-2 flex items-center gap-2.5 text-left hover:bg-teal-50/60 focus:outline-none focus:bg-teal-50/60 cursor-pointer transition-colors"
+                  className="w-full px-3 py-2 flex items-center gap-2 text-left hover:bg-teal-50/60 focus:outline-none focus:bg-teal-50/60 cursor-pointer transition-colors"
                 >
                   <span
                     title={branch.status}
@@ -71,7 +71,7 @@ export const BranchAccordion = ({ label, branches = [], value, onChange }) => {
                       {branch.municipality || 'Valle del Cauca'} • {branch.status || 'Operativo'}
                     </span>
                   </span>
-                  {branch.name === value && <Check className="w-4 h-4 text-[#005c55] shrink-0" />}
+                  {branch.name === value && <Check className="w-3.5 h-3.5 text-[#005c55] shrink-0" />}
                 </button>
               </li>
             ))}
