@@ -22,8 +22,9 @@ func (r *triageRepo) Create(ctx context.Context, record *domain.TriageRecord) er
 	query := `
 		INSERT INTO triage_records (
 			id, patient_id, evaluated_by, systolic_bp, diastolic_bp, heart_rate, respiratory_rate,
-			oxygen_saturation, body_temperature, glasgow_score, manchester_level, reason_for_consultation, status
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			oxygen_saturation, body_temperature, glasgow_score, manchester_level, reason_for_consultation,
+			pain_scale_score, pain_scale_observations, status
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 	_, err := r.db.ExecContext(ctx, query,
 		record.ID,
@@ -38,6 +39,8 @@ func (r *triageRepo) Create(ctx context.Context, record *domain.TriageRecord) er
 		record.GlasgowScore,
 		record.ManchesterLevel,
 		record.ReasonForConsultation,
+		record.PainScaleScore,
+		record.PainScaleObservations,
 		record.Status,
 	)
 	return err
@@ -47,6 +50,7 @@ func (r *triageRepo) GetByID(ctx context.Context, id string) (*domain.TriageReco
 	query := `
 		SELECT id, patient_id, evaluated_by, systolic_bp, diastolic_bp, heart_rate, respiratory_rate,
 		       oxygen_saturation, body_temperature, glasgow_score, manchester_level, reason_for_consultation,
+		       COALESCE(pain_scale_score, 0), COALESCE(pain_scale_observations, ''),
 		       status, created_at
 		FROM triage_records
 		WHERE id = ?
@@ -57,6 +61,7 @@ func (r *triageRepo) GetByID(ctx context.Context, id string) (*domain.TriageReco
 	err := row.Scan(
 		&t.ID, &t.PatientID, &t.EvaluatedBy, &t.SystolicBP, &t.DiastolicBP, &t.HeartRate, &t.RespiratoryRate,
 		&t.OxygenSaturation, &t.BodyTemperature, &t.GlasgowScore, &t.ManchesterLevel, &t.ReasonForConsultation,
+		&t.PainScaleScore, &t.PainScaleObservations,
 		&t.Status, &t.CreatedAt,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -73,6 +78,7 @@ func (r *triageRepo) ListPending(ctx context.Context) ([]domain.TriageRecord, er
 	query := `
 		SELECT id, patient_id, evaluated_by, systolic_bp, diastolic_bp, heart_rate, respiratory_rate,
 		       oxygen_saturation, body_temperature, glasgow_score, manchester_level, reason_for_consultation,
+		       COALESCE(pain_scale_score, 0), COALESCE(pain_scale_observations, ''),
 		       status, created_at
 		FROM triage_records
 		WHERE status IN ('PENDIENTE', 'EN_ATENCION')
@@ -98,6 +104,7 @@ func (r *triageRepo) ListPending(ctx context.Context) ([]domain.TriageRecord, er
 		if err := rows.Scan(
 			&t.ID, &t.PatientID, &t.EvaluatedBy, &t.SystolicBP, &t.DiastolicBP, &t.HeartRate, &t.RespiratoryRate,
 			&t.OxygenSaturation, &t.BodyTemperature, &t.GlasgowScore, &t.ManchesterLevel, &t.ReasonForConsultation,
+			&t.PainScaleScore, &t.PainScaleObservations,
 			&t.Status, &t.CreatedAt,
 		); err != nil {
 			return nil, err

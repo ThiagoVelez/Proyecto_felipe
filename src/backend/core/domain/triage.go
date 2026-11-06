@@ -82,12 +82,17 @@ type TriageRecord struct {
 	GlasgowScore          int             `json:"glasgow_score"`    // Escala de Coma de Glasgow (3-15)
 	ManchesterLevel       ManchesterLevel `json:"manchester_level"`
 	ReasonForConsultation string          `json:"reason_for_consultation"`
+	PainScaleScore        int             `json:"pain_scale_score"`        // Escala Visual Analógica EVA (0-10)
+	PainScaleObservations string          `json:"pain_scale_observations"` // Observaciones semiológicas del dolor
 	Status                TriageStatus    `json:"status"`
 	CreatedAt             time.Time       `json:"created_at"`
 }
 
 // Validate verifica la coherencia y rangos fisiologicos plausibles de los datos ingresados.
 func (t *TriageRecord) Validate() error {
+	if t.PainScaleScore < 0 || t.PainScaleScore > 10 {
+		t.PainScaleScore = 0
+	}
 	if t.GlasgowScore < 3 || t.GlasgowScore > 15 {
 		return ErrInvalidGlasgowScore
 	}

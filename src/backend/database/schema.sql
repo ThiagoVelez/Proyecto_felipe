@@ -110,6 +110,8 @@ CREATE TABLE IF NOT EXISTS triage_records (
     glasgow_score INT NOT NULL,        -- 3 a 15
     manchester_level ENUM('NIVEL_I', 'NIVEL_II', 'NIVEL_III', 'NIVEL_IV', 'NIVEL_V') NOT NULL,
     reason_for_consultation TEXT NOT NULL,
+    pain_scale_score INT DEFAULT 0,     -- Escala EVA 0-10
+    pain_scale_observations TEXT NULL,  -- Observaciones semiologicas del dolor
     status ENUM('PENDIENTE', 'EN_ATENCION', 'FINALIZADO') DEFAULT 'PENDIENTE',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_triage_patient FOREIGN KEY (patient_id) REFERENCES patients(id),
@@ -252,6 +254,30 @@ CREATE TABLE IF NOT EXISTS rips_transactions (
     validation_status ENUM('PENDIENTE', 'EXITOSO', 'GLOSADO') DEFAULT 'PENDIENTE',
     sent_to_minsalud_at TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- -----------------------------------------------------------------------------
+-- 7.5. MURO DE SALUD, PREVENCIÓN Y CONCIENTIZACIÓN (KIT INFORMÁTICO MÉDICO)
+-- -----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS health_education_posts (
+    id VARCHAR(36) PRIMARY KEY,
+    doctor_id VARCHAR(36) NOT NULL,
+    author_name VARCHAR(150) NOT NULL,
+    author_specialty VARCHAR(100) NULL,
+    title VARCHAR(200) NOT NULL,
+    category ENUM('CONSEJOS', 'AYUDAS', 'ENFERMEDADES', 'VACUNAS', 'ESTILO_DE_VIDA', 'PREVENCION') NOT NULL,
+    summary TEXT NULL,
+    content TEXT NOT NULL,
+    image_url LONGTEXT NULL,
+    youtube_url VARCHAR(255) NULL,
+    video_url LONGTEXT NULL,
+    video_duration_seconds INT DEFAULT 0,
+    is_published BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_health_category (category, created_at),
+    CONSTRAINT fk_post_doctor FOREIGN KEY (doctor_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 -- -----------------------------------------------------------------------------

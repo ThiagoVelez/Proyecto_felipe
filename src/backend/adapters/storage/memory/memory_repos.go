@@ -36,6 +36,7 @@ type DataStore struct {
 	inventoryItems  map[string]*domain.InventoryItem
 	prescriptionsV2 map[string]*domain.PrescriptionV2
 	anatomicalNotes map[string]*domain.ClinicalAnatomicalNote
+	healthPosts     map[string]*domain.HealthEducationPost
 }
 
 // NewDataStore crea el almacen en memoria. No siembra cuentas: el administrador inicial se crea con las
@@ -58,6 +59,7 @@ func NewDataStore() *DataStore {
 		inventoryItems:  make(map[string]*domain.InventoryItem),
 		prescriptionsV2: make(map[string]*domain.PrescriptionV2),
 		anatomicalNotes: make(map[string]*domain.ClinicalAnatomicalNote),
+		healthPosts:     make(map[string]*domain.HealthEducationPost),
 	}
 
 	// Semilla de inventario diferenciado por concentracion
@@ -1072,5 +1074,70 @@ func (r *PrescriptionV2MemoryRepo) MarkAsDispensedTx(_ context.Context, req doma
 		p.PaymentMethod = domain.PaymentMethod(req.PaymentMethod)
 	}
 
+	return nil
+}
+
+type healthEducationMemoryRepo struct {
+	ds *DataStore
+}
+
+// NewHealthEducationMemoryRepo crea el repositorio en memoria para publicaciones de salud.
+func NewHealthEducationMemoryRepo(ds *DataStore) ports.HealthEducationRepository {
+	return &healthEducationMemoryRepo{ds: ds}
+}
+
+func (r *healthEducationMemoryRepo) Create(ctx context.Context, post *domain.HealthEducationPost) error {
+	r.ds.mu.Lock()
+	defer r.ds.mu.Unlock()
+	copyPost := *post
+	r.ds.healthPosts[post.ID] = &copyPost
+	return nil
+}
+
+func (r *healthEducationMemoryRepo) GetAll(ctx context.Context, category string) ([]domain.HealthEducationPost, error) {
+	r.ds.mu.RLock()
+	defer r.ds.mu.RUnlock()
+
+	cat := strings.ToUpper(strings.TrimSpace(category))
+	var result []domain.HealthEducationPost
+	for _, p := range r.ds.healthPosts {
+		if cat != "" && cat != "TODOS" && strings.ToUpper(string(p.Category)) != cat {
+			continue
+		}
+		result = append(result, *p)
+	}
+
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].CreatedAt.After(result[j].CreatedAt)
+	})
+	return result, nil
+}
+
+func (r *healthEducationMemoryRepo) GetByID(ctx context.Context, id string) (*domain.HealthEducationPost, error) {
+	r.ds.mu.RLock()
+	defer r.ds.mu.RUnlock()
+	p, ok := r.ds.healthPosts[id]
+	if !ok {
+		return nil, nil
+	}
+	copyPost := *p
+	return &copyPost, nil
+}
+
+func (r *healthEducationMemoryRepo) Update(ctx context.Context, post *domain.HealthEducationPost) error {
+	r.ds.mu.Lock()
+	defer r.ds.mu.Unlock()
+	if _, ok := r.ds.healthPosts[post.ID]; !ok {
+		return domain.ErrPostNotFound
+	}
+	copyPost := *post
+	r.ds.healthPosts[post.ID] = &copyPost
+	return nil
+}
+
+func (r *healthEducationMemoryRepo) Delete(ctx context.Context, id string) error {
+	r.ds.mu.Lock()
+	defer r.ds.mu.Unlock()
+	delete(r.ds.healthPosts, id)
 	return nil
 }

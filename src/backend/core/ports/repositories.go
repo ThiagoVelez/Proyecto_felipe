@@ -104,3 +104,12 @@ type PrescriptionV2Repository interface {
 	GetByUniqueCodeOrDocument(ctx context.Context, term string) (*domain.PrescriptionV2, error)
 	MarkAsDispensedTx(ctx context.Context, req domain.DispenseRequestDTO, items []domain.PrescriptionItemV2) error
 }
+
+// HealthEducationRepository define el contrato de persistencia para el muro de concientización y educación en salud.
+type HealthEducationRepository interface {
+	Create(ctx context.Context, post *domain.HealthEducationPost) error
+	GetAll(ctx context.Context, category string) ([]domain.HealthEducationPost, error)
+	GetByID(ctx context.Context, id string) (*domain.HealthEducationPost, error)
+	Update(ctx context.Context, post *domain.HealthEducationPost) error
+	Delete(ctx context.Context, id string) error
+}

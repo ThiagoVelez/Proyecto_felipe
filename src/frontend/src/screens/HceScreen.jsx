@@ -19,7 +19,7 @@ import PatientPicker from '../components/PatientPicker';
 import PatientBanner from '../components/PatientBanner';
 import AllergyBanner from '../components/AllergyBanner';
 import SignFolioModal from '../components/SignFolioModal';
-import MedicalKitDrawer from '../components/MedicalKitDrawer';
+import PainScaleSelector from '../components/PainScaleSelector';
 import { apiClient } from '../services/api';
 import {
   downloadJson,
@@ -97,7 +97,6 @@ export const HceScreen = ({ patient, onPatientChange, triage, onNavigate }) => {
   const [exporting, setExporting] = useState('');
   const [clarificationText, setClarificationText] = useState('');
   const [clarifying, setClarifying] = useState(false);
-  const [isMedicalKitOpen, setIsMedicalKitOpen] = useState(false);
   const loadSeq = useRef(0);
 
   const patientId = patient?.id;
@@ -212,30 +211,6 @@ export const HceScreen = ({ patient, onPatientChange, triage, onNavigate }) => {
     }
   };
 
-  const handleInjectFromMedicalKit = ({
-    painScaleScore,
-    painScaleObservations,
-    anatomicalMapping,
-    generatedPhysicalExamText,
-    suggestedCIE11
-  }) => {
-    setForm((prev) => {
-      const newPhysicalExam = prev.physical_exam
-        ? `${prev.physical_exam}\n\n${generatedPhysicalExamText}`
-        : generatedPhysicalExamText;
-      const newCie11 = prev.cie11_code || suggestedCIE11 || '';
-      return {
-        ...prev,
-        physical_exam: newPhysicalExam,
-        cie11_code: newCie11,
-        pain_scale_score: painScaleScore,
-        pain_scale_observations: painScaleObservations,
-        anatomical_mapping: anatomicalMapping,
-      };
-    });
-    setNotice('Hallazgos anatómicos y dolor EVA inyectados en la consulta asistencial.');
-  };
-
   const handleConfirmSign = async () => {
     if (!record || signing) return;
     setSigning(true);
@@ -338,14 +313,30 @@ export const HceScreen = ({ patient, onPatientChange, triage, onNavigate }) => {
           {matchingTriage && (
             <div
               aria-label="Signos vitales del triaje"
-              className="flex flex-wrap items-center gap-x-5 gap-y-1 bg-surface-container-low px-3.5 py-1.5 rounded-xl border border-outline-variant/30 text-xs font-mono"
+              className="flex flex-wrap items-center gap-x-5 gap-y-1.5 bg-surface-container-low px-3.5 py-2 rounded-xl border border-outline-variant/30 text-xs font-mono"
             >
               <span>PA <strong>{matchingTriage.systolic_bp}/{matchingTriage.diastolic_bp}</strong></span>
               <span>FC <strong>{matchingTriage.heart_rate}</strong></span>
               <span>FR <strong>{matchingTriage.respiratory_rate}</strong></span>
-              <span>SpO2 <strong>{matchingTriage.oxygen_saturation}%</strong></span>
-              <span>TEMP <strong>{matchingTriage.body_temperature}°</strong></span>
+              <span>SpO2 <strong>{matchingTriage.oxygen_saturation ?? matchingTriage.spo2}%</strong></span>
+              <span>TEMP <strong>{matchingTriage.body_temperature ?? matchingTriage.temperature}°</strong></span>
               <span>GLASGOW <strong>{matchingTriage.glasgow_score}</strong></span>
+              <span className="inline-flex items-center gap-1.5 font-bold">
+                EVA Triaje:
+                <span className={`px-2 py-0.5 rounded text-[11px] font-bold text-white ${
+                  (matchingTriage.pain_scale_score ?? 0) === 0 ? 'bg-emerald-600' :
+                  (matchingTriage.pain_scale_score ?? 0) <= 3 ? 'bg-teal-600' :
+                  (matchingTriage.pain_scale_score ?? 0) <= 6 ? 'bg-amber-600' :
+                  'bg-rose-600'
+                }`}>
+                  {matchingTriage.pain_scale_score ?? 0}/10
+                </span>
+              </span>
+              {matchingTriage.pain_scale_observations && (
+                <span className="text-on-surface-variant font-sans text-xs italic">
+                  Obs: &quot;{matchingTriage.pain_scale_observations}&quot;
+                </span>
+              )}
             </div>
           )}
 
@@ -427,20 +418,12 @@ export const HceScreen = ({ patient, onPatientChange, triage, onNavigate }) => {
               </button>
             </span>
           )}
-          <button
-            type="button"
-            data-testid="open-medical-kit-btn"
-            onClick={() => setIsMedicalKitOpen(true)}
-            className="ml-auto px-3.5 py-1.5 rounded-lg text-xs font-bold bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-300 flex items-center gap-1.5 cursor-pointer shadow-xs transition"
-          >
-            <Stethoscope className="w-3.5 h-3.5 text-teal-700" />
-            <span>Kit Informático Médico</span>
-            {(view.pain_scale_score > 0 || form.pain_scale_score > 0) && (
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-teal-600 text-white font-bold">
-                EVA {view.pain_scale_score || form.pain_scale_score}/10
-              </span>
-            )}
-          </button>
+          {(view.pain_scale_score > 0 || form.pain_scale_score > 0) && (
+            <div className="ml-auto px-3 py-1.5 rounded-lg text-xs font-bold bg-teal-50 text-teal-800 border border-teal-200 flex items-center gap-1.5">
+              <Activity className="w-3.5 h-3.5 text-teal-700" />
+              <span>EVA Consulta: {view.pain_scale_score || form.pain_scale_score}/10</span>
+            </div>
+          )}
         </div>
 
         <div role="tablist" aria-label="Secciones del folio" className="flex items-center border-b border-surface-container-high bg-surface-container-low px-4 pt-2 overflow-x-auto gap-2">
@@ -493,14 +476,6 @@ export const HceScreen = ({ patient, onPatientChange, triage, onNavigate }) => {
                   <label htmlFor="hce-physical-exam" className="block text-xs font-bold text-on-surface uppercase">
                     Examen Físico Detallado por Sistemas
                   </label>
-                  <button
-                    type="button"
-                    onClick={() => setIsMedicalKitOpen(true)}
-                    className="text-xs text-teal-700 hover:text-teal-900 font-bold flex items-center gap-1 cursor-pointer"
-                  >
-                    <Activity className="w-3.5 h-3.5" />
-                    <span>Mapear en Visor Anatómico & Dolor EVA</span>
-                  </button>
                 </div>
                 <textarea
                   id="hce-physical-exam"
@@ -515,6 +490,48 @@ export const HceScreen = ({ patient, onPatientChange, triage, onNavigate }) => {
                   className={textAreaClass(readOnly)}
                 />
                 {fieldErrors.physical_exam && <p role="alert" className="mt-1 text-[11px] text-red-700">{fieldErrors.physical_exam}</p>}
+              </div>
+
+              {/* Escala Visual Analógica del Dolor (EVA 0–10) en la Consulta Médica */}
+              <div className="pt-2">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold text-on-surface uppercase flex items-center gap-1.5">
+                    <Activity className="w-4 h-4 text-primary" />
+                    Valoración y Cuantificación del Dolor (Escala EVA)
+                  </span>
+                  {isNew && matchingTriage && (matchingTriage.pain_scale_score > 0 || matchingTriage.pain_scale_observations) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setForm((prev) => ({
+                          ...prev,
+                          pain_scale_score: matchingTriage.pain_scale_score ?? 0,
+                          pain_scale_observations: matchingTriage.pain_scale_observations ?? '',
+                        }));
+                        setNotice('Puntaje y observaciones de dolor importados desde el Triaje Manchester.');
+                      }}
+                      className="px-2.5 py-1 rounded bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 text-xs font-bold transition cursor-pointer"
+                    >
+                      Importar Dolor del Triaje ({matchingTriage.pain_scale_score}/10)
+                    </button>
+                  )}
+                </div>
+                <PainScaleSelector
+                  value={Number(view.pain_scale_score) || 0}
+                  onChange={(val) => {
+                    if (!readOnly) {
+                      setForm((prev) => ({ ...prev, pain_scale_score: val }));
+                    }
+                  }}
+                  observations={view.pain_scale_observations || ''}
+                  onObservationsChange={(obs) => {
+                    if (!readOnly) {
+                      setForm((prev) => ({ ...prev, pain_scale_observations: obs }));
+                    }
+                  }}
+                  readOnly={readOnly}
+                  theme="light"
+                />
               </div>
             </div>
           )}
@@ -790,16 +807,6 @@ export const HceScreen = ({ patient, onPatientChange, triage, onNavigate }) => {
           </div>
         </div>
       </div>
-
-      {/* Kit Informatico Medico (Visor Anatomico y Escala EVA) */}
-      <MedicalKitDrawer
-        isOpen={isMedicalKitOpen}
-        onClose={() => setIsMedicalKitOpen(false)}
-        patient={patient}
-        recordId={isNew ? null : record?.id}
-        readOnly={readOnly}
-        onInjectToHCE={handleInjectFromMedicalKit}
-      />
     </div>
   );
 };

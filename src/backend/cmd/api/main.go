@@ -93,6 +93,7 @@ func main() {
 	appointmentService := services.NewAppointmentService(repos.Appointment, repos.Patient, repos.User, pdfGen, emailSvc, log)
 	treatmentService := services.NewTreatmentService(repos.PrescriptionV2, repos.Patient, repos.User, pdfGen, emailSvc, log)
 	pharmacyService := services.NewPharmacyService(repos.Inventory, repos.PrescriptionV2, log)
+	healthEducationService := services.NewHealthEducationService(repos.HealthEducation)
 
 	// 7. Adaptadores de Interoperabilidad Normativa (MinSalud & HL7)
 	ripsGen := interoperability.NewRIPSGenerator(cfg.IPSNIT, cfg.CodPrestador)
@@ -110,6 +111,7 @@ func main() {
 	appointmentHandler := handlers.NewAppointmentHandler(appointmentService)
 	treatmentHandler := handlers.NewTreatmentHandler(treatmentService)
 	pharmacyHandler := handlers.NewPharmacyHandler(pharmacyService)
+	healthEducationHandler := handlers.NewHealthEducationHandler(healthEducationService)
 
 	// 9. Configuracion del Servidor HTTP Fiber v2
 	serverCfg := http.ServerConfig{
@@ -121,18 +123,19 @@ func main() {
 		AuditRepo:      repos.Audit,
 		Logger:         log,
 		RouterConfig: http.RouterConfig{
-			AuthHandler:           authHandler,
-			AdminHandler:          adminHandler,
-			PatientHandler:        patientHandler,
-			TriageHandler:         triageHandler,
-			ClinicalRecordHandler: recordHandler,
-			PrescriptionHandler:   prescHandler,
-			SyncHandler:           syncHandler,
-			AppointmentHandler:    appointmentHandler,
-			TreatmentHandler:      treatmentHandler,
-			PharmacyHandler:       pharmacyHandler,
-			Sessions:              authService,
-			JWTSecret:             cfg.JWTSecret,
+			AuthHandler:            authHandler,
+			AdminHandler:           adminHandler,
+			PatientHandler:         patientHandler,
+			TriageHandler:          triageHandler,
+			ClinicalRecordHandler:  recordHandler,
+			PrescriptionHandler:    prescHandler,
+			SyncHandler:            syncHandler,
+			AppointmentHandler:     appointmentHandler,
+			TreatmentHandler:       treatmentHandler,
+			PharmacyHandler:        pharmacyHandler,
+			HealthEducationHandler: healthEducationHandler,
+			Sessions:               authService,
+			JWTSecret:              cfg.JWTSecret,
 		},
 	}
 

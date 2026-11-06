@@ -13,6 +13,7 @@ import {
 import PatientPicker from '../components/PatientPicker';
 import PatientBanner from '../components/PatientBanner';
 import AllergyBanner from '../components/AllergyBanner';
+import PainScaleSelector from '../components/PainScaleSelector';
 import { apiClient } from '../services/api';
 import {
   MANCHESTER_LEVELS,
@@ -43,6 +44,8 @@ const INITIAL_FORM = {
   glasgow_score: '',
   reason_for_consultation: '',
   manchester_level: '',
+  pain_scale_score: 0,
+  pain_scale_observations: '',
 };
 
 /** Valida el formulario de triaje con los rangos del contrato y devuelve campo -> mensaje. */
@@ -113,6 +116,8 @@ export const TriageScreen = ({ patient, onPatientChange, triage, onTriageSaved, 
     const payload = {
       patient_id: patient.id,
       reason_for_consultation: form.reason_for_consultation.trim(),
+      pain_scale_score: Number(form.pain_scale_score || 0),
+      pain_scale_observations: form.pain_scale_observations ? form.pain_scale_observations.trim() : '',
     };
     VITAL_FIELDS.forEach((field) => {
       payload[field.name] = Number(form[field.name]);
@@ -163,8 +168,16 @@ export const TriageScreen = ({ patient, onPatientChange, triage, onTriageSaved, 
             PA {activeTriage.systolic_bp}/{activeTriage.diastolic_bp} | FC {activeTriage.heart_rate} | FR{' '}
             {activeTriage.respiratory_rate} | SpO2 {activeTriage.oxygen_saturation}% | Temp {activeTriage.body_temperature}°C | Glasgow{' '}
             {activeTriage.glasgow_score}
+            {activeTriage.pain_scale_score !== undefined && (
+              <> | Dolor EVA <strong>{activeTriage.pain_scale_score}/10</strong></>
+            )}
           </p>
           <p className="mt-1 text-xs text-on-surface-variant">{activeTriage.reason_for_consultation}</p>
+          {activeTriage.pain_scale_observations && (
+            <p className="mt-1 text-xs text-rose-700 bg-rose-50 p-2 rounded-lg border border-rose-200">
+              <strong>Observación de dolor (EVA):</strong> {activeTriage.pain_scale_observations}
+            </p>
+          )}
         </section>
       )}
 
@@ -217,6 +230,17 @@ export const TriageScreen = ({ patient, onPatientChange, triage, onTriageSaved, 
               ))}
             </fieldset>
           </div>
+
+          {/* ESCALA VISUAL ANALÓGICA DEL DOLOR (EVA 0–10) */}
+          <PainScaleSelector
+            value={Number(form.pain_scale_score || 0)}
+            onChange={(val) => setForm((prev) => ({ ...prev, pain_scale_score: val }))}
+            observations={form.pain_scale_observations || ''}
+            onObservationsChange={(obs) => setForm((prev) => ({ ...prev, pain_scale_observations: obs }))}
+            readOnly={submitting || Boolean(savedTriage)}
+            showObservationsField={true}
+            theme="dark"
+          />
         </div>
 
         <div className="xl:col-span-5 flex flex-col gap-6">

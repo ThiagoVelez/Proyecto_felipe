@@ -1,239 +1,158 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
-import MedicalKitDrawer from '../../src/frontend/src/components/MedicalKitDrawer';
-import MedicalKitScreen from '../../src/frontend/src/screens/MedicalKitScreen';
+import PainScaleSelector from '../../src/frontend/src/components/PainScaleSelector';
+import MedicalKitScreen, { getYoutubeEmbedUrl } from '../../src/frontend/src/screens/MedicalKitScreen';
 import api from '../../src/frontend/src/services/api';
 
 vi.mock('../../src/frontend/src/services/api', () => ({
+  apiClient: {
+    getHealthEducationPosts: vi.fn(),
+    createHealthEducationPost: vi.fn(),
+    updateHealthEducationPost: vi.fn(),
+    deleteHealthEducationPost: vi.fn(),
+  },
   default: {
-    getRecordAnatomicalNotes: vi.fn(),
-    getPatientAnatomicalNotes: vi.fn(),
-    createAnatomicalNote: vi.fn(),
-    updateAnatomicalNote: vi.fn(),
-    deleteAnatomicalNote: vi.fn(),
+    getHealthEducationPosts: vi.fn(),
+    createHealthEducationPost: vi.fn(),
+    updateHealthEducationPost: vi.fn(),
+    deleteHealthEducationPost: vi.fn(),
   },
 }));
 
-describe('Kit Informático Médico - Modelo Anatómico y Escala EVA (ISO/IEC 25010 & Res. 1995)', () => {
-  const dummyPatient = {
-    id: 'p-test-01',
-    full_name: 'Carlos Ramírez Gómez',
-    document_type: 'CC',
-    document_number: '1118234567',
-    eps_name: 'Sura EPS',
-    affiliation_type: 'CONTRIBUTIVO',
-    blood_type: 'O+',
+describe('Kit Informático Médico: Muro de Salud & Escala EVA (ISO/IEC 25010 & Res. 1995)', () => {
+  const doctorUser = {
+    id: 'doc-001',
+    full_name: 'Dr. Santiago Vélez',
+    role: 'MEDICO',
+    role_id: 2,
+    specialty: 'Medicina de Urgencias',
+    branch: 'Sede Cartago - Central',
+  };
+
+  const nurseUser = {
+    id: 'nur-001',
+    full_name: 'Enfermera Elizabeth',
+    role: 'ENFERMERO',
+    role_id: 3,
+    specialty: 'Enfermería Asistencial',
+    branch: 'Sede Cartago - Central',
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    api.getRecordAnatomicalNotes.mockResolvedValue([]);
-    api.getPatientAnatomicalNotes.mockResolvedValue([]);
-    api.createAnatomicalNote.mockImplementation((data) =>
-      Promise.resolve({ ...data, id: 'note-uuid-123' })
-    );
+    api.getHealthEducationPosts.mockResolvedValue([]);
   });
 
-  it('renderiza la escala de dolor EVA (0-10) con sus niveles y descripcion semiológica', async () => {
-    await act(async () => {
+  describe('1. Componente PainScaleSelector (Escala Visual Analógica EVA 0-10)', () => {
+    it('renderiza la escala de dolor EVA (0-10) con sus niveles y descriptores semiológicos', () => {
       render(
-        <MedicalKitDrawer
-          isOpen={true}
-          onClose={vi.fn()}
-          patient={dummyPatient}
+        <PainScaleSelector
+          value={0}
+          onChange={vi.fn()}
+          observations=""
+          onObservationsChange={vi.fn()}
           readOnly={false}
+          theme="light"
         />
       );
+
+      expect(screen.getByText(/Escala Visual Analógica del Dolor \(EVA 0–10\)/i)).toBeInTheDocument();
+      expect(screen.getByText(/0 \/ 10/i)).toBeInTheDocument();
+      expect(screen.getByText(/0: Sin dolor/i)).toBeInTheDocument();
+      expect(screen.getByText(/Paciente asintomático, sin molestia nociceptiva/i)).toBeInTheDocument();
     });
 
-    expect(screen.getByText(/Escala Visual Analógica del Dolor \(EVA 0–10\)/i)).toBeInTheDocument();
-    expect(screen.getByText(/0 \/ 10/i)).toBeInTheDocument();
-    expect(screen.getByText(/0: Sin dolor/i)).toBeInTheDocument();
+    it('permite al usuario seleccionar un nivel de dolor y disparar onChange', () => {
+      const handleChange = vi.fn();
+      render(
+        <PainScaleSelector
+          value={3}
+          onChange={handleChange}
+          observations=""
+          onObservationsChange={vi.fn()}
+          readOnly={false}
+          theme="light"
+        />
+      );
 
-    // Seleccionar nivel 7 (Dolor severo limitante)
-    const btn7 = screen.getByRole('button', { name: '7' });
-    await act(async () => {
+      const btn7 = screen.getByRole('button', { name: '7' });
       fireEvent.click(btn7);
+      expect(handleChange).toHaveBeenCalledWith(7);
     });
 
-    expect(screen.getByText(/7 \/ 10/i)).toBeInTheDocument();
-    expect(screen.getByText(/7: Severo limitante/i)).toBeInTheDocument();
-  });
-
-  it('permite alternar entre capas anatómicas y orientaciones anterior y posterior', async () => {
-    await act(async () => {
+    it('en modo readOnly no dispara onChange al hacer clic en los niveles', () => {
+      const handleChange = vi.fn();
       render(
-        <MedicalKitDrawer
-          isOpen={true}
-          onClose={vi.fn()}
-          patient={dummyPatient}
-          readOnly={false}
-        />
-      );
-    });
-
-    // Alternar capa Ósea
-    const boneBtn = screen.getByRole('button', { name: 'Ósea' });
-    await act(async () => {
-      fireEvent.click(boneBtn);
-    });
-    expect(screen.getByText(/bone/i)).toBeInTheDocument();
-
-    // Alternar a vista Posterior
-    const postBtn = screen.getByRole('button', { name: /Posterior \(Dorsal\)/i });
-    await act(async () => {
-      fireEvent.click(postBtn);
-    });
-    expect(screen.getAllByText(/posterior/i).length).toBeGreaterThanOrEqual(1);
-
-    // Alternar capa Muscular
-    const muscBtn = screen.getByRole('button', { name: 'Muscular' });
-    await act(async () => {
-      fireEvent.click(muscBtn);
-    });
-    expect(screen.getAllByText(/muscle/i).length).toBeGreaterThanOrEqual(1);
-  });
-
-  it('despliega los datos del paciente y pauta semiológica al seleccionar una estructura', async () => {
-    await act(async () => {
-      render(
-        <MedicalKitDrawer
-          isOpen={true}
-          onClose={vi.fn()}
-          patient={dummyPatient}
-          readOnly={false}
-        />
-      );
-    });
-
-    // Asegurar capa de organos
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Órganos' }));
-      fireEvent.click(screen.getByRole('button', { name: /Anterior \(Frontal\)/i }));
-    });
-
-    // Clic en la silueta interactiva del corazón
-    const heartNode = document.querySelector('circle[fill="#E11D48"]');
-    expect(heartNode).toBeTruthy();
-    await act(async () => {
-      fireEvent.click(heartNode);
-    });
-
-    // Debe abrir el modal con datos del paciente autocompletados
-    await waitFor(() => {
-      const patientMatches = screen.getAllByText('Carlos Ramírez Gómez');
-      expect(patientMatches.length).toBeGreaterThanOrEqual(2);
-      expect(screen.getByText(/Corazón y Válvula Aórtica/i)).toBeInTheDocument();
-      expect(screen.getByText(/Pauta Semiológica:/i)).toBeInTheDocument();
-    });
-
-    // Redactar hallazgo facultativo y guardar
-    const obsInput = screen.getByPlaceholderText(/Dolor a la palpación profunda en punto de McBurney/i);
-    await act(async () => {
-      fireEvent.change(obsInput, {
-        target: { value: 'Soplo sistólico en foco aórtico con irradiación.' },
-      });
-    });
-
-    const submitBtn = screen.getByRole('button', { name: /Guardar Observación/i });
-    await act(async () => {
-      fireEvent.click(submitBtn);
-    });
-
-    await waitFor(() => {
-      expect(api.createAnatomicalNote).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  it('permite al facultativo transferir los hallazgos directamente a la HCE', async () => {
-    const onInjectMock = vi.fn();
-    await act(async () => {
-      render(
-        <MedicalKitDrawer
-          isOpen={true}
-          onClose={vi.fn()}
-          patient={dummyPatient}
-          readOnly={false}
-          onInjectToHCE={onInjectMock}
-        />
-      );
-    });
-
-    // Seleccionar nivel 6 de dolor
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: '6' }));
-    });
-
-    // Transferir a HCE
-    const transferBtn = screen.getByRole('button', { name: /Transferir Hallazgos a Historia Clínica/i });
-    expect(transferBtn).not.toBeDisabled();
-    await act(async () => {
-      fireEvent.click(transferBtn);
-    });
-
-    expect(onInjectMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        painScaleScore: 6,
-        painScaleObservations: expect.any(String),
-      })
-    );
-  });
-
-  it('cumple con RBAC restringiendo a personal de enfermería a modo de SOLO LECTURA', async () => {
-    await act(async () => {
-      render(
-        <MedicalKitDrawer
-          isOpen={true}
-          onClose={vi.fn()}
-          patient={dummyPatient}
+        <PainScaleSelector
+          value={5}
+          onChange={handleChange}
+          observations="Dolor lumbar"
+          onObservationsChange={vi.fn()}
           readOnly={true}
+          theme="light"
         />
       );
+
+      const btn8 = screen.getByRole('button', { name: '8' });
+      fireEvent.click(btn8);
+      expect(handleChange).not.toHaveBeenCalled();
     });
-
-    // Debe mostrar la advertencia institucional de solo lectura
-    expect(screen.getByText(/Modo Solo Lectura \(Enfermería\)/i)).toBeInTheDocument();
-
-    // No debe existir el botón de transferir a HCE
-    expect(screen.queryByRole('button', { name: /Transferir Hallazgos a Historia Clínica/i })).not.toBeInTheDocument();
-
-    // Los botones de la escala EVA deben estar inhabilitados
-    const btnEVA = screen.getByRole('button', { name: '5' });
-    expect(btnEVA).toBeDisabled();
   });
 
-  it('MedicalKitScreen renderiza el selector de pacientes si no hay paciente seleccionado', async () => {
-    await act(async () => {
-      render(
-        <MedicalKitScreen
-          user={{ role: 'MEDICO', role_id: 2 }}
-          patient={null}
-          onSelectPatient={vi.fn()}
-          onNavigate={vi.fn()}
-        />
-      );
+  describe('2. Muro Clínico de Salud y Concientización (MedicalKitScreen)', () => {
+    it('renderiza las categorías y publicaciones educativas en el muro', async () => {
+      await act(async () => {
+        render(<MedicalKitScreen user={doctorUser} onNavigate={vi.fn()} />);
+      });
+
+      expect(screen.getByText(/Kit Informático Médico: Muro de Salud & Concientización/i)).toBeInTheDocument();
+      expect(screen.getByText('Todas las Categorías')).toBeInTheDocument();
+      expect(screen.getAllByText('Consejos de Salud').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText('Esquema de Vacunas').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText('Manejo de Enfermedades').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getByText(/Esquema Nacional de Vacunación 2026/i)).toBeInTheDocument();
     });
 
-    expect(screen.getByText(/Seleccione un paciente para ingresar al Kit Informático Médico/i)).toBeInTheDocument();
-    expect(screen.getByText(/Buscar paciente para el Kit Informático Médico/i)).toBeInTheDocument();
-  });
+    it('permite al médico ver el botón de Nueva Publicación y abrir el modal', async () => {
+      await act(async () => {
+        render(<MedicalKitScreen user={doctorUser} onNavigate={vi.fn()} />);
+      });
 
-  it('MedicalKitScreen renderiza el visor embebido con datos del paciente y botón para ir a HCE', async () => {
-    const handleNavigate = vi.fn();
-    await act(async () => {
-      render(
-        <MedicalKitScreen
-          user={{ role: 'MEDICO', role_id: 2 }}
-          patient={dummyPatient}
-          onSelectPatient={vi.fn()}
-          onNavigate={handleNavigate}
-        />
-      );
+      const newPostBtn = screen.getByTestId('create-health-post-btn');
+      expect(newPostBtn).toBeInTheDocument();
+
+      fireEvent.click(newPostBtn);
+      expect(screen.getByText('Nueva Publicación en el Muro Clínico')).toBeInTheDocument();
+      expect(screen.getByText('Título de la Publicación *')).toBeInTheDocument();
     });
 
-    expect(screen.getByText('Ir a Historia Clínica (HCE)')).toBeInTheDocument();
-    fireEvent.click(screen.getByText('Ir a Historia Clínica (HCE)'));
-    expect(handleNavigate).toHaveBeenCalledWith('hce');
+    it('el enfermero tiene acceso de SOLO LECTURA sin botones de crear, editar o eliminar', async () => {
+      await act(async () => {
+        render(<MedicalKitScreen user={nurseUser} onNavigate={vi.fn()} />);
+      });
+
+      // No debe existir el botón de crear publicación
+      expect(screen.queryByTestId('create-health-post-btn')).not.toBeInTheDocument();
+      // No deben existir botones de editar o eliminar
+      expect(screen.queryByTitle('Editar publicación')).not.toBeInTheDocument();
+      expect(screen.queryByTitle('Eliminar publicación')).not.toBeInTheDocument();
+      // Debe mostrar el distintivo de modo enfermería
+      expect(screen.getByText(/Modo Enfermería: Solo Lectura & Sincronización Continua/i)).toBeInTheDocument();
+    });
+
+    it('función getYoutubeEmbedUrl transforma enlaces válidos de YouTube', () => {
+      expect(getYoutubeEmbedUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ')).toBe(
+        'https://www.youtube.com/embed/dQw4w9WgXcQ'
+      );
+      expect(getYoutubeEmbedUrl('https://youtu.be/dQw4w9WgXcQ')).toBe(
+        'https://www.youtube.com/embed/dQw4w9WgXcQ'
+      );
+      expect(getYoutubeEmbedUrl('https://www.youtube.com/shorts/dQw4w9WgXcQ')).toBe(
+        'https://www.youtube.com/embed/dQw4w9WgXcQ'
+      );
+      expect(getYoutubeEmbedUrl('invalid-url')).toBeNull();
+      expect(getYoutubeEmbedUrl('')).toBeNull();
+    });
   });
 });

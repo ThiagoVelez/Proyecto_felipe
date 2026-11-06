@@ -515,6 +515,42 @@ export const apiClient = {
       body: JSON.stringify(data),
     });
   },
+
+  // =========================================================================
+  // METODOS DEL MURO DE SALUD Y CONCIENTIZACIÓN (KIT INFORMÁTICO MÉDICO)
+  // =========================================================================
+
+  async getHealthEducationPosts(category = '') {
+    const query = category && category !== 'TODOS' ? `?category=${encodeURIComponent(category)}` : '';
+    return this.request(`/health-education${query}`, { strict: true });
+  },
+
+  async getHealthEducationPost(id) {
+    return this.request(`/health-education/${encodeURIComponent(id)}`, { strict: true });
+  },
+
+  async createHealthEducationPost(data) {
+    return this.request('/health-education', {
+      strict: true,
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async updateHealthEducationPost(id, data) {
+    return this.request(`/health-education/${encodeURIComponent(id)}`, {
+      strict: true,
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async deleteHealthEducationPost(id) {
+    return this.request(`/health-education/${encodeURIComponent(id)}`, {
+      strict: true,
+      method: 'DELETE',
+    });
+  },
 };
 
 export default apiClient;

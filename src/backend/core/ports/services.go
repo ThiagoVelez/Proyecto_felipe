@@ -115,3 +115,12 @@ type PharmacyService interface {
 	GetPrescriptionByCodeOrDocument(ctx context.Context, term string) (*domain.PrescriptionV2, error)
 	DispensePrescription(ctx context.Context, req domain.DispenseRequestDTO) (*domain.PrescriptionV2, error)
 }
+
+// HealthEducationService define los casos de uso para el Muro de Salud, Prevención y Concientización (Kit Informático).
+type HealthEducationService interface {
+	CreatePost(ctx context.Context, requester *domain.User, post *domain.HealthEducationPost) (*domain.HealthEducationPost, error)
+	ListPosts(ctx context.Context, category string) ([]domain.HealthEducationPost, error)
+	GetPostByID(ctx context.Context, id string) (*domain.HealthEducationPost, error)
+	UpdatePost(ctx context.Context, requester *domain.User, id string, post *domain.HealthEducationPost) (*domain.HealthEducationPost, error)
+	DeletePost(ctx context.Context, requester *domain.User, id string) error
+}

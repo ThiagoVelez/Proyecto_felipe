@@ -275,6 +275,48 @@ func ensureV2TablesAndColumns(db *sql.DB) error {
 		return err
 	}
 
+	// 5. Columnas de dolor EVA en triage_records
+	triageCols := []struct {
+		name string
+		dtyp string
+	}{
+		{"pain_scale_score", "INT NOT NULL DEFAULT 0"},
+		{"pain_scale_observations", "TEXT NULL"},
+	}
+	for _, col := range triageCols {
+		var colEx int
+		_ = db.QueryRow(`SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'triage_records' AND COLUMN_NAME = ?`, col.name).Scan(&colEx)
+		if colEx == 0 {
+			_, _ = db.Exec(fmt.Sprintf("ALTER TABLE triage_records ADD COLUMN %s %s", col.name, col.dtyp))
+		}
+	}
+
+	// 6. Tabla del Muro de Salud y Concientización (Kit Informático Médico)
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS health_education_posts (
+			id VARCHAR(36) PRIMARY KEY,
+			doctor_id VARCHAR(36) NOT NULL,
+			author_name VARCHAR(150) NOT NULL,
+			author_specialty VARCHAR(100) NULL,
+			title VARCHAR(200) NOT NULL,
+			category ENUM('CONSEJOS', 'AYUDAS', 'ENFERMEDADES', 'VACUNAS', 'ESTILO_DE_VIDA', 'PREVENCION') NOT NULL,
+			summary TEXT NULL,
+			content TEXT NOT NULL,
+			image_url LONGTEXT NULL,
+			youtube_url VARCHAR(255) NULL,
+			video_url LONGTEXT NULL,
+			video_duration_seconds INT DEFAULT 0,
+			is_published BOOLEAN DEFAULT TRUE,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+			INDEX idx_health_category (category, created_at),
+			FOREIGN KEY (doctor_id) REFERENCES users(id) ON DELETE CASCADE
+		) ENGINE=InnoDB;
+	`)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

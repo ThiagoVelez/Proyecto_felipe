@@ -130,7 +130,7 @@ export const Sidebar = ({
       id: 'medical_kit',
       label: 'Kit Informático Médico',
       icon: Stethoscope,
-      badge: 'EVA / 3D',
+      badge: 'Muro Salud',
     },
     {
       id: 'treatment',

@@ -17,6 +17,7 @@ type RouterConfig struct {
 	AppointmentHandler    *handlers.AppointmentHandler
 	TreatmentHandler      *handlers.TreatmentHandler
 	PharmacyHandler       *handlers.PharmacyHandler
+	HealthEducationHandler *handlers.HealthEducationHandler
 	// Sessions valida en cada solicitud que la cuenta del token siga activa
 	Sessions  middlewares.SessionValidator
 	JWTSecret string
@@ -123,6 +124,16 @@ func SetupRoutes(app *fiber.App, cfg RouterConfig) {
 	if cfg.SyncHandler != nil {
 		syncGroup := protected.Group("/sync")
 		syncGroup.Post("/batch", middlewares.RequireRoles("MEDICO"), cfg.SyncHandler.ProcessBatch)
+	}
+
+	// 8.5. Modulo Muro de Salud, Prevencion y Concientizacion (Kit Informatico Medico)
+	if cfg.HealthEducationHandler != nil {
+		healthGroup := protected.Group("/health-education")
+		healthGroup.Get("/", middlewares.RequireRoles("MEDICO", "ENFERMERO", "ADMIN", "FARMACIA"), cfg.HealthEducationHandler.ListPosts)
+		healthGroup.Get("/:id", middlewares.RequireRoles("MEDICO", "ENFERMERO", "ADMIN", "FARMACIA"), cfg.HealthEducationHandler.GetPost)
+		healthGroup.Post("/", middlewares.RequireRoles("MEDICO"), cfg.HealthEducationHandler.CreatePost)
+		healthGroup.Put("/:id", middlewares.RequireRoles("MEDICO"), cfg.HealthEducationHandler.UpdatePost)
+		healthGroup.Delete("/:id", middlewares.RequireRoles("MEDICO"), cfg.HealthEducationHandler.DeletePost)
 	}
 
 	// =========================================================================

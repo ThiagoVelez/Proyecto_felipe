@@ -20,7 +20,6 @@ import {
   ClipboardList,
 } from 'lucide-react';
 import { apiClient } from '../services/api';
-import MedicalKitDrawer from '../components/MedicalKitDrawer';
 import {
   calculateAge,
   formatDoctorName,
@@ -34,7 +33,6 @@ export const NurseSummaryView = ({ user, patient, onNavigate, onSelectPatient })
   const [selectedPatientId, setSelectedPatientId] = useState(patient?.id || '');
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
-  const [isMedicalKitOpen, setIsMedicalKitOpen] = useState(false);
 
   // Carga pacientes y órdenes de cuidado asistencial
   useEffect(() => {
@@ -381,14 +379,12 @@ export const NurseSummaryView = ({ user, patient, onNavigate, onSelectPatient })
                   <span>Diagnóstico y Observaciones de la Historia Clínica</span>
                 </h3>
                 <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsMedicalKitOpen(true)}
-                    className="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-900 font-bold text-xs flex items-center gap-1.5 cursor-pointer transition shadow-xs"
-                  >
-                    <Activity className="w-3.5 h-3.5 text-teal-700" />
-                    <span>Kit Informático Médico (Solo Lectura)</span>
-                  </button>
+                  {(activeOrder?.pain_scale_score !== undefined || activePatient?.pain_scale_score !== undefined) && (
+                    <div className="px-3 py-1.5 rounded-xl bg-teal-50 border border-teal-200 text-teal-900 font-bold text-xs flex items-center gap-1.5 shadow-xs">
+                      <Activity className="w-3.5 h-3.5 text-teal-700" />
+                      <span>EVA Dolor: {activeOrder?.pain_scale_score ?? activePatient?.pain_scale_score ?? 0}/10</span>
+                    </div>
+                  )}
                   {activeOrder?.doctor_name && (
                     <span className="text-xs font-medium text-outline">
                       Médico: <strong className="text-on-surface">{activeOrder.doctor_name}</strong>
@@ -520,14 +516,6 @@ export const NurseSummaryView = ({ user, patient, onNavigate, onSelectPatient })
           </p>
         </div>
       )}
-
-      {/* Kit Informatico Medico en Modo Solo Lectura para Enfermeria */}
-      <MedicalKitDrawer
-        isOpen={isMedicalKitOpen}
-        onClose={() => setIsMedicalKitOpen(false)}
-        patient={activePatient}
-        readOnly={true}
-      />
     </div>
   );
 };
