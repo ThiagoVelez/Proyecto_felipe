@@ -239,7 +239,7 @@ export const TriageScreen = ({ patient, onPatientChange, triage, onTriageSaved, 
             onObservationsChange={(obs) => setForm((prev) => ({ ...prev, pain_scale_observations: obs }))}
             readOnly={submitting || Boolean(savedTriage)}
             showObservationsField={true}
-            theme="dark"
+            theme="light"
           />
         </div>
 
