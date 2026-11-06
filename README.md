@@ -1713,7 +1713,7 @@ Base: `/api/v1`. Todas las rutas, salvo `GET /health` y `POST /auth/login`, exig
 | Auth | `POST /auth/mfa/setup` | Autenticado | `{current_code?}` (obligatorio si ya hay MFA activo); retorna `secret` y `otpauth_uri` |
 | Auth | `POST /auth/mfa/enable` | Autenticado | `{code}` confirma el segundo factor |
 | Admin | `GET /admin/users`, `POST /admin/users`, `PATCH /admin/users/:id/status`, `GET /admin/audit-logs` | ADMIN | Registro (nace inactivo), habilitación/suspensión y bitácora real |
-| Pacientes | `POST /patients`, `GET /patients`, `GET /patients/lookup`, `GET /patients/:id` | ADMISION, ENFERMERO, MEDICO | Admisión, listado y búsqueda por documento; 409 si el documento existe |
+| Pacientes | `POST /patients`, `GET /patients`, `GET /patients/lookup`, `GET /patients/:id`, `PUT /patients/:id`, `DELETE /patients/:id` | ADMISION, ENFERMERO, MEDICO | Admisión, listado, actualización de contacto (Ley 1581) vía Drawer, eliminación transaccional y búsqueda por documento; 409 si el documento existe |
 | Pacientes | `POST /patients/:id/allergies`, `GET /patients/:id/allergies` | ADMISION, ENFERMERO, MEDICO | Severidad: LEVE, MODERADA o SEVERA |
 | Triaje | `POST /triage`, `GET /triage`, `GET /triage/:id`, `PATCH /triage/:id/status` | ENFERMERO, MEDICO | El nivel Manchester lo calcula el servidor |
 | HCE | `POST /clinical-records`, `POST /clinical-records/:id/close`, `POST /clinical-records/:id/clarifications` | MEDICO (autor del folio) | 403 si el médico no es el autor; 409 si ya está cerrado |
