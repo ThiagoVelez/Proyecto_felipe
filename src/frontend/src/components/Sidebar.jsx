@@ -12,6 +12,7 @@ import {
   Calendar,
   Package,
   Boxes,
+  Stethoscope,
 } from 'lucide-react';
 
 export const Sidebar = ({
@@ -81,6 +82,12 @@ export const Sidebar = ({
       badge: 'HCE Básica',
     },
     {
+      id: 'medical_kit',
+      label: 'Kit Informático Médico',
+      icon: Stethoscope,
+      badge: 'Lectura',
+    },
+    {
       id: 'nurse_checklist',
       label: 'Lista de Chequeo',
       icon: CheckCircle2,
@@ -118,6 +125,12 @@ export const Sidebar = ({
       label: 'Historia Clinica (HCE)',
       icon: FileText,
       badge: 'Inmutable',
+    },
+    {
+      id: 'medical_kit',
+      label: 'Kit Informático Médico',
+      icon: Stethoscope,
+      badge: 'EVA / 3D',
     },
     {
       id: 'treatment',

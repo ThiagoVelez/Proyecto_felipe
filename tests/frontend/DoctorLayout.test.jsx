@@ -13,6 +13,7 @@ describe('Doctor Clinical Layout & Sidebar', () => {
     expect(screen.getByText('Sala de Espera & Dashboard')).toBeInTheDocument();
     expect(screen.getByText('Triaje Manchester')).toBeInTheDocument();
     expect(screen.getByText('Historia Clinica (HCE)')).toBeInTheDocument();
+    expect(screen.getByText('Kit Informático Médico')).toBeInTheDocument();
     expect(screen.getByText('Prescripcion & Farmacia')).toBeInTheDocument();
     expect(screen.getByText('Seguridad & MFA')).toBeInTheDocument();
     expect(screen.queryByText('Mi Perfil Asistencial')).not.toBeInTheDocument();
@@ -20,6 +21,10 @@ describe('Doctor Clinical Layout & Sidebar', () => {
     const hceBtn = screen.getByText('Historia Clinica (HCE)').closest('button');
     fireEvent.click(hceBtn);
     expect(handleSetView).toHaveBeenCalledWith('hce');
+
+    const kitBtn = screen.getByText('Kit Informático Médico').closest('button');
+    fireEvent.click(kitBtn);
+    expect(handleSetView).toHaveBeenCalledWith('medical_kit');
   });
 
   it('renderiza el Header asistencial con datos del Dr. Santiago Vélez y navega al perfil al hacer clic', () => {
@@ -144,5 +149,27 @@ describe('Doctor Clinical Layout & Sidebar', () => {
     const invBtn = screen.getByText('Inventario de Medicamentos').closest('button');
     fireEvent.click(invBtn);
     expect(handleSetView).toHaveBeenCalledWith('inventory');
+  });
+
+  it('renderiza el Sidebar asistencial para ENFERMERO incluyendo el Kit Informático Médico en modo lectura', () => {
+    const handleSetView = vi.fn();
+    const nurseUser = {
+      id: 'usr-enf-01',
+      role: 'ENFERMERO',
+      role_id: 3,
+      full_name: 'Enf. Elizabeth',
+      specialty: 'Enfermera',
+    };
+    render(<Sidebar currentView="dashboard" setCurrentView={handleSetView} user={nurseUser} />);
+
+    expect(screen.getByText('ENFERMERÍA & CUIDADOS')).toBeInTheDocument();
+    expect(screen.getByText('Sala de Espera & Triaje')).toBeInTheDocument();
+    expect(screen.getByText('Resumen Clínico Asistencial')).toBeInTheDocument();
+    expect(screen.getByText('Kit Informático Médico')).toBeInTheDocument();
+    expect(screen.getByText('Lista de Chequeo')).toBeInTheDocument();
+
+    const kitBtn = screen.getByText('Kit Informático Médico').closest('button');
+    fireEvent.click(kitBtn);
+    expect(handleSetView).toHaveBeenCalledWith('medical_kit');
   });
 });

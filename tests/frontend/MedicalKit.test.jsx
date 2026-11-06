@@ -2,6 +2,7 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import MedicalKitDrawer from '../../src/frontend/src/components/MedicalKitDrawer';
+import MedicalKitScreen from '../../src/frontend/src/screens/MedicalKitScreen';
 import api from '../../src/frontend/src/services/api';
 
 vi.mock('../../src/frontend/src/services/api', () => ({
@@ -200,5 +201,39 @@ describe('Kit Informático Médico - Modelo Anatómico y Escala EVA (ISO/IEC 250
     // Los botones de la escala EVA deben estar inhabilitados
     const btnEVA = screen.getByRole('button', { name: '5' });
     expect(btnEVA).toBeDisabled();
+  });
+
+  it('MedicalKitScreen renderiza el selector de pacientes si no hay paciente seleccionado', async () => {
+    await act(async () => {
+      render(
+        <MedicalKitScreen
+          user={{ role: 'MEDICO', role_id: 2 }}
+          patient={null}
+          onSelectPatient={vi.fn()}
+          onNavigate={vi.fn()}
+        />
+      );
+    });
+
+    expect(screen.getByText(/Seleccione un paciente para ingresar al Kit Informático Médico/i)).toBeInTheDocument();
+    expect(screen.getByText(/Buscar paciente para el Kit Informático Médico/i)).toBeInTheDocument();
+  });
+
+  it('MedicalKitScreen renderiza el visor embebido con datos del paciente y botón para ir a HCE', async () => {
+    const handleNavigate = vi.fn();
+    await act(async () => {
+      render(
+        <MedicalKitScreen
+          user={{ role: 'MEDICO', role_id: 2 }}
+          patient={dummyPatient}
+          onSelectPatient={vi.fn()}
+          onNavigate={handleNavigate}
+        />
+      );
+    });
+
+    expect(screen.getByText('Ir a Historia Clínica (HCE)')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Ir a Historia Clínica (HCE)'));
+    expect(handleNavigate).toHaveBeenCalledWith('hce');
   });
 });

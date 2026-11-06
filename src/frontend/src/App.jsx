@@ -14,6 +14,7 @@ import TreatmentFollowUpView from './screens/TreatmentFollowUpView';
 import PharmacyDashboard from './screens/PharmacyDashboard';
 import NurseSummaryView from './screens/NurseSummaryView';
 import NurseChecklistView from './screens/NurseChecklistView';
+import MedicalKitScreen from './screens/MedicalKitScreen';
 import { apiClient, SESSION_EXPIRED_EVENT } from './services/api';
 
 /**
@@ -168,7 +169,7 @@ export function App() {
 
       if (
         isPharmacist &&
-        ['dashboard', 'appointments', 'triage', 'hce', 'nurse_summary', 'nurse_checklist'].includes(currentView)
+        ['dashboard', 'appointments', 'triage', 'hce', 'nurse_summary', 'nurse_checklist', 'medical_kit'].includes(currentView)
       ) {
         setCurrentView('pharmacy');
         localStorage.setItem('saludconecta_current_view', 'pharmacy');
@@ -331,6 +332,15 @@ export function App() {
               patient={selectedPatient}
               onPatientChange={handleSelectPatient}
               triage={selectedTriage}
+              onNavigate={handleNavigate}
+            />
+          )}
+
+          {currentView === 'medical_kit' && (
+            <MedicalKitScreen
+              user={currentUser}
+              patient={selectedPatient}
+              onSelectPatient={handleSelectPatient}
               onNavigate={handleNavigate}
             />
           )}

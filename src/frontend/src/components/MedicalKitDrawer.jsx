@@ -171,7 +171,8 @@ export default function MedicalKitDrawer({
   patient,
   recordId,
   readOnly = false,
-  onInjectToHCE
+  onInjectToHCE,
+  embedded = false,
 }) {
   const [activeLayer, setActiveLayer] = useState('organs'); // bone | muscle | organs | vascular
   const [viewOrientation, setViewOrientation] = useState('anterior'); // anterior | posterior
@@ -189,9 +190,9 @@ export default function MedicalKitDrawer({
 
   // Cargar notas al abrir el drawer o cambiar de paciente/folio
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen && !embedded) return;
     loadNotes();
-  }, [isOpen, patient?.id, recordId]);
+  }, [isOpen, embedded, patient?.id, recordId]);
 
   const loadNotes = async () => {
     try {
@@ -211,7 +212,7 @@ export default function MedicalKitDrawer({
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen && !embedded) return null;
 
   const currentPainMeta = PAIN_LEVELS[painLevel] || PAIN_LEVELS[0];
 
@@ -355,46 +356,47 @@ export default function MedicalKitDrawer({
     (n.view_orientation || '').toLowerCase() === viewOrientation.toLowerCase()
   );
 
-  return (
-    <div className="fixed inset-0 z-50 overflow-hidden bg-slate-950/80 backdrop-blur-sm flex justify-end transition-opacity">
-      <div className="w-full max-w-4xl bg-slate-900 border-l border-slate-800 h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-300">
-        
-        {/* Cabecera del Drawer */}
-        <div className="p-4 bg-slate-900/95 border-b border-slate-800 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/30 flex items-center justify-center text-teal-400">
-              <Stethoscope className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-white tracking-wide">
-                  Kit Informático Médico
-                </h2>
-                <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-teal-950 text-teal-300 border border-teal-800/80">
-                  v2.4 Pro
-                </span>
-                {readOnly && (
-                  <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-amber-950/80 text-amber-300 border border-amber-800">
-                    <Lock className="w-3 h-3" /> Modo Solo Lectura (Enfermería)
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-slate-400">
-                Modelo Anatómico Interactivo & Escala Visual Analógica (EVA) • Res. 1995/1999
-              </p>
-            </div>
+  const drawerCard = (
+    <div className={`w-full ${embedded ? 'bg-slate-900 border border-slate-800 rounded-2xl shadow-xl' : 'max-w-4xl bg-slate-900 border-l border-slate-800 h-full shadow-2xl animate-in slide-in-from-right duration-300'} flex flex-col overflow-hidden text-slate-100`}>
+      
+      {/* Cabecera del Drawer */}
+      <div className="p-4 bg-slate-900/95 border-b border-slate-800 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/30 flex items-center justify-center text-teal-400">
+            <Stethoscope className="w-5 h-5" />
           </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-base font-bold text-white tracking-wide">
+                Kit Informático Médico
+              </h2>
+              <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-teal-950 text-teal-300 border border-teal-800/80">
+                v2.4 Pro
+              </span>
+              {readOnly && (
+                <span className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-amber-950/80 text-amber-300 border border-amber-800">
+                  <Lock className="w-3 h-3" /> Modo Solo Lectura (Enfermería)
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-slate-400">
+              Modelo Anatómico Interactivo & Escala Visual Analógica (EVA) • Res. 1995/1999
+            </p>
+          </div>
+        </div>
 
+        {onClose && (
           <div className="flex items-center gap-2">
             <button
               onClick={onClose}
-              className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+              className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
               title="Cerrar visor"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
-        </div>
+        )}
+      </div>
 
         {/* Tarjeta de Paciente Activo */}
         {patient && (
@@ -904,9 +906,9 @@ export default function MedicalKitDrawer({
         </div>
 
       </div>
+  );
 
-      {/* MODAL DIÁLOGO DE OBSERVACIÓN CLÍNICA (ABIERTO AL CLIC EN ESTRUCTURA) */}
-      {observationModalOpen && selectedStructureKey && (
+  const observationModal = (observationModalOpen && selectedStructureKey) ? (
         <div className="fixed inset-0 z-60 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-800 rounded-xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
             
@@ -1038,8 +1040,22 @@ export default function MedicalKitDrawer({
             </form>
           </div>
         </div>
-      )}
+  ) : null;
 
+  if (embedded) {
+    return (
+      <div className="w-full">
+        {drawerCard}
+        {observationModal}
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-hidden bg-slate-950/80 backdrop-blur-sm flex justify-end transition-opacity">
+      {drawerCard}
+      {observationModal}
     </div>
   );
 }
+

@@ -324,6 +324,7 @@ A continuación se detalla el catálogo de suites desarrolladas y automatizadas,
 - Visor Anatómico Interactivo: Alternancia dinámica de 4 capas corporales (Órganos, Muscular, Ósea, Vascular) y 2 orientaciones espaciales (Anterior/Posterior).
 - Autofill y Pautas Semiológicas: Al hacer clic en un foco anatómico, el diálogo autocompleta los datos demográficos y aseguradora del paciente, sugiriendo diagnósticos presuntivos CIE-11.
 - Transferencia a Historia Clínica: Botón para inyectar los hallazgos y puntos mapeados al examen físico y plan del folio.
+- Acceso Directo Asistencial en Menú Lateral: Botón dedicado en la barra de navegación lateral (`Sidebar.jsx`) para el Médico (badge `EVA / 3D`) y para el Enfermero (badge `Lectura`), que despliega la pantalla completa `MedicalKitScreen.jsx` y permite la selección contextual de pacientes mediante `PatientPicker`.
 - Restricción RBAC: Verificación del modo de **Solo Lectura** para el rol `ENFERMERO` (bloqueo estricto de edición, creación y eliminación).
 
 ---
