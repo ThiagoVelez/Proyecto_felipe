@@ -205,3 +205,119 @@ func (s *clinicalRecordService) VerifyIntegrity(ctx context.Context, recordID st
 
 	return recalculated == *record.HashSHA256, nil
 }
+
+func (s *clinicalRecordService) AddAnatomicalNote(ctx context.Context, note *domain.ClinicalAnatomicalNote) (*domain.ClinicalAnatomicalNote, error) {
+	if _, err := s.patientRepo.GetByID(ctx, note.PatientID); err != nil {
+		return nil, domain.ErrPatientNotFound
+	}
+
+	doctor, err := s.userRepo.GetByID(ctx, note.DoctorID)
+	if err != nil {
+		return nil, domain.ErrUserNotFound
+	}
+	if !doctor.IsDoctor() {
+		return nil, domain.ErrUnauthorizedRole
+	}
+	note.DoctorName = doctor.FullName
+
+	if note.ClinicalRecordID != nil && *note.ClinicalRecordID != "" {
+		record, err := s.recordRepo.GetByID(ctx, *note.ClinicalRecordID)
+		if err != nil {
+			return nil, err
+		}
+		if !record.CanModify() {
+			return nil, domain.ErrRecordAlreadyClosed
+		}
+	}
+
+	if note.ID == "" {
+		note.ID = uuid.New().String()
+	}
+	now := time.Now().UTC()
+	note.CreatedAt = now
+	note.UpdatedAt = now
+
+	if err := s.recordRepo.SaveAnatomicalNote(ctx, note); err != nil {
+		return nil, err
+	}
+	return note, nil
+}
+
+func (s *clinicalRecordService) GetAnatomicalNotesByRecord(ctx context.Context, recordID string) ([]domain.ClinicalAnatomicalNote, error) {
+	return s.recordRepo.GetAnatomicalNotesByRecord(ctx, recordID)
+}
+
+func (s *clinicalRecordService) GetAnatomicalNotesByPatient(ctx context.Context, patientID string) ([]domain.ClinicalAnatomicalNote, error) {
+	return s.recordRepo.GetAnatomicalNotesByPatient(ctx, patientID)
+}
+
+func (s *clinicalRecordService) UpdateAnatomicalNote(ctx context.Context, note *domain.ClinicalAnatomicalNote) (*domain.ClinicalAnatomicalNote, error) {
+	existing, err := s.recordRepo.GetAnatomicalNoteByID(ctx, note.ID)
+	if err != nil {
+		return nil, err
+	}
+	if existing == nil {
+		return nil, domain.ErrRecordNotFound
+	}
+
+	if existing.DoctorID != note.DoctorID {
+		return nil, domain.ErrNotRecordOwner
+	}
+
+	if existing.ClinicalRecordID != nil && *existing.ClinicalRecordID != "" {
+		rec, err := s.recordRepo.GetByID(ctx, *existing.ClinicalRecordID)
+		if err == nil && rec != nil && !rec.CanModify() {
+			return nil, domain.ErrRecordAlreadyClosed
+		}
+	}
+
+	existing.PainLevel = note.PainLevel
+	existing.DoctorObservation = note.DoctorObservation
+	existing.PreliminaryCIE11 = note.PreliminaryCIE11
+	existing.UpdatedAt = time.Now().UTC()
+
+	if err := s.recordRepo.UpdateAnatomicalNote(ctx, existing); err != nil {
+		return nil, err
+	}
+	return existing, nil
+}
+
+func (s *clinicalRecordService) DeleteAnatomicalNote(ctx context.Context, noteID, doctorID string) error {
+	existing, err := s.recordRepo.GetAnatomicalNoteByID(ctx, noteID)
+	if err != nil {
+		return err
+	}
+	if existing == nil {
+		return domain.ErrRecordNotFound
+	}
+
+	if existing.DoctorID != doctorID {
+		return domain.ErrNotRecordOwner
+	}
+
+	if existing.ClinicalRecordID != nil && *existing.ClinicalRecordID != "" {
+		rec, err := s.recordRepo.GetByID(ctx, *existing.ClinicalRecordID)
+		if err == nil && rec != nil && !rec.CanModify() {
+			return domain.ErrRecordAlreadyClosed
+		}
+	}
+
+	return s.recordRepo.DeleteAnatomicalNote(ctx, noteID)
+}
+
+func (s *clinicalRecordService) UpdatePainAndMapping(ctx context.Context, recordID, doctorID string, painScore int, painObs *string, mapping *string) error {
+	rec, err := s.recordRepo.GetByID(ctx, recordID)
+	if err != nil {
+		return err
+	}
+	if rec == nil {
+		return domain.ErrRecordNotFound
+	}
+	if !rec.CanModify() {
+		return domain.ErrRecordAlreadyClosed
+	}
+	if rec.DoctorID != doctorID {
+		return domain.ErrNotRecordOwner
+	}
+	return s.recordRepo.UpdatePainAndMapping(ctx, recordID, painScore, painObs, mapping)
+}

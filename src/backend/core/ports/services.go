@@ -57,6 +57,14 @@ type ClinicalRecordService interface {
 	GetPatientHistory(ctx context.Context, patientID string) ([]domain.ClinicalRecord, error)
 	GetRecordByID(ctx context.Context, recordID string) (*domain.ClinicalRecord, error)
 	VerifyIntegrity(ctx context.Context, recordID string) (bool, error)
+
+	// Kit Informatico Medico (Escala EVA y Modelo Anatomico)
+	AddAnatomicalNote(ctx context.Context, note *domain.ClinicalAnatomicalNote) (*domain.ClinicalAnatomicalNote, error)
+	GetAnatomicalNotesByRecord(ctx context.Context, recordID string) ([]domain.ClinicalAnatomicalNote, error)
+	GetAnatomicalNotesByPatient(ctx context.Context, patientID string) ([]domain.ClinicalAnatomicalNote, error)
+	UpdateAnatomicalNote(ctx context.Context, note *domain.ClinicalAnatomicalNote) (*domain.ClinicalAnatomicalNote, error)
+	DeleteAnatomicalNote(ctx context.Context, noteID, doctorID string) error
+	UpdatePainAndMapping(ctx context.Context, recordID, doctorID string, painScore int, painObs *string, mapping *string) error
 }
 
 // PrescriptionService define los casos de uso para generacion segura de formulas y cruce de alergias.

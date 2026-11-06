@@ -33,13 +33,16 @@ func NewClinicalRecordHandler(
 }
 
 type CreateRecordRequest struct {
-	PatientID            string  `json:"patient_id"`
-	TriageID             *string `json:"triage_id"`
-	Anamnesis            string  `json:"anamnesis"`
-	PhysicalExam         string  `json:"physical_exam"`
-	CIE11Code            string  `json:"cie11_code"`
-	DiagnosisDescription string  `json:"diagnosis_description"`
-	TreatmentPlan        string  `json:"treatment_plan"`
+	PatientID             string  `json:"patient_id"`
+	TriageID              *string `json:"triage_id"`
+	Anamnesis             string  `json:"anamnesis"`
+	PhysicalExam          string  `json:"physical_exam"`
+	CIE11Code             string  `json:"cie11_code"`
+	DiagnosisDescription  string  `json:"diagnosis_description"`
+	TreatmentPlan         string  `json:"treatment_plan"`
+	PainScaleScore        int     `json:"pain_scale_score"`
+	PainScaleObservations *string `json:"pain_scale_observations"`
+	AnatomicalMapping     *string `json:"anatomical_mapping"`
 }
 
 func (h *ClinicalRecordHandler) CreateDraft(c *fiber.Ctx) error {
@@ -62,14 +65,17 @@ func (h *ClinicalRecordHandler) CreateDraft(c *fiber.Ctx) error {
 	}
 
 	record := &domain.ClinicalRecord{
-		PatientID:            req.PatientID,
-		DoctorID:             doctorID,
-		TriageID:             req.TriageID,
-		Anamnesis:            req.Anamnesis,
-		PhysicalExam:         req.PhysicalExam,
-		CIE11Code:            req.CIE11Code,
-		DiagnosisDescription: req.DiagnosisDescription,
-		TreatmentPlan:        req.TreatmentPlan,
+		PatientID:             req.PatientID,
+		DoctorID:              doctorID,
+		TriageID:              req.TriageID,
+		Anamnesis:             req.Anamnesis,
+		PhysicalExam:          req.PhysicalExam,
+		CIE11Code:             req.CIE11Code,
+		DiagnosisDescription:  req.DiagnosisDescription,
+		TreatmentPlan:         req.TreatmentPlan,
+		PainScaleScore:        req.PainScaleScore,
+		PainScaleObservations: req.PainScaleObservations,
+		AnatomicalMapping:     req.AnatomicalMapping,
 	}
 
 	created, err := h.recordService.CreateDraft(c.Context(), record)
@@ -239,4 +245,228 @@ func (h *ClinicalRecordHandler) ExportFHIR(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(bundle)
+}
+
+// CreateAnatomicalNoteRequest define el payload para registrar una nota clinica georreferenciada.
+type CreateAnatomicalNoteRequest struct {
+	ClinicalRecordID  *string `json:"clinical_record_id,omitempty"`
+	PatientID         string  `json:"patient_id"`
+	StructureKey      string  `json:"structure_key"`
+	StructureName     string  `json:"structure_name"`
+	Layer             string  `json:"layer"`
+	ViewOrientation   string  `json:"view_orientation"`
+	CoordinatesX      int     `json:"coordinates_x"`
+	CoordinatesY      int     `json:"coordinates_y"`
+	PainLevel         int     `json:"pain_level"`
+	DoctorObservation string  `json:"doctor_observation"`
+	PreliminaryCIE11  string  `json:"preliminary_cie11,omitempty"`
+}
+
+func (h *ClinicalRecordHandler) CreateAnatomicalNote(c *fiber.Ctx) error {
+	doctorID, ok := c.Locals("user_id").(string)
+	if !ok || doctorID == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Usuario no autenticado"})
+	}
+
+	var req CreateAnatomicalNoteRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Payload invalido"})
+	}
+
+	recIDParam := c.Params("id")
+	if recIDParam != "" && (req.ClinicalRecordID == nil || *req.ClinicalRecordID == "") {
+		req.ClinicalRecordID = &recIDParam
+	}
+
+	if req.PatientID == "" && c.Params("patient_id") != "" {
+		req.PatientID = c.Params("patient_id")
+	}
+
+	if req.PatientID == "" || req.StructureKey == "" || req.DoctorObservation == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Los campos patient_id, structure_key y doctor_observation son obligatorios",
+		})
+	}
+
+	layer := domain.LayerOrgan
+	switch req.Layer {
+	case "BONE":
+		layer = domain.LayerBone
+	case "MUSCLE":
+		layer = domain.LayerMuscle
+	case "VASCULAR":
+		layer = domain.LayerVascular
+	default:
+		layer = domain.LayerOrgan
+	}
+
+	view := domain.OrientationAnterior
+	if req.ViewOrientation == "POSTERIOR" {
+		view = domain.OrientationPosterior
+	}
+
+	note := &domain.ClinicalAnatomicalNote{
+		ClinicalRecordID:  req.ClinicalRecordID,
+		PatientID:         req.PatientID,
+		DoctorID:          doctorID,
+		StructureKey:      req.StructureKey,
+		StructureName:     req.StructureName,
+		Layer:             layer,
+		ViewOrientation:   view,
+		CoordinatesX:      req.CoordinatesX,
+		CoordinatesY:      req.CoordinatesY,
+		PainLevel:         req.PainLevel,
+		DoctorObservation: req.DoctorObservation,
+		PreliminaryCIE11:  req.PreliminaryCIE11,
+	}
+
+	created, err := h.recordService.AddAnatomicalNote(c.Context(), note)
+	if err != nil {
+		if errors.Is(err, domain.ErrPatientNotFound) {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Paciente no encontrado"})
+		}
+		if errors.Is(err, domain.ErrRecordAlreadyClosed) {
+			return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": "El folio clinico ya esta cerrado y sus notas anatomicas son inmutables"})
+		}
+		if errors.Is(err, domain.ErrUnauthorizedRole) {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Solo personal medico habilitado puede redactar observaciones anatomicas"})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(created)
+}
+
+func (h *ClinicalRecordHandler) GetRecordAnatomicalNotes(c *fiber.Ctx) error {
+	recordID := c.Params("id")
+	notes, err := h.recordService.GetAnatomicalNotesByRecord(c.Context(), recordID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	if notes == nil {
+		notes = []domain.ClinicalAnatomicalNote{}
+	}
+	return c.JSON(notes)
+}
+
+func (h *ClinicalRecordHandler) GetPatientAnatomicalNotes(c *fiber.Ctx) error {
+	patientID := c.Params("id")
+	notes, err := h.recordService.GetAnatomicalNotesByPatient(c.Context(), patientID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	if notes == nil {
+		notes = []domain.ClinicalAnatomicalNote{}
+	}
+	return c.JSON(notes)
+}
+
+type UpdateAnatomicalNoteRequest struct {
+	PainLevel         int    `json:"pain_level"`
+	DoctorObservation string `json:"doctor_observation"`
+	PreliminaryCIE11  string `json:"preliminary_cie11"`
+}
+
+func (h *ClinicalRecordHandler) UpdateAnatomicalNote(c *fiber.Ctx) error {
+	doctorID, ok := c.Locals("user_id").(string)
+	if !ok || doctorID == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Usuario no autenticado"})
+	}
+
+	noteID := c.Params("note_id")
+	if noteID == "" {
+		noteID = c.Params("id")
+	}
+
+	var req UpdateAnatomicalNoteRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Payload invalido"})
+	}
+
+	note := &domain.ClinicalAnatomicalNote{
+		ID:                noteID,
+		DoctorID:          doctorID,
+		PainLevel:         req.PainLevel,
+		DoctorObservation: req.DoctorObservation,
+		PreliminaryCIE11:  req.PreliminaryCIE11,
+	}
+
+	updated, err := h.recordService.UpdateAnatomicalNote(c.Context(), note)
+	if err != nil {
+		if errors.Is(err, domain.ErrRecordNotFound) {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Nota anatomica no encontrada"})
+		}
+		if errors.Is(err, domain.ErrNotRecordOwner) {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Solo el medico autor puede modificar su observacion anatomica"})
+		}
+		if errors.Is(err, domain.ErrRecordAlreadyClosed) {
+			return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": "El folio clinico esta cerrado y no permite modificaciones"})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(updated)
+}
+
+func (h *ClinicalRecordHandler) DeleteAnatomicalNote(c *fiber.Ctx) error {
+	doctorID, ok := c.Locals("user_id").(string)
+	if !ok || doctorID == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Usuario no autenticado"})
+	}
+
+	noteID := c.Params("note_id")
+	if noteID == "" {
+		noteID = c.Params("id")
+	}
+
+	err := h.recordService.DeleteAnatomicalNote(c.Context(), noteID, doctorID)
+	if err != nil {
+		if errors.Is(err, domain.ErrRecordNotFound) {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Nota anatomica no encontrada"})
+		}
+		if errors.Is(err, domain.ErrNotRecordOwner) {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Solo el medico autor puede eliminar su observacion anatomica"})
+		}
+		if errors.Is(err, domain.ErrRecordAlreadyClosed) {
+			return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": "El folio clinico esta cerrado y no permite eliminacion"})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(fiber.Map{"message": "Nota anatomica eliminada exitosamente"})
+}
+
+type UpdatePainMappingRequest struct {
+	PainScaleScore        int     `json:"pain_scale_score"`
+	PainScaleObservations *string `json:"pain_scale_observations"`
+	AnatomicalMapping     *string `json:"anatomical_mapping"`
+}
+
+func (h *ClinicalRecordHandler) UpdatePainAndMapping(c *fiber.Ctx) error {
+	doctorID, ok := c.Locals("user_id").(string)
+	if !ok || doctorID == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Usuario no autenticado"})
+	}
+
+	recordID := c.Params("id")
+	var req UpdatePainMappingRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Payload invalido"})
+	}
+
+	err := h.recordService.UpdatePainAndMapping(c.Context(), recordID, doctorID, req.PainScaleScore, req.PainScaleObservations, req.AnatomicalMapping)
+	if err != nil {
+		if errors.Is(err, domain.ErrRecordNotFound) {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Folio clinico no encontrado"})
+		}
+		if errors.Is(err, domain.ErrNotRecordOwner) {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Solo el medico autor puede actualizar el folio"})
+		}
+		if errors.Is(err, domain.ErrRecordAlreadyClosed) {
+			return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": "El folio clinico ya se encuentra cerrado"})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return c.JSON(fiber.Map{"message": "Escala de dolor y mapeo anatomico actualizados exitosamente"})
 }

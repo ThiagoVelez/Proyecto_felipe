@@ -72,6 +72,10 @@ func SetupRoutes(app *fiber.App, cfg RouterConfig) {
 		patients.Get("/:id", cfg.PatientHandler.GetByID)
 		patients.Post("/:id/allergies", cfg.PatientHandler.AddAllergy)
 		patients.Get("/:id/allergies", cfg.PatientHandler.GetAllergies)
+		if cfg.ClinicalRecordHandler != nil {
+			patients.Get("/:id/anatomical-notes", middlewares.RequireRoles("MEDICO", "ENFERMERO", "AUDITOR"), cfg.ClinicalRecordHandler.GetPatientAnatomicalNotes)
+			patients.Post("/:id/anatomical-notes", middlewares.RequireRoles("MEDICO"), cfg.ClinicalRecordHandler.CreateAnatomicalNote)
+		}
 	}
 
 	// 5. Modulo Triaje Manchester (Exclusivo Asistencial: ENFERMERO, MEDICO)
@@ -94,6 +98,16 @@ func SetupRoutes(app *fiber.App, cfg RouterConfig) {
 		hce.Get("/:id/verify", middlewares.RequireRoles("MEDICO", "AUDITOR"), cfg.ClinicalRecordHandler.VerifyIntegrity)
 		hce.Get("/:id/rips", middlewares.RequireRoles("MEDICO", "AUDITOR"), cfg.ClinicalRecordHandler.ExportRIPS)
 		hce.Get("/:id/fhir", middlewares.RequireRoles("MEDICO", "AUDITOR"), cfg.ClinicalRecordHandler.ExportFHIR)
+
+		// Kit Informatico Medico: Escala EVA y Modelo Anatomico Interactivo
+		hce.Get("/:id/anatomical-notes", middlewares.RequireRoles("MEDICO", "ENFERMERO", "AUDITOR"), cfg.ClinicalRecordHandler.GetRecordAnatomicalNotes)
+		hce.Post("/:id/anatomical-notes", middlewares.RequireRoles("MEDICO"), cfg.ClinicalRecordHandler.CreateAnatomicalNote)
+		hce.Put("/:id/anatomical-notes/:note_id", middlewares.RequireRoles("MEDICO"), cfg.ClinicalRecordHandler.UpdateAnatomicalNote)
+		hce.Delete("/:id/anatomical-notes/:note_id", middlewares.RequireRoles("MEDICO"), cfg.ClinicalRecordHandler.DeleteAnatomicalNote)
+		hce.Put("/:id/pain-mapping", middlewares.RequireRoles("MEDICO"), cfg.ClinicalRecordHandler.UpdatePainAndMapping)
+
+		protected.Put("/anatomical-notes/:note_id", middlewares.RequireRoles("MEDICO"), cfg.ClinicalRecordHandler.UpdateAnatomicalNote)
+		protected.Delete("/anatomical-notes/:note_id", middlewares.RequireRoles("MEDICO"), cfg.ClinicalRecordHandler.DeleteAnatomicalNote)
 	}
 
 	// 7. Modulo Prescripcion Farmacologica y Cruce de Alergias (Exclusivo Asistencial: MEDICO)

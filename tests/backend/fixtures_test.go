@@ -45,6 +45,23 @@ func newDoctorFixture(id, license string) *domain.User {
 	}
 }
 
+func newNurseFixture(id, license string) *domain.User {
+	return &domain.User{
+		ID:               id,
+		RoleID:           3,
+		RoleName:         "ENFERMERO",
+		FullName:         "Enfermera Elizabeth",
+		Email:            fmt.Sprintf("nurse-%s@saludconecta.ips.gov.co", id),
+		PasswordHash:     "$2a$12$e8x...",
+		ProfessionalCard: license,
+		Specialty:        "Enfermería de Urgencias",
+		Branch:           "Sede Cartago - Hospital Central (Nivel II)",
+		IsActive:         true,
+		CreatedAt:        time.Now().UTC(),
+		UpdatedAt:        time.Now().UTC(),
+	}
+}
+
 func startMedInjection(ds *memory.DataStore, meds ...*domain.MedicationCatalog) {
 	for _, m := range meds {
 		ds.SeedMedication(m)

@@ -19,6 +19,7 @@ import PatientPicker from '../components/PatientPicker';
 import PatientBanner from '../components/PatientBanner';
 import AllergyBanner from '../components/AllergyBanner';
 import SignFolioModal from '../components/SignFolioModal';
+import MedicalKitDrawer from '../components/MedicalKitDrawer';
 import { apiClient } from '../services/api';
 import {
   downloadJson,
@@ -35,6 +36,9 @@ const INITIAL_FORM = {
   cie11_code: '',
   diagnosis_description: '',
   treatment_plan: '',
+  pain_scale_score: 0,
+  pain_scale_observations: '',
+  anatomical_mapping: null,
 };
 
 const REQUIRED_MESSAGES = {
@@ -93,6 +97,7 @@ export const HceScreen = ({ patient, onPatientChange, triage, onNavigate }) => {
   const [exporting, setExporting] = useState('');
   const [clarificationText, setClarificationText] = useState('');
   const [clarifying, setClarifying] = useState(false);
+  const [isMedicalKitOpen, setIsMedicalKitOpen] = useState(false);
   const loadSeq = useRef(0);
 
   const patientId = patient?.id;
@@ -191,6 +196,9 @@ export const HceScreen = ({ patient, onPatientChange, triage, onNavigate }) => {
         cie11_code: form.cie11_code.trim().toUpperCase(),
         diagnosis_description: form.diagnosis_description.trim(),
         treatment_plan: form.treatment_plan.trim(),
+        pain_scale_score: form.pain_scale_score || 0,
+        pain_scale_observations: form.pain_scale_observations || null,
+        anatomical_mapping: form.anatomical_mapping || null,
       };
       if (matchingTriage) payload.triage_id = matchingTriage.id;
       const created = await apiClient.saveClinicalDraft(payload);
@@ -202,6 +210,30 @@ export const HceScreen = ({ patient, onPatientChange, triage, onNavigate }) => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleInjectFromMedicalKit = ({
+    painScaleScore,
+    painScaleObservations,
+    anatomicalMapping,
+    generatedPhysicalExamText,
+    suggestedCIE11
+  }) => {
+    setForm((prev) => {
+      const newPhysicalExam = prev.physical_exam
+        ? `${prev.physical_exam}\n\n${generatedPhysicalExamText}`
+        : generatedPhysicalExamText;
+      const newCie11 = prev.cie11_code || suggestedCIE11 || '';
+      return {
+        ...prev,
+        physical_exam: newPhysicalExam,
+        cie11_code: newCie11,
+        pain_scale_score: painScaleScore,
+        pain_scale_observations: painScaleObservations,
+        anatomical_mapping: anatomicalMapping,
+      };
+    });
+    setNotice('Hallazgos anatómicos y dolor EVA inyectados en la consulta asistencial.');
   };
 
   const handleConfirmSign = async () => {
@@ -395,6 +427,20 @@ export const HceScreen = ({ patient, onPatientChange, triage, onNavigate }) => {
               </button>
             </span>
           )}
+          <button
+            type="button"
+            data-testid="open-medical-kit-btn"
+            onClick={() => setIsMedicalKitOpen(true)}
+            className="ml-auto px-3.5 py-1.5 rounded-lg text-xs font-bold bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-300 flex items-center gap-1.5 cursor-pointer shadow-xs transition"
+          >
+            <Stethoscope className="w-3.5 h-3.5 text-teal-700" />
+            <span>Kit Informático Médico</span>
+            {(view.pain_scale_score > 0 || form.pain_scale_score > 0) && (
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-teal-600 text-white font-bold">
+                EVA {view.pain_scale_score || form.pain_scale_score}/10
+              </span>
+            )}
+          </button>
         </div>
 
         <div role="tablist" aria-label="Secciones del folio" className="flex items-center border-b border-surface-container-high bg-surface-container-low px-4 pt-2 overflow-x-auto gap-2">
@@ -443,9 +489,19 @@ export const HceScreen = ({ patient, onPatientChange, triage, onNavigate }) => {
                 {fieldErrors.anamnesis && <p role="alert" className="mt-1 text-[11px] text-red-700">{fieldErrors.anamnesis}</p>}
               </div>
               <div>
-                <label htmlFor="hce-physical-exam" className="block text-xs font-bold text-on-surface uppercase mb-1">
-                  Examen Físico Detallado por Sistemas
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label htmlFor="hce-physical-exam" className="block text-xs font-bold text-on-surface uppercase">
+                    Examen Físico Detallado por Sistemas
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setIsMedicalKitOpen(true)}
+                    className="text-xs text-teal-700 hover:text-teal-900 font-bold flex items-center gap-1 cursor-pointer"
+                  >
+                    <Activity className="w-3.5 h-3.5" />
+                    <span>Mapear en Visor Anatómico & Dolor EVA</span>
+                  </button>
+                </div>
                 <textarea
                   id="hce-physical-exam"
                   data-testid="hce-physical-exam"
@@ -734,6 +790,16 @@ export const HceScreen = ({ patient, onPatientChange, triage, onNavigate }) => {
           </div>
         </div>
       </div>
+
+      {/* Kit Informatico Medico (Visor Anatomico y Escala EVA) */}
+      <MedicalKitDrawer
+        isOpen={isMedicalKitOpen}
+        onClose={() => setIsMedicalKitOpen(false)}
+        patient={patient}
+        recordId={isNew ? null : record?.id}
+        readOnly={readOnly}
+        onInjectToHCE={handleInjectFromMedicalKit}
+      />
     </div>
   );
 };

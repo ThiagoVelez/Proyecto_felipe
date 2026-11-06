@@ -334,6 +334,51 @@ export const apiClient = {
     });
   },
 
+  // Kit Informatico Medico (Escala EVA y Modelo Anatomico Interactivo)
+  async getRecordAnatomicalNotes(recordId) {
+    const res = await this.request(`/clinical-records/${encodeURIComponent(recordId)}/anatomical-notes`, { strict: true });
+    return Array.isArray(res) ? res : [];
+  },
+
+  async getPatientAnatomicalNotes(patientId) {
+    const res = await this.request(`/patients/${encodeURIComponent(patientId)}/anatomical-notes`, { strict: true });
+    return Array.isArray(res) ? res : [];
+  },
+
+  async createAnatomicalNote(data) {
+    const url = data.clinical_record_id
+      ? `/clinical-records/${encodeURIComponent(data.clinical_record_id)}/anatomical-notes`
+      : `/patients/${encodeURIComponent(data.patient_id)}/anatomical-notes`;
+    return this.request(url, {
+      strict: true,
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async updateAnatomicalNote(noteId, data) {
+    return this.request(`/anatomical-notes/${encodeURIComponent(noteId)}`, {
+      strict: true,
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async deleteAnatomicalNote(noteId) {
+    return this.request(`/anatomical-notes/${encodeURIComponent(noteId)}`, {
+      strict: true,
+      method: 'DELETE',
+    });
+  },
+
+  async updatePainAndMapping(recordId, data) {
+    return this.request(`/clinical-records/${encodeURIComponent(recordId)}/pain-mapping`, {
+      strict: true,
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
   async searchMedications(q = '') {
     const res = await this.request(`/medications?q=${encodeURIComponent(q)}`, { strict: true });
     return res?.medications ?? [];
@@ -471,3 +516,5 @@ export const apiClient = {
     });
   },
 };
+
+export default apiClient;

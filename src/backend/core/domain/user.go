@@ -62,6 +62,11 @@ func (u *User) HasMedicalLicense() bool {
 	return u.ProfessionalCard != ""
 }
 
+// IsDoctor verifica si el usuario es un facultativo medico habilitado en ReTHUS.
+func (u *User) IsDoctor() bool {
+	return (u.RoleID == 2 || u.RoleName == "MEDICO") && u.ProfessionalCard != ""
+}
+
 // RoleNameByID traduce el identificador de rol del catalogo RBAC a su nombre; retorna vacio si no existe.
 func RoleNameByID(id int) string {
 	switch id {

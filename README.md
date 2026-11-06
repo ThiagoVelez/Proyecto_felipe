@@ -195,6 +195,15 @@ A continuación se detalla el catálogo de suites desarrolladas y automatizadas,
   - Anexo de nota aclaratoria formal $\rightarrow$ Verifica registro en tabla vinculada sin mutar el folio original (Resolución 1995 de 1999).
   - Verificación matemática de integridad criptográfica $\rightarrow$ `VerifyIntegrity() == true`.
 
+##### 2.1. Kit Informático Médico y Observaciones Anatómicas (`tests/backend/anatomical_notes_test.go`)
+- `TestAnatomicalNotesCreationAndDoctorLicensing`:
+  - Registro de notas anatómicas georreferenciadas por médico facultativo habilitado $\rightarrow$ Registro exitoso con ID generado y metadatos de autoría.
+  - Intento de creación por personal de enfermería $\rightarrow$ Denegación con `domain.ErrUnauthorizedRole` (HTTP 403).
+- `TestAnatomicalNotesImmutabilityOnClosedRecord`:
+  - Intento de adicionar, modificar o eliminar observaciones anatómicas sobre un folio cerrado $\rightarrow$ Bloqueo legal estricto con `domain.ErrRecordAlreadyClosed` (Resolución 1995 de 1999).
+- `TestAnatomicalNotesDoctorOwnership`:
+  - Intento de mutación o eliminación de una nota por un médico distinto al autor $\rightarrow$ Rechazo con `domain.ErrNotRecordOwner` (HTTP 403).
+
 ##### 3. Cadena Criptográfica SHA-256 y Concurrencia (`tests/backend/clinical_chain_test.go`)
 - `TestRecordObjectLevelAccess`:
   - Intento de cierre de folio por un médico distinto al autor $\rightarrow$ Verifica rechazo con `domain.ErrNotRecordOwner` (HTTP 403).
@@ -310,6 +319,13 @@ A continuación se detalla el catálogo de suites desarrolladas y automatizadas,
 - Barra superior (`Header`): Despliegue de los datos de acreditación del facultativo (Nombre, Rol MEDICO, Tarjeta Profesional).
 - Perfil (`ProfileScreen`): Renderizado de la colección de 5 banners médicos temáticos y cumplimiento de contraste WCAG AAA mediante óvalo de alta luminosidad.
 
+##### 8. Kit Informático Médico y Modelo Anatómico (`tests/frontend/MedicalKit.test.jsx`)
+- Escala Visual Analógica (EVA 0–10): Selección interactiva de niveles de dolor con retroalimentación visual cromática y descriptores clínicos semiológicos.
+- Visor Anatómico Interactivo: Alternancia dinámica de 4 capas corporales (Órganos, Muscular, Ósea, Vascular) y 2 orientaciones espaciales (Anterior/Posterior).
+- Autofill y Pautas Semiológicas: Al hacer clic en un foco anatómico, el diálogo autocompleta los datos demográficos y aseguradora del paciente, sugiriendo diagnósticos presuntivos CIE-11.
+- Transferencia a Historia Clínica: Botón para inyectar los hallazgos y puntos mapeados al examen físico y plan del folio.
+- Restricción RBAC: Verificación del modo de **Solo Lectura** para el rol `ENFERMERO` (bloqueo estricto de edición, creación y eliminación).
+
 ---
 
 ### 4.5. Matriz de Trazabilidad de Requisitos (RTM)
@@ -330,6 +346,7 @@ La siguiente matriz certifica la cobertura del 100% de los requisitos funcionale
 | **RF10** | Menú Colapsable y Persistencia F5 | `DoctorLayout.test.jsx`, `AuthMfa.test.jsx` | UI / Persistencia | **APROBADO (PASS)** |
 | **RF11** | Admisión de Pacientes y Alergias | `TestAdmissionPatientAndAllergyAPI`, `PatientFlow.test.jsx` | API / Integración / UI | **APROBADO (PASS)** |
 | **RF12** | Catálogo Farmacológico y Stock | `TestConcurrentPrescriptionsDoNotRaceOnStock`, `TestGetMedicationReturnsCopy` | Concurrencia / Negocio | **APROBADO (PASS)** |
+| **RF13** | Kit Informático Médico (EVA & Anatomía) | `TestAnatomicalNotesCreationAndDoctorLicensing`, `TestAnatomicalNotesImmutabilityOnClosedRecord`, `TestAnatomicalNotesDoctorOwnership`, `MedicalKit.test.jsx` | Modelo Anatómico / RBAC / UI | **APROBADO (PASS)** |
 | **RNF01** | Latencia de Respuesta (< 400 ms) | Benchmarks de Go: Triaje en ns/op, Alergias en $\mu\text{s/op}$ | Eficiencia de Desempeño | **APROBADO (PASS)** |
 | **RNF02** | Trazabilidad y Auditoría Forense | `TestStaffGovernanceAndReTHUSVerification` (AuditRepo), clonación de buffer | Auditoría / No Repudio | **APROBADO (PASS)** |
 | **RNF03** | Seguridad OWASP ASVS Nivel 2 | Suites completas de `auth_security_test.go` y `prescription_security_test.go` | Seguridad Defensiva | **APROBADO (PASS)** |

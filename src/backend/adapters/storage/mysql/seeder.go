@@ -231,6 +231,50 @@ func ensureV2TablesAndColumns(db *sql.DB) error {
 		`, it.id, it.code, it.gen, it.brand, it.dosage, it.pres, it.price, it.stock, it.minStock, it.batch, it.expiry)
 	}
 
+	// 5. Medical Kit V2.4: Columnas en clinical_records y tabla clinical_anatomical_notes
+	crCols := []struct {
+		name string
+		dtyp string
+	}{
+		{"pain_scale_score", "INT DEFAULT 0"},
+		{"pain_scale_observations", "TEXT NULL"},
+		{"anatomical_mapping", "JSON NULL"},
+	}
+	for _, col := range crCols {
+		var colEx int
+		_ = db.QueryRow(`SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'clinical_records' AND COLUMN_NAME = ?`, col.name).Scan(&colEx)
+		if colEx == 0 {
+			_, _ = db.Exec(fmt.Sprintf("ALTER TABLE clinical_records ADD COLUMN %s %s", col.name, col.dtyp))
+		}
+	}
+
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS clinical_anatomical_notes (
+			id VARCHAR(36) PRIMARY KEY,
+			clinical_record_id VARCHAR(36) NULL,
+			patient_id VARCHAR(36) NOT NULL,
+			doctor_id VARCHAR(36) NOT NULL,
+			structure_key VARCHAR(100) NOT NULL,
+			structure_name VARCHAR(150) NOT NULL,
+			layer ENUM('BONE','MUSCLE','ORGAN','VASCULAR') NOT NULL,
+			view_orientation ENUM('ANTERIOR','POSTERIOR') NOT NULL,
+			coordinates_x INT NOT NULL DEFAULT 0,
+			coordinates_y INT NOT NULL DEFAULT 0,
+			pain_level INT NOT NULL DEFAULT 0,
+			doctor_observation TEXT NOT NULL,
+			preliminary_cie11 VARCHAR(20) DEFAULT NULL,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+			FOREIGN KEY (patient_id) REFERENCES patients(id),
+			FOREIGN KEY (doctor_id) REFERENCES users(id),
+			INDEX idx_can_patient (patient_id),
+			INDEX idx_can_record (clinical_record_id)
+		) ENGINE=InnoDB;
+	`)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

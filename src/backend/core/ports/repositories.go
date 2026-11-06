@@ -45,6 +45,15 @@ type ClinicalRecordRepository interface {
 	CloseRecord(ctx context.Context, id string, signatureToken, previousHash, hashSHA256 string, closedAt time.Time) error
 	AddClarification(ctx context.Context, clarification *domain.ClinicalRecordClarification) error
 	SaveBatch(ctx context.Context, records []domain.ClinicalRecord) error
+
+	// Metodos del Kit Informatico Medico (Escala EVA y Modelo Anatomico)
+	SaveAnatomicalNote(ctx context.Context, note *domain.ClinicalAnatomicalNote) error
+	GetAnatomicalNotesByRecord(ctx context.Context, recordID string) ([]domain.ClinicalAnatomicalNote, error)
+	GetAnatomicalNotesByPatient(ctx context.Context, patientID string) ([]domain.ClinicalAnatomicalNote, error)
+	GetAnatomicalNoteByID(ctx context.Context, id string) (*domain.ClinicalAnatomicalNote, error)
+	UpdateAnatomicalNote(ctx context.Context, note *domain.ClinicalAnatomicalNote) error
+	DeleteAnatomicalNote(ctx context.Context, id string) error
+	UpdatePainAndMapping(ctx context.Context, recordID string, painScore int, painObs *string, mapping *string) error
 }
 
 // PrescriptionRepository define el contrato para recetas medicas y catalogo de medicamentos CUM.

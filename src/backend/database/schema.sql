@@ -131,6 +131,9 @@ CREATE TABLE IF NOT EXISTS clinical_records (
     cie11_code VARCHAR(20) NOT NULL,    -- Codigo CIE-11 oficial
     diagnosis_description VARCHAR(255) NOT NULL,
     treatment_plan TEXT NOT NULL,
+    pain_scale_score INT DEFAULT 0,     -- Escala EVA 0-10
+    pain_scale_observations TEXT NULL,  -- Observaciones semiologicas del dolor
+    anatomical_mapping JSON NULL,       -- Puntos mapeados georreferenciados en el visor
     is_closed BOOLEAN DEFAULT FALSE,    -- Una vez firmado/cerrado no permite edicion
     signature_token VARCHAR(255) NULL,  -- Firma digital o token de sesion
     previous_hash VARCHAR(64) NULL,     -- Hash SHA-256 del folio anterior (cadena inmutable)
@@ -156,6 +159,30 @@ CREATE TABLE IF NOT EXISTS clinical_record_clarifications (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_clarification_hce FOREIGN KEY (clinical_record_id) REFERENCES clinical_records(id),
     CONSTRAINT fk_clarification_doctor FOREIGN KEY (doctor_id) REFERENCES users(id)
+) ENGINE=InnoDB;
+
+-- Observaciones anatomicas georreferenciadas (Kit Informatico Medico)
+CREATE TABLE IF NOT EXISTS clinical_anatomical_notes (
+    id VARCHAR(36) PRIMARY KEY,
+    clinical_record_id VARCHAR(36) NULL,
+    patient_id VARCHAR(36) NOT NULL,
+    doctor_id VARCHAR(36) NOT NULL,
+    structure_key VARCHAR(100) NOT NULL,
+    structure_name VARCHAR(150) NOT NULL,
+    layer ENUM('BONE', 'MUSCLE', 'ORGAN', 'VASCULAR') NOT NULL,
+    view_orientation ENUM('ANTERIOR', 'POSTERIOR') NOT NULL,
+    coordinates_x INT NOT NULL DEFAULT 0,
+    coordinates_y INT NOT NULL DEFAULT 0,
+    pain_level INT NOT NULL DEFAULT 0,
+    doctor_observation TEXT NOT NULL,
+    preliminary_cie11 VARCHAR(20) DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_can_patient FOREIGN KEY (patient_id) REFERENCES patients(id),
+    CONSTRAINT fk_can_doctor FOREIGN KEY (doctor_id) REFERENCES users(id),
+    CONSTRAINT fk_can_record FOREIGN KEY (clinical_record_id) REFERENCES clinical_records(id) ON DELETE SET NULL,
+    INDEX idx_can_patient (patient_id),
+    INDEX idx_can_record (clinical_record_id)
 ) ENGINE=InnoDB;
 
 -- -----------------------------------------------------------------------------

@@ -271,3 +271,175 @@ func (r *clinicalRecordRepo) SaveBatch(ctx context.Context, records []domain.Cli
 
 	return tx.Commit()
 }
+
+func (r *clinicalRecordRepo) SaveAnatomicalNote(ctx context.Context, note *domain.ClinicalAnatomicalNote) error {
+	query := `
+		INSERT INTO clinical_anatomical_notes (
+			id, clinical_record_id, patient_id, doctor_id, structure_key, structure_name,
+			layer, view_orientation, coordinates_x, coordinates_y, pain_level,
+			doctor_observation, preliminary_cie11, created_at, updated_at
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+	`
+	_, err := r.db.ExecContext(ctx, query,
+		note.ID,
+		note.ClinicalRecordID,
+		note.PatientID,
+		note.DoctorID,
+		note.StructureKey,
+		note.StructureName,
+		string(note.Layer),
+		string(note.ViewOrientation),
+		note.CoordinatesX,
+		note.CoordinatesY,
+		note.PainLevel,
+		note.DoctorObservation,
+		note.PreliminaryCIE11,
+		note.CreatedAt,
+		note.UpdatedAt,
+	)
+	return err
+}
+
+func (r *clinicalRecordRepo) GetAnatomicalNotesByRecord(ctx context.Context, recordID string) ([]domain.ClinicalAnatomicalNote, error) {
+	query := `
+		SELECT n.id, n.clinical_record_id, n.patient_id, n.doctor_id, COALESCE(u.full_name, ''),
+		       n.structure_key, n.structure_name, n.layer, n.view_orientation,
+		       n.coordinates_x, n.coordinates_y, n.pain_level, n.doctor_observation,
+		       COALESCE(n.preliminary_cie11, ''), n.created_at, n.updated_at
+		FROM clinical_anatomical_notes n
+		LEFT JOIN users u ON n.doctor_id = u.id
+		WHERE n.clinical_record_id = $1
+		ORDER BY n.created_at ASC
+	`
+	rows, err := r.db.QueryContext(ctx, query, recordID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var notes []domain.ClinicalAnatomicalNote
+	for rows.Next() {
+		var n domain.ClinicalAnatomicalNote
+		var (
+			layerStr string
+			viewStr  string
+		)
+		if err := rows.Scan(
+			&n.ID, &n.ClinicalRecordID, &n.PatientID, &n.DoctorID, &n.DoctorName,
+			&n.StructureKey, &n.StructureName, &layerStr, &viewStr,
+			&n.CoordinatesX, &n.CoordinatesY, &n.PainLevel, &n.DoctorObservation,
+			&n.PreliminaryCIE11, &n.CreatedAt, &n.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		n.Layer = domain.AnatomicalLayer(layerStr)
+		n.ViewOrientation = domain.ViewOrientation(viewStr)
+		notes = append(notes, n)
+	}
+	return notes, rows.Err()
+}
+
+func (r *clinicalRecordRepo) GetAnatomicalNotesByPatient(ctx context.Context, patientID string) ([]domain.ClinicalAnatomicalNote, error) {
+	query := `
+		SELECT n.id, n.clinical_record_id, n.patient_id, n.doctor_id, COALESCE(u.full_name, ''),
+		       n.structure_key, n.structure_name, n.layer, n.view_orientation,
+		       n.coordinates_x, n.coordinates_y, n.pain_level, n.doctor_observation,
+		       COALESCE(n.preliminary_cie11, ''), n.created_at, n.updated_at
+		FROM clinical_anatomical_notes n
+		LEFT JOIN users u ON n.doctor_id = u.id
+		WHERE n.patient_id = $1
+		ORDER BY n.created_at DESC
+	`
+	rows, err := r.db.QueryContext(ctx, query, patientID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var notes []domain.ClinicalAnatomicalNote
+	for rows.Next() {
+		var n domain.ClinicalAnatomicalNote
+		var (
+			layerStr string
+			viewStr  string
+		)
+		if err := rows.Scan(
+			&n.ID, &n.ClinicalRecordID, &n.PatientID, &n.DoctorID, &n.DoctorName,
+			&n.StructureKey, &n.StructureName, &layerStr, &viewStr,
+			&n.CoordinatesX, &n.CoordinatesY, &n.PainLevel, &n.DoctorObservation,
+			&n.PreliminaryCIE11, &n.CreatedAt, &n.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		n.Layer = domain.AnatomicalLayer(layerStr)
+		n.ViewOrientation = domain.ViewOrientation(viewStr)
+		notes = append(notes, n)
+	}
+	return notes, rows.Err()
+}
+
+func (r *clinicalRecordRepo) GetAnatomicalNoteByID(ctx context.Context, id string) (*domain.ClinicalAnatomicalNote, error) {
+	query := `
+		SELECT n.id, n.clinical_record_id, n.patient_id, n.doctor_id, COALESCE(u.full_name, ''),
+		       n.structure_key, n.structure_name, n.layer, n.view_orientation,
+		       n.coordinates_x, n.coordinates_y, n.pain_level, n.doctor_observation,
+		       COALESCE(n.preliminary_cie11, ''), n.created_at, n.updated_at
+		FROM clinical_anatomical_notes n
+		LEFT JOIN users u ON n.doctor_id = u.id
+		WHERE n.id = $1
+	`
+	row := r.db.QueryRowContext(ctx, query, id)
+
+	var n domain.ClinicalAnatomicalNote
+	var (
+		layerStr string
+		viewStr  string
+	)
+	err := row.Scan(
+		&n.ID, &n.ClinicalRecordID, &n.PatientID, &n.DoctorID, &n.DoctorName,
+		&n.StructureKey, &n.StructureName, &layerStr, &viewStr,
+		&n.CoordinatesX, &n.CoordinatesY, &n.PainLevel, &n.DoctorObservation,
+		&n.PreliminaryCIE11, &n.CreatedAt, &n.UpdatedAt,
+	)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	n.Layer = domain.AnatomicalLayer(layerStr)
+	n.ViewOrientation = domain.ViewOrientation(viewStr)
+	return &n, nil
+}
+
+func (r *clinicalRecordRepo) UpdateAnatomicalNote(ctx context.Context, note *domain.ClinicalAnatomicalNote) error {
+	query := `
+		UPDATE clinical_anatomical_notes
+		SET pain_level = $1, doctor_observation = $2, preliminary_cie11 = $3, updated_at = $4
+		WHERE id = $5
+	`
+	_, err := r.db.ExecContext(ctx, query,
+		note.PainLevel,
+		note.DoctorObservation,
+		note.PreliminaryCIE11,
+		time.Now().UTC(),
+		note.ID,
+	)
+	return err
+}
+
+func (r *clinicalRecordRepo) DeleteAnatomicalNote(ctx context.Context, id string) error {
+	query := `DELETE FROM clinical_anatomical_notes WHERE id = $1`
+	_, err := r.db.ExecContext(ctx, query, id)
+	return err
+}
+
+func (r *clinicalRecordRepo) UpdatePainAndMapping(ctx context.Context, recordID string, painScore int, painObs *string, mapping *string) error {
+	query := `
+		UPDATE clinical_records
+		SET pain_scale_score = $1, pain_scale_observations = $2, anatomical_mapping = $3
+		WHERE id = $4 AND is_closed = FALSE
+	`
+	_, err := r.db.ExecContext(ctx, query, painScore, painObs, mapping, recordID)
+	return err
+}

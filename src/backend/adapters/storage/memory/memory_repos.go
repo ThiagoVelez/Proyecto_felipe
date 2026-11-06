@@ -35,6 +35,7 @@ type DataStore struct {
 	appointments    map[string]*domain.Appointment
 	inventoryItems  map[string]*domain.InventoryItem
 	prescriptionsV2 map[string]*domain.PrescriptionV2
+	anatomicalNotes map[string]*domain.ClinicalAnatomicalNote
 }
 
 // NewDataStore crea el almacen en memoria. No siembra cuentas: el administrador inicial se crea con las
@@ -56,6 +57,7 @@ func NewDataStore() *DataStore {
 		appointments:    make(map[string]*domain.Appointment),
 		inventoryItems:  make(map[string]*domain.InventoryItem),
 		prescriptionsV2: make(map[string]*domain.PrescriptionV2),
+		anatomicalNotes: make(map[string]*domain.ClinicalAnatomicalNote),
 	}
 
 	// Semilla de inventario diferenciado por concentracion
@@ -534,6 +536,86 @@ func (r *ClinicalRecordMemoryRepo) SaveBatch(_ context.Context, records []domain
 	for _, rec := range toStore {
 		r.ds.clinicalRecords[rec.ID] = rec
 	}
+	return nil
+}
+
+func (r *ClinicalRecordMemoryRepo) SaveAnatomicalNote(_ context.Context, note *domain.ClinicalAnatomicalNote) error {
+	r.ds.mu.Lock()
+	defer r.ds.mu.Unlock()
+	cp := *note
+	r.ds.anatomicalNotes[note.ID] = &cp
+	return nil
+}
+
+func (r *ClinicalRecordMemoryRepo) GetAnatomicalNotesByRecord(_ context.Context, recordID string) ([]domain.ClinicalAnatomicalNote, error) {
+	r.ds.mu.RLock()
+	defer r.ds.mu.RUnlock()
+	var list []domain.ClinicalAnatomicalNote
+	for _, n := range r.ds.anatomicalNotes {
+		if n.ClinicalRecordID != nil && *n.ClinicalRecordID == recordID {
+			list = append(list, *n)
+		}
+	}
+	return list, nil
+}
+
+func (r *ClinicalRecordMemoryRepo) GetAnatomicalNotesByPatient(_ context.Context, patientID string) ([]domain.ClinicalAnatomicalNote, error) {
+	r.ds.mu.RLock()
+	defer r.ds.mu.RUnlock()
+	var list []domain.ClinicalAnatomicalNote
+	for _, n := range r.ds.anatomicalNotes {
+		if n.PatientID == patientID {
+			list = append(list, *n)
+		}
+	}
+	return list, nil
+}
+
+func (r *ClinicalRecordMemoryRepo) GetAnatomicalNoteByID(_ context.Context, id string) (*domain.ClinicalAnatomicalNote, error) {
+	r.ds.mu.RLock()
+	defer r.ds.mu.RUnlock()
+	n, ok := r.ds.anatomicalNotes[id]
+	if !ok {
+		return nil, nil
+	}
+	cp := *n
+	return &cp, nil
+}
+
+func (r *ClinicalRecordMemoryRepo) UpdateAnatomicalNote(_ context.Context, note *domain.ClinicalAnatomicalNote) error {
+	r.ds.mu.Lock()
+	defer r.ds.mu.Unlock()
+	n, ok := r.ds.anatomicalNotes[note.ID]
+	if !ok {
+		return domain.ErrRecordNotFound
+	}
+	n.PainLevel = note.PainLevel
+	n.DoctorObservation = note.DoctorObservation
+	n.PreliminaryCIE11 = note.PreliminaryCIE11
+	n.UpdatedAt = time.Now().UTC()
+	return nil
+}
+
+func (r *ClinicalRecordMemoryRepo) DeleteAnatomicalNote(_ context.Context, id string) error {
+	r.ds.mu.Lock()
+	defer r.ds.mu.Unlock()
+	delete(r.ds.anatomicalNotes, id)
+	return nil
+}
+
+func (r *ClinicalRecordMemoryRepo) UpdatePainAndMapping(_ context.Context, recordID string, painScore int, painObs *string, mapping *string) error {
+	r.ds.mu.Lock()
+	defer r.ds.mu.Unlock()
+	rec, ok := r.ds.clinicalRecords[recordID]
+	if !ok {
+		return domain.ErrRecordNotFound
+	}
+	if rec.IsClosed {
+		return domain.ErrRecordAlreadyClosed
+	}
+	rec.PainScaleScore = painScore
+	rec.PainScaleObservations = painObs
+	rec.AnatomicalMapping = mapping
 	return nil
 }
 
