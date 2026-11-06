@@ -291,7 +291,10 @@ func ensureV2TablesAndColumns(db *sql.DB) error {
 		}
 	}
 
-	// 6. Tabla del Muro de Salud y Concientización (Kit Informático Médico)
+	// 6. Idempotencia de status en citas medicas (appointments) para soportar SCHEDULED / AGENDADA
+	_, _ = db.Exec("ALTER TABLE appointments MODIFY COLUMN status VARCHAR(20) DEFAULT 'SCHEDULED'")
+
+	// 7. Tabla del Muro de Salud y Concientización (Kit Informático Médico)
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS health_education_posts (
 			id VARCHAR(36) PRIMARY KEY,

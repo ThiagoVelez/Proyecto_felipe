@@ -3,6 +3,7 @@ package mysql
 import (
 	"context"
 	"database/sql"
+	"strings"
 	"time"
 
 	"saludconecta-backend/core/domain"
@@ -11,6 +12,19 @@ import (
 
 type appointmentRepository struct {
 	db *sql.DB
+}
+
+func normalizeAppointmentStatus(s string) domain.AppointmentStatus {
+	switch strings.ToUpper(strings.TrimSpace(s)) {
+	case "AGENDADA", "SCHEDULED", "":
+		return domain.AppointmentScheduled
+	case "ATENDIDA", "ATTENDED":
+		return domain.AppointmentAttended
+	case "CANCELADA", "CANCELLED", "CANCELED":
+		return domain.AppointmentCancelled
+	default:
+		return domain.AppointmentScheduled
+	}
 }
 
 // NewAppointmentRepository inicializa el repositorio de citas en MySQL
@@ -26,9 +40,13 @@ func (r *appointmentRepository) Create(ctx context.Context, app *domain.Appointm
 	if app.CreatedAt.IsZero() {
 		app.CreatedAt = time.Now().UTC()
 	}
+	statusStr := string(app.Status)
+	if statusStr == "" {
+		statusStr = string(domain.AppointmentScheduled)
+	}
 	_, err := r.db.ExecContext(ctx, query,
 		app.ID, app.PatientID, app.DoctorID, app.AppointmentDate, app.Observations,
-		string(app.Status), app.PDFPath, app.EmailSent, app.CreatedAt,
+		statusStr, app.PDFPath, app.EmailSent, app.CreatedAt,
 	)
 	return err
 }
@@ -56,7 +74,7 @@ func (r *appointmentRepository) GetByID(ctx context.Context, id string) (*domain
 	if err != nil {
 		return nil, err
 	}
-	app.Status = domain.AppointmentStatus(status)
+	app.Status = normalizeAppointmentStatus(status)
 	return &app, nil
 }
 
@@ -88,7 +106,7 @@ func (r *appointmentRepository) GetByDoctorID(ctx context.Context, doctorID stri
 		); err != nil {
 			return nil, err
 		}
-		app.Status = domain.AppointmentStatus(status)
+		app.Status = normalizeAppointmentStatus(status)
 		result = append(result, app)
 	}
 	return result, rows.Err()
@@ -122,7 +140,7 @@ func (r *appointmentRepository) GetByDateRange(ctx context.Context, doctorID str
 		); err != nil {
 			return nil, err
 		}
-		app.Status = domain.AppointmentStatus(status)
+		app.Status = normalizeAppointmentStatus(status)
 		result = append(result, app)
 	}
 	return result, rows.Err()
