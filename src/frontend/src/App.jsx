@@ -236,7 +236,27 @@ export function App() {
   };
 
   const handleHeaderSearch = async (documentType, documentNumber) => {
-    const found = await apiClient.lookupPatient(documentType, documentNumber);
+    const cleanDoc = documentNumber.trim().replace(/[\.\s]/g, '');
+    let found = null;
+    try {
+      found = await apiClient.lookupPatient(documentType, cleanDoc);
+    } catch (e) {
+      try {
+        const list = await apiClient.listPatients({ limit: 200 });
+        found = list.find((p) => {
+          const doc = String(p.document_number ?? '').trim();
+          const name = (p.full_name || `${p.first_name || ''} ${p.last_name || ''}`).toLowerCase();
+          return (
+            doc === cleanDoc ||
+            doc === documentNumber.trim() ||
+            name.includes(documentNumber.trim().toLowerCase())
+          );
+        });
+      } catch {
+        // Ignorar
+      }
+      if (!found) throw e;
+    }
     const detail = await apiClient.getPatient(found.id);
     handleSelectPatient(detail);
     handleNavigate('hce');

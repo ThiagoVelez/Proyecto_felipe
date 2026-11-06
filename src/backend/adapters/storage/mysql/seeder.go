@@ -163,6 +163,16 @@ func ensureV2TablesAndColumns(db *sql.DB) error {
 	if exists == 0 {
 		_, _ = db.Exec(`ALTER TABLE patients ADD COLUMN affiliation_type ENUM('CONTRIBUTIVO', 'SUBSIDIADO', 'VINCULADO', 'PARTICULAR') NOT NULL DEFAULT 'CONTRIBUTIVO'`)
 	}
+	var addrEx int
+	_ = db.QueryRow(`SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'patients' AND COLUMN_NAME = 'address'`).Scan(&addrEx)
+	if addrEx == 0 {
+		_, _ = db.Exec(`ALTER TABLE patients ADD COLUMN address VARCHAR(200) DEFAULT ''`)
+	}
+	var emailEx int
+	_ = db.QueryRow(`SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'patients' AND COLUMN_NAME = 'email'`).Scan(&emailEx)
+	if emailEx == 0 {
+		_, _ = db.Exec(`ALTER TABLE patients ADD COLUMN email VARCHAR(100) DEFAULT ''`)
+	}
 
 	// 2. Columnas en appointments
 	appCols := []struct {

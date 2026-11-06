@@ -144,3 +144,18 @@ func (s *patientService) GetAllergies(ctx context.Context, patientID string) ([]
 	}
 	return allergies, nil
 }
+
+func (s *patientService) UpdateContact(ctx context.Context, id string, email, address, phone string) (*domain.Patient, error) {
+	email = strings.TrimSpace(email)
+	address = strings.TrimSpace(address)
+	phone = strings.TrimSpace(phone)
+
+	if err := s.patientRepo.UpdateContact(ctx, id, email, address, phone); err != nil {
+		return nil, err
+	}
+	return s.patientRepo.GetByID(ctx, id)
+}
+
+func (s *patientService) DeletePatient(ctx context.Context, id string) error {
+	return s.patientRepo.Delete(ctx, id)
+}

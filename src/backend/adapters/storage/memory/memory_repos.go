@@ -323,6 +323,34 @@ func (r *PatientMemoryRepo) AddPatientAllergy(_ context.Context, allergy *domain
 	return nil
 }
 
+func (r *PatientMemoryRepo) UpdateContact(_ context.Context, id string, email, address, phone string) error {
+	r.ds.mu.Lock()
+	defer r.ds.mu.Unlock()
+	p, ok := r.ds.patients[id]
+	if !ok {
+		return domain.ErrPatientNotFound
+	}
+	p.Email = email
+	p.Address = address
+	p.Phone = &phone
+	p.UpdatedAt = time.Now()
+	return nil
+}
+
+func (r *PatientMemoryRepo) Delete(_ context.Context, id string) error {
+	r.ds.mu.Lock()
+	defer r.ds.mu.Unlock()
+	p, ok := r.ds.patients[id]
+	if !ok {
+		return domain.ErrPatientNotFound
+	}
+	key := string(p.DocumentType) + "_" + p.DocumentNumber
+	delete(r.ds.patients, id)
+	delete(r.ds.patientsByDoc, key)
+	delete(r.ds.allergies, id)
+	return nil
+}
+
 // TriageMemoryRepo implementa ports.TriageRepository en memoria.
 type TriageMemoryRepo struct {
 	ds *DataStore

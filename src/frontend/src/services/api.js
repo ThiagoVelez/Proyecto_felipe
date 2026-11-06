@@ -268,6 +268,21 @@ export const apiClient = {
     });
   },
 
+  async updatePatientContact(patientId, data) {
+    return this.request(`/patients/${encodeURIComponent(patientId)}`, {
+      strict: true,
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  },
+
+  async deletePatient(patientId) {
+    return this.request(`/patients/${encodeURIComponent(patientId)}`, {
+      strict: true,
+      method: 'DELETE',
+    });
+  },
+
   async addPatientAllergy(patientId, data) {
     return this.request(`/patients/${encodeURIComponent(patientId)}/allergies`, {
       strict: true,

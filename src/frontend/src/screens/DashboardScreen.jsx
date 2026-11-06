@@ -54,7 +54,28 @@ export const DashboardScreen = ({ onSelectPatient, onNavigate }) => {
         if (result.status === 'fulfilled' && result.value) byId[result.value.id] = result.value;
       });
       setPatientsById(byId);
-      setQueue(triages);
+
+      // Pacientes con triaje activo en la cola
+      const triagedPatientIds = new Set(triages.map((t) => t.patient_id));
+
+      // Pacientes registrados en el sistema asistencial que esperan valoración de triaje
+      const untriaged = patients
+        .filter((p) => !triagedPatientIds.has(p.id))
+        .map((p) => ({
+          id: `un-triaged-${p.id}`,
+          patient_id: p.id,
+          is_untriaged: true,
+          manchester_level: null,
+          systolic_bp: null,
+          diastolic_bp: null,
+          heart_rate: null,
+          oxygen_saturation: null,
+          reason_for_consultation: 'Paciente registrado en admisión — Pendiente de toma de signos y triaje',
+          status: 'PENDIENTE_TRIAJE',
+          created_at: p.created_at || new Date().toISOString(),
+        }));
+
+      setQueue([...triages, ...untriaged]);
       setNow(Date.now());
     } catch (err) {
       setLoadError(getErrorMessage(err, 'No fue posible cargar la cola de triaje.'));
@@ -72,6 +93,12 @@ export const DashboardScreen = ({ onSelectPatient, onNavigate }) => {
     setBusyKey(key);
     setActionError('');
     try {
+      if (item.is_untriaged) {
+        const patient = patientsById[item.patient_id] || (await apiClient.getPatient(item.patient_id));
+        onSelectPatient(patient, null);
+        onNavigate(view);
+        return;
+      }
       let triage = item;
       if (view === 'hce' && item.status === 'PENDIENTE') {
         await apiClient.updateTriageStatus(item.id, 'EN_ATENCION');
@@ -94,14 +121,15 @@ export const DashboardScreen = ({ onSelectPatient, onNavigate }) => {
       if (statusFilter !== 'all' && t.status !== statusFilter) return false;
       if (!term) return true;
       const patient = patientsById[t.patient_id];
-      return (
-        getFullName(patient).toLowerCase().includes(term) ||
-        String(patient?.document_number ?? '').toLowerCase().includes(term)
-      );
+      const fullName = getFullName(patient).toLowerCase();
+      const docNum = String(patient?.document_number ?? '').toLowerCase();
+      const eps = String(patient?.eps_name ?? '').toLowerCase();
+      const reason = String(t.reason_for_consultation ?? '').toLowerCase();
+      return fullName.includes(term) || docNum.includes(term) || eps.includes(term) || reason.includes(term);
     });
   }, [queue, patientsById, searchFilter, statusFilter]);
 
-  const pendingCount = queue.filter((t) => t.status === 'PENDIENTE').length;
+  const pendingCount = queue.filter((t) => t.status === 'PENDIENTE' || t.status === 'PENDIENTE_TRIAJE').length;
   const inAttentionCount = queue.filter((t) => t.status === 'EN_ATENCION').length;
   const criticalCount = queue.filter((t) => CRITICAL_LEVELS.includes(t.manchester_level)).length;
   const levelOneCount = queue.filter((t) => t.manchester_level === 'NIVEL_I').length;
@@ -141,6 +169,7 @@ export const DashboardScreen = ({ onSelectPatient, onNavigate }) => {
               <option value="all">Todos los estados</option>
               <option value="PENDIENTE">{TRIAGE_STATUS_LABELS.PENDIENTE}</option>
               <option value="EN_ATENCION">{TRIAGE_STATUS_LABELS.EN_ATENCION}</option>
+              <option value="PENDIENTE_TRIAJE">En Espera de Triaje</option>
             </select>
           </div>
 
@@ -311,33 +340,61 @@ export const DashboardScreen = ({ onSelectPatient, onNavigate }) => {
                   const level = getManchesterInfo(item.manchester_level);
                   const patient = patientsById[item.patient_id];
                   const age = calculateAge(patient?.birth_date);
+                  const isUntriaged = Boolean(item.is_untriaged);
+                  const borderColor = isUntriaged ? 'border-l-amber-400' : level.borderColor;
+
                   return (
                     <tr
                       key={item.id}
-                      className={`hover:bg-surface-container-low/50 transition-colors border-l-4 ${level.borderColor}`}
+                      className={`hover:bg-surface-container-low/50 transition-colors border-l-4 ${borderColor}`}
                     >
                       <td className="py-3.5 px-4">
-                        <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider inline-block shadow-2xs ${level.color}`}>
-                          {level.number} {level.name && `| ${level.name}`}
-                        </span>
+                        {isUntriaged ? (
+                          <span className="px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider inline-block shadow-2xs bg-amber-100 text-amber-900 border border-amber-300">
+                            Pendiente Triaje
+                          </span>
+                        ) : (
+                          <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider inline-block shadow-2xs ${level.color}`}>
+                            {level.number} {level.name && `| ${level.name}`}
+                          </span>
+                        )}
                       </td>
                       <td className="py-3.5 px-4">
                         <div className="font-bold text-sm text-on-surface">{getFullName(patient) || 'Paciente no disponible'}</div>
-                        <div className="font-mono text-[11px] text-on-surface-variant">
-                          {patient ? `${patient.document_type} ${patient.document_number}` : item.patient_id}
-                          {age !== null ? ` | ${age} años` : ''}
+                        <div className="font-mono text-[11px] text-on-surface-variant flex items-center gap-1.5 flex-wrap">
+                          <span>{patient ? `${patient.document_type} ${patient.document_number}` : item.patient_id}</span>
+                          {age !== null ? <span>| {age} años</span> : ''}
+                          {patient?.eps_name ? <span className="text-primary font-semibold">| {patient.eps_name}</span> : ''}
                         </div>
                       </td>
                       <td className="py-3.5 px-4 max-w-xs">
-                        <div className="font-mono text-xs font-semibold text-on-surface">
-                          PA {item.systolic_bp}/{item.diastolic_bp} | FC {item.heart_rate} | SpO2 {item.oxygen_saturation}%
-                        </div>
-                        <div className="text-[11px] text-on-surface-variant truncate" title={item.reason_for_consultation}>
-                          {item.reason_for_consultation}
-                        </div>
+                        {isUntriaged ? (
+                          <>
+                            <div className="text-xs font-semibold text-amber-800 italic flex items-center gap-1">
+                              <HeartPulse className="w-3.5 h-3.5 text-amber-600" />
+                              <span>Pendiente toma de signos vitales</span>
+                            </div>
+                            <div className="text-[11px] text-on-surface-variant truncate" title={item.reason_for_consultation}>
+                              {item.reason_for_consultation}
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="font-mono text-xs font-semibold text-on-surface">
+                              PA {item.systolic_bp}/{item.diastolic_bp} | FC {item.heart_rate} | SpO2 {item.oxygen_saturation}%
+                            </div>
+                            <div className="text-[11px] text-on-surface-variant truncate" title={item.reason_for_consultation}>
+                              {item.reason_for_consultation}
+                            </div>
+                          </>
+                        )}
                       </td>
                       <td className="py-3.5 px-4">
-                        <span className="px-2 py-0.5 rounded bg-surface-container-high text-on-surface font-semibold text-[11px]">
+                        <span className={`px-2 py-0.5 rounded font-semibold text-[11px] ${
+                          isUntriaged
+                            ? 'bg-amber-50 text-amber-900 border border-amber-200'
+                            : 'bg-surface-container-high text-on-surface'
+                        }`}>
                           {TRIAGE_STATUS_LABELS[item.status] ?? item.status}
                         </span>
                       </td>
@@ -349,24 +406,49 @@ export const DashboardScreen = ({ onSelectPatient, onNavigate }) => {
                       </td>
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => openFor(item, 'triage')}
-                            disabled={Boolean(busyKey)}
-                            className="px-2.5 py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface text-[11px] font-semibold border border-outline-variant/30 transition-all cursor-pointer disabled:opacity-50"
-                          >
-                            Ver Triaje
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => openFor(item, 'hce')}
-                            disabled={Boolean(busyKey)}
-                            className="px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-container text-white text-[11px] font-bold shadow-xs transition-all flex items-center gap-1 cursor-pointer active:scale-95 disabled:opacity-50"
-                          >
-                            {busyKey === `${item.id}:hce` ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
-                            <span>Llamar HCE</span>
-                            <ArrowRight className="w-3 h-3" />
-                          </button>
+                          {isUntriaged ? (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => openFor(item, 'hce')}
+                                disabled={Boolean(busyKey)}
+                                className="px-2.5 py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface text-[11px] font-semibold border border-outline-variant/30 transition-all cursor-pointer disabled:opacity-50"
+                              >
+                                Abrir HCE
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => openFor(item, 'triage')}
+                                disabled={Boolean(busyKey)}
+                                className="px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-container text-white text-[11px] font-bold shadow-xs transition-all flex items-center gap-1 cursor-pointer active:scale-95 disabled:opacity-50"
+                              >
+                                <HeartPulse className="w-3 h-3" />
+                                <span>Iniciar Triaje</span>
+                                <ArrowRight className="w-3 h-3" />
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => openFor(item, 'triage')}
+                                disabled={Boolean(busyKey)}
+                                className="px-2.5 py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface text-[11px] font-semibold border border-outline-variant/30 transition-all cursor-pointer disabled:opacity-50"
+                              >
+                                Ver Triaje
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => openFor(item, 'hce')}
+                                disabled={Boolean(busyKey)}
+                                className="px-3 py-1.5 rounded-lg bg-primary hover:bg-primary-container text-white text-[11px] font-bold shadow-xs transition-all flex items-center gap-1 cursor-pointer active:scale-95 disabled:opacity-50"
+                              >
+                                {busyKey === `${item.id}:hce` ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+                                <span>Llamar HCE</span>
+                                <ArrowRight className="w-3 h-3" />
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>

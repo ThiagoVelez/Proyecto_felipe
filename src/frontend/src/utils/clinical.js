@@ -62,6 +62,7 @@ export const TRIAGE_STATUS_LABELS = {
   PENDIENTE: 'En espera de médico',
   EN_ATENCION: 'En atención',
   FINALIZADO: 'Finalizado',
+  PENDIENTE_TRIAJE: 'En espera de triaje',
 };
 
 export const getManchesterInfo = (level) =>

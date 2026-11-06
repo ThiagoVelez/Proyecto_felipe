@@ -26,6 +26,8 @@ type PatientRepository interface {
 	List(ctx context.Context, limit, offset int) ([]domain.Patient, error)
 	GetPatientAllergies(ctx context.Context, patientID string) ([]domain.PatientAllergy, error)
 	AddPatientAllergy(ctx context.Context, allergy *domain.PatientAllergy) error
+	UpdateContact(ctx context.Context, id string, email, address, phone string) error
+	Delete(ctx context.Context, id string) error
 }
 
 // TriageRepository define el contrato para el registro y consulta de triajes de urgencias.

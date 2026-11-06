@@ -161,6 +161,35 @@ func (h *PatientHandler) GetAllergies(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"allergies": allergies})
 }
 
+type UpdatePatientContactRequest struct {
+	Email   string `json:"email"`
+	Address string `json:"address"`
+	Phone   string `json:"phone"`
+}
+
+// UpdateContact actualiza los datos de contacto y residencia del paciente (Habeas Data).
+func (h *PatientHandler) UpdateContact(c *fiber.Ctx) error {
+	id := c.Params("id")
+	var req UpdatePatientContactRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Parametros de actualizacion invalidos"})
+	}
+	updated, err := h.patientService.UpdateContact(c.Context(), id, req.Email, req.Address, req.Phone)
+	if err != nil {
+		return patientErrorResponse(c, err)
+	}
+	return c.JSON(patientView(updated))
+}
+
+// Delete retira un paciente y limpia de forma transaccional sus registros dependientes.
+func (h *PatientHandler) Delete(c *fiber.Ctx) error {
+	id := c.Params("id")
+	if err := h.patientService.DeletePatient(c.Context(), id); err != nil {
+		return patientErrorResponse(c, err)
+	}
+	return c.JSON(fiber.Map{"message": "Paciente eliminado correctamente"})
+}
+
 // patientView arma la respuesta publica del paciente con fecha de nacimiento AAAA-MM-DD y nombre completo.
 func patientView(p *domain.Patient) fiber.Map {
 	allergies := p.Allergies
@@ -182,6 +211,8 @@ func patientView(p *domain.Patient) fiber.Map {
 		"eps_name":           p.EPSName,
 		"affiliation_status": p.AffiliationStatus,
 		"phone":              p.Phone,
+		"email":              p.Email,
+		"address":            p.Address,
 		"is_rural_zone":      p.IsRuralZone,
 		"created_at":         p.CreatedAt,
 		"updated_at":         p.UpdatedAt,

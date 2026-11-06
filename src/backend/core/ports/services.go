@@ -39,6 +39,8 @@ type PatientService interface {
 	ListPatients(ctx context.Context, limit, offset int) ([]domain.Patient, error)
 	AddAllergy(ctx context.Context, allergy *domain.PatientAllergy) (*domain.PatientAllergy, error)
 	GetAllergies(ctx context.Context, patientID string) ([]domain.PatientAllergy, error)
+	UpdateContact(ctx context.Context, id string, email, address, phone string) (*domain.Patient, error)
+	DeletePatient(ctx context.Context, id string) error
 }
 
 // TriageService define los casos de uso para clasificacion y priorizacion clinica.

@@ -77,6 +77,9 @@ func SetupRoutes(app *fiber.App, cfg RouterConfig) {
 		patients.Get("/", cfg.PatientHandler.List)
 		patients.Get("/lookup", cfg.PatientHandler.Lookup)
 		patients.Get("/:id", cfg.PatientHandler.GetByID)
+		patients.Put("/:id", cfg.PatientHandler.UpdateContact)
+		patients.Patch("/:id", cfg.PatientHandler.UpdateContact)
+		patients.Delete("/:id", cfg.PatientHandler.Delete)
 		patients.Post("/:id/allergies", cfg.PatientHandler.AddAllergy)
 		patients.Get("/:id/allergies", cfg.PatientHandler.GetAllergies)
 		if cfg.ClinicalRecordHandler != nil {

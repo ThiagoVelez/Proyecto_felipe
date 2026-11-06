@@ -167,3 +167,51 @@ func (r *patientRepo) AddPatientAllergy(ctx context.Context, allergy *domain.Pat
 	return err
 }
 
+func (r *patientRepo) UpdateContact(ctx context.Context, id string, email, address, phone string) error {
+	query := `
+		UPDATE patients
+		SET email = $1, address = $2, phone = $3, updated_at = NOW()
+		WHERE id = $4
+	`
+	res, err := r.db.ExecContext(ctx, query, email, address, phone, id)
+	if err != nil {
+		return err
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if n == 0 {
+		return domain.ErrPatientNotFound
+	}
+	return nil
+}
+
+func (r *patientRepo) Delete(ctx context.Context, id string) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	_, _ = tx.ExecContext(ctx, "DELETE FROM clinical_anatomical_notes WHERE patient_id = $1", id)
+	_, _ = tx.ExecContext(ctx, "DELETE FROM prescriptions WHERE patient_id = $1", id)
+	_, _ = tx.ExecContext(ctx, "DELETE FROM clinical_records WHERE patient_id = $1", id)
+	_, _ = tx.ExecContext(ctx, "DELETE FROM triage_records WHERE patient_id = $1", id)
+	_, _ = tx.ExecContext(ctx, "DELETE FROM appointments WHERE patient_id = $1", id)
+	_, _ = tx.ExecContext(ctx, "DELETE FROM patient_allergies WHERE patient_id = $1", id)
+
+	res, err := tx.ExecContext(ctx, "DELETE FROM patients WHERE id = $1", id)
+	if err != nil {
+		return err
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if n == 0 {
+		return domain.ErrPatientNotFound
+	}
+	return tx.Commit()
+}
+

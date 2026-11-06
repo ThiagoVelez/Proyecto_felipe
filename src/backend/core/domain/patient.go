@@ -82,6 +82,7 @@ type Patient struct {
 	AffiliationStatus AffiliationStatus `json:"affiliation_status"`
 	Phone             *string           `json:"phone"`
 	Email             string            `json:"email"`
+	Address           string            `json:"address"`
 	IsRuralZone       bool              `json:"is_rural_zone"`
 	CreatedAt         time.Time         `json:"created_at"`
 	UpdatedAt         time.Time         `json:"updated_at"`
