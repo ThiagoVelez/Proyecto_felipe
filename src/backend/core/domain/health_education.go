@@ -72,3 +72,4 @@ func (p *HealthEducationPost) Validate() error {
 	}
 	return nil
 }
+

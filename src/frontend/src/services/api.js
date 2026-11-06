@@ -68,12 +68,12 @@ export const apiClient = {
           endpoint === '/auth/refresh' ||
           endpoint === '/auth/logout';
 
-        // Intento de renovacion transparente ante expiracion del Access Token (401)
-        if (res.status === 401 && !isAuthEndpoint && this.refreshToken) {
+        // Intento de renovacion transparente ante expiracion del Access Token (401), maximo 1 reintento
+        if (res.status === 401 && !isAuthEndpoint && this.refreshToken && !options._isRetry) {
           try {
             await this.refreshSession();
-            // Reintenta la peticion con el nuevo access token
-            return await this.request(endpoint, { strict, ...options });
+            // Reintenta la peticion con el nuevo access token exactamente UNA vez
+            return await this.request(endpoint, { ...options, strict, _isRetry: true });
           } catch {
             const error = new Error(
               errorData.error || (res.status >= 500 ? UNAVAILABLE_MESSAGE : `Error HTTP ${res.status}`)

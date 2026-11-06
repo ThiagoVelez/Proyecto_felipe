@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"time"
 
@@ -64,11 +65,38 @@ func (s *healthEducationService) UpdatePost(ctx context.Context, requester *doma
 		return nil, domain.ErrUnauthorizedRole
 	}
 	existing, err := s.repo.GetByID(ctx, id)
-	if err != nil {
+	if err != nil || existing == nil {
+		if errors.Is(err, domain.ErrPostNotFound) || existing == nil {
+			// Si la publicación no existía previamente (ej: tarjeta semilla inicial), se crea de forma transparente
+			newPost := &domain.HealthEducationPost{
+				ID:               id,
+				DoctorID:         requester.ID,
+				AuthorName:       requester.FullName,
+				AuthorSpecialty:  requester.Specialty,
+				Title:            post.Title,
+				Category:         post.Category,
+				Summary:          post.Summary,
+				Content:          post.Content,
+				ImageURL:         post.ImageURL,
+				YoutubeURL:       post.YoutubeURL,
+				VideoURL:         post.VideoURL,
+				VideoDurationSec: post.VideoDurationSec,
+				IsPublished:      true,
+				CreatedAt:        time.Now(),
+				UpdatedAt:        time.Now(),
+			}
+			if newPost.AuthorName == "" {
+				newPost.AuthorName = requester.Email
+			}
+			if err := newPost.Validate(); err != nil {
+				return nil, err
+			}
+			if err := s.repo.Create(ctx, newPost); err != nil {
+				return nil, err
+			}
+			return newPost, nil
+		}
 		return nil, err
-	}
-	if existing == nil {
-		return nil, domain.ErrPostNotFound
 	}
 
 	existing.Title = post.Title
@@ -97,3 +125,4 @@ func (s *healthEducationService) DeletePost(ctx context.Context, requester *doma
 	}
 	return s.repo.Delete(ctx, id)
 }
+

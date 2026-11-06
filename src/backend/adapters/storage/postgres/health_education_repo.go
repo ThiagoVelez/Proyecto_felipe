@@ -208,3 +208,4 @@ func (r *healthEducationRepo) Delete(ctx context.Context, id string) error {
 	_, err := r.db.ExecContext(ctx, query, id)
 	return err
 }
+

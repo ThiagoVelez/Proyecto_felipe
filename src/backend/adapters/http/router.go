@@ -1,6 +1,8 @@
 package http
 
 import (
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"saludconecta-backend/adapters/http/handlers"
 	"saludconecta-backend/adapters/http/middlewares"
@@ -37,19 +39,23 @@ func SetupRoutes(app *fiber.App, cfg RouterConfig) {
 		})
 	})
 
-	// 2. Modulo Autenticacion y Credenciales: limite estricto por IP ademas del bloqueo por cuenta
+	// 2. Modulo Autenticacion y Credenciales: limites por IP independientes por ruta
 	auth := api.Group("/auth")
-	authLimit := middlewares.AuthRateLimitMiddleware(10, 0)
-	auth.Post("/login", authLimit, cfg.AuthHandler.Login)
-	auth.Post("/refresh", authLimit, cfg.AuthHandler.RefreshToken)
+	loginLimit := middlewares.AuthRateLimitMiddleware(30, 1*time.Minute)
+	refreshLimit := middlewares.RateLimitMiddleware(120, 1*time.Minute)
+	seedLimit := middlewares.RateLimitMiddleware(120, 1*time.Minute)
+	adminRegLimit := middlewares.AuthRateLimitMiddleware(20, 1*time.Minute)
+
+	auth.Post("/login", loginLimit, cfg.AuthHandler.Login)
+	auth.Post("/refresh", refreshLimit, cfg.AuthHandler.RefreshToken)
 	auth.Post("/logout", cfg.AuthHandler.Logout)
-	auth.Post("/register-admin", authLimit, cfg.AuthHandler.RegisterAdmin)
-	auth.Get("/mfa-seed", authLimit, cfg.AuthHandler.GetMFASeed)
+	auth.Post("/register-admin", adminRegLimit, cfg.AuthHandler.RegisterAdmin)
+	auth.Get("/mfa-seed", seedLimit, cfg.AuthHandler.GetMFASeed)
 
 	authProtected := auth.Use(authMW)
 	authProtected.Get("/me", cfg.AuthHandler.Me)
-	authProtected.Post("/mfa/setup", authLimit, cfg.AuthHandler.SetupMFA)
-	authProtected.Post("/mfa/enable", authLimit, cfg.AuthHandler.EnableMFA)
+	authProtected.Post("/mfa/setup", loginLimit, cfg.AuthHandler.SetupMFA)
+	authProtected.Post("/mfa/enable", loginLimit, cfg.AuthHandler.EnableMFA)
 
 	// Proteccion global JWT para v1
 	protected := api.Group("/", authMW)

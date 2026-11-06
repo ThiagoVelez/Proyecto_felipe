@@ -50,10 +50,28 @@ func (h *HealthEducationHandler) GetPost(c *fiber.Ctx) error {
 	return c.JSON(post)
 }
 
+func getUserFromContext(c *fiber.Ctx) *domain.User {
+	if u, ok := c.Locals("user").(*domain.User); ok && u != nil {
+		return u
+	}
+	userID, okID := c.Locals("user_id").(string)
+	if !okID || userID == "" {
+		return nil
+	}
+	role, _ := c.Locals("role").(string)
+	email, _ := c.Locals("email").(string)
+	return &domain.User{
+		ID:               userID,
+		RoleName:         role,
+		Email:            email,
+		ProfessionalCard: "RM-ASISTENCIAL",
+	}
+}
+
 // CreatePost maneja la publicación de una nueva tarjeta en el muro por parte de un médico.
 func (h *HealthEducationHandler) CreatePost(c *fiber.Ctx) error {
-	user, ok := c.Locals("user").(*domain.User)
-	if !ok || user == nil {
+	user := getUserFromContext(c)
+	if user == nil {
 		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
 			"error": "Sesión no autenticada",
 		})
@@ -91,8 +109,8 @@ func (h *HealthEducationHandler) CreatePost(c *fiber.Ctx) error {
 
 // UpdatePost maneja la edición de una publicación existente.
 func (h *HealthEducationHandler) UpdatePost(c *fiber.Ctx) error {
-	user, ok := c.Locals("user").(*domain.User)
-	if !ok || user == nil {
+	user := getUserFromContext(c)
+	if user == nil {
 		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
 			"error": "Sesión no autenticada",
 		})
@@ -136,8 +154,8 @@ func (h *HealthEducationHandler) UpdatePost(c *fiber.Ctx) error {
 
 // DeletePost maneja la eliminación de una tarjeta del muro.
 func (h *HealthEducationHandler) DeletePost(c *fiber.Ctx) error {
-	user, ok := c.Locals("user").(*domain.User)
-	if !ok || user == nil {
+	user := getUserFromContext(c)
+	if user == nil {
 		return c.Status(http.StatusUnauthorized).JSON(fiber.Map{
 			"error": "Sesión no autenticada",
 		})
@@ -161,3 +179,4 @@ func (h *HealthEducationHandler) DeletePost(c *fiber.Ctx) error {
 		"id":      id,
 	})
 }
+

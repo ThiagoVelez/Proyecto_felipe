@@ -181,3 +181,4 @@ func TestTriage_PainScalePersistedInRecord(t *testing.T) {
 		t.Fatal("Observaciones de dolor no deben ser vacías")
 	}
 }
+

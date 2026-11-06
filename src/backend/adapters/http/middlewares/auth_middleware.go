@@ -65,6 +65,7 @@ func AuthMiddleware(jwtSecret string, sessions SessionValidator) fiber.Handler {
 		c.Locals("user_id", user.ID)
 		c.Locals("role", role)
 		c.Locals("email", user.Email)
+		c.Locals("user", user)
 
 		return c.Next()
 	}
