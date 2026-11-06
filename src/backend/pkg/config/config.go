@@ -67,8 +67,35 @@ func ValidateJWTSecret(secret string) error {
 	return nil
 }
 
+// loadDotEnv carga variables desde un archivo .env si existe en el entorno local
+func loadDotEnv() {
+	paths := []string{".env", "../.env", "../../.env"}
+	for _, p := range paths {
+		data, err := os.ReadFile(p)
+		if err == nil {
+			for _, line := range strings.Split(string(data), "\n") {
+				line = strings.TrimSpace(line)
+				if line == "" || strings.HasPrefix(line, "#") {
+					continue
+				}
+				parts := strings.SplitN(line, "=", 2)
+				if len(parts) == 2 {
+					key := strings.TrimSpace(parts[0])
+					val := strings.TrimSpace(parts[1])
+					val = strings.Trim(val, "\"'`\r")
+					if os.Getenv(key) == "" {
+						os.Setenv(key, val)
+					}
+				}
+			}
+			break
+		}
+	}
+}
+
 // Load lee la configuracion del entorno y falla de forma explicita ante valores inseguros o ausentes.
 func Load() (*Config, error) {
+	loadDotEnv()
 	return LoadFrom(os.Getenv)
 }
 
