@@ -20,6 +20,8 @@ var knownInsecureSecrets = []string{
 	"tu_clave_secreta_jwt_de_alta_entropia_aqui",
 	"changeme",
 	"secret",
+	// DEF-63: marcador de .env.example; quien copia la plantilla sin editarla firmaria con un secreto publico.
+	"defina_un_secreto_aleatorio_de_al_menos_32_caracteres",
 }
 
 // Config concentra la configuracion de arranque ya validada.

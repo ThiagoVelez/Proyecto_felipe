@@ -1,0 +1,7 @@
+=== RUN   TestDEF63PlantillaEnvNoEsSecretoValido
+    calidad_defectos_abiertos_regression_test.go:377: DEFECTO-REPRODUCIDO DEF-63: El valor publicado en .env.example se acepta como JWT_SECRET
+    calidad_defectos_abiertos_regression_test.go:381: DEFECTO-REPRODUCIDO DEF-63: El administrador inicial se creo con la contrasena publicada en .env.example
+--- FAIL: TestDEF63PlantillaEnvNoEsSecretoValido (0.28s)
+FAIL
+FAIL	saludconecta-tests	0.297s
+FAIL

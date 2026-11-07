@@ -14,6 +14,7 @@ import (
 	"saludconecta-backend/core/domain"
 	"saludconecta-backend/core/ports"
 	"saludconecta-backend/core/services"
+	"saludconecta-backend/pkg/config"
 	"saludconecta-backend/pkg/crypto"
 )
 
@@ -262,4 +263,15 @@ func TestDEF37LecturaConcurrenteDeFolioSinCarrera(t *testing.T) {
 		}()
 	}
 	wg.Wait()
+}
+
+// DEF-63 (detectado y corregido por calidad en v2): los marcadores de la plantilla .env.example se aceptan como JWT_SECRET y contrasena de administrador.
+func TestDEF63PlantillaEnvNoEsSecretoValido(t *testing.T) {
+	if err := config.ValidateJWTSecret("defina_un_secreto_aleatorio_de_al_menos_32_caracteres"); err == nil {
+		defectoReproducido(t, "DEF-63", "El valor publicado en .env.example se acepta como JWT_SECRET")
+	}
+	ds := memory.NewDataStore()
+	if creado, err := services.BootstrapAdmin(context.Background(), memory.NewUserMemoryRepo(ds), "admin@su-institucion.example", "defina_una_clave_privada_larga"); err == nil && creado {
+		defectoReproducido(t, "DEF-63", "El administrador inicial se creo con la contrasena publicada en .env.example")
+	}
 }
