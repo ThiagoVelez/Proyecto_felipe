@@ -1,0 +1,4 @@
+=== RUN   TestDEF28AuditoriaConservaDatosTrasFinalizarPeticion
+--- PASS: TestDEF28AuditoriaConservaDatosTrasFinalizarPeticion (0.00s)
+PASS
+ok  	saludconecta-tests	0.024s
