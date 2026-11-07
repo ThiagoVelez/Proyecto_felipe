@@ -1,0 +1,15 @@
+flowchart TD
+    Start(["Inicio: CalculateTriageLevel(vitals)"]) --> C1{"¿Glasgow <= 8 o SatO2 < 85% o Shock?"}
+    C1 -- Sí (Rama 1) --> N1["Nivel I: Resucitación (Rojo)"]
+    C1 -- No --> C2{"¿Dolor EVA >= 8 o SatO2 85-89%?"}
+    C2 -- Sí (Rama 2) --> N2["Nivel II: Emergencia (Naranja)"]
+    C2 -- No --> C3{"¿Dolor EVA 5-7 o Fiebre >= 39°C?"}
+    C3 -- Sí (Rama 3) --> N3["Nivel III: Urgencia (Amarillo)"]
+    C3 -- No --> C4{"¿Dolor EVA 1-4 o Signos Leves?"}
+    C4 -- Sí (Rama 4) --> N4["Nivel IV: Prioritario (Verde)"]
+    C4 -- No (Rama 5) --> N5["Nivel V: No Urgente (Azul)"]
+    N1 --> Ret(["Retorno de Categorización & Tiempo"])
+    N2 --> Ret
+    N3 --> Ret
+    N4 --> Ret
+    N5 --> Ret
