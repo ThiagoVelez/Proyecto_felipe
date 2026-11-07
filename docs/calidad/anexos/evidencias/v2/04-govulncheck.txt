@@ -1,0 +1,19 @@
+=== Symbol Results ===
+
+Vulnerability #1: GO-2026-6888
+    Excessive memory allocation when decompressing crafted streams in
+    github.com/andybalholm/brotli
+  More info: https://pkg.go.dev/vuln/GO-2026-6888
+  Module: github.com/andybalholm/brotli
+    Found in: github.com/andybalholm/brotli@v1.1.0
+    Fixed in: github.com/andybalholm/brotli@v1.2.7
+    Example traces found:
+      #1: adapters/storage/factory.go:99:16: storage.NewRepositoryBundle calls sql.DB.Close, which eventually calls brotli.Reader.Read
+      #2: adapters/http/handlers/clinical_record_handler.go:468:85: handlers.ClinicalRecordHandler.UpdatePainAndMapping calls brotli.decodeError.Error
+
+Your code is affected by 1 vulnerability from 1 module.
+This scan also found 3 vulnerabilities in packages you import and 24
+vulnerabilities in modules you require, but your code doesn't appear to call
+these vulnerabilities.
+Use '-show verbose' for more details.
+exit=3

@@ -12,15 +12,24 @@
 # Al corregir un defecto: eliminar su linea en el mismo PR que la correccion, convertir la prueba
 # en regresion permanente (quitar requireDefectoAbierto) y actualizar 04-bitacora-defectos.md.
 
-DEF-06 TestDEF06CruceAlergiasReactividadCruzadaYTildes marcador
-DEF-07 TestDEF07SincronizacionNoSobrescribeFolioCerrado marcador
-DEF-09 TestDEF09HipotermiaSeveraNoEsNoUrgente marcador
-DEF-13 TestDEF13TokenDeUsuarioDesactivadoEsRechazado marcador
-DEF-14 TestDEF14SetupMFANoDesactivaSegundoFactor marcador
-DEF-16 TestDEF16CierreConcurrenteNoBifurcaCadena marcador
-DEF-17 TestDEF17MedicoNoCierraFolioAjeno marcador
-DEF-18 TestDEF18SincronizacionUsaMedicoAutenticado marcador
+# Reverificacion v2 (7 nov 2026): DEF-06, 07, 09, 13, 14, 16, 17, 18, 31 y 37 se cerraron (corregidos por el
+# equipo) y sus pruebas pasaron a calidad_defectos_corregidos_v2_regression_test.go como regresion permanente.
+
 DEF-29 TestDEF29HashSinColisionPorDelimitador marcador
 DEF-30 TestDEF30VerificacionValidaEnlaceConFolioAnterior marcador
-DEF-31 TestDEF31LoginNoRevelaCuentaInactivaConClaveErronea marcador
-DEF-37 TestDEF37LecturaConcurrenteDeFolioSinCarrera carrera
+DEF-49 TestDEF49RegistroDeAdministradorRequiereAutenticacion marcador
+DEF-50 TestDEF50SemillaMFANoSeExponeSinAutenticacion marcador
+DEF-51 TestDEF51PrescripcionV2CruzaAlergias marcador
+DEF-52 TestDEF52RecetaV2RechazaCantidadNoPositiva marcador
+DEF-53 TestDEF53DispensacionExigeDocumentoDelPaciente marcador
+DEF-54 TestDEF54NoDispensaMedicamentoVencido marcador
+DEF-55 TestDEF55EliminarPacienteNoPierdeAntecedentesAlergicos marcador
+DEF-57 TestDEF57NotaAnatomicaCoincideConPacienteDelFolio marcador
+DEF-58 TestDEF58RecetaDispensadaNoSeReactiva marcador
+DEF-59 TestDEF59NoDispensaRecetaCancelada marcador
+DEF-60 TestDEF60AlergiaAFarmacoSeExtiendeASuFamilia marcador
+DEF-61 TestDEF61PDFNoSaleDelDirectorioDeDocumentos marcador
+DEF-67 TestDEF67EscalaEVAFueraDeRangoSeRechaza marcador
+DEF-68 TestDEF68ActualizacionParcialConservaContacto marcador
+DEF-70 TestDEF70PublicacionSoloLaEditaSuAutor marcador
+DEF-72 TestDEF72AuditorConsultaNotasAnatomicasDelPaciente marcador

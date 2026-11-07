@@ -1,0 +1,19 @@
+?   	saludconecta-backend/adapters/email	[no test files]
+?   	saludconecta-backend/adapters/http	[no test files]
+?   	saludconecta-backend/adapters/http/handlers	[no test files]
+?   	saludconecta-backend/adapters/http/middlewares	[no test files]
+?   	saludconecta-backend/adapters/interoperability	[no test files]
+?   	saludconecta-backend/adapters/pdf	[no test files]
+?   	saludconecta-backend/adapters/storage	[no test files]
+?   	saludconecta-backend/adapters/storage/catalog	[no test files]
+?   	saludconecta-backend/adapters/storage/memory	[no test files]
+?   	saludconecta-backend/adapters/storage/mysql	[no test files]
+?   	saludconecta-backend/adapters/storage/postgres	[no test files]
+?   	saludconecta-backend/cmd/api	[no test files]
+?   	saludconecta-backend/core/domain	[no test files]
+?   	saludconecta-backend/core/ports	[no test files]
+ok  	saludconecta-backend/core/services	0.019s
+ok  	saludconecta-backend/pkg/config	0.019s
+ok  	saludconecta-backend/pkg/crypto	0.843s
+?   	saludconecta-backend/pkg/logger	[no test files]
+exit=0

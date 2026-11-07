@@ -18,7 +18,7 @@ import (
 // Una respuesta distinta de 401/403 significa que la peticion supero autenticacion y RBAC.
 func TestRBACMatrizRutasPorRol(t *testing.T) {
 	env := newCalidadEnv(t)
-	roles := []string{"ADMIN", "MEDICO", "ENFERMERO", "ADMISION", "AUDITOR"}
+	roles := []string{"ADMIN", "MEDICO", "ENFERMERO", "ADMISION", "AUDITOR", "FARMACIA"}
 	sembrarUsuariosPorRol(t, env, roles)
 
 	rutas := []struct {
@@ -48,6 +48,43 @@ func TestRBACMatrizRutasPorRol(t *testing.T) {
 		{http.MethodGet, "/api/v1/prescriptions/x", []string{"MEDICO"}},
 		{http.MethodGet, "/api/v1/prescriptions/record/x", []string{"MEDICO"}},
 		{http.MethodPost, "/api/v1/sync/batch", []string{"MEDICO"}},
+
+		// H34 (v2): rutas nuevas. Se registra la politica EFECTIVA; las discrepancias con la intencion
+		// declarada en router.go se documentan como defectos (DEF-72) y no se corrigen aqui.
+		{http.MethodGet, "/api/v1/auth/me", roles},
+		{http.MethodGet, "/api/v1/medications", []string{"MEDICO"}},
+		{http.MethodPost, "/api/v1/patients/", []string{"ADMISION", "ENFERMERO", "MEDICO"}},
+		{http.MethodGet, "/api/v1/patients/", []string{"ADMISION", "ENFERMERO", "MEDICO"}},
+		{http.MethodGet, "/api/v1/patients/lookup", []string{"ADMISION", "ENFERMERO", "MEDICO"}},
+		{http.MethodGet, "/api/v1/patients/x", []string{"ADMISION", "ENFERMERO", "MEDICO"}},
+		{http.MethodPatch, "/api/v1/patients/x", []string{"ADMISION", "ENFERMERO", "MEDICO"}},
+		{http.MethodDelete, "/api/v1/patients/x", []string{"ADMISION", "ENFERMERO", "MEDICO"}},
+		{http.MethodPost, "/api/v1/patients/x/allergies", []string{"ADMISION", "ENFERMERO", "MEDICO"}},
+		{http.MethodGet, "/api/v1/patients/x/allergies", []string{"ADMISION", "ENFERMERO", "MEDICO"}},
+		// Declarada para MEDICO, ENFERMERO y AUDITOR, pero el grupo /patients excluye a AUDITOR (DEF-72).
+		{http.MethodGet, "/api/v1/patients/x/anatomical-notes", []string{"ENFERMERO", "MEDICO"}},
+		{http.MethodPost, "/api/v1/patients/x/anatomical-notes", []string{"MEDICO"}},
+		{http.MethodGet, "/api/v1/clinical-records/x/anatomical-notes", []string{"MEDICO", "ENFERMERO", "AUDITOR"}},
+		{http.MethodPost, "/api/v1/clinical-records/x/anatomical-notes", []string{"MEDICO"}},
+		{http.MethodPut, "/api/v1/clinical-records/x/pain-mapping", []string{"MEDICO"}},
+		{http.MethodDelete, "/api/v1/anatomical-notes/x", []string{"MEDICO"}},
+		{http.MethodGet, "/api/v1/health-education/", []string{"MEDICO", "ENFERMERO", "ADMIN", "FARMACIA"}},
+		{http.MethodPost, "/api/v1/health-education/", []string{"MEDICO"}},
+		{http.MethodPut, "/api/v1/health-education/x", []string{"MEDICO"}},
+		{http.MethodDelete, "/api/v1/health-education/x", []string{"MEDICO"}},
+		{http.MethodPost, "/api/v2/triage/", []string{"ENFERMERO", "MEDICO"}},
+		{http.MethodPost, "/api/v2/appointments/", []string{"MEDICO", "ADMIN", "ENFERMERO"}},
+		{http.MethodGet, "/api/v2/appointments/", []string{"MEDICO", "ADMIN", "ENFERMERO"}},
+		{http.MethodGet, "/api/v2/appointments/doctor/x", []string{"MEDICO", "ADMIN", "ENFERMERO"}},
+		{http.MethodPost, "/api/v2/treatments/dispatch", []string{"MEDICO"}},
+		{http.MethodGet, "/api/v2/treatments/x", []string{"MEDICO", "FARMACIA", "ADMIN", "ENFERMERO"}},
+		{http.MethodGet, "/api/v2/pharmacy/inbox", []string{"FARMACIA", "ADMIN", "MEDICO", "ENFERMERO"}},
+		{http.MethodGet, "/api/v2/pharmacy/inventory", []string{"FARMACIA", "ADMIN", "MEDICO", "ENFERMERO"}},
+		{http.MethodPost, "/api/v2/pharmacy/inventory", []string{"FARMACIA", "ADMIN"}},
+		{http.MethodPatch, "/api/v2/pharmacy/inventory/x/stock", []string{"FARMACIA", "ADMIN"}},
+		{http.MethodDelete, "/api/v2/pharmacy/inventory/x", []string{"FARMACIA", "ADMIN"}},
+		{http.MethodGet, "/api/v2/pharmacy/prescriptions/lookup", []string{"FARMACIA", "ADMIN"}},
+		{http.MethodPost, "/api/v2/pharmacy/dispense", []string{"FARMACIA", "ADMIN"}},
 	}
 
 	var tabla strings.Builder

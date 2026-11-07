@@ -1,0 +1,193 @@
+..\..\..\Documents\Proyecto_felipe\src\backend\cmd\api\main.go:59:19: Error return value is not checked (errcheck)
+	defer repos.Close()
+	                 ^
+..\..\..\Documents\Proyecto_felipe\src\backend\pkg\config\config.go:89:16: Error return value of `os.Setenv` is not checked (errcheck)
+						os.Setenv(key, val)
+						         ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\email\smtp.go:35:6: G301: Expect directory permissions to be 0750 or less (gosec)
+	_ = os.MkdirAll(outbox, 0755)
+	    ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\email\smtp.go:60:7: G306: Expect WriteFile permissions to be 0600 or less (gosec)
+		_ = os.WriteFile(filePath, []byte(content), 0644)
+		    ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\pdf\generator.go:24:6: G301: Expect directory permissions to be 0750 or less (gosec)
+	_ = os.MkdirAll(outputDir, 0755)
+	    ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\pdf\generator.go:198:6: G301: Expect directory permissions to be 0750 or less (gosec)
+	_ = os.MkdirAll(filepath.Dir(fullPath), 0755)
+	    ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\pdf\generator.go:199:12: G306: Expect WriteFile permissions to be 0600 or less (gosec)
+	if err := os.WriteFile(fullPath, data, 0644); err != nil {
+	          ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\pdf\generator.go:245:6: G301: Expect directory permissions to be 0750 or less (gosec)
+	_ = os.MkdirAll(filepath.Dir(fullPath), 0755)
+	    ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\pdf\generator.go:246:12: G306: Expect WriteFile permissions to be 0600 or less (gosec)
+	if err := os.WriteFile(fullPath, data, 0644); err != nil {
+	          ^
+..\..\..\Documents\Proyecto_felipe\src\backend\core\services\appointment_service.go:94:2: G118: Goroutine uses context.Background/TODO while request-scoped context is available (gosec)
+	go func(appCopy domain.Appointment) {
+	^
+..\..\..\Documents\Proyecto_felipe\src\backend\core\services\appointment_service.go:139:7: G404: Use of weak random number generator (math/rand or math/rand/v2 instead of crypto/rand) (gosec)
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	     ^
+..\..\..\Documents\Proyecto_felipe\src\backend\pkg\config\config.go:76:16: G304: Potential file inclusion via variable (gosec)
+		data, err := os.ReadFile(p)
+		             ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\http\handlers\clinical_record_handler.go:291:2: ineffectual assignment to layer (ineffassign)
+	layer := domain.LayerOrgan
+	^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\user_repo.go:133:3: ineffectual assignment to argIdx (ineffassign)
+		argIdx++
+		^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\connection.go:61:19: (*database/sql.DB).Ping must not be called. use (*database/sql.DB).PingContext (noctx)
+	if err := db.Ping(); err != nil {
+	                 ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\seeder.go:30:24: (*database/sql.DB).QueryRow must not be called. use (*database/sql.DB).QueryRowContext (noctx)
+		if err := db.QueryRow(checkQuery, col.name).Scan(&exists); err != nil {
+		                     ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\seeder.go:35:24: (*database/sql.DB).Exec must not be called. use (*database/sql.DB).ExecContext (noctx)
+			if _, err := db.Exec(alterQuery); err != nil {
+			                    ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\seeder.go:60:23: (*database/sql.DB).Exec must not be called. use (*database/sql.DB).ExecContext (noctx)
+		if _, err := db.Exec(query, r.id, r.name, r.desc); err != nil {
+		                    ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\seeder.go:71:20: (*database/sql.DB).QueryRow must not be called. use (*database/sql.DB).QueryRowContext (noctx)
+	err := db.QueryRow(`
+	                  ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\seeder.go:80:22: (*database/sql.DB).Exec must not be called. use (*database/sql.DB).ExecContext (noctx)
+	if _, err := db.Exec(fmt.Sprintf("ALTER TABLE clinical_records ADD UNIQUE KEY %s (patient_id, previous_hash)", chainIndexName)); err != nil {
+	                    ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\seeder.go:126:21: (*database/sql.DB).QueryRow must not be called. use (*database/sql.DB).QueryRowContext (noctx)
+		err := db.QueryRow(`
+		                  ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\seeder.go:135:23: (*database/sql.DB).Exec must not be called. use (*database/sql.DB).ExecContext (noctx)
+		if _, err := db.Exec(trg.stmt); err != nil {
+		                    ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\seeder.go:145:20: (*database/sql.DB).Exec must not be called. use (*database/sql.DB).ExecContext (noctx)
+		_, err := db.Exec(`
+		                 ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\seeder.go:162:17: (*database/sql.DB).QueryRow must not be called. use (*database/sql.DB).QueryRowContext (noctx)
+	_ = db.QueryRow(`SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'patients' AND COLUMN_NAME = 'affiliation_type'`).Scan(&exists)
+	               ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\seeder.go:164:17: (*database/sql.DB).Exec must not be called. use (*database/sql.DB).ExecContext (noctx)
+		_, _ = db.Exec(`ALTER TABLE patients ADD COLUMN affiliation_type ENUM('CONTRIBUTIVO', 'SUBSIDIADO', 'VINCULADO', 'PARTICULAR') NOT NULL DEFAULT 'CONTRIBUTIVO'`)
+		              ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\seeder.go:167:17: (*database/sql.DB).QueryRow must not be called. use (*database/sql.DB).QueryRowContext (noctx)
+	_ = db.QueryRow(`SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'patients' AND COLUMN_NAME = 'address'`).Scan(&addrEx)
+	               ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\seeder.go:169:17: (*database/sql.DB).Exec must not be called. use (*database/sql.DB).ExecContext (noctx)
+		_, _ = db.Exec(`ALTER TABLE patients ADD COLUMN address VARCHAR(200) DEFAULT ''`)
+		              ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\seeder.go:172:17: (*database/sql.DB).QueryRow must not be called. use (*database/sql.DB).QueryRowContext (noctx)
+	_ = db.QueryRow(`SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'patients' AND COLUMN_NAME = 'email'`).Scan(&emailEx)
+	               ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\seeder.go:174:17: (*database/sql.DB).Exec must not be called. use (*database/sql.DB).ExecContext (noctx)
+		_, _ = db.Exec(`ALTER TABLE patients ADD COLUMN email VARCHAR(100) DEFAULT ''`)
+		              ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\seeder.go:188:18: (*database/sql.DB).QueryRow must not be called. use (*database/sql.DB).QueryRowContext (noctx)
+		_ = db.QueryRow(`SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'appointments' AND COLUMN_NAME = ?`, col.name).Scan(&colEx)
+		               ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\seeder.go:190:18: (*database/sql.DB).Exec must not be called. use (*database/sql.DB).ExecContext (noctx)
+			_, _ = db.Exec(fmt.Sprintf("ALTER TABLE appointments ADD COLUMN %s %s", col.name, col.dtyp))
+			              ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\seeder.go:195:19: (*database/sql.DB).Exec must not be called. use (*database/sql.DB).ExecContext (noctx)
+	_, err := db.Exec(`
+	                 ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\seeder.go:238:17: (*database/sql.DB).Exec must not be called. use (*database/sql.DB).ExecContext (noctx)
+		_, _ = db.Exec(`
+		              ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\seeder.go:255:18: (*database/sql.DB).QueryRow must not be called. use (*database/sql.DB).QueryRowContext (noctx)
+		_ = db.QueryRow(`SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'clinical_records' AND COLUMN_NAME = ?`, col.name).Scan(&colEx)
+		               ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\seeder.go:257:18: (*database/sql.DB).Exec must not be called. use (*database/sql.DB).ExecContext (noctx)
+			_, _ = db.Exec(fmt.Sprintf("ALTER TABLE clinical_records ADD COLUMN %s %s", col.name, col.dtyp))
+			              ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\seeder.go:261:18: (*database/sql.DB).Exec must not be called. use (*database/sql.DB).ExecContext (noctx)
+	_, err = db.Exec(`
+	                ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\seeder.go:298:18: (*database/sql.DB).QueryRow must not be called. use (*database/sql.DB).QueryRowContext (noctx)
+		_ = db.QueryRow(`SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'triage_records' AND COLUMN_NAME = ?`, col.name).Scan(&colEx)
+		               ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\seeder.go:300:18: (*database/sql.DB).Exec must not be called. use (*database/sql.DB).ExecContext (noctx)
+			_, _ = db.Exec(fmt.Sprintf("ALTER TABLE triage_records ADD COLUMN %s %s", col.name, col.dtyp))
+			              ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\seeder.go:305:16: (*database/sql.DB).Exec must not be called. use (*database/sql.DB).ExecContext (noctx)
+	_, _ = db.Exec("ALTER TABLE appointments MODIFY COLUMN status VARCHAR(20) DEFAULT 'SCHEDULED'")
+	              ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\seeder.go:308:18: (*database/sql.DB).Exec must not be called. use (*database/sql.DB).ExecContext (noctx)
+	_, err = db.Exec(`
+	                ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\connection.go:68:19: (*database/sql.DB).Ping must not be called. use (*database/sql.DB).PingContext (noctx)
+	if err := db.Ping(); err != nil {
+	                 ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\migrate.go:19:22: (*database/sql.DB).Exec must not be called. use (*database/sql.DB).ExecContext (noctx)
+	if _, err := db.Exec(schemaSQL); err != nil {
+	                    ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\migrate.go:24:20: (*database/sql.DB).Exec must not be called. use (*database/sql.DB).ExecContext (noctx)
+		_, err := db.Exec(`
+		                 ^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\email\smtp.go:75:2: QF1012: Use fmt.Fprintf(...) instead of WriteString(fmt.Sprintf(...)) (staticcheck)
+	msg.WriteString(fmt.Sprintf("From: %s\r\n", s.cfg.From))
+	^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\email\smtp.go:76:2: QF1012: Use fmt.Fprintf(...) instead of WriteString(fmt.Sprintf(...)) (staticcheck)
+	msg.WriteString(fmt.Sprintf("To: %s\r\n", to))
+	^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\email\smtp.go:77:2: QF1012: Use fmt.Fprintf(...) instead of WriteString(fmt.Sprintf(...)) (staticcheck)
+	msg.WriteString(fmt.Sprintf("Subject: %s\r\n", subject))
+	^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\email\smtp.go:79:2: QF1012: Use fmt.Fprintf(...) instead of WriteString(fmt.Sprintf(...)) (staticcheck)
+	msg.WriteString(fmt.Sprintf("Content-Type: multipart/mixed; boundary=\"%s\"\r\n\r\n", boundary))
+	^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\email\smtp.go:82:2: QF1012: Use fmt.Fprintf(...) instead of WriteString(fmt.Sprintf(...)) (staticcheck)
+	msg.WriteString(fmt.Sprintf("--%s\r\n", boundary))
+	^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\email\smtp.go:89:3: QF1012: Use fmt.Fprintf(...) instead of WriteString(fmt.Sprintf(...)) (staticcheck)
+		msg.WriteString(fmt.Sprintf("--%s\r\n", boundary))
+		^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\email\smtp.go:103:2: QF1012: Use fmt.Fprintf(...) instead of WriteString(fmt.Sprintf(...)) (staticcheck)
+	msg.WriteString(fmt.Sprintf("--%s--\r\n", boundary))
+	^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\http\middlewares\audit_middleware.go:74:4: QF1002: could use tagged switch on method (staticcheck)
+			switch {
+			^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\pdf\generator.go:67:2: QF1012: Use fmt.Fprintf(...) instead of WriteString(fmt.Sprintf(...)) (staticcheck)
+	stream.WriteString(fmt.Sprintf("48 640 Td (%s) Tj\n", sanitize(title)))
+	^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\pdf\generator.go:83:4: QF1012: Use fmt.Fprintf(...) instead of WriteString(fmt.Sprintf(...)) (staticcheck)
+			stream.WriteString(fmt.Sprintf("48 %d Td (%s) Tj\n", y, sanitize(clean)))
+			^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\pdf\generator.go:86:4: QF1012: Use fmt.Fprintf(...) instead of WriteString(fmt.Sprintf(...)) (staticcheck)
+			stream.WriteString(fmt.Sprintf("48 %d Td (%s) Tj\n", y, sanitize(line)))
+			^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\pdf\generator.go:105:4: QF1012: Use fmt.Fprintf(...) instead of WriteString(fmt.Sprintf(...)) (staticcheck)
+			stream.WriteString(fmt.Sprintf("%d 92 %d 24 re f\n", bx, width))
+			^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\pdf\generator.go:112:3: QF1012: Use fmt.Fprintf(...) instead of WriteString(fmt.Sprintf(...)) (staticcheck)
+		stream.WriteString(fmt.Sprintf("235 104 Td (CODIGO UNICO VALIDABLE: %s) Tj\n", sanitize(barcodeText)))
+		^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\pdf\generator.go:122:2: QF1012: Use fmt.Fprintf(...) instead of WriteString(fmt.Sprintf(...)) (staticcheck)
+	stream.WriteString(fmt.Sprintf("48 45 Td (Generado electronicamente por SaludConecta IPS v2.4 | Fecha: %s) Tj\n", time.Now().Format("2006-01-02 15:04:05")))
+	^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\pdf\generator.go:144:2: QF1012: Use fmt.Fprintf(...) instead of WriteString(fmt.Sprintf(...)) (staticcheck)
+	pdf.WriteString(fmt.Sprintf("4 0 obj\n<< /Length %d >>\nstream\n", streamLen))
+	^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\pdf\generator.go:156:2: QF1012: Use fmt.Fprintf(...) instead of WriteString(fmt.Sprintf(...)) (staticcheck)
+	pdf.WriteString(fmt.Sprintf("0 %d\n", len(offsets)+1))
+	^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\pdf\generator.go:159:3: QF1012: Use fmt.Fprintf(...) instead of WriteString(fmt.Sprintf(...)) (staticcheck)
+		pdf.WriteString(fmt.Sprintf("%010d 00000 n \n", off))
+		^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\pdf\generator.go:162:2: QF1012: Use fmt.Fprintf(...) instead of WriteString(fmt.Sprintf(...)) (staticcheck)
+	pdf.WriteString(fmt.Sprintf("<< /Size %d /Root 1 0 R >>\n", len(offsets)+1))
+	^
+..\..\..\Documents\Proyecto_felipe\src\backend\adapters\pdf\generator.go:164:2: QF1012: Use fmt.Fprintf(...) instead of WriteString(fmt.Sprintf(...)) (staticcheck)
+	pdf.WriteString(fmt.Sprintf("%d\n", startxref))
+	^
+62 issues:
+* errcheck: 2
+* gosec: 10
+* ineffassign: 2
+* noctx: 29
+* staticcheck: 19
+exit=1
