@@ -35,7 +35,9 @@ function enrichUserWithCustomProfile(rawUser) {
     if (rawCustom) {
       customProfile = JSON.parse(rawCustom);
     }
-  } catch {}
+  } catch {
+    // Perfil local corrupto o almacenamiento bloqueado: se continua con los datos del servidor.
+  }
 
   const savedAvatar =
     rawUser.avatar ||
@@ -59,7 +61,9 @@ function enrichUserWithCustomProfile(rawUser) {
 
   try {
     localStorage.setItem('saludconecta_user', JSON.stringify(merged));
-  } catch {}
+  } catch {
+    // Cuota excedida o almacenamiento bloqueado: la sesion sigue en memoria sin persistir el perfil.
+  }
 
   return merged;
 }
@@ -236,7 +240,7 @@ export function App() {
   };
 
   const handleHeaderSearch = async (documentType, documentNumber) => {
-    const cleanDoc = documentNumber.trim().replace(/[\.\s]/g, '');
+    const cleanDoc = documentNumber.trim().replace(/[.\s]/g, '');
     let found = null;
     try {
       found = await apiClient.lookupPatient(documentType, cleanDoc);
