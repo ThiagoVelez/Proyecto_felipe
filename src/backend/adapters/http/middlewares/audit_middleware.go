@@ -16,9 +16,12 @@ import (
 // CorrelationIDMiddleware asegura que cada solicitud cuente con un identificador de correlacion unico.
 func CorrelationIDMiddleware() fiber.Handler {
 	return func(c *fiber.Ctx) error {
+		// DEF-41: el valor del cliente se escribe en bitacora y cabeceras; solo se acepta un UUID canonico.
 		correlationID := c.Get("X-Correlation-ID")
-		if correlationID == "" {
+		if parsed, err := uuid.Parse(correlationID); err != nil || parsed.String() != strings.ToLower(correlationID) {
 			correlationID = uuid.New().String()
+		} else {
+			correlationID = parsed.String()
 		}
 
 		c.Locals("correlation_id", correlationID)
