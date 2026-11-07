@@ -1,0 +1,63 @@
+$ npx jscpd src (frontend) y src/backend
+Duplications detection: Found 12 exact clones with 318(3.26%) duplicated lines in 39 (3 formats) files.
+Duplications detection: Found 39 exact clones with 920(14.46%) duplicated lines in 50 (1 formats) files.
+Clone found (go):
+ - ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\user_repo.go [64:2 - 83:7] (19 lines, 224 tokens)
+   ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\user_repo.go [34:3 - 53:11]
+Clone found (go):
+ - ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\user_repo.go [162:5 - 168:2] (6 lines, 119 tokens)
+   ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\user_repo.go [37:4 - 44:3]
+Clone found (go):
+ - ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\prescription_repo.go [106:9 - 125:9] (19 lines, 194 tokens)
+   ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\prescription_repo.go [80:3 - 99:22]
+Clone found (go):
+ - ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\patient_repo.go [57:10 - 79:7] (22 lines, 263 tokens)
+   ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\patient_repo.go [28:3 - 50:14]
+Clone found (go):
+ - ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\clinical_record_repo.go [97:10 - 107:4] (10 lines, 170 tokens)
+   ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\clinical_record_repo.go [61:3 - 71:7]
+Clone found (go):
+ - ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\clinical_record_repo.go [135:5 - 140:2] (5 lines, 123 tokens)
+   ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\clinical_record_repo.go [64:4 - 70:3]
+Clone found (go):
+ - ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\user_repo.go [34:2 - 63:3] (29 lines, 273 tokens)
+   ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\user_repo.go [34:2 - 63:3]
+Clone found (go):
+ - ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\user_repo.go [64:2 - 90:3] (26 lines, 278 tokens)
+   ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\user_repo.go [64:2 - 90:3]
+Clone found (go):
+ - ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\user_repo.go [91:2 - 115:3] (24 lines, 186 tokens)
+   ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\user_repo.go [91:2 - 115:3]
+Clone found (go):
+ - ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\user_repo.go [131:2 - 175:46] (44 lines, 397 tokens)
+   ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\user_repo.go [134:2 - 178:48]
+Clone found (go):
+ - ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\user_repo.go [176:2 - 195:2] (19 lines, 197 tokens)
+   ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\user_repo.go [179:2 - 198:2]
+Clone found (go):
+ - ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\triage_repo.go [28:2 - 53:3] (25 lines, 167 tokens)
+   ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\triage_repo.go [28:2 - 53:3]
+Clone found (go):
+ - ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\triage_repo.go [54:2 - 72:72] (18 lines, 243 tokens)
+   ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\triage_repo.go [54:2 - 72:6]
+Clone found (go):
+ - ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\triage_repo.go [73:2 - 111:52] (38 lines, 304 tokens)
+   ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\triage_repo.go [72:2 - 110:54]
+Clone found (go):
+ - ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\prescription_repo.go [17:1 - 31:3] (14 lines, 128 tokens)
+   ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\prescription_repo.go [17:1 - 31:3]
+Clone found (go):
+ - ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\prescription_repo.go [83:2 - 108:3] (25 lines, 243 tokens)
+   ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\prescription_repo.go [80:2 - 105:3]
+Clone found (go):
+ - ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\prescription_repo.go [109:2 - 137:3] (28 lines, 244 tokens)
+   ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\prescription_repo.go [106:2 - 134:3]
+Clone found (go):
+ - ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\prescription_repo.go [138:2 - 168:3] (30 lines, 341 tokens)
+   ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\prescription_repo.go [135:2 - 165:3]
+Clone found (go):
+ - ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\prescription_repo.go [169:2 - 193:3] (24 lines, 230 tokens)
+   ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\prescription_repo.go [166:2 - 190:3]
+Clone found (go):
+ - ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\prescription_repo.go [194:2 - 219:3] (25 lines, 265 tokens)
+   ..\..\..\..\..\..\..\..\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\prescription_repo.go [191:2 - 216:3]

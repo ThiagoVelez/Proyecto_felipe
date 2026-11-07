@@ -1,0 +1,30 @@
+$ go test -count=1 -run "TestDEF28|TestDEF41" -v ./...  (ANTES)
+=== RUN   TestDEF28AuditoriaConservaDatosTrasFinalizarPeticion
+    auditoria_concurrencia_regression_test.go:76: Entrada 0 alterada tras finalizar la peticion: resource="/api/v1/recurso-0016" correlation="aa20777b-26b5-46b1-ba7c-baf4378c6f9b"; se esperaba "/api/v1/recurso-0000" / "59d47971-48c9-49ce-84f8-301e63c935f2"
+    auditoria_concurrencia_regression_test.go:76: Entrada 1 alterada tras finalizar la peticion: resource="/api/v1/recurso-0016" correlation="aa20777b-26b5-46b1-ba7c-baf4378c6f9b"; se esperaba "/api/v1/recurso-0001" / "78942dac-5b46-432b-99ba-b4350442c9dc"
+    auditoria_concurrencia_regression_test.go:76: Entrada 2 alterada tras finalizar la peticion: resource="/api/v1/recurso-0016" correlation="aa20777b-26b5-46b1-ba7c-baf4378c6f9b"; se esperaba "/api/v1/recurso-0002" / "540ebe64-f9f2-48d1-9471-7416cf2fe1d9"
+    auditoria_concurrencia_regression_test.go:76: Entrada 3 alterada tras finalizar la peticion: resource="/api/v1/recurso-0016" correlation="aa20777b-26b5-46b1-ba7c-baf4378c6f9b"; se esperaba "/api/v1/recurso-0003" / "99aa8230-a0c9-4cd8-911c-ca9eb680ed44"
+    auditoria_concurrencia_regression_test.go:76: Entrada 4 alterada tras finalizar la peticion: resource="/api/v1/recurso-0016" correlation="aa20777b-26b5-46b1-ba7c-baf4378c6f9b"; se esperaba "/api/v1/recurso-0004" / "0cf9bc24-d733-4d7d-818e-7d0a758ec73f"
+    auditoria_concurrencia_regression_test.go:76: Entrada 5 alterada tras finalizar la peticion: resource="/api/v1/recurso-0016" correlation="aa20777b-26b5-46b1-ba7c-baf4378c6f9b"; se esperaba "/api/v1/recurso-0005" / "90c5006d-65f1-44ef-956d-3c599c173975"
+    auditoria_concurrencia_regression_test.go:76: Entrada 6 alterada tras finalizar la peticion: resource="/api/v1/recurso-0016" correlation="aa20777b-26b5-46b1-ba7c-baf4378c6f9b"; se esperaba "/api/v1/recurso-0006" / "3cbb5f10-1de8-49c3-bbfa-df543ef70d0b"
+    auditoria_concurrencia_regression_test.go:76: Entrada 7 alterada tras finalizar la peticion: resource="/api/v1/recurso-0016" correlation="aa20777b-26b5-46b1-ba7c-baf4378c6f9b"; se esperaba "/api/v1/recurso-0007" / "39b8122e-8b3f-4329-8277-261eb605353a"
+    auditoria_concurrencia_regression_test.go:76: Entrada 8 alterada tras finalizar la peticion: resource="/api/v1/recurso-0016" correlation="aa20777b-26b5-46b1-ba7c-baf4378c6f9b"; se esperaba "/api/v1/recurso-0008" / "9202f64f-020d-4e5a-bfd7-2393e0a2eaa4"
+    auditoria_concurrencia_regression_test.go:76: Entrada 9 alterada tras finalizar la peticion: resource="/api/v1/recurso-0016" correlation="aa20777b-26b5-46b1-ba7c-baf4378c6f9b"; se esperaba "/api/v1/recurso-0009" / "ae9c5dfe-e194-45c2-a0e7-f8b4c7a76acb"
+    auditoria_concurrencia_regression_test.go:76: Entrada 10 alterada tras finalizar la peticion: resource="/api/v1/recurso-0016" correlation="aa20777b-26b5-46b1-ba7c-baf4378c6f9b"; se esperaba "/api/v1/recurso-0010" / "d3a5a22b-baa2-4586-9e89-257c982b6c25"
+    auditoria_concurrencia_regression_test.go:76: Entrada 11 alterada tras finalizar la peticion: resource="/api/v1/recurso-0016" correlation="aa20777b-26b5-46b1-ba7c-baf4378c6f9b"; se esperaba "/api/v1/recurso-0011" / "557d29ac-4be9-4385-8a23-7c31f4dd3ed0"
+    auditoria_concurrencia_regression_test.go:76: Entrada 12 alterada tras finalizar la peticion: resource="/api/v1/recurso-0016" correlation="aa20777b-26b5-46b1-ba7c-baf4378c6f9b"; se esperaba "/api/v1/recurso-0012" / "fd69547f-e4be-4c2a-959d-91c458b1dab5"
+    auditoria_concurrencia_regression_test.go:76: Entrada 13 alterada tras finalizar la peticion: resource="/api/v1/recurso-0016" correlation="aa20777b-26b5-46b1-ba7c-baf4378c6f9b"; se esperaba "/api/v1/recurso-0013" / "6098c3c9-c71b-4793-93a0-95d100480b11"
+    auditoria_concurrencia_regression_test.go:76: Entrada 14 alterada tras finalizar la peticion: resource="/api/v1/recurso-0016" correlation="aa20777b-26b5-46b1-ba7c-baf4378c6f9b"; se esperaba "/api/v1/recurso-0014" / "bcd05c0e-6041-43ea-b891-dbbf207f1299"
+    auditoria_concurrencia_regression_test.go:76: Entrada 15 alterada tras finalizar la peticion: resource="/api/v1/recurso-0016" correlation="aa20777b-26b5-46b1-ba7c-baf4378c6f9b"; se esperaba "/api/v1/recurso-0015" / "066bb86d-eb48-4d92-a620-6386d24e9a67"
+    auditoria_concurrencia_regression_test.go:76: Entrada 17 alterada tras finalizar la peticion: resource="/api/v1/recurso-0019" correlation="4b2da16a-ff8d-46c8-85ef-88676d4ea7e4"; se esperaba "/api/v1/recurso-0017" / "acd45f99-dad7-4e55-ac7a-29dd72218079"
+    auditoria_concurrencia_regression_test.go:76: Entrada 18 alterada tras finalizar la peticion: resource="/api/v1/recurso-0019" correlation="4b2da16a-ff8d-46c8-85ef-88676d4ea7e4"; se esperaba "/api/v1/recurso-0018" / "ad587a2e-2ddf-418b-92e2-dd50a6ed3e30"
+--- FAIL: TestDEF28AuditoriaConservaDatosTrasFinalizarPeticion (0.00s)
+=== RUN   TestDEF41CorrelationIDSoloAceptaUUID
+    auditoria_concurrencia_regression_test.go:107: Entrada "no-es-un-uuid": la cabecera devuelta "no-es-un-uuid" no es un UUID
+    auditoria_concurrencia_regression_test.go:113: Entrada "no-es-un-uuid" aceptada sin validar como identificador de correlacion
+    auditoria_concurrencia_regression_test.go:102: error when reading request headers: small read buffer. Increase ReadBufferSize. Buffer size=4096, contents: "POST /api/v1/correlacion HTTP/1.1\r\nHost: example.com\r\nX-Correlation-Id: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"..."AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+--- FAIL: TestDEF41CorrelationIDSoloAceptaUUID (0.00s)
+FAIL
+FAIL	saludconecta-tests	0.025s
+FAIL
+exit=1

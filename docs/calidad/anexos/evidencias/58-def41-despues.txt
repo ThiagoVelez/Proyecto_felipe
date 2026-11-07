@@ -1,0 +1,8 @@
+$ go test -count=1 -run TestDEF41 -v ./...  (DESPUES)
+=== RUN   TestDEF41CorrelationIDSoloAceptaUUID
+--- PASS: TestDEF41CorrelationIDSoloAceptaUUID (0.00s)
+PASS
+ok  	saludconecta-tests	0.024s
+exit=0
+$ go test -count=1 ./...
+ok  	saludconecta-tests	6.825s

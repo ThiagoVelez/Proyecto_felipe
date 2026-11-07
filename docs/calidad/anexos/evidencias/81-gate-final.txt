@@ -1,0 +1,43 @@
+# Gate final 2026-11-01T22:11:39Z sobre de5bfb7 + cambios de documentacion sin confirmar
+$ go build ./... && go vet ./...  (src/backend)
+exit=0
+$ go test -count=1 ./...  (src/backend)
+ok  	saludconecta-backend/cmd/api	0.019s
+ok  	saludconecta-backend/core/services	0.020s
+ok  	saludconecta-backend/pkg/crypto	0.867s
+exit=0
+$ golangci-lint run --config ../../.golangci.yml ./...  (src/backend)
+0 issues.
+exit=0
+$ go vet ./... && go test -count=1 ./...  (tests/backend)
+ok  	saludconecta-tests	7.642s
+exit=0
+$ golangci-lint run --config ../../.golangci.yml ./...  (tests/backend)
+0 issues.
+exit=0
+$ go test -race ./...
+# runtime/cgo
+cgo: C compiler "gcc" not found: exec: "gcc": executable file not found in %PATH%
+(no ejecutable en este entorno: sin compilador C)
+$ npx eslint src
+✖ 69 problems (0 errors, 69 warnings)
+
+exit=0
+$ npx vitest run
+ Test Files  4 passed (4)
+      Tests  28 passed (28)
+exit=0
+$ npm run build
+✓ built in 7.05s
+exit=0
+$ npm audit --omit=dev --audit-level=high
+found 0 vulnerabilities
+exit=0
+$ actionlint .github/workflows/calidad.yml
+exit=0
+$ git status --short
+ M .github/workflows/calidad.yml
+ M README.md
+ M docs/informe-calidad.md
+?? docs/calidad/
+?? tarea-responsable-calidad-codex.md

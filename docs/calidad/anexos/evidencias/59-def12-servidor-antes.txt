@@ -1,0 +1,19 @@
+{"timestamp":"2026-11-01T21:39:13.9394469Z","level":"INFO","message":"Iniciando Sistema Hospitalario SaludConecta IPS v2.4 (ISO/IEC 25010)"}
+{"timestamp":"2026-11-01T21:39:13.9479382Z","level":"INFO","message":"Activando Adaptador de Persistencia MySQL 8.0+","fields":{"db":"saludconecta_db","host":"127.0.0.1","port":"1"}}
+{"timestamp":"2026-11-01T21:39:13.9610967Z","level":"ERROR","message":"No fue posible inicializar el adaptador principal configurado","fields":{"driver":"mysql","error":"fallo conexion al adaptador mysql: error al verificar ping a mysql (127.0.0.1:1): dial tcp 127.0.0.1:1: connectex: No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión."}}
+{"timestamp":"2026-11-01T21:39:13.9616218Z","level":"WARN","message":"Conmutando a Adaptador en Memoria para permitir pruebas inmediatas con gobernanza"}
+{"timestamp":"2026-11-01T21:39:13.9616218Z","level":"INFO","message":"Activando Adaptador de Persistencia en Memoria (In-Memory Mock con Gobernanza ReTHUS)"}
+{"timestamp":"2026-11-01T21:39:14.5390271Z","level":"INFO","message":"Servidor HTTP Fiber v2 en escucha","fields":{"address":":18081","port":"18081"}}
+
+ ┌───────────────────────────────────────────────────┐ 
+ │               SaludConecta IPS v2.4               │ 
+ │                   Fiber v2.52.5                   │ 
+ │              http://127.0.0.1:18081               │ 
+ │      (bound on host 0.0.0.0 and port 18081)       │ 
+ │                                                   │ 
+ │ Handlers ............ 69  Processes ........... 1 │ 
+ │ Prefork ....... Disabled  PID ............. 15428 │ 
+ └───────────────────────────────────────────────────┘ 
+
+{"timestamp":"2026-11-01T21:39:15.0143533Z","level":"INFO","message":"Solicitud HTTP procesada","correlation_id":"55d0e759-441c-49fd-81df-a0ed398252e2","fields":{"ip":"127.0.0.1","latency_ms":2,"method":"GET","path":"/api/v1/health","status":200,"user_agent":"curl/8.23.0"}}
+{"timestamp":"2026-11-01T21:39:15.1677885Z","level":"INFO","message":"Solicitud HTTP procesada","correlation_id":"b2926080-003a-4a95-8059-d8bd2a058ea4","fields":{"ip":"127.0.0.1","latency_ms":1,"method":"GET","path":"/api/v1/clinical-records/patient/cualquiera","status":200,"user_agent":"curl/8.23.0"}}

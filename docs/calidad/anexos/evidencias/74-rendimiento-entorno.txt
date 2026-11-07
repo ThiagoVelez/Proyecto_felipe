@@ -1,0 +1,4 @@
+windows
+amd64
+AMD Ryzen 5 3500U with Radeon Vega Mobile Gfx  
+8
