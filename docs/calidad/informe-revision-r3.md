@@ -3,8 +3,8 @@
 <!-- cifras-r3 -->
 > **Cifras vigentes de la revisión R3 (10 nov 2026).** Fuente única: `anexos/cifras-r3.json`; coherencia comprobada con `anexos/verificar_cifras_r3.py`. Detalle en `informe-revision-r3.md`.
 >
-> - Defectos registrados: 92 (DEF-01 a DEF-92). Verificación de DEF-01 a DEF-48: 27 verificados, 8 corregidos parcialmente, 12 siguen abiertos, 1 sin ejecución medible, 0 regresiones.
-> - Abiertos en `main` (DEF-05 a DEF-92): 62 (18 críticos, 9 altos, 28 medios, 7 bajos). Nuevos de R3: 8 (1 crítico, 1 alto, 6 medios).
+> - Defectos registrados: 92 (DEF-01 a DEF-92). Verificación de DEF-01 a DEF-48: 26 verificados, 9 corregidos parcialmente, 12 siguen abiertos, 1 sin ejecución medible, 0 regresiones.
+> - Abiertos en `main` (DEF-05 a DEF-92): 63 (18 críticos, 9 altos, 28 medios, 8 bajos). Nuevos de R3: 8 (1 crítico, 1 alto, 6 medios).
 > - Pruebas backend: 91 pasan, 0 fallan, 22 reproducciones omitidas (evidencias/r3/12-go-test-tests.txt). Cobertura backend: 68,9 %. Vitest: 108 pruebas en 15 archivos (105 en 14 archivos del equipo), todas pasan. Cobertura frontend: 72,85 %. Reproducciones de defectos abiertos: 22 de 22.
 > - Análisis estático: golangci-lint 62 hallazgos (21 nuevos desde la v1); gocyclo 16 funciones con complejidad mayor de 15; govulncheck 1 vulnerabilidad alcanzable (GO-2026-6888); npm audit 0 en producción; 6 en desarrollo; ESLint 0 errores, 89 avisos.
 > - Rendimiento: p95 1,38 ms HTTP real; 3,92 a 7,86 ms en proceso; memoria 11,5 a 16,3 MB.
@@ -21,7 +21,7 @@
 
 ## 1. Resumen ejecutivo
 
-**Estado en una frase:** el equipo corrigió de verdad la mayoría de los defectos de la revisión 1 (27 de 48 verificados con prueba), pero los módulos nuevos introdujeron 18 defectos críticos abiertos que pueden afectar a pacientes, por lo que el producto **no es conforme** con ISO/IEC 25010:2023 y el dictamen «Aprobado 100 %» publicado no se sostiene.
+**Estado en una frase:** el equipo corrigió de verdad la mayoría de los defectos de la revisión 1 (26 de 48 verificados con prueba), pero los módulos nuevos introdujeron 18 defectos críticos abiertos que pueden afectar a pacientes, por lo que el producto **no es conforme** con ISO/IEC 25010:2023 y el dictamen «Aprobado 100 %» publicado no se sostiene.
 
 ### 1.1 Semáforo ISO/IEC 25010:2023
 
@@ -42,8 +42,8 @@
 | Indicador | Valor | Evidencia |
 |---|---|---|
 | Defectos registrados | 92 (DEF-01 a DEF-92) | `04-bitacora-defectos.md` |
-| Verificación de DEF-01 a DEF-48 | 27 verificados, 8 corregidos parcialmente, 12 siguen abiertos, 1 sin ejecución medible, 0 regresiones | Sección 3 |
-| Defectos abiertos en `main` (DEF-05 a DEF-92) | 62: 18 críticos, 9 altos, 28 medios, 7 bajos | `cifras-r3.json` |
+| Verificación de DEF-01 a DEF-48 | 26 verificados, 9 corregidos parcialmente, 12 siguen abiertos, 1 sin ejecución medible, 0 regresiones | Sección 3 |
+| Defectos abiertos en `main` (DEF-05 a DEF-92) | 63: 18 críticos, 9 altos, 28 medios, 8 bajos | `cifras-r3.json` |
 | Defectos nuevos de R3 | 8 (DEF-85 a DEF-92): 1 crítico, 1 alto, 6 medios | Sección 6 |
 | Pruebas backend (`tests/backend`) | 91 pasan, 0 fallan, 22 reproducciones de defectos abiertos omitidas por diseño | `12-go-test-tests.txt` |
 | Reproducciones de defectos abiertos | 22 de 22 fallan por el defecto declarado | `32-control-defectos-local.txt` |
@@ -88,13 +88,15 @@ Detalle de cada defecto con evidencia en la sección «Verificación R3 (10 nov 
 
 | Veredicto | Cantidad | Defectos |
 |---|---|---|
-| Verificado — corregido | 27 | 01, 04, 05, 06, 07, 08, 09, 11, 12, 13, 14, 16, 17, 18, 19, 20, 23, 24, 26, 27, 31, 34, 37, 42, 46, 47, 48 |
-| Corregido parcialmente | 8 | 02, 10, 15, 21, 22, 33, 38, 40 |
+| Verificado — corregido | 26 | 01, 04, 05, 06, 07, 08, 09, 11, 12, 13, 14, 16, 17, 18, 19, 20, 23, 24, 26, 27, 31, 34, 37, 42, 46, 47 |
+| Corregido parcialmente | 9 | 02, 10, 15, 21, 22, 33, 38, 40, 48 |
 | Sigue abierto | 12 | 03, 28, 29, 30, 32, 35, 36, 39, 41, 43, 44, 45 |
 | Corrección presente; ejecución No medida | 1 | 25 |
 | Regresión | 0 | — |
 | Ya no aplica | 0 | — |
 | **Total** | **48** | |
+
+DEF-48 se reabrió en R3: el equipo corrigió la prueba original, pero el primer run del pipeline mostró la misma causa (timeout de 1 s bajo `-race`) en `TestDualTokenLoginAndRefreshFlow` y `TestRefreshTokenRevocationOnUserDeactivation` (`evidencias/r3/60-ci-run-42922715510-fallos.txt`).
 
 DEF-28 y DEF-41 siguen abiertos en `main` porque sus correcciones son de Calidad y nunca se fusionaron: el PR #1 sigue abierto. Con el código de `main`, la prueba de DEF-28 altera 18 de 20 entradas de auditoría (`31-def28-en-main.txt`). No son regresiones: en `main` nunca estuvieron corregidos.
 
@@ -134,7 +136,7 @@ Veredictos: **Verificada**, **Parcial**, **No verificada** (no hay evidencia y n
 | 3 | Seguridad OWASP ASVS Nivel 2 | README §1, RNF03 | ASVS L2 medido en la v1: 34,0 %; R3 agrega DEF-49 y DEF-50 | Falsa |
 | 4 | Contraste WCAG AAA de los banners | README RF09 | 2,15:1 y 3,74:1 en pediatría (`44-…`) | Falsa |
 | 5 | RTM: 100 % de RF01 a RF12 y RNF01 a RNF08 | README §4.5, tarjeta «Certificación de Calidad» | 18 de 21 filas citan pruebas que existen; solo 5 requisitos se sostienen sin defecto contrario; el README define RF01 a RF16 | Falsa |
-| 6 | «Cumple de forma estricta y verificable el 100 %» | README §4.7 | 62 defectos abiertos, 18 críticos | Falsa |
+| 6 | «Cumple de forma estricta y verificable el 100 %» | README §4.7 | 63 defectos abiertos, 18 críticos | Falsa |
 | 7 | «Aprobado 100 % conforme a ISO/IEC 25010 e ISO/IEC/IEEE 29119» | Tarjeta «Certificación de Calidad», README §14.1 | Dictamen de la sección 7: no conforme | Falsa (DEF-91) |
 | 8 | Triaje en 5,55 ns/op | Tarjeta «Certificación», README | 9,47 a 9,97 ns/op en este equipo; el benchmark mide solo `SuggestManchesterPriority()` | Parcial: reproducible como función pura, no como «triaje» |
 | 9 | Alergias en 3,23 µs/op | Tarjeta, README | 5,3 a 5,8 µs/op | Parcial: mismo orden de magnitud; depende del equipo |

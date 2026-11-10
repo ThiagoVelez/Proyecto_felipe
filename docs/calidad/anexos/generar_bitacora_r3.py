@@ -78,7 +78,7 @@ R3 = {
  "DEF-45": (A, "Confirmado (sigue abierto, R3)", "`npm audit`: 6 vulnerabilidades en dependencias de desarrollo (2 críticas, 1 alta, 3 moderadas); producción: 0 (`evidencias/r3/22b-npm-audit-completo.txt`, `22-npm-audit-prod.txt`)."),
  "DEF-46": (V, "Cerrado (verificado en R3)", "`TestDEF46CatalogoNoExponePunteroInterno` y `TestDEF46PrescripcionesConcurrentesSinCarrera` pasan."),
  "DEF-47": (V, "Cerrado (verificado en R3)", "`tests/frontend/totp.regression.test.js` (3 pruebas) pasa (`evidencias/r3/24-vitest.txt`)."),
- "DEF-48": (V, "Cerrado (verificado en R3)", "`staff_register_routes_test.go:84` usa 30 s. Calidad retira en esta rama el `-skip` que quedaba en `calidad.yml`."),
+ "DEF-48": (P, "Reabierto (corregido parcialmente, R3)", "El equipo corrigió `staff_register_routes_test.go:84` (timeout de 30 s) y Calidad retiró el `-skip` de `calidad.yml`. El primer run del pipeline de R3 (`42922715510`) mostró la misma causa en otras pruebas del equipo: `TestDualTokenLoginAndRefreshFlow` y `TestRefreshTokenRevocationOnUserDeactivation` (`auth_security_test.go:278,308,387`, timeout por defecto de 1 s) fallan bajo `-race` con «timeout error 1000ms» y un pánico derivado (`evidencias/r3/60-ci-run-42922715510-fallos.txt`). Sin `-race` pasan. Corrección propuesta al Responsable de Pruebas: `app.Test(req, -1)` o un timeout explícito."),
 }
 
 # Defectos nuevos de la revisión R3. Mismo orden de campos que borrador.NUEVOS.

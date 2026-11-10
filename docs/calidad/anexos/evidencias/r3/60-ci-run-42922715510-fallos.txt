@@ -1,0 +1,143 @@
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	﻿2026-11-10T23:22:44.3357836Z ##[group]Run go test -race -count=1 ./...
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:22:44.3358283Z ^[[36;1mgo test -race -count=1 ./...^[[0m
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:22:44.3372408Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:22:44.3372888Z env:
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:22:44.3373362Z   GO_VERSION: 1.27.3
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:22:44.3373741Z   NODE_VERSION: 20.18.1
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:22:44.3374060Z   COBERTURA_MINIMA_BACKEND: 60
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:22:44.3374386Z   GOLANGCI_LINT_VERSION: v2.15.0
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:22:44.3374775Z   STATICCHECK_VERSION: v0.8.2
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:22:44.3375108Z   GOSEC_VERSION: v2.30.0
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:22:44.3375429Z   GOVULNCHECK_VERSION: v1.9.0
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:22:44.3375810Z   GOCYCLO_VERSION: v0.6.0
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:22:44.3376121Z   CGO_ENABLED: 1
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:22:44.3376462Z ##[endgroup]
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2856176Z {"timestamp":"2026-11-10T23:22:56.988141038Z","level":"INFO","message":"Solicitud HTTP procesada","correlation_id":"10e39e49-fcc5-41a7-a8c8-97a911f9ae62","fields":{"ip":"0.0.0.0","latency_ms":0,"method":"POST","path":"/api/v1/recurso-0000","status":201,"user_agent":""}}
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2860617Z {"timestamp":"2026-11-10T23:22:56.988175254Z","level":"INFO","message":"Correo electronico despachado y registrado en outbox local","fields":{"archivo_pdf":"CitaMedica_.pdf","asunto":"Confirmación de Cita Médica - SaludConecta IPS [12/11/2026]","auditoria":"storage/outbox/paciente_at_saludconecta.local_mail_1794352976988093290.txt","destinatario":"paciente@saludconecta.local","tamano_bytes":3016}}
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2864580Z {"timestamp":"2026-11-10T23:22:56.988363169Z","level":"INFO","message":"Correo electronico despachado y registrado en outbox local","fields":{"archivo_pdf":"CitaMedica_111222333.pdf","asunto":"Confirmación de Cita Médica - SaludConecta IPS [13/11/2026]","auditoria":"storage/outbox/paciente.test_at_saludconecta.local_mail_1794352976988266515.txt","destinatario":"paciente.test@saludconecta.local","tamano_bytes":3150}}
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2867184Z {"timestamp":"2026-11-10T23:22:56.988821575Z","level":"INFO","message":"Solicitud HTTP procesada","correlation_id":"b374c809-2439-4e8e-a1a8-77cff20100b6","fields":{"ip":"0.0.0.0","latency_ms":0,"method":"POST","path":"/api/v1/recurso-0001","status":201,"user_agent":""}}
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2869336Z {"timestamp":"2026-11-10T23:22:56.989136939Z","level":"INFO","message":"Solicitud HTTP procesada","correlation_id":"9008a04f-145d-481c-ba63-c326a86c15d0","fields":{"ip":"0.0.0.0","latency_ms":0,"method":"POST","path":"/api/v1/recurso-0002","status":201,"user_agent":""}}
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2871283Z {"timestamp":"2026-11-10T23:22:56.989462484Z","level":"INFO","message":"Solicitud HTTP procesada","correlation_id":"2d90dd90-6709-439e-a2c5-9d9927f23ce4","fields":{"ip":"0.0.0.0","latency_ms":0,"method":"POST","path":"/api/v1/recurso-0003","status":201,"user_agent":""}}
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2874502Z {"timestamp":"2026-11-10T23:22:56.989760674Z","level":"INFO","message":"Solicitud HTTP procesada","correlation_id":"454ddabe-df25-489d-b4d5-85e75173c506","fields":{"ip":"0.0.0.0","latency_ms":0,"method":"POST","path":"/api/v1/recurso-0004","status":201,"user_agent":""}}
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2877262Z {"timestamp":"2026-11-10T23:22:56.99006902Z","level":"INFO","message":"Solicitud HTTP procesada","correlation_id":"a9b59cf9-2d3c-4433-99bf-3c72405fac43","fields":{"ip":"0.0.0.0","latency_ms":0,"method":"POST","path":"/api/v1/recurso-0005","status":201,"user_agent":""}}
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2879850Z {"timestamp":"2026-11-10T23:22:56.990363609Z","level":"INFO","message":"Solicitud HTTP procesada","correlation_id":"d1e19914-9264-4927-b60d-343f08bf93fc","fields":{"ip":"0.0.0.0","latency_ms":0,"method":"POST","path":"/api/v1/recurso-0006","status":201,"user_agent":""}}
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2882410Z {"timestamp":"2026-11-10T23:22:56.990646092Z","level":"INFO","message":"Solicitud HTTP procesada","correlation_id":"0b7c55b7-dd8b-4895-8343-be9b4b3a47e1","fields":{"ip":"0.0.0.0","latency_ms":0,"method":"POST","path":"/api/v1/recurso-0007","status":201,"user_agent":""}}
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2885138Z {"timestamp":"2026-11-10T23:22:56.99102453Z","level":"INFO","message":"Solicitud HTTP procesada","correlation_id":"c05fbd9e-b4cb-478d-b40f-5442d98e3816","fields":{"ip":"0.0.0.0","latency_ms":0,"method":"POST","path":"/api/v1/recurso-0008","status":201,"user_agent":""}}
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2887906Z {"timestamp":"2026-11-10T23:22:56.991365498Z","level":"INFO","message":"Solicitud HTTP procesada","correlation_id":"806f5b37-3255-42b7-ba23-1133ca8ebac3","fields":{"ip":"0.0.0.0","latency_ms":0,"method":"POST","path":"/api/v1/recurso-0009","status":201,"user_agent":""}}
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2890427Z {"timestamp":"2026-11-10T23:22:56.991692921Z","level":"INFO","message":"Solicitud HTTP procesada","correlation_id":"058580f2-b071-4221-9039-f6e37b17ff51","fields":{"ip":"0.0.0.0","latency_ms":0,"method":"POST","path":"/api/v1/recurso-0010","status":201,"user_agent":""}}
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2893472Z {"timestamp":"2026-11-10T23:22:56.992041947Z","level":"INFO","message":"Solicitud HTTP procesada","correlation_id":"b3033d53-2c8b-4f20-b034-8040360263d0","fields":{"ip":"0.0.0.0","latency_ms":0,"method":"POST","path":"/api/v1/recurso-0011","status":201,"user_agent":""}}
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2896054Z {"timestamp":"2026-11-10T23:22:56.992372884Z","level":"INFO","message":"Solicitud HTTP procesada","correlation_id":"67ed53f9-6070-4d4b-8763-8573a9687a19","fields":{"ip":"0.0.0.0","latency_ms":0,"method":"POST","path":"/api/v1/recurso-0012","status":201,"user_agent":""}}
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2898769Z {"timestamp":"2026-11-10T23:22:56.992641685Z","level":"INFO","message":"Solicitud HTTP procesada","correlation_id":"9ee995a4-9af9-496b-901f-6f5e20fe347e","fields":{"ip":"0.0.0.0","latency_ms":0,"method":"POST","path":"/api/v1/recurso-0013","status":201,"user_agent":""}}
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2901384Z {"timestamp":"2026-11-10T23:22:56.992917251Z","level":"INFO","message":"Solicitud HTTP procesada","correlation_id":"a94fbfdc-88b2-4580-be3d-bd398b16f22d","fields":{"ip":"0.0.0.0","latency_ms":0,"method":"POST","path":"/api/v1/recurso-0014","status":201,"user_agent":""}}
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2904344Z {"timestamp":"2026-11-10T23:22:56.993238993Z","level":"INFO","message":"Solicitud HTTP procesada","correlation_id":"ae11525c-f3ab-44af-b437-13e1cd98f502","fields":{"ip":"0.0.0.0","latency_ms":0,"method":"POST","path":"/api/v1/recurso-0015","status":201,"user_agent":""}}
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2907238Z {"timestamp":"2026-11-10T23:22:56.993524449Z","level":"INFO","message":"Solicitud HTTP procesada","correlation_id":"2cf76cff-58a0-44f6-8fed-af4330a0a2e4","fields":{"ip":"0.0.0.0","latency_ms":0,"method":"POST","path":"/api/v1/recurso-0016","status":201,"user_agent":""}}
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2909695Z {"timestamp":"2026-11-10T23:22:56.993808105Z","level":"INFO","message":"Solicitud HTTP procesada","correlation_id":"dd0355e7-9e18-4bcc-b127-f019556ab5df","fields":{"ip":"0.0.0.0","latency_ms":0,"method":"POST","path":"/api/v1/recurso-0017","status":201,"user_agent":""}}
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2912421Z {"timestamp":"2026-11-10T23:22:56.994082446Z","level":"INFO","message":"Solicitud HTTP procesada","correlation_id":"742f138f-9a61-41ad-9ac7-bae587ca85ae","fields":{"ip":"0.0.0.0","latency_ms":0,"method":"POST","path":"/api/v1/recurso-0018","status":201,"user_agent":""}}
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2915080Z {"timestamp":"2026-11-10T23:22:56.994350375Z","level":"INFO","message":"Solicitud HTTP procesada","correlation_id":"a083b92b-1365-484f-abf6-4756c691bb3e","fields":{"ip":"0.0.0.0","latency_ms":0,"method":"POST","path":"/api/v1/recurso-0019","status":201,"user_agent":""}}
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2916830Z --- FAIL: TestDualTokenLoginAndRefreshFlow (4.40s)
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2917935Z     auth_security_test.go:310: Fallo login con credenciales validas: test: timeout error 1000ms
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2918878Z --- FAIL: TestRefreshTokenRevocationOnUserDeactivation (4.47s)
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2919897Z panic: runtime error: invalid memory address or nil pointer dereference [recovered, repanicked]
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2920931Z [signal SIGSEGV: segmentation violation code=0x1 addr=0x0 pc=0xa662ef]
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2921638Z 
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2921941Z goroutine 112 [running]:
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2922465Z testing.tRunner.func1.2({0xfe6710, 0x10b6150})
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2923422Z 	/opt/hostedtoolcache/go/1.27.3/x64/src/testing/testing.go:2125 +0x419
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2924120Z testing.tRunner.func1()
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2924831Z 	/opt/hostedtoolcache/go/1.27.3/x64/src/testing/testing.go:2128 +0x65f
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2925539Z panic({0xfe6710?, 0x10b6150?})
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2926261Z 	/opt/hostedtoolcache/go/1.27.3/x64/src/runtime/panic.go:859 +0x125
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2927182Z saludconecta-tests_test.TestRefreshTokenRevocationOnUserDeactivation(0xc0000fefc8)
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2928149Z 	/home/runner/work/Proyecto_felipe/Proyecto_felipe/tests/backend/auth_security_test.go:390 +0x40f
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2928741Z testing.tRunner(0xc0000fefc8, 0x103f5c8)
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2929703Z 	/opt/hostedtoolcache/go/1.27.3/x64/src/testing/testing.go:2195 +0x21d
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2930219Z created by testing.(*T).Run in goroutine 1
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2930721Z 	/opt/hostedtoolcache/go/1.27.3/x64/src/testing/testing.go:2260 +0xb13
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2931196Z FAIL	saludconecta-tests	90.542s
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2931688Z ok  	saludconecta-tests/herramientas/controldefectos	1.018s
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.2932089Z FAIL
+Backend - pruebas con -race y cobertura	Pruebas de integracion de tests/backend con detector de carreras	2026-11-10T23:24:17.3069535Z ##[error]Process completed with exit code 1.
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	﻿2026-11-10T23:24:34.5067161Z ##[group]Run (cd src/backend && golangci-lint run --config ../../.golangci.yml ./...)
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:34.5067828Z ^[[36;1m(cd src/backend && golangci-lint run --config ../../.golangci.yml ./...)^[[0m
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:34.5068392Z ^[[36;1m(cd tests/backend && golangci-lint run --config ../../.golangci.yml ./...)^[[0m
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:34.5088965Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:34.5089527Z env:
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:34.5089717Z   GO_VERSION: 1.27.3
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:34.5089929Z   NODE_VERSION: 20.18.1
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:34.5090149Z   COBERTURA_MINIMA_BACKEND: 60
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:34.5090391Z   GOLANGCI_LINT_VERSION: v2.15.0
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:34.5090647Z   STATICCHECK_VERSION: v0.8.2
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:34.5090884Z   GOSEC_VERSION: v2.30.0
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:34.5091111Z   GOVULNCHECK_VERSION: v1.9.0
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:34.5091348Z   GOCYCLO_VERSION: v0.6.0
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:34.5091561Z ##[endgroup]
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8245126Z ##[error]src/backend/pkg/config/config.go:91:16: Error return value of `os.Setenv` is not checked (errcheck)
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8247364Z 						os.Setenv(key, val)
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8247828Z 						         ^
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8249252Z ##[error]src/backend/adapters/email/smtp.go:60:7: G306: Expect WriteFile permissions to be 0600 or less (gosec)
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8250908Z 		_ = os.WriteFile(filePath, []byte(content), 0644)
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8251439Z 		    ^
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8252646Z ##[error]src/backend/adapters/pdf/generator.go:24:6: G301: Expect directory permissions to be 0750 or less (gosec)
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8254209Z 	_ = os.MkdirAll(outputDir, 0755)
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8254632Z 	    ^
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8255777Z ##[error]src/backend/adapters/pdf/generator.go:198:6: G301: Expect directory permissions to be 0750 or less (gosec)
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8257714Z 	_ = os.MkdirAll(filepath.Dir(fullPath), 0755)
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8258210Z 	    ^
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8259369Z ##[error]src/backend/adapters/pdf/generator.go:199:12: G306: Expect WriteFile permissions to be 0600 or less (gosec)
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8261057Z 	if err := os.WriteFile(fullPath, data, 0644); err != nil {
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8261624Z 	          ^
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8262752Z ##[error]src/backend/adapters/pdf/generator.go:245:6: G301: Expect directory permissions to be 0750 or less (gosec)
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8264239Z 	_ = os.MkdirAll(filepath.Dir(fullPath), 0755)
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8264693Z 	    ^
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8265767Z ##[error]src/backend/adapters/pdf/generator.go:246:12: G306: Expect WriteFile permissions to be 0600 or less (gosec)
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8267546Z 	if err := os.WriteFile(fullPath, data, 0644); err != nil {
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8268063Z 	          ^
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8269896Z ##[error]src/backend/core/services/appointment_service.go:94:2: G118: Goroutine uses context.Background/TODO while request-scoped context is available (gosec)
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8271725Z 	go func(appCopy domain.Appointment) {
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8272154Z 	^
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8273709Z ##[error]src/backend/core/services/appointment_service.go:139:7: G404: Use of weak random number generator (math/rand or math/rand/v2 instead of crypto/rand) (gosec)
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8275531Z 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8276206Z 	     ^
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8277146Z ##[error]src/backend/pkg/config/config.go:78:16: G304: Potential file inclusion via variable (gosec)
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8278730Z 		data, err := os.ReadFile(p)
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8279166Z 		             ^
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8280416Z ##[error]src/backend/adapters/http/handlers/clinical_record_handler.go:291:2: ineffectual assignment to layer (ineffassign)
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8282045Z 	layer := domain.LayerOrgan
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8282398Z 	^
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8283950Z ##[error]src/backend/adapters/storage/mysql/seeder.go:71:20: (*database/sql.DB).QueryRow must not be called. use (*database/sql.DB).QueryRowContext (noctx)
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8285635Z 	err := db.QueryRow(`
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8286234Z 	                  ^
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8288197Z ##[error]src/backend/adapters/storage/mysql/seeder.go:80:22: (*database/sql.DB).Exec must not be called. use (*database/sql.DB).ExecContext (noctx)
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8290654Z 	if _, err := db.Exec(fmt.Sprintf("ALTER TABLE clinical_records ADD UNIQUE KEY %s (patient_id, previous_hash)", chainIndexName)); err != nil {
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8292036Z 	                    ^
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8293644Z ##[error]src/backend/adapters/storage/mysql/seeder.go:126:21: (*database/sql.DB).QueryRow must not be called. use (*database/sql.DB).QueryRowContext (noctx)
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8295506Z 		err := db.QueryRow(`
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8295960Z 		                  ^
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8297670Z ##[error]src/backend/adapters/storage/mysql/seeder.go:135:23: (*database/sql.DB).Exec must not be called. use (*database/sql.DB).ExecContext (noctx)
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8299531Z 		if _, err := db.Exec(trg.stmt); err != nil {
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8300127Z 		                    ^
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8301605Z ##[error]src/backend/adapters/storage/mysql/seeder.go:145:20: (*database/sql.DB).Exec must not be called. use (*database/sql.DB).ExecContext (noctx)
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8303365Z 		_, err := db.Exec(`
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8303802Z 		                 ^
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8305366Z ##[error]src/backend/adapters/storage/mysql/seeder.go:162:17: (*database/sql.DB).QueryRow must not be called. use (*database/sql.DB).QueryRowContext (noctx)
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8308258Z 	_ = db.QueryRow(`SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'patients' AND COLUMN_NAME = 'affiliation_type'`).Scan(&exists)
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8309461Z 	               ^
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8310712Z ##[error]src/backend/adapters/email/smtp.go:75:2: QF1012: Use fmt.Fprintf(...) instead of WriteString(fmt.Sprintf(...)) (staticcheck)
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8312391Z 	msg.WriteString(fmt.Sprintf("From: %s\r\n", s.cfg.From))
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8312884Z 	^
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8314077Z ##[error]src/backend/adapters/email/smtp.go:76:2: QF1012: Use fmt.Fprintf(...) instead of WriteString(fmt.Sprintf(...)) (staticcheck)
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8315690Z 	msg.WriteString(fmt.Sprintf("To: %s\r\n", to))
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8316303Z 	^
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8317511Z ##[error]src/backend/adapters/email/smtp.go:77:2: QF1012: Use fmt.Fprintf(...) instead of WriteString(fmt.Sprintf(...)) (staticcheck)
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8319162Z 	msg.WriteString(fmt.Sprintf("Subject: %s\r\n", subject))
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8319651Z 	^
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8320811Z ##[error]src/backend/adapters/http/middlewares/audit_middleware.go:74:4: QF1002: could use tagged switch on method (staticcheck)
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8322464Z 			switch {
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8322743Z 			^
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8323014Z 21 issues:
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8323297Z * errcheck: 1
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8323592Z * gosec: 9
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8323886Z * ineffassign: 1
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8324186Z * noctx: 6
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8324473Z * staticcheck: 4
+Backend - analisis estatico	golangci-lint (hallazgos nuevos)	2026-11-10T23:24:42.8759800Z ##[error]Process completed with exit code 1.

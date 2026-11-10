@@ -34,7 +34,7 @@ Los 25 identificadores SEC-* corresponden uno a uno con las 25 tarjetas de defec
 | SEC-A15 | Sin API de admisión; ADMISION sin rutas | DEF-26 | `TestAdmissionPatientAndAllergyAPI` existe | Verificado — corregido |
 | SEC-A16 | Sin Web Crypto el cliente calculaba un TOTP inválido | DEF-47 | `totp.test.js` existe | Verificado — corregido |
 | SEC-M01 | `GetMedicationByID` devolvía el puntero interno (carrera con `DeductStock`) | DEF-46 | `TestGetMedicationReturnsCopy` existe; `TestConcurrentPrescriptionsDoNotRaceOnStock` existe | Verificado — corregido |
-| SEC-B01 | `TestStaffRegisterRequiresAdmin` fallaba bajo `-race` por el timeout de 1 s con Bcrypt | DEF-48 | `TestStaffRegisterRequiresAdmin` existe | Verificado — corregido |
+| SEC-B01 | `TestStaffRegisterRequiresAdmin` fallaba bajo `-race` por el timeout de 1 s con Bcrypt | DEF-48 | `TestStaffRegisterRequiresAdmin` existe | Corregido parcialmente |
 
 ## 2. Identificadores DEF-01 a DEF-04 del README (sección 14.3)
 

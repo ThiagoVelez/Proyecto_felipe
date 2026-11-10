@@ -3,8 +3,8 @@
 <!-- cifras-r3 -->
 > **Cifras vigentes de la revisión R3 (10 nov 2026).** Fuente única: `anexos/cifras-r3.json`; coherencia comprobada con `anexos/verificar_cifras_r3.py`. Detalle en `informe-revision-r3.md`.
 >
-> - Defectos registrados: 92 (DEF-01 a DEF-92). Verificación de DEF-01 a DEF-48: 27 verificados, 8 corregidos parcialmente, 12 siguen abiertos, 1 sin ejecución medible, 0 regresiones.
-> - Abiertos en `main` (DEF-05 a DEF-92): 62 (18 críticos, 9 altos, 28 medios, 7 bajos). Nuevos de R3: 8 (1 crítico, 1 alto, 6 medios).
+> - Defectos registrados: 92 (DEF-01 a DEF-92). Verificación de DEF-01 a DEF-48: 26 verificados, 9 corregidos parcialmente, 12 siguen abiertos, 1 sin ejecución medible, 0 regresiones.
+> - Abiertos en `main` (DEF-05 a DEF-92): 63 (18 críticos, 9 altos, 28 medios, 8 bajos). Nuevos de R3: 8 (1 crítico, 1 alto, 6 medios).
 > - Pruebas backend: 91 pasan, 0 fallan, 22 reproducciones omitidas (evidencias/r3/12-go-test-tests.txt). Cobertura backend: 68,9 %. Vitest: 108 pruebas en 15 archivos (105 en 14 archivos del equipo), todas pasan. Cobertura frontend: 72,85 %. Reproducciones de defectos abiertos: 22 de 22.
 > - Análisis estático: golangci-lint 62 hallazgos (21 nuevos desde la v1); gocyclo 16 funciones con complejidad mayor de 15; govulncheck 1 vulnerabilidad alcanzable (GO-2026-6888); npm audit 0 en producción; 6 en desarrollo; ESLint 0 errores, 89 avisos.
 > - Rendimiento: p95 1,38 ms HTTP real; 3,92 a 7,86 ms en proceso; memoria 11,5 a 16,3 MB.
@@ -97,7 +97,7 @@ El contenido de las columnas originales se transcribe sin cambios desde `docs/in
 | DEF-45 | Mantener vulnerabilidades en dependencias de desarrollo JS | Frontend | Baja | P4 | Confirmado (sigue abierto, R3) |
 | DEF-46 | Exponer el puntero interno del catálogo de medicamentos y provocar una carrera de datos | Backend | Media | P2 | Cerrado (verificado en R3) |
 | DEF-47 | Calcular un TOTP ajeno al secreto cuando Web Crypto no está disponible | Frontend | Alta | P2 | Cerrado (verificado en R3) |
-| DEF-48 | Mantener una prueba con timeout fijo de 1 s que falla bajo `-race` | Pruebas | Baja | P3 | Cerrado (verificado en R3) |
+| DEF-48 | Mantener una prueba con timeout fijo de 1 s que falla bajo `-race` | Pruebas | Baja | P3 | Reabierto (corregido parcialmente, R3) |
 | DEF-49 | Permitir el registro anónimo de administradores activos | Backend | Crítica | P1 | Confirmado (reverificado en R3) |
 | DEF-50 | Exponer sin autenticación la semilla TOTP de cualquier cuenta | Backend / Frontend | Crítica | P1 | Confirmado (reverificado en R3) |
 | DEF-51 | Omitir el cruce de alergias en la prescripción v2, la única que la interfaz permite usar | Backend / Frontend | Crítica | P1 | Confirmado (reverificado en R3) |
@@ -1115,7 +1115,7 @@ Los defectos DEF-46 a DEF-48 se detectaron en la primera ejecución del pipeline
 
 | Veredicto | Evidencia |
 |---|---|
-| **Verificado — corregido** | `staff_register_routes_test.go:84` usa 30 s. Calidad retira en esta rama el `-skip` que quedaba en `calidad.yml`. |
+| **Corregido parcialmente** | El equipo corrigió `staff_register_routes_test.go:84` (timeout de 30 s) y Calidad retiró el `-skip` de `calidad.yml`. El primer run del pipeline de R3 (`42922715510`) mostró la misma causa en otras pruebas del equipo: `TestDualTokenLoginAndRefreshFlow` y `TestRefreshTokenRevocationOnUserDeactivation` (`auth_security_test.go:278,308,387`, timeout por defecto de 1 s) fallan bajo `-race` con «timeout error 1000ms» y un pánico derivado (`evidencias/r3/60-ci-run-42922715510-fallos.txt`). Sin `-race` pasan. Corrección propuesta al Responsable de Pruebas: `app.Test(req, -1)` o un timeout explícito. |
 
 ### DEF-49. Permitir el registro anónimo de administradores activos
 
@@ -1978,8 +1978,8 @@ Fuente única: `anexos/cifras-r3.json`, generado por `anexos/generar_bitacora_r3
 
 | Veredicto | Cantidad | Defectos |
 |---|---|---|
-| Verificado — corregido | 27 | 01, 04, 05, 06, 07, 08, 09, 11, 12, 13, 14, 16, 17, 18, 19, 20, 23, 24, 26, 27, 31, 34, 37, 42, 46, 47, 48 |
-| Corregido parcialmente | 8 | 02, 10, 15, 21, 22, 33, 38, 40 |
+| Verificado — corregido | 26 | 01, 04, 05, 06, 07, 08, 09, 11, 12, 13, 14, 16, 17, 18, 19, 20, 23, 24, 26, 27, 31, 34, 37, 42, 46, 47 |
+| Corregido parcialmente | 9 | 02, 10, 15, 21, 22, 33, 38, 40, 48 |
 | Sigue abierto | 12 | 03, 28, 29, 30, 32, 35, 36, 39, 41, 43, 44, 45 |
 | Corrección presente; ejecución No medida | 1 | 25 |
 | Regresión | 0 | — |
@@ -1988,14 +1988,14 @@ Fuente única: `anexos/cifras-r3.json`, generado por `anexos/generar_bitacora_r3
 
 ### 5.2 Defectos abiertos en `main` por severidad
 
-Ámbito DEF-05 a DEF-92 (los históricos DEF-02 y DEF-03, también abiertos, no tienen severidad vigente). Incluye los «Sigue abierto», los «Corregido parcialmente», DEF-49 a DEF-92 y las tres correcciones de Calidad aún no fusionadas (DEF-28, DEF-41, DEF-63). Total: **62**; densidad 2,06 defectos abiertos/KLOC.
+Ámbito DEF-05 a DEF-92 (los históricos DEF-02 y DEF-03, también abiertos, no tienen severidad vigente). Incluye los «Sigue abierto», los «Corregido parcialmente», DEF-49 a DEF-92 y las tres correcciones de Calidad aún no fusionadas (DEF-28, DEF-41, DEF-63). Total: **63**; densidad 2,09 defectos abiertos/KLOC.
 
 | Severidad | Abiertos |
 |---|---|
 | Crítica | 18 |
 | Alta | 9 |
 | Media | 28 |
-| Baja | 7 |
+| Baja | 8 |
 
 ### 5.3 Defectos nuevos de R3 (DEF-85 a DEF-92)
 

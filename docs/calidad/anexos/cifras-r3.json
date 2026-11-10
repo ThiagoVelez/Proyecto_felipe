@@ -2,8 +2,8 @@
  "resumen": {
   "defectos_registrados": 92,
   "verificacion_01_48": {
-   "Verificado — corregido": 27,
-   "Corregido parcialmente": 8,
+   "Verificado — corregido": 26,
+   "Corregido parcialmente": 9,
    "Sigue abierto": 12,
    "Corrección presente; ejecución No medida": 1
   },
@@ -34,8 +34,7 @@
     37,
     42,
     46,
-    47,
-    48
+    47
    ],
    "Corregido parcialmente": [
     2,
@@ -45,7 +44,8 @@
     22,
     33,
     38,
-    40
+    40,
+    48
    ],
    "Sigue abierto": [
     3,
@@ -65,12 +65,12 @@
     25
    ]
   },
-  "abiertos_en_main": 62,
+  "abiertos_en_main": 63,
   "abiertos_en_main_por_severidad": {
    "Crítica": 18,
    "Media": 28,
    "Alta": 9,
-   "Baja": 7
+   "Baja": 8
   },
   "corregidos_en_rama_pendientes_de_fusion": [
    "DEF-28",
@@ -85,7 +85,7 @@
    "Alta": 1
   },
   "kloc_productivo": 30.157,
-  "densidad_abiertos_por_kloc": 2.06
+  "densidad_abiertos_por_kloc": 2.09
  },
  "medidas": {
   "pruebas_backend": "91 pasan, 0 fallan, 22 reproducciones omitidas (evidencias/r3/12-go-test-tests.txt)",
@@ -323,7 +323,7 @@
   [
    "DEF-48",
    "Baja",
-   "Verificado — corregido"
+   "Corregido parcialmente"
   ],
   [
    "DEF-49",
