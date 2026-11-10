@@ -1,0 +1,85 @@
+=== RUN   TestDEF29HashSinColisionPorDelimitador
+    calidad_defectos_abiertos_regression_test.go:62: DEFECTO-REPRODUCIDO DEF-29: Dos folios con anamnesis y examen fisico distintos producen el mismo hash: 9ec719652898a8478a33fca0ba5b66da1f34b659a204906608331027c1da96d2
+--- FAIL: TestDEF29HashSinColisionPorDelimitador (0.00s)
+=== RUN   TestDEF30VerificacionValidaEnlaceConFolioAnterior
+    calidad_defectos_abiertos_regression_test.go:93: DEFECTO-REPRODUCIDO DEF-30: Un folio cuyo previous_hash no corresponde a ningun folio anterior se reporta como integro
+--- FAIL: TestDEF30VerificacionValidaEnlaceConFolioAnterior (0.00s)
+=== RUN   TestDEF49RegistroDeAdministradorRequiereAutenticacion
+    calidad_defectos_abiertos_regression_test.go:149: DEFECTO-REPRODUCIDO DEF-49: Peticion anonima a register-admin: estado 201; administrador activo creado=true
+--- FAIL: TestDEF49RegistroDeAdministradorRequiereAutenticacion (0.79s)
+=== RUN   TestDEF50SemillaMFANoSeExponeSinAutenticacion
+    calidad_defectos_abiertos_regression_test.go:174: DEFECTO-REPRODUCIDO DEF-50: Sin token, mfa-seed devolvio (estado 200) el secreto TOTP vigente del medico
+--- FAIL: TestDEF50SemillaMFANoSeExponeSinAutenticacion (0.01s)
+=== RUN   TestDEF51PrescripcionV2CruzaAlergias
+    calidad_defectos_abiertos_regression_test.go:190: DEFECTO-REPRODUCIDO DEF-51: Receta v2 de amoxicilina para paciente alergico a penicilina emitida; err=<nil>
+{"timestamp":"2026-11-10T23:01:21.9717268Z","level":"INFO","message":"Correo electronico despachado y registrado en outbox local","fields":{"archivo_pdf":"Receta_RX-2026-21496.pdf","asunto":"Orden Médica y Recetario - Código RX-2026-21496 - SaludConecta IPS","auditoria":"storage\\outbox\\paciente_at_saludconecta.local_mail_1794351681971170600.txt","destinatario":"paciente@saludconecta.local","tamano_bytes":3226}}
+--- FAIL: TestDEF51PrescripcionV2CruzaAlergias (0.50s)
+=== RUN   TestDEF52RecetaV2RechazaCantidadNoPositiva
+{"timestamp":"2026-11-10T23:01:22.2744843Z","level":"INFO","message":"Dispensacion farmacologica completada exitosamente","fields":{"coverage_type":"","dispensed_by":"","patient_document":"DOC-52","payment_method":"","prescription_id":"29227c42-c690-4b43-9a53-a823b72be550","unique_code":"RX-2026-92778"}}
+    calidad_defectos_abiertos_regression_test.go:213: DEFECTO-REPRODUCIDO DEF-52: Receta con cantidad -50 emitida; stock de risperidona 95 -> 145 tras dispensar
+{"timestamp":"2026-11-10T23:01:22.2777779Z","level":"INFO","message":"Correo electronico despachado y registrado en outbox local","fields":{"archivo_pdf":"Receta_RX-2026-92778.pdf","asunto":"Orden Médica y Recetario - Código RX-2026-92778 - SaludConecta IPS","auditoria":"storage\\outbox\\paciente_at_saludconecta.local_mail_1794351682277218800.txt","destinatario":"paciente@saludconecta.local","tamano_bytes":3226}}
+--- FAIL: TestDEF52RecetaV2RechazaCantidadNoPositiva (0.30s)
+=== RUN   TestDEF53DispensacionExigeDocumentoDelPaciente
+{"timestamp":"2026-11-10T23:01:22.5783665Z","level":"INFO","message":"Dispensacion farmacologica completada exitosamente","fields":{"coverage_type":"","dispensed_by":"","patient_document":"DOC-53","payment_method":"","prescription_id":"6db3db9b-b507-4c27-8191-db13fd4a81ea","unique_code":"RX-2026-53765"}}
+    calidad_defectos_abiertos_regression_test.go:227: DEFECTO-REPRODUCIDO DEF-53: Receta dispensada sin documento de identidad del paciente
+{"timestamp":"2026-11-10T23:01:22.5803657Z","level":"INFO","message":"Correo electronico despachado y registrado en outbox local","fields":{"archivo_pdf":"Receta_RX-2026-53765.pdf","asunto":"Orden Médica y Recetario - Código RX-2026-53765 - SaludConecta IPS","auditoria":"storage\\outbox\\paciente_at_saludconecta.local_mail_1794351682579366000.txt","destinatario":"paciente@saludconecta.local","tamano_bytes":3226}}
+--- FAIL: TestDEF53DispensacionExigeDocumentoDelPaciente (0.30s)
+=== RUN   TestDEF54NoDispensaMedicamentoVencido
+{"timestamp":"2026-11-10T23:01:22.8824136Z","level":"INFO","message":"Dispensacion farmacologica completada exitosamente","fields":{"coverage_type":"","dispensed_by":"","patient_document":"DOC-54","payment_method":"","prescription_id":"99a984f1-cdf5-4902-ac8d-79170a1ab0b5","unique_code":"RX-2026-75915"}}
+    calidad_defectos_abiertos_regression_test.go:251: DEFECTO-REPRODUCIDO DEF-54: Se dispenso un lote vencido el 2026-11-09
+{"timestamp":"2026-11-10T23:01:22.8852667Z","level":"INFO","message":"Correo electronico despachado y registrado en outbox local","fields":{"archivo_pdf":"Receta_RX-2026-75915.pdf","asunto":"Orden Médica y Recetario - Código RX-2026-75915 - SaludConecta IPS","auditoria":"storage\\outbox\\paciente_at_saludconecta.local_mail_1794351682884197600.txt","destinatario":"paciente@saludconecta.local","tamano_bytes":3225}}
+--- FAIL: TestDEF54NoDispensaMedicamentoVencido (0.30s)
+=== RUN   TestDEF55EliminarPacienteNoPierdeAntecedentesAlergicos
+    calidad_defectos_abiertos_regression_test.go:276: DEFECTO-REPRODUCIDO DEF-55: Paciente eliminado fisicamente; al readmitirlo no conserva su alergia a penicilina
+--- FAIL: TestDEF55EliminarPacienteNoPierdeAntecedentesAlergicos (0.00s)
+=== RUN   TestDEF57NotaAnatomicaCoincideConPacienteDelFolio
+    calidad_defectos_abiertos_regression_test.go:297: DEFECTO-REPRODUCIDO DEF-57: Nota del paciente B aceptada sobre el folio del paciente A, escrita por un medico ajeno al folio
+--- FAIL: TestDEF57NotaAnatomicaCoincideConPacienteDelFolio (0.00s)
+=== RUN   TestDEF58RecetaDispensadaNoSeReactiva
+{"timestamp":"2026-11-10T23:01:23.1856776Z","level":"INFO","message":"Dispensacion farmacologica completada exitosamente","fields":{"coverage_type":"","dispensed_by":"","patient_document":"DOC-58","payment_method":"","prescription_id":"3fc7b940-52d7-4d16-b979-028773b0df22","unique_code":"RX-2026-83306"}}
+{"timestamp":"2026-11-10T23:01:23.1861848Z","level":"INFO","message":"Dispensacion farmacologica completada exitosamente","fields":{"coverage_type":"","dispensed_by":"","patient_document":"DOC-58","payment_method":"","prescription_id":"3fc7b940-52d7-4d16-b979-028773b0df22","unique_code":"RX-2026-37536"}}
+    calidad_defectos_abiertos_regression_test.go:321: DEFECTO-REPRODUCIDO DEF-58: La receta 3fc7b940-52d7-4d16-b979-028773b0df22 se dispenso dos veces tras reenviarla con el mismo ID
+{"timestamp":"2026-11-10T23:01:23.18779Z","level":"INFO","message":"Correo electronico despachado y registrado en outbox local","fields":{"archivo_pdf":"Receta_RX-2026-83306.pdf","asunto":"Orden Médica y Recetario - Código RX-2026-83306 - SaludConecta IPS","auditoria":"storage\\outbox\\paciente_at_saludconecta.local_mail_1794351683187261600.txt","destinatario":"paciente@saludconecta.local","tamano_bytes":3224}}
+{"timestamp":"2026-11-10T23:01:23.1883042Z","level":"INFO","message":"Correo electronico despachado y registrado en outbox local","fields":{"archivo_pdf":"Receta_RX-2026-37536.pdf","asunto":"Orden Médica y Recetario - Código RX-2026-37536 - SaludConecta IPS","auditoria":"storage\\outbox\\paciente_at_saludconecta.local_mail_1794351683187261600.txt","destinatario":"paciente@saludconecta.local","tamano_bytes":3224}}
+--- FAIL: TestDEF58RecetaDispensadaNoSeReactiva (0.30s)
+=== RUN   TestDEF59NoDispensaRecetaCancelada
+{"timestamp":"2026-11-10T23:01:23.4891205Z","level":"INFO","message":"Dispensacion farmacologica completada exitosamente","fields":{"coverage_type":"","dispensed_by":"","patient_document":"DOC-59","payment_method":"","prescription_id":"rx-def59","unique_code":""}}
+    calidad_defectos_abiertos_regression_test.go:338: DEFECTO-REPRODUCIDO DEF-59: Receta en estado CANCELLED dispensada
+--- FAIL: TestDEF59NoDispensaRecetaCancelada (0.00s)
+=== RUN   TestDEF60AlergiaAFarmacoSeExtiendeASuFamilia
+    calidad_defectos_abiertos_regression_test.go:351: DEFECTO-REPRODUCIDO DEF-60: Alergia a AMOXICILINA no bloquea AMPICILINA (misma familia farmacologica)
+    calidad_defectos_abiertos_regression_test.go:351: DEFECTO-REPRODUCIDO DEF-60: Alergia a CEFTRIAXONA no bloquea CEFALEXINA (misma familia farmacologica)
+--- FAIL: TestDEF60AlergiaAFarmacoSeExtiendeASuFamilia (0.00s)
+=== RUN   TestDEF61PDFNoSaleDelDirectorioDeDocumentos
+    calidad_defectos_abiertos_regression_test.go:368: DEFECTO-REPRODUCIDO DEF-61: El PDF se escribio fuera de C:\Users\juan\AppData\Local\Temp\TestDEF61PDFNoSaleDelDirectorioDeDocumentos2532618969\001\documents: C:\Users\juan\AppData\Local\Temp\TestDEF61PDFNoSaleDelDirectorioDeDocumentos2532618969\001\escape-def61_20261110_180123.pdf
+--- FAIL: TestDEF61PDFNoSaleDelDirectorioDeDocumentos (0.01s)
+=== RUN   TestDEF67EscalaEVAFueraDeRangoSeRechaza
+    calidad_defectos_abiertos_regression_test.go:377: DEFECTO-REPRODUCIDO DEF-67: EVA 11 aceptada y registrada como 0
+--- FAIL: TestDEF67EscalaEVAFueraDeRangoSeRechaza (0.00s)
+=== RUN   TestDEF68ActualizacionParcialConservaContacto
+    calidad_defectos_abiertos_regression_test.go:398: DEFECTO-REPRODUCIDO DEF-68: Tras actualizar solo el telefono, el correo quedo vacio y la direccion=""
+--- FAIL: TestDEF68ActualizacionParcialConservaContacto (0.00s)
+=== RUN   TestDEF70PublicacionSoloLaEditaSuAutor
+    calidad_defectos_abiertos_regression_test.go:414: DEFECTO-REPRODUCIDO DEF-70: Un medico distinto al autor modifico la publicacion 84859553-5c36-4ef0-91d6-9f6c817bf730
+--- FAIL: TestDEF70PublicacionSoloLaEditaSuAutor (0.00s)
+=== RUN   TestDEF72AuditorConsultaNotasAnatomicasDelPaciente
+    calidad_defectos_abiertos_regression_test.go:425: DEFECTO-REPRODUCIDO DEF-72: AUDITOR recibio 403 en una ruta que router.go declara accesible para AUDITOR
+--- FAIL: TestDEF72AuditorConsultaNotasAnatomicasDelPaciente (0.01s)
+=== RUN   TestDEF85CitaConservaLaHoraLocalDeColombia
+    calidad_revision_r3_regression_test.go:122: DEFECTO-REPRODUCIDO DEF-85: Hora elegida 2026-11-17 18:00 (Colombia); guardada 2026-11-17T18:00:00Z, es decir 2026-11-17 13:00 en Colombia
+{"timestamp":"2026-11-10T23:01:23.5066063Z","level":"INFO","message":"Correo electronico despachado y registrado en outbox local","fields":{"archivo_pdf":"CitaMedica_DOC-85.pdf","asunto":"Confirmación de Cita Médica - SaludConecta IPS [17/11/2026]","auditoria":"storage\\outbox\\paciente_at_saludconecta.local_mail_1794351683506063200.txt","destinatario":"paciente@saludconecta.local","tamano_bytes":3075}}
+--- FAIL: TestDEF85CitaConservaLaHoraLocalDeColombia (0.30s)
+=== RUN   TestDEF88CitaExigePacienteExistente
+    calidad_revision_r3_regression_test.go:134: DEFECTO-REPRODUCIDO DEF-88: Cita ad670295-6e6a-4548-926e-36830d0535f5 creada para un paciente inexistente (nombre del paciente: "")
+{"timestamp":"2026-11-10T23:01:23.8098943Z","level":"INFO","message":"Correo electronico despachado y registrado en outbox local","fields":{"archivo_pdf":"CitaMedica_.pdf","asunto":"Confirmación de Cita Médica - SaludConecta IPS [13/11/2026]","auditoria":"storage\\outbox\\paciente_at_saludconecta.local_mail_1794351683809297400.txt","destinatario":"paciente@saludconecta.local","tamano_bytes":3039}}
+--- FAIL: TestDEF88CitaExigePacienteExistente (0.30s)
+=== RUN   TestDEF87MuroNoConfiaEnLaDuracionDeclaradaPorElCliente
+    calidad_revision_r3_regression_test.go:149: DEFECTO-REPRODUCIDO DEF-87: Publicacion dffe362b-6515-4202-a118-c9ac70984c44 aceptada con duracion declarada -30 s y un video_url de tipo text/html
+--- FAIL: TestDEF87MuroNoConfiaEnLaDuracionDeclaradaPorElCliente (0.00s)
+=== RUN   TestDEF89NotaAnatomicaRechazaEVAFueraDeRango
+    calidad_revision_r3_regression_test.go:202: DEFECTO-REPRODUCIDO DEF-89: Notas anatomicas aceptadas con EVA [-1 11] y coordenadas (-5000, 99999)
+--- FAIL: TestDEF89NotaAnatomicaRechazaEVAFueraDeRango (0.00s)
+FAIL
+FAIL	saludconecta-tests	3.184s
+FAIL
+# codigo de salida: 1

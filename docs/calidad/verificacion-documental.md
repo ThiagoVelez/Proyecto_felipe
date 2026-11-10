@@ -1,5 +1,18 @@
 # Verificación de consistencia documental (Fase 3)
 
+<!-- cifras-r3 -->
+> **Cifras vigentes de la revisión R3 (10 nov 2026).** Fuente única: `anexos/cifras-r3.json`; coherencia comprobada con `anexos/verificar_cifras_r3.py`. Detalle en `informe-revision-r3.md`.
+>
+> - Defectos registrados: 92 (DEF-01 a DEF-92). Verificación de DEF-01 a DEF-48: 27 verificados, 8 corregidos parcialmente, 12 siguen abiertos, 1 sin ejecución medible, 0 regresiones.
+> - Abiertos en `main` (DEF-05 a DEF-92): 62 (18 críticos, 9 altos, 28 medios, 7 bajos). Nuevos de R3: 8 (1 crítico, 1 alto, 6 medios).
+> - Pruebas backend: 91 pasan, 0 fallan, 22 reproducciones omitidas (evidencias/r3/12-go-test-tests.txt). Cobertura backend: 68,9 %. Vitest: 108 pruebas en 15 archivos (105 en 14 archivos del equipo), todas pasan. Cobertura frontend: 72,85 %. Reproducciones de defectos abiertos: 22 de 22.
+> - Análisis estático: golangci-lint 62 hallazgos (21 nuevos desde la v1); gocyclo 16 funciones con complejidad mayor de 15; govulncheck 1 vulnerabilidad alcanzable (GO-2026-6888); npm audit 0 en producción; 6 en desarrollo; ESLint 0 errores, 89 avisos.
+> - Rendimiento: p95 1,38 ms HTTP real; 3,92 a 7,86 ms en proceso; memoria 11,5 a 16,3 MB.
+> - Afirmaciones publicadas: 48 evaluadas: 7 verificadas, 24 parciales, 2 no verificadas, 15 falsas. RTM: 5 de 21 requisitos se sostienen. Dictamen: **No conforme con ISO/IEC 25010:2023**.
+<!-- /cifras-r3 -->
+
+**Verificación documental R3.** Las 48 afirmaciones del README, de `QA.md` (integrado en el README) y de las tarjetas de «Pruebas QA» se evalúan en `informe-revision-r3.md`, sección 4. El README de `main` vuelve a publicar las listas antiguas de Trello y el rango «RF01 a RF12»; esta rama aplica solo los cambios autorizados (sección 7.2 de la tarea).
+
 Documentos contrastados: `README.md`, `docs/especificacion.md`, `docs/plan-de-pruebas.md` y `docs/informe-calidad.md` (versión `6492f07`), contra el código, las pruebas y las mediciones de `anexos/`.
 
 Veredictos: **Verificada** (la evidencia la respalda), **Parcial** (cierta solo en parte o sin medición suficiente), **Falsa** (la evidencia la contradice) y **No verificable** (no hay forma de comprobarla con los medios disponibles; se indica el motivo).

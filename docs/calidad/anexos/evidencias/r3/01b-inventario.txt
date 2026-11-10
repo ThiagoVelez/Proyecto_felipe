@@ -1,0 +1,10 @@
+$ git ls-files (origin/main 9bacb0a) | wc -l por extension; productivo = src/ sin *_test.go
+go archivos=98 lineas=16497
+jsx archivos=50 lineas=18156
+js archivos=10 lineas=1308
+css archivos=1 lineas=154
+sql archivos=3 lineas=689
+html archivos=6 lineas=2616
+yml archivos=1 lineas=101
+md archivos=5 lineas=2768
+productivo src/ (go, jsx, js, sin pruebas): 30157 lineas

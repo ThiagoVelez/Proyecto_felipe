@@ -1,0 +1,3 @@
+﻿# Get-Process saludconecta-r3 (cmd/api, DB_DRIVER=memory, Windows 10, go1.27.3) 2026-11-10T18:03:41.5947443-05:00
+# Primera corrida, tras 18 000 peticiones (casi todas 429): WorkingSet 16,3 MB; PrivateMemory 52,7 MB
+# Segunda corrida, tras 112 peticiones 200: WorkingSet 11,5 MB; PrivateMemory 49,0 MB

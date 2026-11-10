@@ -1,0 +1,11 @@
+go: go version go1.27.3 windows/amd64
+node: v24.21.0
+npm: 11.19.0
+golangci-lint: golangci-lint has version 2.15.0 built with go1.27.3 from (unknown, modified: ?, mod sum: "h1:w94zf8HAYI7hm3164kwKsvZRuqXvY+YxeFoTbu1OLg8=") on (unknown)
+staticcheck: staticcheck.exe 2026.2.2 (0.8.2)
+govulncheck: Go: go1.27.3 Scanner: govulncheck@v1.9.0 DB: https://vuln.go.dev 
+gosec: Version: dev Git tag:  
+gcc (requerido por -race): no disponible
+docker: no disponible
+hey/k6: no disponibles
+commit: 8a20c70978d25c2dbeeafd0790f459c91e2a8fb8 rama calidad/revision-r3

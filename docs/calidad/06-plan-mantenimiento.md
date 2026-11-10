@@ -1,5 +1,18 @@
 # 06. Plan de mantenimiento (ISO/IEC 14764)
 
+<!-- cifras-r3 -->
+> **Cifras vigentes de la revisión R3 (10 nov 2026).** Fuente única: `anexos/cifras-r3.json`; coherencia comprobada con `anexos/verificar_cifras_r3.py`. Detalle en `informe-revision-r3.md`.
+>
+> - Defectos registrados: 92 (DEF-01 a DEF-92). Verificación de DEF-01 a DEF-48: 27 verificados, 8 corregidos parcialmente, 12 siguen abiertos, 1 sin ejecución medible, 0 regresiones.
+> - Abiertos en `main` (DEF-05 a DEF-92): 62 (18 críticos, 9 altos, 28 medios, 7 bajos). Nuevos de R3: 8 (1 crítico, 1 alto, 6 medios).
+> - Pruebas backend: 91 pasan, 0 fallan, 22 reproducciones omitidas (evidencias/r3/12-go-test-tests.txt). Cobertura backend: 68,9 %. Vitest: 108 pruebas en 15 archivos (105 en 14 archivos del equipo), todas pasan. Cobertura frontend: 72,85 %. Reproducciones de defectos abiertos: 22 de 22.
+> - Análisis estático: golangci-lint 62 hallazgos (21 nuevos desde la v1); gocyclo 16 funciones con complejidad mayor de 15; govulncheck 1 vulnerabilidad alcanzable (GO-2026-6888); npm audit 0 en producción; 6 en desarrollo; ESLint 0 errores, 89 avisos.
+> - Rendimiento: p95 1,38 ms HTTP real; 3,92 a 7,86 ms en proceso; memoria 11,5 a 16,3 MB.
+> - Afirmaciones publicadas: 48 evaluadas: 7 verificadas, 24 parciales, 2 no verificadas, 15 falsas. RTM: 5 de 21 requisitos se sostienen. Dictamen: **No conforme con ISO/IEC 25010:2023**.
+<!-- /cifras-r3 -->
+
+**Acciones nuevas de R3.** M-49 (fechas de citas con zona horaria, DEF-85), M-50 (parser y normalización del PDF417, DEF-86), M-51 (validar video en el servidor, DEF-87), M-52 (probar el modal real con axe-core, DEF-90), M-53 (retirar el dictamen de conformidad y rehacer la RTM, DEF-91) y M-54 (bitácora única con equivalencias SEC -> DEF, DEF-92). Prioridades vigentes y las 5 acciones de mayor retorno: `informe-revision-r3.md`, sección 8.
+
 ## 1. Convenciones
 
 - **Tipo (ISO/IEC 14764):** *Correctiva* (corrige un defecto), *Preventiva* (evita defectos latentes), *Adaptativa* (ajusta a cambios del entorno: dependencias, motores, plataformas) y *Perfectiva* (mejora la mantenibilidad o agrega capacidades).
