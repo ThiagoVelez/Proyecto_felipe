@@ -114,14 +114,12 @@ jobs:
         env:
           CGO_ENABLED: '1'
         run: go test -race -count=1 -coverprofile=coverage-src.out ./...
-      # DEF-48: TestStaffRegisterRequiresAdmin usa el timeout por defecto de 1 s de fiber.App.Test y,
-      # bajo -race, Bcrypt coste 12 supera ese limite. No es una carrera: se excluye solo de este paso
-      # y se ejecuta completa en el siguiente, sin -race, hasta que Pruebas ajuste el timeout.
+      # DEF-48 cerrado en R3: TestStaffRegisterRequiresAdmin usa un timeout de 30 s, por lo que ya no se excluye.
       - name: Pruebas de integracion de tests/backend con detector de carreras
         working-directory: tests/backend
         env:
           CGO_ENABLED: '1'
-        run: go test -race -count=1 -skip '^TestStaffRegisterRequiresAdmin$' ./...
+        run: go test -race -count=1 ./...
       - name: Pruebas de integracion de tests/backend completas (cobertura sobre los paquetes reales)
         working-directory: tests/backend
         run: go test -count=1 -coverpkg=saludconecta-backend/... -coverprofile=coverage-tests.out ./...
