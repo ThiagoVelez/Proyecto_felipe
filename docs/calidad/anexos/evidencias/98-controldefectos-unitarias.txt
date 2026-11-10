@@ -1,0 +1,17 @@
+$ go test -count=1 -v ./herramientas/controldefectos/
+--- PASS: TestReproduccionEsperadaPasaEnVerde (0.00s)
+--- PASS: TestPruebaQuePasaIndicaDefectoCorregido (0.00s)
+--- PASS: TestFalloSinMarcaEsCausaDistinta (0.00s)
+--- PASS: TestMarcaDeOtroDefectoNoCuenta (0.00s)
+--- PASS: TestPanicoEsError (0.00s)
+--- PASS: TestErrorDeCompilacionEsError (0.00s)
+--- PASS: TestCarreraNoDeclaradaEsError (0.00s)
+--- PASS: TestCarreraSinRaceNoEsEvaluable (0.00s)
+--- PASS: TestPruebaOmitidaEsError (0.00s)
+--- PASS: TestSubpruebasSeAtribuyenALaPrincipal (0.00s)
+--- PASS: TestCoherenciaConBitacoraYFuente (0.00s)
+--- PASS: TestLeerListaRechazaFormatoInvalido (0.00s)
+--- PASS: TestEstadosEnBitacora (0.00s)
+--- PASS: TestEjecutarExtremoAExtremo (0.01s)
+ok  	saludconecta-tests/herramientas/controldefectos	0.026s
+exit=0

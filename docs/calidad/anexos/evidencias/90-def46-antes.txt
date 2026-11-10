@@ -1,0 +1,10 @@
+$ go test -count=1 -v -run TestDEF46 ./...  (ANTES)
+=== RUN   TestDEF46CatalogoNoExponePunteroInterno
+    catalogo_aliasing_regression_test.go:29: El inventario almacenado cambio a 0 al modificar la copia devuelta; se esperaba 10
+--- FAIL: TestDEF46CatalogoNoExponePunteroInterno (0.64s)
+=== RUN   TestDEF46PrescripcionesConcurrentesSinCarrera
+--- PASS: TestDEF46PrescripcionesConcurrentesSinCarrera (0.58s)
+FAIL
+FAIL	saludconecta-tests	1.249s
+FAIL
+exit=1

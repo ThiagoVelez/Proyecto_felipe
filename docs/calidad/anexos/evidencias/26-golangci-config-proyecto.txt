@@ -1,0 +1,8 @@
+### src/backend
+$ golangci-lint run --config ../../.golangci.yml ./...
+0 issues.
+exit=0
+### tests/backend
+$ golangci-lint run --config ../../.golangci.yml ./...
+0 issues.
+exit=0

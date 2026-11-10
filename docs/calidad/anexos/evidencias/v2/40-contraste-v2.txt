@@ -1,0 +1,7 @@
+Formula WCAG 2.x (luminancia relativa). AA texto normal 4,5:1; AAA 7:1.
+AllergyBanner alerta: blanco sobre red-600 | src/frontend/src/components/AllergyBanner.jsx:20 | 4.83:1 | AA cumple | AAA falla
+Manchester II: blanco sobre orange-500 | src/frontend/src/utils/clinical.js:31 | 2.80:1 | AA falla | AAA falla
+Manchester IV: blanco sobre emerald-600 | src/frontend/src/utils/clinical.js:47 | 3.77:1 | AA falla | AAA falla
+Banner perfil pediatria: blanco sobre #F59E0B (final del degradado) | src/frontend/src/components/UserProfileModal.jsx:34 | 2.15:1 | AA falla | AAA falla
+Banner perfil pediatria: blanco sobre #0D9488 (centro del degradado) | src/frontend/src/components/UserProfileModal.jsx:34 | 3.74:1 | AA falla | AAA falla
+Banner perfil urgencias: blanco sobre #075985 | src/frontend/src/components/UserProfileModal.jsx:56 | 7.56:1 | AA cumple | AAA cumple

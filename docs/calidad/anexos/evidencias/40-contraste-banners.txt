@@ -1,0 +1,18 @@
+$ node contraste.mjs  (WCAG 2.x, composicion alfa sobre cada parada del degradado; umbral AAA 7:1 texto normal)
+banner;parada;A_blanco_sobre_white20;B_badge_sobre_900_60;C_blanco90_sobre_black45
+pediatria;#0F766E;3.71;6.73;9.60
+pediatria;#0D9488;2.83;5.71;7.73
+pediatria;#F59E0B;1.85;4.74;5.37
+farmacia;#064E3B;5.64;8.57;12.61
+farmacia;#047857;3.75;6.79;9.62
+farmacia;#022c22;8.09;10.33;14.91
+urgencias;#0B1329;9.99;11.23;15.87
+urgencias;#003B46;6.76;9.16;13.83
+urgencias;#075985;4.71;7.54;11.30
+cirugia;#1E293B;7.67;10.37;14.69
+cirugia;#1E3A8A;5.93;8.96;12.94
+cirugia;#0F172A;9.54;11.38;15.70
+cardiologia;#4C0519;9.04;9.81;15.18
+cardiologia;#881337;6.10;7.97;12.59
+cardiologia;#0F172A;9.54;11.20;15.70
+MINIMOS {"A":1.85,"B":4.74,"C":5.37}

@@ -1,0 +1,4 @@
+=== RUN   TestDEF41CorrelationIDSoloAceptaUUID
+--- PASS: TestDEF41CorrelationIDSoloAceptaUUID (0.00s)
+PASS
+ok  	saludconecta-tests	0.023s

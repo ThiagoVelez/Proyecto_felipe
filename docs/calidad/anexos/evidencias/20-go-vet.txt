@@ -1,0 +1,6 @@
+### .
+$ go vet ./...
+exit=0
+### ../../tests/backend
+$ go vet ./...
+exit=0

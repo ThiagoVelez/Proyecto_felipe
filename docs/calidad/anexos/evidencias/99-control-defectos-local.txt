@@ -1,0 +1,17 @@
+$ CALIDAD_DEFECTOS_ABIERTOS=1 go test -count=1 -json -run '<regex de la lista>' . | go run ./herramientas/controldefectos  (local, sin -race)
+| Defecto | Prueba | Resultado | Detalle |
+|---|---|---|---|
+| DEF-06 | TestDEF06CruceAlergiasReactividadCruzadaYTildes | reproducido | falla como se espera |
+| DEF-07 | TestDEF07SincronizacionNoSobrescribeFolioCerrado | reproducido | falla como se espera |
+| DEF-09 | TestDEF09HipotermiaSeveraNoEsNoUrgente | reproducido | falla como se espera |
+| DEF-13 | TestDEF13TokenDeUsuarioDesactivadoEsRechazado | reproducido | falla como se espera |
+| DEF-14 | TestDEF14SetupMFANoDesactivaSegundoFactor | reproducido | falla como se espera |
+| DEF-16 | TestDEF16CierreConcurrenteNoBifurcaCadena | reproducido | falla como se espera |
+| DEF-17 | TestDEF17MedicoNoCierraFolioAjeno | reproducido | falla como se espera |
+| DEF-18 | TestDEF18SincronizacionUsaMedicoAutenticado | reproducido | falla como se espera |
+| DEF-29 | TestDEF29HashSinColisionPorDelimitador | reproducido | falla como se espera |
+| DEF-30 | TestDEF30VerificacionValidaEnlaceConFolioAnterior | reproducido | falla como se espera |
+| DEF-31 | TestDEF31LoginNoRevelaCuentaInactivaConClaveErronea | reproducido | falla como se espera |
+| DEF-37 | TestDEF37LecturaConcurrenteDeFolioSinCarrera | no evaluable | requiere -race; ejecucion sin el detector |
+Defectos abiertos reproducidos como se espera: 11 de 12 (1 no evaluables sin -race).
+exit=0

@@ -1,0 +1,4 @@
+=== RUN   TestDEF63PlantillaEnvNoEsSecretoValido
+--- PASS: TestDEF63PlantillaEnvNoEsSecretoValido (0.00s)
+PASS
+ok  	saludconecta-tests	0.020s
