@@ -1,0 +1,36 @@
+sequenceDiagram
+    autonumber
+    actor Medico as "Médico Asistencial (Dr. Santiago Vélez)"
+    participant UI_Med as "DoctorLabOrdersView (Frontend)"
+    participant EventBus as "EventBus / LocalStorage (Buzón Reactivo)"
+    participant UI_Lab as "LaboratoryScreen (Frontend)"
+    actor Bact as "Bacteriólogo (ReTHUS Activo)"
+    actor Paciente as "Paciente / Historia Clínica"
+
+    Note over Medico,UI_Med: 1. Prescripción Paraclínica
+    Medico->>UI_Med: Selecciona paciente y tipo de examen (Catálogo Rápido / Personalizado)
+    Medico->>UI_Med: Ingresa muestra biológica, prioridad (RUTINA/URGENTE) y sospecha diagnóstica
+    UI_Med->>UI_Med: Genera ID único inmutable secuencial (LAB-2026-XXX)
+    Medico->>UI_Med: Clic en "Enviar al Buzón de Laboratorio"
+    UI_Med->>EventBus: Registra orden en almacenamiento y emite evento saludconecta_lab_orders_updated
+
+    Note over EventBus,UI_Lab: 2. Recepción y Toma en Laboratorio
+    EventBus->>UI_Lab: Notificación en tiempo real sin recargar página (F5)
+    UI_Lab->>Bact: Despliega orden en bandeja con badge de prioridad y datos del paciente
+    Bact->>UI_Lab: Recepciona muestra e inicia análisis cuantitativo/cualitativo
+    Bact->>UI_Lab: Digita parámetros obtenidos y valores de referencia biológicos
+    Bact->>UI_Lab: Clic en "Validar & Sellar Resultado"
+
+    Note over UI_Lab,EventBus: 3. Sellado ReTHUS y Notificación Médica
+    UI_Lab->>UI_Lab: Genera sello criptográfico ReTHUS inmutable (BAC-9421-VALLE)
+    UI_Lab->>EventBus: Actualiza estado a COMPLETADO y emite sincronización
+    EventBus->>UI_Med: Médico recibe resultado validado en su historial de órdenes
+
+    Note over UI_Med,Paciente: 4. Impresión Física y Despacho Digital
+    alt Impresión Formato Físico
+        Medico->>UI_Med: Clic en "Imprimir Físico"
+        UI_Med->>Paciente: Emite documento oficial con membrete IPS, NIT y firma legal
+    else Despacho por Correo Electrónico
+        Medico->>UI_Med: Clic en "Enviar Correo"
+        UI_Med->>Paciente: Remite informe oficial firmado en formato digital seguro
+    end

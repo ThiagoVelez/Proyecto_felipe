@@ -1,0 +1,44 @@
+flowchart TD
+    subgraph Farmacia["Área de Farmacia Hospitalaria"]
+        disp["Dispensación de Receta / Ajuste de Stock"] --> eval["Evaluación de Umbral de Seguridad"]
+        eval --> cond{"Condición de Stock"}
+        cond -->|"stock == 0"| sevCrit["Severidad CRITICA"]
+        cond -->|"stock <= 0.5 * min_stock"| sevAlta["Severidad ALTA"]
+        cond -->|"stock <= min_stock"| sevMed["Severidad MEDIA"]
+        cond -->|"stock > min_stock"| stockNormal["Stock Óptimo (Sin Acción)"]
+        
+        sevCrit --> genRep["Generación Automática de Reporte"]
+        sevAlta --> genRep
+        sevMed --> genRep
+        
+        genRep --> bannerFarm["Banner Visual Alerta Inmediata (PharmacyDashboard)"]
+        genRep --> copiaFarm["Bandeja de Copia de Reportes (pharmacy_reports_copy)"]
+    end
+
+    subgraph SyncService["Capa de Sincronización y Persistencia"]
+        genRep --> db[(Tabla: pharmacy_stock_reports)]
+        db --> evtBus["Canal de Eventos en Tiempo Real"]
+    end
+
+    subgraph DireccionAdmin["Dirección / Administrador del Sistema"]
+        evtBus --> adminDash["Dashboard de Farmacia (KPIs y Monitor de Inventario)"]
+        evtBus --> adminReports["Vista de Tarjetas de Reportes (Reportes)"]
+        
+        adminReports --> actGestion["Acción: Poner En Gestión (Estado EN_GESTION)"]
+        adminReports --> actReabastecer["Acción: Reabastecer Medicamento (Lote, Vence, Cantidad)"]
+        adminReports --> actCopiar["Acción: Copiar Reporte para Compras Externas"]
+        
+        actReabastecer --> resuelto["Resolución Transaccional del Reporte (RESUELTO)"]
+        resuelto --> db
+    end
+
+    classDef danger fill:#fee2e2,stroke:#ef4444,stroke-width:2px;
+    classDef warning fill:#fef3c7,stroke:#f59e0b,stroke-width:2px;
+    classDef success fill:#dcfce7,stroke:#22c55e,stroke-width:2px;
+    classDef primary fill:#ede9fe,stroke:#7c3aed,stroke-width:2px;
+
+    class sevCrit danger;
+    class sevAlta warning;
+    class sevMed warning;
+    class stockNormal success;
+    class genRep,adminReports,adminDash primary;

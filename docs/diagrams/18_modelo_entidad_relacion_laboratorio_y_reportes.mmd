@@ -1,0 +1,69 @@
+erDiagram
+    USERS ||--o{ LAB_ORDERS : "prescribe como medico solicitante"
+    USERS ||--o{ LAB_ORDERS : "valida y sella como bacteriologo"
+    PATIENTS ||--o{ LAB_ORDERS : "recibe orden diagnostica"
+    MEDICATIONS ||--o{ PHARMACY_STOCK_REPORTS : "origina reporte por stock bajo"
+    USERS ||--o{ PHARMACY_STOCK_REPORTS : "gestiona y reabastece como admin"
+
+    USERS {
+        int id PK
+        string email
+        string full_name
+        string professional_card "ReTHUS inmutable"
+        string role "ADMIN | MEDICO | ENFERMERO | FARMACEUTICO | LABORATORIO"
+        string specialty
+        boolean is_active
+    }
+
+    PATIENTS {
+        int id PK
+        string document_type "CC | TI | CE | RC"
+        string document_number UK
+        string full_name
+        string eps_name
+        int age
+        string gender
+        string email
+    }
+
+    LAB_ORDERS {
+        string id PK "LAB-YYYY-XXX correlativo unico"
+        int patient_id FK
+        string test_type "Nombre del examen formulado"
+        string sample_type "Tubo lila, suero, orina fraccion media"
+        string priority "RUTINA | PRIORITARIO | URGENTE"
+        string status "PENDIENTE | EN_PROCESO | COMPLETADO"
+        string ordering_doctor "Nombre del medico prescriptor"
+        string doctor_license "ReTHUS del medico"
+        string observations "Sospecha diagnostica y observaciones"
+        string results "Valores obtenidos y parametros analiticos"
+        string validated_by "Nombre del bacteriologo validador"
+        string bacteriologist_license "ReTHUS del bacteriologo"
+        datetime created_at
+        datetime validated_at
+    }
+
+    MEDICATIONS {
+        int id PK
+        string cum UK "Codigo unico de medicamento"
+        string name "Principio activo y marca"
+        string concentration "Ej: 250 mg / 500 mg"
+        int stock "Inventario actual"
+        int min_stock "Nivel de seguridad de reabastecimiento"
+        string batch "Numero de lote"
+        date expiration_date
+    }
+
+    PHARMACY_STOCK_REPORTS {
+        string id PK "REP-YYYY-XXX"
+        int medication_id FK
+        string medication_name
+        int current_stock
+        int min_stock
+        string severity "CRITICA | ALTA | MEDIA"
+        string status "GENERADO | EN_GESTION | RESUELTO"
+        string clinical_impact "Descripcion del riesgo asistencial"
+        int managed_by FK "Usuario administrador asignado"
+        datetime created_at
+        datetime resolved_at
+    }
