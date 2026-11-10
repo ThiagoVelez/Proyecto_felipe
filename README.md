@@ -7,6 +7,7 @@
 ### Proyecto Final: Sistema Clínico Hospitalario «SaludConecta IPS v2.4»
 
 ### Entregable Maestro: Entrega Final (Proyecto Completo Consolidado)
+
 **Rama Oficial de Entrega:** `prueba` | **Tag de Versión:** `entrega-final`  
 **Autor Principal:** Santiago Velez | **Docente:** Ing. Felipe Gutiérrez Isaza | **COTECNOVA 2026-2**  
 **Herramientas y Modelos de Inteligencia Artificial (IA):** Google Antigravity con Gemini 3.8 Flash en High y Claude Code con Sonnet 5.5 en High
@@ -25,6 +26,7 @@
 - **Estándar de Calidad:** Evaluado, asegurado y documentado bajo el estándar internacional **ISO/IEC 25010** y lineamientos de seguridad **OWASP ASVS Nivel 2**.
 
 - **Herramientas de Inteligencia Artificial (Pair Programming & QA):** Google Antigravity impulsado por **Gemini 3.8 Flash en High** y Claude Code impulsado por **Sonnet 5.5 en High**, empleados para la concepción arquitectónica, diseño de pruebas automatizadas de regresión bajo ISO/IEC 25010 y documentación técnica viva.
+
 ---
 
 ## 2. Integrantes y Asignación de Roles del Equipo
@@ -60,6 +62,7 @@ El flujo de trabajo, la priorización de requisitos y el ciclo de vida del desar
 ## 4. Informe Integral de Aseguramiento de Calidad y Pruebas (QA - ISO/IEC/IEEE 29119)
 
 ### Control Institucional del Documento
+
 - **Institución:** Corporación de Estudios Tecnológicos del Norte del Valle (COTECNOVA)
 - **Programa Académico:** Ingeniería de Sistemas — Asignatura: Ingeniería de Software II (Periodo 2026-2)
 - **Docente Titular:** Ing. Felipe Gutiérrez Isaza
@@ -76,6 +79,7 @@ El flujo de trabajo, la priorización de requisitos y el ciclo de vida del desar
 El presente informe técnico ha sido estructurado y consolidado por **Santiago Arcos** en calidad de **Responsable de Pruebas (QA / Testing Lead)** del equipo de ingeniería. Su propósito es certificar formalmente la fiabilidad, seguridad, corrección algorítmica y adecuación funcional del sistema asistencial **SaludConecta IPS v2.4**.
 
 El aseguramiento de calidad comprendió el diseño, automatización, parametrización matemática y ejecución de pruebas sobre dos capas principales:
+
 1. **Núcleo Transaccional Backend (Go 1.22+):** Pruebas unitarias de dominio puro, validaciones fisiológicas deterministas, integración de adaptadores primarios Fiber con middlewares de seguridad, inmutabilidad criptográfica SHA-256 encadenada, consistencia concurrente sin condiciones de carrera (`-race`), y simulación transaccional MySQL / en memoria.
 2. **Capa Cliente Asistencial Web (React 18 / Vite 5 / Tailwind CSS):** Pruebas de componentes, integración de flujos asistenciales con mock de red estricto (rechazo de simulaciones falsas de éxito), renderizado condicional de alertas de alto riesgo farmacológico, validación matemática de tokens TOTP RFC 6238 en frontend/backend y resiliencia ante errores `HTTP 500` para prevenir pantallas en blanco en estaciones hospitalarias.
 
@@ -99,6 +103,7 @@ La arquitectura de pruebas implementada sigue el principio de la **Pirámide de 
 ```
 
 #### 4.2.1. Tipología de Pruebas Ejecutadas
+
 - **Caja Blanca Unitaria:** Inspección de rutas de ejecución de servicios (`ClinicalRecordService`, `TriageService`, `PrescriptionService`, `AuthService`, `SyncService`, `PatientService`).
 - **Caja Negra Funcional:** Validación de entradas/salidas contra especificación formal (Gherkin BDD).
 - **Pruebas de Seguridad (Security Testing - OWASP ASVS Nivel 2):** Resistencia a inyecciones, ataques de fuerza bruta en autenticación, revocación inmediata de sesiones suspendidas, aislamiento horizontal de objetos (IDOR médico-legal) y rechazo de secretos débiles.
@@ -112,6 +117,7 @@ La arquitectura de pruebas implementada sigue el principio de la **Pirámide de 
 Para maximizar la cobertura lógica minimizando el número de casos de prueba redundantes, se aplicaron rigurosamente dos técnicas formales de caja negra: **Partición de Equivalencia (Equivalence Partitioning - EP)** y **Análisis de Valores Límite (Boundary Value Analysis - BVA)**.
 
 #### 4.3.1. Escala de Coma de Glasgow (GCS)
+
 - **Rango Teórico y Fisiológico:** Intervalo entero cerrado $[3, 15]$.
 - **Clases de Equivalencia:**
   - $CE_1$ (Inválida Inferior): $(-\infty, 2] \cap \mathbb{Z} \rightarrow$ Rechazo con `ErrInvalidGlasgowScore` (HTTP 422).
@@ -126,6 +132,7 @@ Para maximizar la cobertura lógica minimizando el número de casos de prueba re
   - $16$ (Límite inválido inmediatamente superior) $\rightarrow$ Rechazado.
 
 #### 4.3.2. Frecuencia Cardíaca (FC en latidos por minuto - lpm)
+
 - **Rango Plausible Hospitalario:** $[1, 300]$ lpm.
 - **Clases de Equivalencia:**
   - $CE_1$ (Inválida - Muerte aparente o error de captura): $(-\infty, 0] \rightarrow$ Error `ErrInvalidVitals`.
@@ -138,6 +145,7 @@ Para maximizar la cobertura lógica minimizando el número de casos de prueba re
 - **Valores Frontera Evaluados:** $0$ (Error), $1$ (Nivel I), $39$ (Nivel I), $40$ (Nivel II/III), $150$ (Nivel II/III), $151$ (Nivel I), $300$ (Nivel I), $301$ (Error).
 
 #### 4.3.3. Tensión Arterial Sistólica (TAS en mmHg) y Saturación de Oxígeno ($\text{SpO}_2$ en %)
+
 - **TAS Choque Hemodinámico:** $< 70\text{ mmHg} \rightarrow$ Disparador mandate Manchester `NIVEL_I`.
 - **TAS Rango Plausible:** $[1, 300]\text{ mmHg}$; valores $> 300$ o $< 1$ son rechazados con HTTP 422.
 - **$\text{SpO}_2$ Hipoxemia Severa:** $< 85\% \rightarrow$ Disparador Manchester `NIVEL_I`.
@@ -146,6 +154,7 @@ Para maximizar la cobertura lógica minimizando el número de casos de prueba re
 - **$\text{SpO}_2$ Normal Basal:** $[95\%, 100\%] \rightarrow$ Estable. Valores fuera de $[0, 100]$ son rechazados.
 
 #### 4.3.4. Temperatura Corporal Corporal ($^\circ\text{C}$) — Discriminadores Manchester
+
 - **Rango Plausible Hospitalario:** $[20.0, 45.0]^\circ\text{C}$.
 - **Hipotermia Severa / Choque:** $\le 29.9^\circ\text{C} \rightarrow$ Clasificación forzosa en `NIVEL_I` (ej. $27.5^\circ\text{C}$).
 - **Hipotermia Moderada:** $[30.0, 31.9]^\circ\text{C} \rightarrow$ Clasificación en `NIVEL_II` (nunca Nivel V).
@@ -157,6 +166,7 @@ Para maximizar la cobertura lógica minimizando el número de casos de prueba re
 - **Hiperpirexia Extrema:** $\ge 41.0^\circ\text{C} \rightarrow$ `NIVEL_I`.
 
 #### 4.3.5. Seguridad Criptográfica y Políticas de Bloqueo
+
 - **Longitud del Secreto JWT (`JWT_SECRET`):**
   - Inválido: $< 32$ caracteres o cadenas conocidas/publicadas en repositorios (`"super-secret-key..."`).
   - Válido: $\ge 32$ caracteres pseudoaleatorios criptográficamente fuertes.
@@ -173,6 +183,7 @@ A continuación se detalla el catálogo de suites desarrolladas y automatizadas,
 #### 4.4.1. Suites Backend en Go (`tests/backend/` y `src/backend/`)
 
 ##### 1. Triaje Manchester y Constantes Vitales (`tests/backend/triage_test.go` y `triage_security_test.go`)
+
 - `TestTriageEquivalencePartitioningAndBoundaryValues`:
   - Evalúa partición inválida superior de Glasgow ($16$) $\rightarrow$ Verifica error tipado `domain.ErrInvalidGlasgowScore`.
   - Evalúa partición inválida por frecuencia cardíaca nula ($\text{FC} = 0$) $\rightarrow$ Verifica `domain.ErrInvalidVitals`.
@@ -189,6 +200,7 @@ A continuación se detalla el catálogo de suites desarrolladas y automatizadas,
   - Rechaza temperaturas de $10^\circ\text{C}$ y $100^\circ\text{C}$, FC de $500$ y TAS de $900$ con `ErrInvalidVitals`.
 
 ##### 2. Inmutabilidad de Historia Clínica Electrónica (`tests/backend/clinical_record_test.go`)
+
 - `TestClinicalRecordImmutabilityAndClosingPolicy`:
   - Creación de borrador $\rightarrow$ Valida `IsClosed = false` y ausencia de hash SHA-256.
   - Cierre y firma formal con token digital $\rightarrow$ Valida transición a `IsClosed = true` y generación determinista del hash SHA-256.
@@ -197,6 +209,7 @@ A continuación se detalla el catálogo de suites desarrolladas y automatizadas,
   - Verificación matemática de integridad criptográfica $\rightarrow$ `VerifyIntegrity() == true`.
 
 ##### 2.1. Kit Informático Médico y Observaciones Anatómicas (`tests/backend/anatomical_notes_test.go`)
+
 - `TestAnatomicalNotesCreationAndDoctorLicensing`:
   - Registro de notas anatómicas georreferenciadas por médico facultativo habilitado $\rightarrow$ Registro exitoso con ID generado y metadatos de autoría.
   - Intento de creación por personal de enfermería $\rightarrow$ Denegación con `domain.ErrUnauthorizedRole` (HTTP 403).
@@ -206,6 +219,7 @@ A continuación se detalla el catálogo de suites desarrolladas y automatizadas,
   - Intento de mutación o eliminación de una nota por un médico distinto al autor $\rightarrow$ Rechazo con `domain.ErrNotRecordOwner` (HTTP 403).
 
 ##### 3. Cadena Criptográfica SHA-256 y Concurrencia (`tests/backend/clinical_chain_test.go`)
+
 - `TestRecordObjectLevelAccess`:
   - Intento de cierre de folio por un médico distinto al autor $\rightarrow$ Verifica rechazo con `domain.ErrNotRecordOwner` (HTTP 403).
   - Intento de anexar nota aclaratoria por facultativo ajeno $\rightarrow$ Verifica rechazo con `domain.ErrNotRecordOwner`.
@@ -220,6 +234,7 @@ A continuación se detalla el catálogo de suites desarrolladas y automatizadas,
   - Intento de un lote offline de reescribir un folio previamente cerrado enviando otro médico tratante o hashes falsificados $\rightarrow$ El servidor descarta la falsificación, preserva el folio intacto y calcula los metadatos de autoría en el servidor.
 
 ##### 4. Intercepción Farmacológica de Alergias (`tests/backend/prescription_test.go` y `prescription_security_test.go`)
+
 - `TestPrescriptionAllergyInterceptor`:
   - Paciente con antecedente severo de hipersensibilidad a betalactámicos. Prescripción de Amoxil (Amoxicilina) $\rightarrow$ El interceptor detiene la operación en un tiempo $< 150\text{ ms}$ emitiendo `domain.AllergyConflictError`.
   - Prescripción de Acetaminofén (Paracetamol) al mismo paciente $\rightarrow$ Operación permitida y descuento efectivo del stock en inventario hospitalario.
@@ -235,6 +250,7 @@ A continuación se detalla el catálogo de suites desarrolladas y automatizadas,
   - Ejecución concurrente de prescripciones sobre inventario limitado $\rightarrow$ Garantiza que el stock final no caiga en valores negativos ni sufra inconsistencias por carreras de lectura/escritura.
 
 ##### 5. Gobernanza ReTHUS y Control Administrativo (`tests/backend/admin_governance_test.go` y `staff_register_routes_test.go`)
+
 - `TestStaffGovernanceAndReTHUSVerification`:
   - Registro de médico con tarjeta profesional en blanco $\rightarrow$ Rechazo con `domain.ErrMissingProfessionalCard`.
   - Registro formal de personal médico con tarjeta profesional válida $\rightarrow$ La cuenta se crea obligatoriamente inactiva (`IsActive = false`).
@@ -244,6 +260,7 @@ A continuación se detalla el catálogo de suites desarrolladas y automatizadas,
   - Verificación de rutas de registro `/api/v1/admin/users`: rechazo con `HTTP 401` ante peticiones anónimas y con `HTTP 403` si son ejecutadas por roles asistenciales (ej. MEDICO).
 
 ##### 6. Seguridad de Autenticación, MFA y Tokens (`tests/backend/auth_security_test.go`)
+
 - `TestDeactivatedUserLosesAccessImmediately`:
   - Usuario autenticado con token válido es suspendido por el Administrador $\rightarrow$ En la solicitud inmediatamente posterior con dicho token a `/api/v1/auth/me`, la petición es rechazada con `HTTP 401 Unauthorized` (revocación instantánea).
 - `TestRoleComesFromStoreNotToken`:
@@ -260,6 +277,7 @@ A continuación se detalla el catálogo de suites desarrolladas y automatizadas,
   - Valida que la limitación de tasa por IP respete la cabecera `X-Real-IP` solo cuando proviene de proxies de confianza (`TRUSTED_PROXIES`).
 
 ##### 7. Admisión de Pacientes y Sincronización Offline (`tests/backend/patient_api_test.go` y `sync_test.go`)
+
 - `TestAdmissionPatientAndAllergyAPI`:
   - Valida que únicamente los roles autorizados (ADMISION, ENFERMERO, MEDICO) registren pacientes.
   - Documentos de identidad duplicados responden `HTTP 409 Conflict`.
@@ -269,6 +287,7 @@ A continuación se detalla el catálogo de suites desarrolladas y automatizadas,
   - Verifica la idempotencia de sincronización: reenviar el lote no duplica registros ni modifica folios cerrados.
 
 ##### 8. Pruebas Criptográficas y de Dominio Interno (`src/backend/core/services/` y `src/backend/pkg/crypto/`)
+
 - `TestChainedSHA256Integrity`:
   - Valida determinismo: mismos datos producen idéntico hash SHA-256.
   - Valida efecto avalancha: la modificación de un solo carácter en la anamnesis cambia radicalmente el hash resultante.
@@ -284,12 +303,14 @@ A continuación se detalla el catálogo de suites desarrolladas y automatizadas,
 #### 4.4.2. Suites Frontend en React (`tests/frontend/`)
 
 ##### 1. Intercepción Visual de Alergias (`tests/frontend/AllergyAlertModal.test.jsx`)
+
 - Renderizado condicional de alerta de alta visibilidad:
   - Ante severidad `SEVERA`, comprueba la aplicación de estilos de alto contraste (borde rojo `border-red-600`, fondo `bg-red-50` y texto `text-red-900`).
   - Despliegue accesible de atributos ARIA (`role="dialog"`, `aria-modal="true"`, `aria-labelledby`).
   - Interrupción del flujo asistencial hasta confirmación explícita del médico.
 
 ##### 2. Implementación Criptográfica TOTP RFC 6238 (`tests/frontend/totp.test.js`)
+
 - `totp.test.js`:
   - Decodificación matemática de semillas Base32 a bytes.
   - Construcción de URIs compatibles con Google Authenticator y Authy (`otpauth://totp/...`).
@@ -297,30 +318,36 @@ A continuación se detalla el catálogo de suites desarrolladas y automatizadas,
   - Rechazo de semillas inválidas sin inventar códigos aleatorios.
 
 ##### 3. Gobernanza Administrativa e Integración (`tests/frontend/AdminGovernance.test.jsx`)
+
 - Renderizado del modal de registro de personal asistencial con validación de obligatoriedad de tarjeta profesional ReTHUS.
 - Validación de que los errores reales del servidor (ej. HTTP 403 Forbidden) se proyecten directamente al usuario sin encubrirlos con falsos mensajes de éxito.
 - Comprobación de que el formulario de creación de personal sea accesible exclusivamente desde el perfil del Administrador.
 
 ##### 4. Flujo de Autenticación y Desafío MFA (`tests/frontend/AuthMfa.test.jsx`)
+
 - Despliegue reactivo del input de 6 dígitos cuando el servidor retorna `{ mfa_required: true, status: 401 }`.
 - Validación de que el cliente no evalúe el código TOTP localmente, sino que lo transporte íntegro al endpoint del servidor.
 - Limpieza de casillas y presentación de mensaje de error legible ante rechazo por código inválido o caducado.
 
 ##### 5. Pantallas Clínicas y Consumo de API Real (`tests/frontend/ClinicalScreens.test.jsx`)
+
 - Pantalla de Historia Clínica (HCE): Carga de folios del paciente y renderizado fidedigno del hash SHA-256 devuelto por la API en la pestaña de cadena forense.
 - Despliegue de mensaje de error legible cuando la API no se encuentra disponible (error 500/red).
 - Validación de mensajes de error médico-legal: advertencia clara cuando un facultativo intenta cerrar el folio de otro médico (código HTTP 403).
 
 ##### 6. Admisión y Flujo de Pacientes (`tests/frontend/PatientFlow.test.jsx`)
+
 - Selector de pacientes (`PatientPicker`): Consulta al servidor y despliegue de antecedentes alérgicos confirmados.
 - Búsqueda por documento y notificación accesible cuando el paciente no se encuentra en el censo hospitalario (HTTP 404).
 
 ##### 7. Entorno Asistencial y Diseño de Alto Contraste (`tests/frontend/DoctorLayout.test.jsx`)
+
 - Menú lateral (`Sidebar`): Verificación de opciones asistenciales (Dashboard, Triaje, HCE, Prescripción, Perfil, MFA).
 - Barra superior (`Header`): Despliegue de los datos de acreditación del facultativo (Nombre, Rol MEDICO, Tarjeta Profesional).
 - Perfil (`ProfileScreen`): Renderizado de la colección de 5 banners médicos temáticos y cumplimiento de contraste WCAG AAA mediante óvalo de alta luminosidad.
 
 ##### 8. Kit Informático Médico y Modelo Anatómico (`tests/frontend/MedicalKit.test.jsx`)
+
 - Escala Visual Analógica (EVA 0–10): Selección interactiva de niveles de dolor con retroalimentación visual cromática y descriptores clínicos semiológicos.
 - Visor Anatómico Interactivo: Alternancia dinámica de 4 capas corporales (Órganos, Muscular, Ósea, Vascular) y 2 orientaciones espaciales (Anterior/Posterior).
 - Autofill y Pautas Semiológicas: Al hacer clic en un foco anatómico, el diálogo autocompleta los datos demográficos y aseguradora del paciente, sugiriendo diagnósticos presuntivos CIE-11.
@@ -334,29 +361,29 @@ A continuación se detalla el catálogo de suites desarrolladas y automatizadas,
 
 La siguiente matriz certifica la cobertura del 100% de los requisitos funcionales (RF01 a RF12) y no funcionales (RNF01 a RNF08) contra las suites de prueba ejecutadas:
 
-| Código Requisito | Descripción del Requisito | Suite / Casos de Prueba Asociados | Tipo de Prueba | Estado de Ejecución |
-| :--- | :--- | :--- | :--- | :---: |
-| **RF01** | Autenticación, MFA y Esquema Dual de Tokens | `TestDeactivatedUserLosesAccessImmediately`, `TestMFASetupRequiresCurrentCode`, `TestLoginBruteForceLockout`, `totp.test.js`, `AuthMfa.test.jsx` | Seguridad / Unitarias / UI | **APROBADO (PASS)** |
-| **RF02** | Triaje Manchester y Guardia Fisiológica | `TestTriageEquivalencePartitioningAndBoundaryValues`, `TestTriageRejectsClientLevelOutsideCatalog`, `TestTriageTemperatureDiscriminators`, `ClinicalScreens.test.jsx` | BVA / EP / Integración | **APROBADO (PASS)** |
-| **RF03** | HCE e Inmutabilidad Absoluta | `TestClinicalRecordImmutabilityAndClosingPolicy`, `TestRecordObjectLevelAccess`, `ClinicalScreens.test.jsx` | Caja Blanca / Integración | **APROBADO (PASS)** |
-| **RF04** | Cadena Criptográfica SHA-256 | `TestChainedSHA256Integrity`, `TestConcurrentClosesKeepChainLinear`, `TestClosedAtIsSealedToSeconds`, `TestRepositoryRejectsForkedChainLink` | Criptografía / Concurrencia | **APROBADO (PASS)** |
-| **RF05** | Intercepción Farmacológica de Alergias | `TestPrescriptionAllergyInterceptor`, `TestAllergyCrossCheckUsesRecordPatient`, `TestAllergyFamilyAndAccentMatching`, `AllergyAlertModal.test.jsx` | Integración / UI / Ontología | **APROBADO (PASS)** |
-| **RF06** | Sincronización Offline-First Rural | `TestRuralOfflineBatchSynchronization`, `TestSyncNeverRewritesClosedRecordsNorTrustsClient` | Idempotencia / Resiliencia | **APROBADO (PASS)** |
-| **RF07** | Gobernanza de Personal y Habilitación ReTHUS | `TestStaffGovernanceAndReTHUSVerification`, `TestStaffRegisterRequiresAdmin`, `AdminGovernance.test.jsx` | Seguridad / RBAC / UI | **APROBADO (PASS)** |
-| **RF08** | Panel Administrativo Desacoplado | `TestRoleComesFromStoreNotToken`, `AdminGovernance.test.jsx` | Aislamiento / RBAC | **APROBADO (PASS)** |
-| **RF09** | Perfil Asistencial y Alto Contraste | `DoctorLayout.test.jsx` (evaluación de banners y óvalo protector) | Usabilidad / WCAG AAA | **APROBADO (PASS)** |
-| **RF10** | Menú Colapsable y Persistencia F5 | `DoctorLayout.test.jsx`, `AuthMfa.test.jsx` | UI / Persistencia | **APROBADO (PASS)** |
-| **RF11** | Admisión de Pacientes y Alergias | `TestAdmissionPatientAndAllergyAPI`, `PatientFlow.test.jsx` | API / Integración / UI | **APROBADO (PASS)** |
-| **RF12** | Catálogo Farmacológico y Stock | `TestConcurrentPrescriptionsDoNotRaceOnStock`, `TestGetMedicationReturnsCopy` | Concurrencia / Negocio | **APROBADO (PASS)** |
-| **RF13** | Kit Informático Médico (EVA & Anatomía) | `TestAnatomicalNotesCreationAndDoctorLicensing`, `TestAnatomicalNotesImmutabilityOnClosedRecord`, `TestAnatomicalNotesDoctorOwnership`, `MedicalKit.test.jsx` | Modelo Anatómico / RBAC / UI | **APROBADO (PASS)** |
-| **RNF01** | Latencia de Respuesta (< 400 ms) | Benchmarks de Go: Triaje en ns/op, Alergias en $\mu\text{s/op}$ | Eficiencia de Desempeño | **APROBADO (PASS)** |
-| **RNF02** | Trazabilidad y Auditoría Forense | `TestStaffGovernanceAndReTHUSVerification` (AuditRepo), clonación de buffer | Auditoría / No Repudio | **APROBADO (PASS)** |
-| **RNF03** | Seguridad OWASP ASVS Nivel 2 | Suites completas de `auth_security_test.go` y `prescription_security_test.go` | Seguridad Defensiva | **APROBADO (PASS)** |
-| **RNF04** | Inmutabilidad Criptográfica en BD | Disparadores SQL (`trg_prevent_update_closed_record`), `TestMySQLChainSyncAndTimestamps` | Integridad Persistente | **APROBADO (PASS)** |
-| **RNF05** | Resiliencia Offline Rural | `TestRuralOfflineBatchSynchronization` | Fiabilidad / Disponibilidad | **APROBADO (PASS)** |
-| **RNF06** | Persistencia a Prueba de Fallos | `TestJWTSecretValidation`, comprobación de arranque sin DB_DRIVER silencioso | Fiabilidad Operativa | **APROBADO (PASS)** |
-| **RNF07** | Gestión Segura de Secretos | `TestBootstrapAdminNeverUsesDefaults`, `TestMemoryStoreHasNoPublishedAccounts` | Confidencialidad | **APROBADO (PASS)** |
-| **RNF08** | Consistencia bajo Concurrencia | Ejecución bajo bandera `-race`, bloqueos lineales de cadena SHA-256 | Concurrencia e Integridad | **APROBADO (PASS)** |
+| Código Requisito | Descripción del Requisito                    | Suite / Casos de Prueba Asociados                                                                                                                                     | Tipo de Prueba               | Estado de Ejecución |
+| :--------------- | :------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------- | :-----------------: |
+| **RF01**         | Autenticación, MFA y Esquema Dual de Tokens  | `TestDeactivatedUserLosesAccessImmediately`, `TestMFASetupRequiresCurrentCode`, `TestLoginBruteForceLockout`, `totp.test.js`, `AuthMfa.test.jsx`                      | Seguridad / Unitarias / UI   | **APROBADO (PASS)** |
+| **RF02**         | Triaje Manchester y Guardia Fisiológica      | `TestTriageEquivalencePartitioningAndBoundaryValues`, `TestTriageRejectsClientLevelOutsideCatalog`, `TestTriageTemperatureDiscriminators`, `ClinicalScreens.test.jsx` | BVA / EP / Integración       | **APROBADO (PASS)** |
+| **RF03**         | HCE e Inmutabilidad Absoluta                 | `TestClinicalRecordImmutabilityAndClosingPolicy`, `TestRecordObjectLevelAccess`, `ClinicalScreens.test.jsx`                                                           | Caja Blanca / Integración    | **APROBADO (PASS)** |
+| **RF04**         | Cadena Criptográfica SHA-256                 | `TestChainedSHA256Integrity`, `TestConcurrentClosesKeepChainLinear`, `TestClosedAtIsSealedToSeconds`, `TestRepositoryRejectsForkedChainLink`                          | Criptografía / Concurrencia  | **APROBADO (PASS)** |
+| **RF05**         | Intercepción Farmacológica de Alergias       | `TestPrescriptionAllergyInterceptor`, `TestAllergyCrossCheckUsesRecordPatient`, `TestAllergyFamilyAndAccentMatching`, `AllergyAlertModal.test.jsx`                    | Integración / UI / Ontología | **APROBADO (PASS)** |
+| **RF06**         | Sincronización Offline-First Rural           | `TestRuralOfflineBatchSynchronization`, `TestSyncNeverRewritesClosedRecordsNorTrustsClient`                                                                           | Idempotencia / Resiliencia   | **APROBADO (PASS)** |
+| **RF07**         | Gobernanza de Personal y Habilitación ReTHUS | `TestStaffGovernanceAndReTHUSVerification`, `TestStaffRegisterRequiresAdmin`, `AdminGovernance.test.jsx`                                                              | Seguridad / RBAC / UI        | **APROBADO (PASS)** |
+| **RF08**         | Panel Administrativo Desacoplado             | `TestRoleComesFromStoreNotToken`, `AdminGovernance.test.jsx`                                                                                                          | Aislamiento / RBAC           | **APROBADO (PASS)** |
+| **RF09**         | Perfil Asistencial y Alto Contraste          | `DoctorLayout.test.jsx` (evaluación de banners y óvalo protector)                                                                                                     | Usabilidad / WCAG AAA        | **APROBADO (PASS)** |
+| **RF10**         | Menú Colapsable y Persistencia F5            | `DoctorLayout.test.jsx`, `AuthMfa.test.jsx`                                                                                                                           | UI / Persistencia            | **APROBADO (PASS)** |
+| **RF11**         | Admisión de Pacientes y Alergias             | `TestAdmissionPatientAndAllergyAPI`, `PatientFlow.test.jsx`                                                                                                           | API / Integración / UI       | **APROBADO (PASS)** |
+| **RF12**         | Catálogo Farmacológico y Stock               | `TestConcurrentPrescriptionsDoNotRaceOnStock`, `TestGetMedicationReturnsCopy`                                                                                         | Concurrencia / Negocio       | **APROBADO (PASS)** |
+| **RF13**         | Kit Informático Médico (EVA & Anatomía)      | `TestAnatomicalNotesCreationAndDoctorLicensing`, `TestAnatomicalNotesImmutabilityOnClosedRecord`, `TestAnatomicalNotesDoctorOwnership`, `MedicalKit.test.jsx`         | Modelo Anatómico / RBAC / UI | **APROBADO (PASS)** |
+| **RNF01**        | Latencia de Respuesta (< 400 ms)             | Benchmarks de Go: Triaje en ns/op, Alergias en $\mu\text{s/op}$                                                                                                       | Eficiencia de Desempeño      | **APROBADO (PASS)** |
+| **RNF02**        | Trazabilidad y Auditoría Forense             | `TestStaffGovernanceAndReTHUSVerification` (AuditRepo), clonación de buffer                                                                                           | Auditoría / No Repudio       | **APROBADO (PASS)** |
+| **RNF03**        | Seguridad OWASP ASVS Nivel 2                 | Suites completas de `auth_security_test.go` y `prescription_security_test.go`                                                                                         | Seguridad Defensiva          | **APROBADO (PASS)** |
+| **RNF04**        | Inmutabilidad Criptográfica en BD            | Disparadores SQL (`trg_prevent_update_closed_record`), `TestMySQLChainSyncAndTimestamps`                                                                              | Integridad Persistente       | **APROBADO (PASS)** |
+| **RNF05**        | Resiliencia Offline Rural                    | `TestRuralOfflineBatchSynchronization`                                                                                                                                | Fiabilidad / Disponibilidad  | **APROBADO (PASS)** |
+| **RNF06**        | Persistencia a Prueba de Fallos              | `TestJWTSecretValidation`, comprobación de arranque sin DB_DRIVER silencioso                                                                                          | Fiabilidad Operativa         | **APROBADO (PASS)** |
+| **RNF07**        | Gestión Segura de Secretos                   | `TestBootstrapAdminNeverUsesDefaults`, `TestMemoryStoreHasNoPublishedAccounts`                                                                                        | Confidencialidad             | **APROBADO (PASS)** |
+| **RNF08**        | Consistencia bajo Concurrencia               | Ejecución bajo bandera `-race`, bloqueos lineales de cadena SHA-256                                                                                                   | Concurrencia e Integridad    | **APROBADO (PASS)** |
 
 ---
 
@@ -365,24 +392,26 @@ La siguiente matriz certifica la cobertura del 100% de los requisitos funcionale
 Como parte de las actividades rigurosas de QA, se evaluó la resolución y blindaje de los defectos históricos detectados en la plataforma.
 
 #### 4.6.1. Defectos Principales de la Entrega-s2
+
 1. **DEF-01: Bypass de Modificación en Folios Clínicos Cerrados**
-   - *Severidad:* Crítica (Violación médico-legal a la Res. 1995 de 1999).
-   - *Causa Raíz:* La comprobación de estado `is_closed` residía únicamente en una capa lógica y no a nivel de transacción atómica de persistencia.
-   - *Verificación QA:* Se comprobó la doble barrera: guardia en `ClinicalRecordService.CloseAndSign` que devuelve `ErrRecordAlreadyClosed` y trigger relacional `trg_prevent_update_closed_record` en MySQL y PostgreSQL que emite excepción `SIGNAL SQLSTATE '45000'`.
+   - _Severidad:_ Crítica (Violación médico-legal a la Res. 1995 de 1999).
+   - _Causa Raíz:_ La comprobación de estado `is_closed` residía únicamente en una capa lógica y no a nivel de transacción atómica de persistencia.
+   - _Verificación QA:_ Se comprobó la doble barrera: guardia en `ClinicalRecordService.CloseAndSign` que devuelve `ErrRecordAlreadyClosed` y trigger relacional `trg_prevent_update_closed_record` en MySQL y PostgreSQL que emite excepción `SIGNAL SQLSTATE '45000'`.
 2. **DEF-02: Condición de Carrera en Buffers de Auditoría Forense**
-   - *Severidad:* Alta (Riesgo de pánico en goroutines concurrentes y corrupción de logs).
-   - *Causa Raíz:* GoFiber reutiliza los contextos de `fasthttp.RequestCtx`. Una goroutine asíncrona leía directamente `c.Body()` tras el reciclaje del buffer.
-   - *Verificación QA:* Comprobada la clonación profunda e inmutable previa al despacho de la goroutine (`append([]byte(nil), c.Body()...)`).
+   - _Severidad:_ Alta (Riesgo de pánico en goroutines concurrentes y corrupción de logs).
+   - _Causa Raíz:_ GoFiber reutiliza los contextos de `fasthttp.RequestCtx`. Una goroutine asíncrona leía directamente `c.Body()` tras el reciclaje del buffer.
+   - _Verificación QA:_ Comprobada la clonación profunda e inmutable previa al despacho de la goroutine (`append([]byte(nil), c.Body()...)`).
 3. **DEF-03: Fuga de Conexiones en Pool MySQL bajo Carga**
-   - *Severidad:* Alta (Degradación y bloqueo transaccional en urgencias).
-   - *Causa Raíz:* Ausencia de límites explícitos en `SetMaxOpenConns` y consultas SQL sin contexto temporal (`context.WithTimeout`).
-   - *Verificación QA:* Comprobada la configuración del pool (25 conexiones máximas, 10 inactivas) e inyección de timeouts de 3 segundos en todas las transacciones SQL.
+   - _Severidad:_ Alta (Degradación y bloqueo transaccional en urgencias).
+   - _Causa Raíz:_ Ausencia de límites explícitos en `SetMaxOpenConns` y consultas SQL sin contexto temporal (`context.WithTimeout`).
+   - _Verificación QA:_ Comprobada la configuración del pool (25 conexiones máximas, 10 inactivas) e inyección de timeouts de 3 segundos en todas las transacciones SQL.
 4. **DEF-04: Omisión de Alerta ante Familias Farmacológicas y Acentos**
-   - *Severidad:* Crítica (Riesgo inminente de shock anafiláctico).
-   - *Causa Raíz:* Comparación literal de cadenas. Penicilina no bloqueaba Amoxicilina y diferencias de tildes omitían la coincidencia.
-   - *Verificación QA:* Implementación de `domain.MatchAllergy` con desacentuación y tabla de familias terapéuticas (betalactámicos, cefalosporinas, AINEs, sulfonamidas, macrólidos, quinolonas).
+   - _Severidad:_ Crítica (Riesgo inminente de shock anafiláctico).
+   - _Causa Raíz:_ Comparación literal de cadenas. Penicilina no bloqueaba Amoxicilina y diferencias de tildes omitían la coincidencia.
+   - _Verificación QA:_ Implementación de `domain.MatchAllergy` con desacentuación y tabla de familias terapéuticas (betalactámicos, cefalosporinas, AINEs, sulfonamidas, macrólidos, quinolonas).
 
 #### 4.6.2. Auditoría de Seguridad Adicional (25 Defectos Blindados)
+
 - **Críticos (SEC-C01 a SEC-C07):** Resuelto cruce de alergias contra el paciente del folio real, soporte integral de tildes y asociaciones farmacológicas, prohibición de sobreescritura de folios cerrados en sincronización, rechazo de niveles Manchester fuera de catálogo, clasificación correcta de hipotermia a $30^\circ\text{C}$ como `NIVEL_II`, prohibición de conmutación silenciosa a memoria y erradicación de cuentas por defecto.
 - **Altos (SEC-A01 a SEC-A16):** Rechazo de secretos JWT inseguros, revocación instantánea de sesiones al desactivar usuarios, exigencia de código TOTP vigente para alterar MFA, bloqueo por fuerza bruta a 5 intentos, serialización de cadena SHA-256 sin bifurcaciones, control de acceso por autor del folio, sellado de tiempo truncado a segundos y desacoplamiento de mocks en frontend.
 - **Medio y Bajo (SEC-M01, SEC-B01):** Repositorios en memoria devuelven copias defensivas para evitar carreras de punteros, y ajuste de tiempos de espera en hashing Bcrypt bajo pruebas concurrentes.
@@ -393,18 +422,18 @@ Como parte de las actividades rigurosas de QA, se evaluó la resolución y blind
 
 Los resultados empíricos obtenidos en las mediciones del sistema contra los umbrales definidos en el informe de calidad son los siguientes:
 
-| Característica ISO 25010 | Métrica Evaluada | Meta de Calidad | Resultado Medido | Dictamen QA |
-| :--- | :--- | :---: | :---: | :---: |
-| **Adecuación Funcional** | Tasa de éxito en transacciones clínicas | 100% | 100% | **Conforme** |
-| **Eficiencia de Desempeño** | Latencia p95 en lectura y prescripción | $< 180\text{ ms}$ | $28.4\text{ ms}$ | **Conforme** |
-| **Eficiencia de Desempeño** | Velocidad de cálculo Manchester | $< 1\text{ ms}$ | $5.55\text{ ns/op}$ | **Conforme** |
-| **Eficiencia de Desempeño** | Tiempo de intercepción de alergias | $< 90\text{ ms}$ | $3.23\ \mu\text{s/op}$ | **Conforme** |
-| **Eficiencia de Desempeño** | Consumo de RAM en reposo del binario Go | $< 35\text{ MB}$ | $18.2\text{ MB}$ | **Conforme** |
-| **Fiabilidad** | Tolerancia a fallos HTTP 500 sin pantalla blanca | 0 pantallas blancas | 0 (Alerta con reintento) | **Conforme** |
-| **Seguridad** | Aislamiento RBAC e inmutabilidad HCE | 0 mutaciones ilegales | 0 (Bloqueo 401/403/Signal) | **Conforme** |
-| **Mantenibilidad** | Desacoplamiento Hexagonal estricto | 0 dependencias en core | 0 dependencias directas | **Conforme** |
-| **Usabilidad** | Accesibilidad visual y contraste de datos | WCAG AA / AAA | Paleta estandarizada | **Conforme** |
-| **Portabilidad** | Despliegue agnóstico en Docker | 0 dependencias host | Multi-stage Go+React | **Conforme** |
+| Característica ISO 25010    | Métrica Evaluada                                 |    Meta de Calidad     |      Resultado Medido      | Dictamen QA  |
+| :-------------------------- | :----------------------------------------------- | :--------------------: | :------------------------: | :----------: |
+| **Adecuación Funcional**    | Tasa de éxito en transacciones clínicas          |          100%          |            100%            | **Conforme** |
+| **Eficiencia de Desempeño** | Latencia p95 en lectura y prescripción           |   $< 180\text{ ms}$    |      $28.4\text{ ms}$      | **Conforme** |
+| **Eficiencia de Desempeño** | Velocidad de cálculo Manchester                  |    $< 1\text{ ms}$     |    $5.55\text{ ns/op}$     | **Conforme** |
+| **Eficiencia de Desempeño** | Tiempo de intercepción de alergias               |    $< 90\text{ ms}$    |   $3.23\ \mu\text{s/op}$   | **Conforme** |
+| **Eficiencia de Desempeño** | Consumo de RAM en reposo del binario Go          |    $< 35\text{ MB}$    |      $18.2\text{ MB}$      | **Conforme** |
+| **Fiabilidad**              | Tolerancia a fallos HTTP 500 sin pantalla blanca |  0 pantallas blancas   |  0 (Alerta con reintento)  | **Conforme** |
+| **Seguridad**               | Aislamiento RBAC e inmutabilidad HCE             | 0 mutaciones ilegales  | 0 (Bloqueo 401/403/Signal) | **Conforme** |
+| **Mantenibilidad**          | Desacoplamiento Hexagonal estricto               | 0 dependencias en core |  0 dependencias directas   | **Conforme** |
+| **Usabilidad**              | Accesibilidad visual y contraste de datos        |     WCAG AA / AAA      |    Paleta estandarizada    | **Conforme** |
+| **Portabilidad**            | Despliegue agnóstico en Docker                   |  0 dependencias host   |    Multi-stage Go+React    | **Conforme** |
 
 ---
 
@@ -413,6 +442,7 @@ Los resultados empíricos obtenidos en las mediciones del sistema contra los umb
 Para que el docente titular (**Ing. Felipe Gutiérrez Isaza**) o el equipo de evaluadores puedan reproducir de manera determinista los resultados de las suites automatizadas, se proporcionan los siguientes comandos de consola:
 
 #### 4.8.1. Pruebas Backend en Go (desde la raíz o `src/backend`)
+
 ```powershell
 # 1. Ejecución de la suite completa de pruebas unitarias y de integración
 go test ./tests/backend/... -v
@@ -436,6 +466,7 @@ go test -tags integration -run TestMySQL ./tests/backend/... -v
 ```
 
 #### 4.8.2. Pruebas Frontend en React / Vitest (desde `src/frontend`)
+
 ```powershell
 # 1. Instalación de dependencias del cliente web
 cd src/frontend
@@ -460,10 +491,11 @@ Habiendo culminado el proceso de auditoría y pruebas sobre la totalidad de los 
 4. **La plataforma presenta cero defectos críticos abiertos y es declarada apta para despliegue y sustentación académica.**
 
 ---
+
 **Dictamen:** **APROBADO — 100% CONFORME**  
 **Santiago Arcos**  
-*Responsable de Pruebas (QA / Testing Lead)*  
-*Ingeniería de Software II — COTECNOVA 2026-2*
+_Responsable de Pruebas (QA / Testing Lead)_  
+_Ingeniería de Software II — COTECNOVA 2026-2_
 
 ---
 
@@ -471,37 +503,37 @@ Habiendo culminado el proceso de auditoría y pruebas sobre la totalidad de los 
 
 ### 5.1. Requisitos Funcionales (Priorización MoSCoW)
 
-| Código   | Nombre del Requisito                                   | Descripción Detallada                                                                                                                                                                                                                                                                                       | Prioridad MoSCoW |
-| :------- | :----------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------- |
-| **RF01** | Autenticación, MFA y Esquema Dual de Tokens | Control de acceso por roles (MEDICO, ENFERMERO, ADMISION, AUDITOR, ADMIN) mediante esquema dual de tokens JWT (HS256) con Access Token de 15 minutos y Refresh Token de 7 días con rotación automática y detección de reuso conforme a OWASP ASVS v4. Firma con `JWT_SECRET` obligatorio de al menos 32 caracteres y MFA TOTP (RFC 6238) con QR escaneable. El código TOTP se valida siempre en el servidor. Reemplazar o retirar un segundo factor activo exige el código vigente. Tras 5 intentos fallidos la cuenta se bloquea 15 minutos y las rutas de verificación tienen además un límite por IP real del cliente. En cada solicitud se revalida que la cuenta siga activa: suspender a un usuario revoca sus tokens de inmediato y el rol efectivo es el almacenado, no el declarado en el token. Renovación transparente en segundo plano vía `POST /auth/refresh` sin interrumpir la atención médica. | **Must Have** |
-| **RF02** | Triaje Manchester y Guardia Fisiológica | Semaforización automática en 5 niveles calculada **siempre en el servidor** a partir de Glasgow, SpO2, FC, FR, PAS/PAD y temperatura (incluidas hipotermia e hipertermia: 30 °C es NIVEL_II, nunca NIVEL_V). Rangos plausibles: Glasgow 3-15, SpO2 0-100, FC 1-300, FR 1-80, PAS 1-300, PAD 1-200 y temperatura 20-45 °C (HTTP 422 fuera de rango). El cliente solo puede escalar a un nivel más urgente; un nivel fuera del catálogo o menos urgente que el clínico se rechaza. | **Must Have** |
-| **RF03** | HCE e Inmutabilidad Absoluta | Registro de atención clínica con bloqueo de modificación post-cierre: un folio firmado no se reabre ni se reemplaza (tampoco al reenviar un lote de sincronización) y cualquier mutación se rechaza y está protegida por triggers a nivel de base de datos (MySQL y PostgreSQL), incluidas las notas aclaratorias, que son solo de anexo. Solo el médico autor del folio puede firmarlo o anexar notas (HTTP 403 en otro caso) (Resolución 1995 de 1999). | **Must Have** |
-| **RF04** | Cadena Criptográfica SHA-256 | Hash SHA-256 encadenado que incorpora el hash del folio previo del paciente. La cabeza de la cadena es el último eslabón no referenciado; un índice único (paciente, hash previo) y un bloqueo por paciente con reintento impiden bifurcaciones cuando se cierran folios simultáneamente. La hora de cierre se sella con precisión de segundos para que lo firmado coincida con lo persistido y la verificación de integridad no falle. | **Must Have** |
-| **RF05** | Intercepción Farmacológica de Alergias | Cruce en tiempo real entre los principios activos del medicamento (activo y genérico) y los antecedentes alérgicos del paciente **del folio** (nunca el paciente declarado por el cliente), sin distinguir mayúsculas ni tildes y por familia farmacológica: penicilina bloquea amoxicilina; también betalactámicos, cefalosporinas, AINE, quinolonas, macrólidos y sulfonamidas. Respuesta < 150 ms. Solo el autor del folio puede prescribir sobre él. | **Must Have** |
-| **RF06** | Sincronización Offline-First Rural | Consolidación por lotes idempotentes con UUID v4 de folios capturados en brigadas rurales. El autor de cada folio es el médico autenticado; el hash previo y el hash los calcula el servidor y los encadena al historial del paciente; reenviar un lote nunca modifica un folio cerrado. El lote es atómico y se reintenta ante conflicto de cadena. | **Should Have** |
-| **RF07** | Gobernanza de Personal y Habilitación ReTHUS           | Registro de personal exclusivo del Administrador, donde toda cuenta ingresa obligatoriamente inactiva (`is_active = FALSE`). Validación mandatoria de Tarjeta Profesional ReTHUS para roles médicos y de enfermería (Res. 1995/1999). Activación y suspensión controlada mediante auditoría forense inmutable.                 | **Must Have**    |
-| **RF08** | Panel de Control Administrativo Desacoplado            | Entorno exclusivo para rol `ADMIN` (`AdminLayout`) aislado absolutamente de historias clínicas y consultas (Ley 1581 de 2012). Módulos de gobernanza de personal, bitácora forense de solo lectura alimentada por la API (inicios de sesión, mutaciones y lecturas de datos clínicos con usuario, rol, IP y Correlation-ID) y catálogo local de sedes. Los usuarios, estados y la bitácora provienen exclusivamente del servidor: si el backend falla o rechaza una operación se muestra el error real y nunca un éxito simulado.                                     | **Must Have**    |
-| **RF09** | Perfil Asistencial y Administrativo con Alto Contraste | Perfil estilo red social con colección de 5 banners temáticos (Pediatría, Farmacia, Urgencias, Cirugía, Cardiología), carga reactiva de foto de perfil y encapsulación de identidad en un óvalo protector de alta luminosidad (`bg-white/95`) que garantiza contraste WCAG AAA sobre cualquier fondo.       | **Must Have**    |
-| **RF10** | Menú Lateral Colapsable y Persistencia de Sesión F5    | Sidebar asistencial con modo colapsable (`w-20`) centrado exclusivamente en íconos con tooltips y margen reactivo (`ml-20`/`ml-64`). Persistencia local del estado de autenticación y vista activa que previene el cierre de sesión ante eventos de recarga del navegador (F5).                             | **Must Have**    |
-| **RF11** | Admisión de Pacientes y Antecedentes Alérgicos | API de admisión (`POST /patients`, listado y búsqueda por documento) y registro de alergias (`POST /patients/:id/allergies`) para los roles ADMISION, ENFERMERO y MEDICO, con validación de catálogos (tipo de documento, sexo, grupo sanguíneo, afiliación y severidad) y rechazo de documentos duplicados (HTTP 409). | **Must Have** |
-| **RF12** | Catálogo Farmacológico y Prescripción | Consulta del catálogo CUM institucional con stock (`GET /medications?q=`). El catálogo inicial de demostración usa códigos `CUM-DEMO-xxx` y debe sustituirse por la carga oficial del INVIMA. La prescripción descuenta inventario y rechaza stock insuficiente (HTTP 409). | **Should Have** |
-| **RF13** | Agendamiento y Calendario Médico Interactivo | Vista mensual interactiva de consulta externa (`DoctorAppointmentsView.jsx`) con contadores de citas por día, selector de paciente, validación de traslape horario (ventanas de 20 min) y rechazo de fechas pasadas. Generación de confirmación en PDF vectorial y despacho asíncrono vía SMTP mediante Goroutines desacopladas (`/api/v2/appointments`). | **Must Have** |
-| **RF14** | Seguimiento de Tratamiento y Prescripción Tripartita | Módulo clínico (`TreatmentFollowUpView.jsx`) con banner obligatorio de EPS/IPS del paciente (`eps_name`, `affiliation_type`), duración del tratamiento en días, formulación multiproducto por concentración exacta de inventario con precio unitario en COP, liquidación de cobertura (PBS 100%, Copago 15%, Particular con selector de medio de pago: Efectivo, Tarjeta, Transferencia) y emisión tripartita simultánea (HCE + Correo PDF al paciente + Buzón de Farmacia con código legible ej. `RX-2026-XXXXX`). | **Must Have** |
-| **RF15** | Farmacia, Inventario por Concentración y Dispensación PDF417 | Módulo logístico y farmacéutico (`PharmacyDashboard.jsx`) con arquitectura desacoplada en dos vistas especializadas: 1) **Buzón de Recetas y Dispensación:** recepción en tiempo real de prescripciones pendientes emitidas desde consulta externa, lectura por cámara web del código de barras PDF417 de la cédula del paciente (`@zxing/library`) o contingencia manual, liquidación de cobertura (PBS 100%, Copago 15%, Particular con medios de pago en ventanilla) y dispensación atómica ACID en MySQL con bloqueo de fila (`SELECT ... FOR UPDATE`), deducción de existencias y control de doble despacho (HTTP 409 Conflict); 2) **Catálogo de Inventario Farmacéutico:** gestión CRUD completa diferenciada por principio activo y concentración exacta (ej. Amoxicilina 250 mg vs. 500 mg, Risperidona 1 mg vs. 3 mg), registro modal de nuevos fármacos (`POST /api/v2/pharmacy/inventory`), ajuste modal de todos los parámetros técnicos (principio activo, nombre comercial, dosis, presentación, CUM, precio COP, stock, stock mínimo, lote y fecha de vencimiento vía `PUT /api/v2/pharmacy/inventory/:id`) y eliminación segura sujeta a integridad referencial (`DELETE /api/v2/pharmacy/inventory/:id`). | **Must Have** |
-| **RF16** | Módulo Asistencial de Enfermería: Resumen Clínico HCE y Lista de Chequeo Nominal | Módulo asistencial (`NurseSummaryView.jsx` y `NurseChecklistView.jsx`) exclusivo para el rol `ENFERMERO`/`ENFERMERA`: 1) **Resumen Clínico Asistencial (HCE Básica):** visor de ficha demográfica (edad calculada, EPS, grupo sanguíneo), alertas alérgicas visibles con severidad, constantes vitales del triaje Manchester, diagnóstico médico, tiempo de tratamiento, observaciones clínicas del facultativo y plan farmacológico activo con concentraciones y posología; 2) **Lista de Chequeo Asistencial:** control nominal interactivo de tareas y deberes (verificación de brazalete e identidad, revisión de alergias previas, administración de cada fármaco prescrito con horario de ejecución y firma de enfermería, signos vitales, accesos venosos, nutrición y confort), creador de deberes personalizados (+ Agregar Cuidado), registro legal de notas de evolución de turno (Resolución 1995 de 1999) con almacenamiento persistente en `localStorage`, e integración con el botón "Enviar y Guardar" del médico en `TreatmentFollowUpView.jsx` para el despacho simultáneo de órdenes clínicas; 3) **Gobernanza de Perfil y Persistencia de Identidad:** botones de cambio de portada y carga de foto condicionados exclusivamente al modo edición ("Editar Perfil"), persistencia permanente del avatar del personal por ID/cédula/correo para resistir recargas (F5), navegación de vistas y cierres de sesión, y ocultamiento estético de widgets de sesión y latencia en cabecera preservando su operativa en segundo plano. | **Must Have** |
+| Código   | Nombre del Requisito                                                             | Descripción Detallada                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Prioridad MoSCoW |
+| :------- | :------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------- |
+| **RF01** | Autenticación, MFA y Esquema Dual de Tokens                                      | Control de acceso por roles (MEDICO, ENFERMERO, ADMISION, AUDITOR, ADMIN) mediante esquema dual de tokens JWT (HS256) con Access Token de 15 minutos y Refresh Token de 7 días con rotación automática y detección de reuso conforme a OWASP ASVS v4. Firma con `JWT_SECRET` obligatorio de al menos 32 caracteres y MFA TOTP (RFC 6238) con QR escaneable. El código TOTP se valida siempre en el servidor. Reemplazar o retirar un segundo factor activo exige el código vigente. Tras 5 intentos fallidos la cuenta se bloquea 15 minutos y las rutas de verificación tienen además un límite por IP real del cliente. En cada solicitud se revalida que la cuenta siga activa: suspender a un usuario revoca sus tokens de inmediato y el rol efectivo es el almacenado, no el declarado en el token. Renovación transparente en segundo plano vía `POST /auth/refresh` sin interrumpir la atención médica.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | **Must Have**    |
+| **RF02** | Triaje Manchester y Guardia Fisiológica                                          | Semaforización automática en 5 niveles calculada **siempre en el servidor** a partir de Glasgow, SpO2, FC, FR, PAS/PAD y temperatura (incluidas hipotermia e hipertermia: 30 °C es NIVEL_II, nunca NIVEL_V). Rangos plausibles: Glasgow 3-15, SpO2 0-100, FC 1-300, FR 1-80, PAS 1-300, PAD 1-200 y temperatura 20-45 °C (HTTP 422 fuera de rango). El cliente solo puede escalar a un nivel más urgente; un nivel fuera del catálogo o menos urgente que el clínico se rechaza.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | **Must Have**    |
+| **RF03** | HCE e Inmutabilidad Absoluta                                                     | Registro de atención clínica con bloqueo de modificación post-cierre: un folio firmado no se reabre ni se reemplaza (tampoco al reenviar un lote de sincronización) y cualquier mutación se rechaza y está protegida por triggers a nivel de base de datos (MySQL y PostgreSQL), incluidas las notas aclaratorias, que son solo de anexo. Solo el médico autor del folio puede firmarlo o anexar notas (HTTP 403 en otro caso) (Resolución 1995 de 1999).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | **Must Have**    |
+| **RF04** | Cadena Criptográfica SHA-256                                                     | Hash SHA-256 encadenado que incorpora el hash del folio previo del paciente. La cabeza de la cadena es el último eslabón no referenciado; un índice único (paciente, hash previo) y un bloqueo por paciente con reintento impiden bifurcaciones cuando se cierran folios simultáneamente. La hora de cierre se sella con precisión de segundos para que lo firmado coincida con lo persistido y la verificación de integridad no falle.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | **Must Have**    |
+| **RF05** | Intercepción Farmacológica de Alergias                                           | Cruce en tiempo real entre los principios activos del medicamento (activo y genérico) y los antecedentes alérgicos del paciente **del folio** (nunca el paciente declarado por el cliente), sin distinguir mayúsculas ni tildes y por familia farmacológica: penicilina bloquea amoxicilina; también betalactámicos, cefalosporinas, AINE, quinolonas, macrólidos y sulfonamidas. Respuesta < 150 ms. Solo el autor del folio puede prescribir sobre él.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | **Must Have**    |
+| **RF06** | Sincronización Offline-First Rural                                               | Consolidación por lotes idempotentes con UUID v4 de folios capturados en brigadas rurales. El autor de cada folio es el médico autenticado; el hash previo y el hash los calcula el servidor y los encadena al historial del paciente; reenviar un lote nunca modifica un folio cerrado. El lote es atómico y se reintenta ante conflicto de cadena.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | **Should Have**  |
+| **RF07** | Gobernanza de Personal y Habilitación ReTHUS                                     | Registro de personal exclusivo del Administrador, donde toda cuenta ingresa obligatoriamente inactiva (`is_active = FALSE`). Validación mandatoria de Tarjeta Profesional ReTHUS para roles médicos y de enfermería (Res. 1995/1999). Activación y suspensión controlada mediante auditoría forense inmutable.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | **Must Have**    |
+| **RF08** | Panel de Control Administrativo Desacoplado                                      | Entorno exclusivo para rol `ADMIN` (`AdminLayout`) aislado absolutamente de historias clínicas y consultas (Ley 1581 de 2012). Módulos de gobernanza de personal, bitácora forense de solo lectura alimentada por la API (inicios de sesión, mutaciones y lecturas de datos clínicos con usuario, rol, IP y Correlation-ID) y catálogo local de sedes. Los usuarios, estados y la bitácora provienen exclusivamente del servidor: si el backend falla o rechaza una operación se muestra el error real y nunca un éxito simulado.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | **Must Have**    |
+| **RF09** | Perfil Asistencial y Administrativo con Alto Contraste                           | Perfil estilo red social con colección de 5 banners temáticos (Pediatría, Farmacia, Urgencias, Cirugía, Cardiología), carga reactiva de foto de perfil y encapsulación de identidad en un óvalo protector de alta luminosidad (`bg-white/95`) que garantiza contraste WCAG AAA sobre cualquier fondo.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | **Must Have**    |
+| **RF10** | Menú Lateral Colapsable y Persistencia de Sesión F5                              | Sidebar asistencial con modo colapsable (`w-20`) centrado exclusivamente en íconos con tooltips y margen reactivo (`ml-20`/`ml-64`). Persistencia local del estado de autenticación y vista activa que previene el cierre de sesión ante eventos de recarga del navegador (F5).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | **Must Have**    |
+| **RF11** | Admisión de Pacientes y Antecedentes Alérgicos                                   | API de admisión (`POST /patients`, listado y búsqueda por documento) y registro de alergias (`POST /patients/:id/allergies`) para los roles ADMISION, ENFERMERO y MEDICO, con validación de catálogos (tipo de documento, sexo, grupo sanguíneo, afiliación y severidad) y rechazo de documentos duplicados (HTTP 409).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | **Must Have**    |
+| **RF12** | Catálogo Farmacológico y Prescripción                                            | Consulta del catálogo CUM institucional con stock (`GET /medications?q=`). El catálogo inicial de demostración usa códigos `CUM-DEMO-xxx` y debe sustituirse por la carga oficial del INVIMA. La prescripción descuenta inventario y rechaza stock insuficiente (HTTP 409).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | **Should Have**  |
+| **RF13** | Agendamiento y Calendario Médico Interactivo                                     | Vista mensual interactiva de consulta externa (`DoctorAppointmentsView.jsx`) con contadores de citas por día, selector de paciente, validación de traslape horario (ventanas de 20 min) y rechazo de fechas pasadas. Generación de confirmación en PDF vectorial y despacho asíncrono vía SMTP mediante Goroutines desacopladas (`/api/v2/appointments`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | **Must Have**    |
+| **RF14** | Seguimiento de Tratamiento y Prescripción Tripartita                             | Módulo clínico (`TreatmentFollowUpView.jsx`) con banner obligatorio de EPS/IPS del paciente (`eps_name`, `affiliation_type`), duración del tratamiento en días, formulación multiproducto por concentración exacta de inventario con precio unitario en COP, liquidación de cobertura (PBS 100%, Copago 15%, Particular con selector de medio de pago: Efectivo, Tarjeta, Transferencia) y emisión tripartita simultánea (HCE + Correo PDF al paciente + Buzón de Farmacia con código legible ej. `RX-2026-XXXXX`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | **Must Have**    |
+| **RF15** | Farmacia, Inventario por Concentración y Dispensación PDF417                     | Módulo logístico y farmacéutico (`PharmacyDashboard.jsx`) con arquitectura desacoplada en dos vistas especializadas: 1) **Buzón de Recetas y Dispensación:** recepción en tiempo real de prescripciones pendientes emitidas desde consulta externa, lectura por cámara web del código de barras PDF417 de la cédula del paciente (`@zxing/library`) o contingencia manual, liquidación de cobertura (PBS 100%, Copago 15%, Particular con medios de pago en ventanilla) y dispensación atómica ACID en MySQL con bloqueo de fila (`SELECT ... FOR UPDATE`), deducción de existencias y control de doble despacho (HTTP 409 Conflict); 2) **Catálogo de Inventario Farmacéutico:** gestión CRUD completa diferenciada por principio activo y concentración exacta (ej. Amoxicilina 250 mg vs. 500 mg, Risperidona 1 mg vs. 3 mg), registro modal de nuevos fármacos (`POST /api/v2/pharmacy/inventory`), ajuste modal de todos los parámetros técnicos (principio activo, nombre comercial, dosis, presentación, CUM, precio COP, stock, stock mínimo, lote y fecha de vencimiento vía `PUT /api/v2/pharmacy/inventory/:id`) y eliminación segura sujeta a integridad referencial (`DELETE /api/v2/pharmacy/inventory/:id`).                                                                                                                                                                                                                                                                                                                        | **Must Have**    |
+| **RF16** | Módulo Asistencial de Enfermería: Resumen Clínico HCE y Lista de Chequeo Nominal | Módulo asistencial (`NurseSummaryView.jsx` y `NurseChecklistView.jsx`) exclusivo para el rol `ENFERMERO`/`ENFERMERA`: 1) **Resumen Clínico Asistencial (HCE Básica):** visor de ficha demográfica (edad calculada, EPS, grupo sanguíneo), alertas alérgicas visibles con severidad, constantes vitales del triaje Manchester, diagnóstico médico, tiempo de tratamiento, observaciones clínicas del facultativo y plan farmacológico activo con concentraciones y posología; 2) **Lista de Chequeo Asistencial:** control nominal interactivo de tareas y deberes (verificación de brazalete e identidad, revisión de alergias previas, administración de cada fármaco prescrito con horario de ejecución y firma de enfermería, signos vitales, accesos venosos, nutrición y confort), creador de deberes personalizados (+ Agregar Cuidado), registro legal de notas de evolución de turno (Resolución 1995 de 1999) con almacenamiento persistente en `localStorage`, e integración con el botón "Enviar y Guardar" del médico en `TreatmentFollowUpView.jsx` para el despacho simultáneo de órdenes clínicas; 3) **Gobernanza de Perfil y Persistencia de Identidad:** botones de cambio de portada y carga de foto condicionados exclusivamente al modo edición ("Editar Perfil"), persistencia permanente del avatar del personal por ID/cédula/correo para resistir recargas (F5), navegación de vistas y cierres de sesión, y ocultamiento estético de widgets de sesión y latencia en cabecera preservando su operativa en segundo plano. | **Must Have**    |
 
 ### 5.2. Requisitos No Funcionales (RNF)
 
-| Código    | Criterio de Calidad                            | Descripción y Métrica de Aceptación                                                                                                                                                                                              |
-| :-------- | :--------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **RNF01** | Latencia de Respuesta (Eficiencia)             | El percentil 95 (p95) de la latencia en operaciones de lectura y emisión de prescripciones debe ser inferior a 400 ms bajo concurrencia asistencial estándar.                                                                    |
-| **RNF02** | Trazabilidad y Auditoría Forense               | Cada petición debe portar y propagar un encabezado `X-Correlation-ID` único (UUID v4). Las operaciones de mutación quedan persistidas en bitácora inalterable con IP, marca de tiempo UTC y actor institucional (ISO/IEC 27001). |
-| **RNF03** | Seguridad en Aplicaciones (OWASP ASVS Nivel 2) | Esquema dual de tokens (Access Token 15 min / Refresh Token 7 días) con rotación automática (Refresh Token Rotation) y detección de reuso fraudulento, protección contra inyección SQL mediante sentencias preparadas, hashing de contraseñas con Bcrypt (coste 12), revocación inmediata de sesiones de cuentas suspendidas, bloqueo por cuenta tras 5 intentos fallidos, limitación de tasa por IP real del cliente (cabecera `X-Real-IP` solo desde proxies de confianza) y sanitización de cabeceras CORS. |
-| **RNF04** | Inmutabilidad Criptográfica de Datos           | Toda modificación física a folios cerrados debe ser prevenida tanto en la capa de aplicación como en el motor de base de datos relacional mediante disparadores `BEFORE UPDATE` y `BEFORE DELETE`.                               |
-| **RNF05** | Resiliencia y Disponibilidad en Zonas Rurales  | Operación asistencial autónoma en ausencia de conexión a internet mediante almacenamiento local PWA y resolución determinista de duplicados al sincronizar con la sede central.                                                  |
-| **RNF06** | Configuración y Persistencia a Prueba de Fallos | El servicio no arranca sin `JWT_SECRET` seguro (mínimo 32 caracteres, distinto de cualquier valor publicado) y, si el motor de base de datos configurado no responde, termina con error: nunca conmuta en silencio a memoria, porque los registros clínicos se perderían al reiniciar. |
-| **RNF07** | Gestión de Secretos | Ningún secreto ni cuenta por defecto en el código, el `docker-compose.yml` o la documentación. Las credenciales se definen en un `.env` privado y `docker compose` se detiene si faltan. Las plantillas `.env.example` solo contienen marcadores genéricos. |
-| **RNF08** | Consistencia bajo Concurrencia | Los repositorios devuelven copias y protegen su estado con candados (verificable con `go test -race`); los cierres simultáneos del mismo paciente forman una cadena lineal; los lotes de sincronización son atómicos. |
+| Código    | Criterio de Calidad                             | Descripción y Métrica de Aceptación                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| :-------- | :---------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **RNF01** | Latencia de Respuesta (Eficiencia)              | El percentil 95 (p95) de la latencia en operaciones de lectura y emisión de prescripciones debe ser inferior a 400 ms bajo concurrencia asistencial estándar.                                                                                                                                                                                                                                                                                                                                                  |
+| **RNF02** | Trazabilidad y Auditoría Forense                | Cada petición debe portar y propagar un encabezado `X-Correlation-ID` único (UUID v4). Las operaciones de mutación quedan persistidas en bitácora inalterable con IP, marca de tiempo UTC y actor institucional (ISO/IEC 27001).                                                                                                                                                                                                                                                                               |
+| **RNF03** | Seguridad en Aplicaciones (OWASP ASVS Nivel 2)  | Esquema dual de tokens (Access Token 15 min / Refresh Token 7 días) con rotación automática (Refresh Token Rotation) y detección de reuso fraudulento, protección contra inyección SQL mediante sentencias preparadas, hashing de contraseñas con Bcrypt (coste 12), revocación inmediata de sesiones de cuentas suspendidas, bloqueo por cuenta tras 5 intentos fallidos, limitación de tasa por IP real del cliente (cabecera `X-Real-IP` solo desde proxies de confianza) y sanitización de cabeceras CORS. |
+| **RNF04** | Inmutabilidad Criptográfica de Datos            | Toda modificación física a folios cerrados debe ser prevenida tanto en la capa de aplicación como en el motor de base de datos relacional mediante disparadores `BEFORE UPDATE` y `BEFORE DELETE`.                                                                                                                                                                                                                                                                                                             |
+| **RNF05** | Resiliencia y Disponibilidad en Zonas Rurales   | Operación asistencial autónoma en ausencia de conexión a internet mediante almacenamiento local PWA y resolución determinista de duplicados al sincronizar con la sede central.                                                                                                                                                                                                                                                                                                                                |
+| **RNF06** | Configuración y Persistencia a Prueba de Fallos | El servicio no arranca sin `JWT_SECRET` seguro (mínimo 32 caracteres, distinto de cualquier valor publicado) y, si el motor de base de datos configurado no responde, termina con error: nunca conmuta en silencio a memoria, porque los registros clínicos se perderían al reiniciar.                                                                                                                                                                                                                         |
+| **RNF07** | Gestión de Secretos                             | Ningún secreto ni cuenta por defecto en el código, el `docker-compose.yml` o la documentación. Las credenciales se definen en un `.env` privado y `docker compose` se detiene si faltan. Las plantillas `.env.example` solo contienen marcadores genéricos.                                                                                                                                                                                                                                                    |
+| **RNF08** | Consistencia bajo Concurrencia                  | Los repositorios devuelven copias y protegen su estado con candados (verificable con `go test -race`); los cierres simultáneos del mismo paciente forman una cadena lineal; los lotes de sincronización son atómicos.                                                                                                                                                                                                                                                                                          |
 
 ---
 
@@ -1315,6 +1347,7 @@ sequenceDiagram
 - Imagen de alta resolución: [`docs/diagrams/12_persistencia_sesion_f5.png`](docs/diagrams/12_persistencia_sesion_f5.png) | Vectorial: [`docs/diagrams/12_persistencia_sesion_f5.svg`](docs/diagrams/12_persistencia_sesion_f5.svg)
 
 ---
+
 ---
 
 ### 6.11. Diagrama de Secuencia: Prescripción Médica Tripartita, Notificación a Enfermería y Dispensación con Lector PDF417
@@ -1383,7 +1416,7 @@ flowchart TD
     subgraph OrgChartCanvas ["Lienzo Interactivo de Organigrama (AdminOrgChartView)"]
         Toolbar["Barra de Herramientas: Buscador en tiempo real, Zoom (0.4x - 2.0x), Reset"]
         CanvasDrag["Lienzo con Cuadrícula Gráfica: Soporte para arrastre (Pan) y scroll (Zoom)"]
-        
+
         subgraph TopManagement ["Nivel 1: Alta Dirección"]
             Gerente["Gerencia General & Dirección Médica\n(Dr. Felipe Gutiérrez Isaza)"]
         end
@@ -1412,7 +1445,7 @@ flowchart TD
     AdminActor --> Sidebar
     AdminActor --> Header
     Sidebar -->|Selecciona Vista Jerarquía| OrgChartCanvas
-    
+
     Toolbar --> CanvasDrag
     CanvasDrag --> Gerente
     Gerente --> DepMed & DepFar & DepEnf & DepAux & DepAdm
@@ -1666,25 +1699,25 @@ _El servidor de desarrollo Vite servirá la aplicación en `http://localhost:517
 
 Siguiendo la política de protección de infraestructura sensible (Regla 27), todas las credenciales y puertos reales se mantienen confidenciales mediante máscaras genéricas:
 
-| Variable                 | Descripción                                               | Valor de Muestra                              |
-| :----------------------- | :-------------------------------------------------------- | :-------------------------------------------- |
-| `PORT`                   | Puerto de escucha del servicio HTTP GoFiber               | `8080`                                        |
-| `DB_DRIVER`              | Adaptador de persistencia (`mysql`, `postgres`, `memory`) | `mysql`                                       |
-| `DB_HOST`                | Host del motor de base de datos relacional                | `localhost`                                   |
-| `DB_PORT`                | Puerto del motor de base de datos                         | `3306`                                        |
-| `DB_USER`                | Usuario de conexión con permisos DDL/DML                  | `root`                                        |
-| `DB_PASSWORD`            | Clave de acceso a la base de datos                        | `secret_password`                             |
-| `DB_NAME`                | Nombre de la base de datos clínica                        | `saludconecta_db`                             |
-| `JWT_SECRET`             | Obligatoria: firma de tokens HS256 (mínimo 32 caracteres aleatorios; el servicio no arranca sin ella) | `defina_un_secreto_aleatorio_de_32_o_mas` |
-| `JWT_ACCESS_TTL_MINUTES` | Vigencia del Access Token de corta duración (por defecto 15 minutos) | `15` |
-| `JWT_REFRESH_TTL_HOURS`  | Vigencia del Refresh Token rotado de larga duración (por defecto 7 días) | `168` |
-| `CORS_ALLOWED_ORIGINS`   | Orígenes web autorizados para consumo de la API           | `http://localhost:5173,http://localhost:5174` |
-| `ADMIN_INITIAL_EMAIL`    | Correo del administrador inicial (se crea solo si no hay ninguno) | `admin@su-institucion.example`        |
-| `ADMIN_INITIAL_PASSWORD` | Clave inicial para inicialización automática              | `defina_una_clave_privada_larga`              |
-| `IPS_NIT`                | NIT de la institución prestadora de salud                 | `900123456`                                   |
-| `TRUSTED_PROXIES`        | IPs/CIDR del proxy inverso cuya cabecera `X-Real-IP` se acepta como IP del cliente | `127.0.0.1,::1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16` |
-| `DB_ROOT_PASSWORD`       | Solo `docker compose`: clave root de MySQL                | `defina_una_clave_privada`                    |
-| `COD_PRESTADOR`          | Código de habilitación MinSalud (12 dígitos)              | `110010999901`                                |
+| Variable                 | Descripción                                                                                           | Valor de Muestra                                        |
+| :----------------------- | :---------------------------------------------------------------------------------------------------- | :------------------------------------------------------ |
+| `PORT`                   | Puerto de escucha del servicio HTTP GoFiber                                                           | `8080`                                                  |
+| `DB_DRIVER`              | Adaptador de persistencia (`mysql`, `postgres`, `memory`)                                             | `mysql`                                                 |
+| `DB_HOST`                | Host del motor de base de datos relacional                                                            | `localhost`                                             |
+| `DB_PORT`                | Puerto del motor de base de datos                                                                     | `3306`                                                  |
+| `DB_USER`                | Usuario de conexión con permisos DDL/DML                                                              | `root`                                                  |
+| `DB_PASSWORD`            | Clave de acceso a la base de datos                                                                    | `secret_password`                                       |
+| `DB_NAME`                | Nombre de la base de datos clínica                                                                    | `saludconecta_db`                                       |
+| `JWT_SECRET`             | Obligatoria: firma de tokens HS256 (mínimo 32 caracteres aleatorios; el servicio no arranca sin ella) | `defina_un_secreto_aleatorio_de_32_o_mas`               |
+| `JWT_ACCESS_TTL_MINUTES` | Vigencia del Access Token de corta duración (por defecto 15 minutos)                                  | `15`                                                    |
+| `JWT_REFRESH_TTL_HOURS`  | Vigencia del Refresh Token rotado de larga duración (por defecto 7 días)                              | `168`                                                   |
+| `CORS_ALLOWED_ORIGINS`   | Orígenes web autorizados para consumo de la API                                                       | `http://localhost:5173,http://localhost:5174`           |
+| `ADMIN_INITIAL_EMAIL`    | Correo del administrador inicial (se crea solo si no hay ninguno)                                     | `admin@su-institucion.example`                          |
+| `ADMIN_INITIAL_PASSWORD` | Clave inicial para inicialización automática                                                          | `defina_una_clave_privada_larga`                        |
+| `IPS_NIT`                | NIT de la institución prestadora de salud                                                             | `900123456`                                             |
+| `TRUSTED_PROXIES`        | IPs/CIDR del proxy inverso cuya cabecera `X-Real-IP` se acepta como IP del cliente                    | `127.0.0.1,::1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16` |
+| `DB_ROOT_PASSWORD`       | Solo `docker compose`: clave root de MySQL                                                            | `defina_una_clave_privada`                              |
+| `COD_PRESTADOR`          | Código de habilitación MinSalud (12 dígitos)                                                          | `110010999901`                                          |
 
 ---
 
@@ -1719,35 +1752,35 @@ Para consultar el detalle extendido de la ingeniería del proyecto, accede a los
 
 Base: `/api/v1`. Todas las rutas, salvo `GET /health` y `POST /auth/login`, exigen `Authorization: Bearer <jwt>` y verifican en cada solicitud que la cuenta siga activa. Los errores tienen la forma `{ "error": "...", "correlation_id": "..." }` con el código HTTP real. Los JSON de entidades usan claves `snake_case`.
 
-| Módulo | Ruta | Roles | Notas |
-| :----- | :--- | :---- | :---- |
-| Salud | `GET /health` | Público | Estado del servicio |
-| Auth | `POST /auth/login` | Público | `{email, password, totp_code?}`; 401 con `mfa_required` si falta el TOTP; 403 cuenta inactiva; 429 tras 5 intentos fallidos |
-| Auth | `GET /auth/me` | Autenticado | Revalida la sesión y retorna el usuario vigente |
-| Auth | `POST /auth/mfa/setup` | Autenticado | `{current_code?}` (obligatorio si ya hay MFA activo); retorna `secret` y `otpauth_uri` |
-| Auth | `POST /auth/mfa/enable` | Autenticado | `{code}` confirma el segundo factor |
-| Admin | `GET /admin/users`, `POST /admin/users`, `PATCH /admin/users/:id/status`, `GET /admin/audit-logs` | ADMIN | Registro (nace inactivo), habilitación/suspensión y bitácora real |
-| Pacientes | `POST /patients`, `GET /patients`, `GET /patients/lookup`, `GET /patients/:id`, `PUT /patients/:id`, `DELETE /patients/:id` | ADMISION, ENFERMERO, MEDICO | Admisión, listado, actualización de contacto (Ley 1581) vía Drawer, eliminación transaccional y búsqueda por documento; 409 si el documento existe |
-| Pacientes | `POST /patients/:id/allergies`, `GET /patients/:id/allergies` | ADMISION, ENFERMERO, MEDICO | Severidad: LEVE, MODERADA o SEVERA |
-| Triaje | `POST /triage`, `GET /triage`, `GET /triage/:id`, `PATCH /triage/:id/status` | ENFERMERO, MEDICO | El nivel Manchester lo calcula el servidor |
-| HCE | `POST /clinical-records`, `POST /clinical-records/:id/close`, `POST /clinical-records/:id/clarifications` | MEDICO (autor del folio) | 403 si el médico no es el autor; 409 si ya está cerrado |
-| HCE | `GET /clinical-records/:id`, `GET /clinical-records/patient/:patient_id` | MEDICO | Lecturas registradas en la bitácora |
-| HCE | `GET /clinical-records/:id/verify`, `/rips`, `/fhir` | MEDICO, AUDITOR | Integridad SHA-256 y exportación RIPS / HL7 FHIR |
-| Medicamentos | `GET /medications?q=` | MEDICO | Catálogo con stock (máximo 50) |
-| Prescripción | `POST /prescriptions`, `GET /prescriptions/:id`, `GET /prescriptions/record/:record_id` | MEDICO | 422 con `allergy_conflict` ante alergia; 409 stock o paciente distinto del folio; 403 si no es el autor |
-| Sincronización | `POST /sync/batch` | MEDICO | Idempotente; autoría y hashes los define el servidor |
-| Agendamiento v2 | `POST /api/v2/appointments`, `GET /api/v2/appointments/doctor/:id` | MEDICO | Agendamiento con PDF y SMTP asíncrono; 409 por traslape o fecha pasada |
-| Tratamiento v2 | `POST /api/v2/treatments/dispatch` | MEDICO | Prescripción tripartita con liquidación económica (PBS, Copago, Particular) y código RX |
-| Farmacia v2 | `GET /api/v2/pharmacy/inbox` | FARMACIA, MEDICO, ADMIN | Buzón de recetas pendientes en tiempo real filtrable por estado y término |
-| Farmacia v2 | `GET /api/v2/pharmacy/inventory` | FARMACIA, ADMIN | Inventario valorizado segregado por concentración exacta (CUM, stock, precio) |
-| Farmacia v2 | `POST /api/v2/pharmacy/inventory` | FARMACIA, ADMIN | Alta de nuevo medicamento con principio activo, dosis, CUM, lote y vencimiento |
-| Farmacia v2 | `PUT /api/v2/pharmacy/inventory/:id` | FARMACIA, ADMIN | Edición integral de todos los parámetros clínicos y logísticos del medicamento |
-| Farmacia v2 | `DELETE /api/v2/pharmacy/inventory/:id` | FARMACIA, ADMIN | Eliminación de fármaco protegida por integridad referencial ante recetas previas |
-| Farmacia v2 | `PATCH /api/v2/pharmacy/inventory/:id/stock` | FARMACIA, ADMIN | Ajuste rápido de stock físico y número de lote |
-| Farmacia v2 | `GET /api/v2/pharmacy/prescriptions/lookup` | FARMACIA | Búsqueda por documento (cédula PDF417) o código legible RX |
-| Farmacia v2 | `POST /api/v2/pharmacy/dispense` | FARMACIA | Dispensación atómica ACID con deducción de stock y 409 ante doble despacho |
-| Educación en Salud | `GET /health-education`, `GET /health-education/:id` | Autenticado (MEDICO, ENFERMERO, ADMIN, FARMACIA) | Muro educativo en tiempo real filtrable por categoría (`CONSEJOS`, `AYUDAS`, `ENFERMEDADES`, `VACUNAS`, `ESTILO_DE_VIDA`, `PREVENCION`) |
-| Educación en Salud | `POST /health-education`, `PUT /health-education/:id`, `DELETE /health-education/:id` | MEDICO | Creación, edición y eliminación de publicaciones con fotos, enlaces de YouTube y videos cortos (máx. 120s). 403 para enfermeros. |
+| Módulo             | Ruta                                                                                                                        | Roles                                            | Notas                                                                                                                                              |
+| :----------------- | :-------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Salud              | `GET /health`                                                                                                               | Público                                          | Estado del servicio                                                                                                                                |
+| Auth               | `POST /auth/login`                                                                                                          | Público                                          | `{email, password, totp_code?}`; 401 con `mfa_required` si falta el TOTP; 403 cuenta inactiva; 429 tras 5 intentos fallidos                        |
+| Auth               | `GET /auth/me`                                                                                                              | Autenticado                                      | Revalida la sesión y retorna el usuario vigente                                                                                                    |
+| Auth               | `POST /auth/mfa/setup`                                                                                                      | Autenticado                                      | `{current_code?}` (obligatorio si ya hay MFA activo); retorna `secret` y `otpauth_uri`                                                             |
+| Auth               | `POST /auth/mfa/enable`                                                                                                     | Autenticado                                      | `{code}` confirma el segundo factor                                                                                                                |
+| Admin              | `GET /admin/users`, `POST /admin/users`, `PATCH /admin/users/:id/status`, `GET /admin/audit-logs`                           | ADMIN                                            | Registro (nace inactivo), habilitación/suspensión y bitácora real                                                                                  |
+| Pacientes          | `POST /patients`, `GET /patients`, `GET /patients/lookup`, `GET /patients/:id`, `PUT /patients/:id`, `DELETE /patients/:id` | ADMISION, ENFERMERO, MEDICO                      | Admisión, listado, actualización de contacto (Ley 1581) vía Drawer, eliminación transaccional y búsqueda por documento; 409 si el documento existe |
+| Pacientes          | `POST /patients/:id/allergies`, `GET /patients/:id/allergies`                                                               | ADMISION, ENFERMERO, MEDICO                      | Severidad: LEVE, MODERADA o SEVERA                                                                                                                 |
+| Triaje             | `POST /triage`, `GET /triage`, `GET /triage/:id`, `PATCH /triage/:id/status`                                                | ENFERMERO, MEDICO                                | El nivel Manchester lo calcula el servidor                                                                                                         |
+| HCE                | `POST /clinical-records`, `POST /clinical-records/:id/close`, `POST /clinical-records/:id/clarifications`                   | MEDICO (autor del folio)                         | 403 si el médico no es el autor; 409 si ya está cerrado                                                                                            |
+| HCE                | `GET /clinical-records/:id`, `GET /clinical-records/patient/:patient_id`                                                    | MEDICO                                           | Lecturas registradas en la bitácora                                                                                                                |
+| HCE                | `GET /clinical-records/:id/verify`, `/rips`, `/fhir`                                                                        | MEDICO, AUDITOR                                  | Integridad SHA-256 y exportación RIPS / HL7 FHIR                                                                                                   |
+| Medicamentos       | `GET /medications?q=`                                                                                                       | MEDICO                                           | Catálogo con stock (máximo 50)                                                                                                                     |
+| Prescripción       | `POST /prescriptions`, `GET /prescriptions/:id`, `GET /prescriptions/record/:record_id`                                     | MEDICO                                           | 422 con `allergy_conflict` ante alergia; 409 stock o paciente distinto del folio; 403 si no es el autor                                            |
+| Sincronización     | `POST /sync/batch`                                                                                                          | MEDICO                                           | Idempotente; autoría y hashes los define el servidor                                                                                               |
+| Agendamiento v2    | `POST /api/v2/appointments`, `GET /api/v2/appointments/doctor/:id`                                                          | MEDICO                                           | Agendamiento con PDF y SMTP asíncrono; 409 por traslape o fecha pasada                                                                             |
+| Tratamiento v2     | `POST /api/v2/treatments/dispatch`                                                                                          | MEDICO                                           | Prescripción tripartita con liquidación económica (PBS, Copago, Particular) y código RX                                                            |
+| Farmacia v2        | `GET /api/v2/pharmacy/inbox`                                                                                                | FARMACIA, MEDICO, ADMIN                          | Buzón de recetas pendientes en tiempo real filtrable por estado y término                                                                          |
+| Farmacia v2        | `GET /api/v2/pharmacy/inventory`                                                                                            | FARMACIA, ADMIN                                  | Inventario valorizado segregado por concentración exacta (CUM, stock, precio)                                                                      |
+| Farmacia v2        | `POST /api/v2/pharmacy/inventory`                                                                                           | FARMACIA, ADMIN                                  | Alta de nuevo medicamento con principio activo, dosis, CUM, lote y vencimiento                                                                     |
+| Farmacia v2        | `PUT /api/v2/pharmacy/inventory/:id`                                                                                        | FARMACIA, ADMIN                                  | Edición integral de todos los parámetros clínicos y logísticos del medicamento                                                                     |
+| Farmacia v2        | `DELETE /api/v2/pharmacy/inventory/:id`                                                                                     | FARMACIA, ADMIN                                  | Eliminación de fármaco protegida por integridad referencial ante recetas previas                                                                   |
+| Farmacia v2        | `PATCH /api/v2/pharmacy/inventory/:id/stock`                                                                                | FARMACIA, ADMIN                                  | Ajuste rápido de stock físico y número de lote                                                                                                     |
+| Farmacia v2        | `GET /api/v2/pharmacy/prescriptions/lookup`                                                                                 | FARMACIA                                         | Búsqueda por documento (cédula PDF417) o código legible RX                                                                                         |
+| Farmacia v2        | `POST /api/v2/pharmacy/dispense`                                                                                            | FARMACIA                                         | Dispensación atómica ACID con deducción de stock y 409 ante doble despacho                                                                         |
+| Educación en Salud | `GET /health-education`, `GET /health-education/:id`                                                                        | Autenticado (MEDICO, ENFERMERO, ADMIN, FARMACIA) | Muro educativo en tiempo real filtrable por categoría (`CONSEJOS`, `AYUDAS`, `ENFERMEDADES`, `VACUNAS`, `ESTILO_DE_VIDA`, `PREVENCION`)            |
+| Educación en Salud | `POST /health-education`, `PUT /health-education/:id`, `DELETE /health-education/:id`                                       | MEDICO                                           | Creación, edición y eliminación de publicaciones con fotos, enlaces de YouTube y videos cortos (máx. 120s). 403 para enfermeros.                   |
 
 ---
 
@@ -1778,44 +1811,43 @@ Defectos hallados en la auditoría y su corrección. Todos tienen prueba automat
 
 ### Críticos
 
-| ID | Defecto | Corrección | Verificación |
-| :- | :------ | :--------- | :----------- |
-| SEC-C01 | El cruce de alergias usaba el paciente enviado por el cliente | `PrescriptionService` toma el paciente del folio y rechaza (409) uno distinto | `TestAllergyCrossCheckUsesRecordPatient` |
-| SEC-C02 | Penicilina no bloqueaba amoxicilina; «ÁCIDO» y «ACIDO» eran distintos | `domain.MatchAllergy`: normaliza tildes, separa asociaciones y compara por familia | `TestAllergyFamilyAndAccentMatching` |
-| SEC-C03 | Reenviar un lote con un folio cerrado lo reemplazaba y reabría (memoria) | El repositorio nunca sobrescribe un folio cerrado y el servicio lo reconoce de forma idempotente | `TestSyncNeverRewritesClosedRecordsNorTrustsClient` |
-| SEC-C04 | El backend aceptaba niveles Manchester fuera del catálogo | El nivel se calcula en el servidor; el cliente solo puede escalar con un valor válido | `TestTriageRejectsClientLevelOutsideCatalog` |
-| SEC-C05 | 30 °C con el resto normal se clasificaba NIVEL_V | Discriminadores de hipotermia, hipertermia y frecuencia respiratoria | `TestTriageTemperatureDiscriminators` |
-| SEC-C06 | Si MySQL no respondía se pasaba en silencio a memoria | El servicio reintenta y termina con error; memoria solo con `DB_DRIVER=memory` | Revisión de `cmd/api/main.go` |
-| SEC-C07 | El seeder creaba un MEDICO con contraseña y MFA conocidos | Se eliminaron todas las cuentas sembradas; el administrador se crea solo con credenciales del operador | `TestBootstrapAdminNeverUsesDefaults`, `TestMemoryStoreHasNoPublishedAccounts` |
+| ID      | Defecto                                                                  | Corrección                                                                                             | Verificación                                                                   |
+| :------ | :----------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------- |
+| SEC-C01 | El cruce de alergias usaba el paciente enviado por el cliente            | `PrescriptionService` toma el paciente del folio y rechaza (409) uno distinto                          | `TestAllergyCrossCheckUsesRecordPatient`                                       |
+| SEC-C02 | Penicilina no bloqueaba amoxicilina; «ÁCIDO» y «ACIDO» eran distintos    | `domain.MatchAllergy`: normaliza tildes, separa asociaciones y compara por familia                     | `TestAllergyFamilyAndAccentMatching`                                           |
+| SEC-C03 | Reenviar un lote con un folio cerrado lo reemplazaba y reabría (memoria) | El repositorio nunca sobrescribe un folio cerrado y el servicio lo reconoce de forma idempotente       | `TestSyncNeverRewritesClosedRecordsNorTrustsClient`                            |
+| SEC-C04 | El backend aceptaba niveles Manchester fuera del catálogo                | El nivel se calcula en el servidor; el cliente solo puede escalar con un valor válido                  | `TestTriageRejectsClientLevelOutsideCatalog`                                   |
+| SEC-C05 | 30 °C con el resto normal se clasificaba NIVEL_V                         | Discriminadores de hipotermia, hipertermia y frecuencia respiratoria                                   | `TestTriageTemperatureDiscriminators`                                          |
+| SEC-C06 | Si MySQL no respondía se pasaba en silencio a memoria                    | El servicio reintenta y termina con error; memoria solo con `DB_DRIVER=memory`                         | Revisión de `cmd/api/main.go`                                                  |
+| SEC-C07 | El seeder creaba un MEDICO con contraseña y MFA conocidos                | Se eliminaron todas las cuentas sembradas; el administrador se crea solo con credenciales del operador | `TestBootstrapAdminNeverUsesDefaults`, `TestMemoryStoreHasNoPublishedAccounts` |
 
 ### Altos
 
-| ID | Defecto | Corrección | Verificación |
-| :- | :------ | :--------- | :----------- |
-| SEC-A01 | `JWT_SECRET` por defecto publicado en el código | `pkg/config` exige un secreto de 32 o más caracteres y rechaza valores publicados | `TestJWTSecretValidation` |
-| SEC-A02 | Tokens válidos hasta 8 h tras desactivar un usuario | `AuthMiddleware` revalida la cuenta y el rol almacenados en cada solicitud | `TestDeactivatedUserLosesAccessImmediately`, `TestRoleComesFromStoreNotToken` |
-| SEC-A03 | `/auth/mfa/setup` reemplazaba el segundo factor sin verificar el TOTP | Con MFA activo se exige `current_code` | `TestMFASetupRequiresCurrentCode` |
-| SEC-A04 | Sin límite de intentos; la IP del proxy se compartía entre usuarios | Bloqueo por cuenta (5 fallos, 15 min), límite por IP en rutas de autenticación e IP real vía `X-Real-IP` de proxies de confianza | `TestLoginBruteForceLockout`, `TestTOTPBruteForceLockout`, `TestRateLimitUsesRealClientIPBehindProxy` |
-| SEC-A05 | Dos cierres simultáneos bifurcaban la cadena SHA-256 | Cabeza de cadena por eslabón no referenciado, bloqueo por paciente, reintento e índice único `uq_cr_patient_chain` | `TestConcurrentClosesKeepChainLinear`, `TestRepositoryRejectsForkedChainLink` |
-| SEC-A06 | Un médico podía firmar el folio de otro y rompía la verificación | Solo el autor cierra, anexa notas o prescribe (`ErrNotRecordOwner`, HTTP 403) | `TestRecordObjectLevelAccess`, `TestPrescriptionRequiresRecordAuthor` |
-| SEC-A07 | La sincronización aceptaba `doctor_id` y hash previo del cliente | DTO sin autoría ni hashes; el servidor los asigna y encadena | `TestSyncNeverRewritesClosedRecordsNorTrustsClient`, `TestSyncChainsAfterServerRecords` |
-| SEC-A08 | El trigger abortaba todo el lote al reenviar un folio cerrado | `SaveBatch` consulta antes (`SELECT ... FOR UPDATE`) e inserta, actualiza borradores u omite cerrados | Revisión; `TestMySQLChainSyncAndTimestamps` con MySQL real |
-| SEC-A09 | `TIMESTAMP(0)` redondeaba `closed_at` y la verificación fallaba | La hora se sella a segundos antes de hashear y persistir | `TestClosedAtIsSealedToSeconds` |
-| SEC-A10 | HCE, prescripción y triaje mostraban datos y hashes simulados | Pantallas reescritas sobre la API real, con errores visibles | `ClinicalScreens.test.jsx`, `PatientFlow.test.jsx` |
-| SEC-A11 | El panel admin mostraba éxito aunque el backend fallara y una bitácora fabricada | Se eliminaron mocks y respaldos; errores reales, estados de carga/vacío y bitácora del servidor | `AdminGovernance.test.jsx` |
-| SEC-A12 | El frontend validaba el TOTP localmente con un secreto fijo | Validación solo en el servidor; flujo `setup`/`enable` con `otpauth_uri` | `AuthMfa.test.jsx` |
-| SEC-A13 | Fiber v2.52.5 afectado por GO-2025-3845 | Actualizado a v2.52.16 (`govulncheck` ya no la reporta) | `govulncheck ./...` |
-| SEC-A14 | Triggers solo en MySQL; sin protección de aclaraciones | Triggers para PostgreSQL y para notas aclaratorias; la guardia `CanModify` se usa en los servicios | Revisión de `schema.sql` y `postgres/schema.sql` |
-| SEC-A15 | Sin API de admisión; ADMISION sin rutas | `PatientService`, `PatientHandler` y rutas `/patients` con validación de catálogos | `TestAdmissionPatientAndAllergyAPI` |
-| SEC-A16 | Sin Web Crypto el cliente calculaba un TOTP inválido | HMAC-SHA1 en JavaScript puro como respaldo; nunca se devuelve un código inventado | `totp.test.js` |
+| ID      | Defecto                                                                          | Corrección                                                                                                                       | Verificación                                                                                          |
+| :------ | :------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------------------------- |
+| SEC-A01 | `JWT_SECRET` por defecto publicado en el código                                  | `pkg/config` exige un secreto de 32 o más caracteres y rechaza valores publicados                                                | `TestJWTSecretValidation`                                                                             |
+| SEC-A02 | Tokens válidos hasta 8 h tras desactivar un usuario                              | `AuthMiddleware` revalida la cuenta y el rol almacenados en cada solicitud                                                       | `TestDeactivatedUserLosesAccessImmediately`, `TestRoleComesFromStoreNotToken`                         |
+| SEC-A03 | `/auth/mfa/setup` reemplazaba el segundo factor sin verificar el TOTP            | Con MFA activo se exige `current_code`                                                                                           | `TestMFASetupRequiresCurrentCode`                                                                     |
+| SEC-A04 | Sin límite de intentos; la IP del proxy se compartía entre usuarios              | Bloqueo por cuenta (5 fallos, 15 min), límite por IP en rutas de autenticación e IP real vía `X-Real-IP` de proxies de confianza | `TestLoginBruteForceLockout`, `TestTOTPBruteForceLockout`, `TestRateLimitUsesRealClientIPBehindProxy` |
+| SEC-A05 | Dos cierres simultáneos bifurcaban la cadena SHA-256                             | Cabeza de cadena por eslabón no referenciado, bloqueo por paciente, reintento e índice único `uq_cr_patient_chain`               | `TestConcurrentClosesKeepChainLinear`, `TestRepositoryRejectsForkedChainLink`                         |
+| SEC-A06 | Un médico podía firmar el folio de otro y rompía la verificación                 | Solo el autor cierra, anexa notas o prescribe (`ErrNotRecordOwner`, HTTP 403)                                                    | `TestRecordObjectLevelAccess`, `TestPrescriptionRequiresRecordAuthor`                                 |
+| SEC-A07 | La sincronización aceptaba `doctor_id` y hash previo del cliente                 | DTO sin autoría ni hashes; el servidor los asigna y encadena                                                                     | `TestSyncNeverRewritesClosedRecordsNorTrustsClient`, `TestSyncChainsAfterServerRecords`               |
+| SEC-A08 | El trigger abortaba todo el lote al reenviar un folio cerrado                    | `SaveBatch` consulta antes (`SELECT ... FOR UPDATE`) e inserta, actualiza borradores u omite cerrados                            | Revisión; `TestMySQLChainSyncAndTimestamps` con MySQL real                                            |
+| SEC-A09 | `TIMESTAMP(0)` redondeaba `closed_at` y la verificación fallaba                  | La hora se sella a segundos antes de hashear y persistir                                                                         | `TestClosedAtIsSealedToSeconds`                                                                       |
+| SEC-A10 | HCE, prescripción y triaje mostraban datos y hashes simulados                    | Pantallas reescritas sobre la API real, con errores visibles                                                                     | `ClinicalScreens.test.jsx`, `PatientFlow.test.jsx`                                                    |
+| SEC-A11 | El panel admin mostraba éxito aunque el backend fallara y una bitácora fabricada | Se eliminaron mocks y respaldos; errores reales, estados de carga/vacío y bitácora del servidor                                  | `AdminGovernance.test.jsx`                                                                            |
+| SEC-A12 | El frontend validaba el TOTP localmente con un secreto fijo                      | Validación solo en el servidor; flujo `setup`/`enable` con `otpauth_uri`                                                         | `AuthMfa.test.jsx`                                                                                    |
+| SEC-A13 | Fiber v2.52.5 afectado por GO-2025-3845                                          | Actualizado a v2.52.16 (`govulncheck` ya no la reporta)                                                                          | `govulncheck ./...`                                                                                   |
+| SEC-A14 | Triggers solo en MySQL; sin protección de aclaraciones                           | Triggers para PostgreSQL y para notas aclaratorias; la guardia `CanModify` se usa en los servicios                               | Revisión de `schema.sql` y `postgres/schema.sql`                                                      |
+| SEC-A15 | Sin API de admisión; ADMISION sin rutas                                          | `PatientService`, `PatientHandler` y rutas `/patients` con validación de catálogos                                               | `TestAdmissionPatientAndAllergyAPI`                                                                   |
+| SEC-A16 | Sin Web Crypto el cliente calculaba un TOTP inválido                             | HMAC-SHA1 en JavaScript puro como respaldo; nunca se devuelve un código inventado                                                | `totp.test.js`                                                                                        |
 
 ### Medio y bajo
 
-| ID | Defecto | Corrección | Verificación |
-| :- | :------ | :--------- | :----------- |
-| SEC-M01 | `GetMedicationByID` devolvía el puntero interno (carrera con `DeductStock`) | Todos los repositorios en memoria devuelven copias | `TestGetMedicationReturnsCopy`, `TestConcurrentPrescriptionsDoNotRaceOnStock` |
-| SEC-B01 | `TestStaffRegisterRequiresAdmin` fallaba bajo `-race` por el timeout de 1 s con Bcrypt | La prueba usa un timeout de 30 s; ya no requiere exclusión del paso `-race` | `TestStaffRegisterRequiresAdmin` |
-
+| ID      | Defecto                                                                                | Corrección                                                                  | Verificación                                                                  |
+| :------ | :------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------- | :---------------------------------------------------------------------------- |
+| SEC-M01 | `GetMedicationByID` devolvía el puntero interno (carrera con `DeductStock`)            | Todos los repositorios en memoria devuelven copias                          | `TestGetMedicationReturnsCopy`, `TestConcurrentPrescriptionsDoNotRaceOnStock` |
+| SEC-B01 | `TestStaffRegisterRequiresAdmin` fallaba bajo `-race` por el timeout de 1 s con Bcrypt | La prueba usa un timeout de 30 s; ya no requiere exclusión del paso `-race` | `TestStaffRegisterRequiresAdmin`                                              |
 
 ---
 
@@ -1827,17 +1859,17 @@ Toda la implementación, suites de prueba, benchmarks y documentación asociada 
 
 ### 14.1. Alcance de los Entregables de la Entrega-s2
 
-| Componente | Artefactos Técnicos | Normas y Estándares | Estado de Conformidad |
-| :--- | :--- | :--- | :--- |
-| **Evaluación de Calidad** | `docs/informe-calidad.md`, `README.md` | ISO/IEC 25010, Res. 1995/1999, Res. 2275/2023, Ley 1581/2012 | 100% Conforme |
-| **Bitácora de Defectos** | Registro DEF-01 a DEF-04 con causa raíz, parches y commits | ISO/IEC 25010 (Seguridad, Fiabilidad, Rendimiento) | Mitigado y Verificado |
-| **Mantenimiento de Software** | Mantenimiento Correctivo, Preventivo (pool SQL/timeouts) y Perfectivo (puertos) | ISO/IEC 14764 / IEEE 1219 | Implementado |
-| **Pruebas de Regresión Go** | `tests/backend/quality_regression_test.go` | Inmutabilidad HCE, alergias cruzadas, Glasgow e integración HTTP | 100% Aprobado (4/4 tests) |
-| **Benchmarks de Rendimiento** | `tests/backend/performance_benchmark_test.go` | Eficiencia temporal Manchester y motor de alergias | 5.55 ns/op Manchester, 3.23 µs/op Alergias |
-| **Resiliencia Frontend React** | `tests/frontend/ResilienceQuality.test.jsx` | Bloqueo de HCE cerrada (`disabled`/`readOnly`) y manejo de error 500 sin pantalla blanca | 100% Aprobado (2/2 tests) |
-| **Suite Integral del Sistema** | 25+ tests backend en Go y 84 tests frontend en Vitest | ISO/IEC 29119 (Pruebas de Software) | 100% Aprobado (0 fallos) |
-| **Herramientas de Inteligencia Artificial** | Google Antigravity (Gemini 3.8 Flash en High) y Claude Code (Sonnet 5.5 en High) | Asistencia avanzada en arquitectura, pruebas y calidad | Documentado y Aplicado |
-| **Contenedorización Docker** | `Dockerfile` multi-etapa y `docker-compose.yml` orquestado | Portabilidad y reproducibilidad del entorno | Verificado |
+| Componente                                  | Artefactos Técnicos                                                              | Normas y Estándares                                                                      | Estado de Conformidad                      |
+| :------------------------------------------ | :------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------- | :----------------------------------------- |
+| **Evaluación de Calidad**                   | `docs/informe-calidad.md`, `README.md`                                           | ISO/IEC 25010, Res. 1995/1999, Res. 2275/2023, Ley 1581/2012                             | 100% Conforme                              |
+| **Bitácora de Defectos**                    | Registro DEF-01 a DEF-04 con causa raíz, parches y commits                       | ISO/IEC 25010 (Seguridad, Fiabilidad, Rendimiento)                                       | Mitigado y Verificado                      |
+| **Mantenimiento de Software**               | Mantenimiento Correctivo, Preventivo (pool SQL/timeouts) y Perfectivo (puertos)  | ISO/IEC 14764 / IEEE 1219                                                                | Implementado                               |
+| **Pruebas de Regresión Go**                 | `tests/backend/quality_regression_test.go`                                       | Inmutabilidad HCE, alergias cruzadas, Glasgow e integración HTTP                         | 100% Aprobado (4/4 tests)                  |
+| **Benchmarks de Rendimiento**               | `tests/backend/performance_benchmark_test.go`                                    | Eficiencia temporal Manchester y motor de alergias                                       | 5.55 ns/op Manchester, 3.23 µs/op Alergias |
+| **Resiliencia Frontend React**              | `tests/frontend/ResilienceQuality.test.jsx`                                      | Bloqueo de HCE cerrada (`disabled`/`readOnly`) y manejo de error 500 sin pantalla blanca | 100% Aprobado (2/2 tests)                  |
+| **Suite Integral del Sistema**              | 25+ tests backend en Go y 84 tests frontend en Vitest                            | ISO/IEC 29119 (Pruebas de Software)                                                      | 100% Aprobado (0 fallos)                   |
+| **Herramientas de Inteligencia Artificial** | Google Antigravity (Gemini 3.8 Flash en High) y Claude Code (Sonnet 5.5 en High) | Asistencia avanzada en arquitectura, pruebas y calidad                                   | Documentado y Aplicado                     |
+| **Contenedorización Docker**                | `Dockerfile` multi-etapa y `docker-compose.yml` orquestado                       | Portabilidad y reproducibilidad del entorno                                              | Verificado                                 |
 
 ---
 
@@ -1845,19 +1877,19 @@ Toda la implementación, suites de prueba, benchmarks y documentación asociada 
 
 La siguiente matriz presenta los resultados empíricos y cuantitativos obtenidos en las mediciones del sistema contra los umbrales de aceptación:
 
-| Característica ISO/IEC 25010 | Métrica Cuantitativa | Herramienta de Medición | Umbral / Meta | Resultado Obtenido | Conformidad |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **Adecuación Funcional** | Tasa de éxito en transacciones clínicas asistenciales | Go Test Runner / Vitest | 100% | 100% transacciones aprobadas sin discrepancias | Conforme |
-| **Eficiencia de Desempeño** | Latencia percentil 95 (p95) en endpoints GoFiber | Go Benchmarks / HTTP Load Harness | p95 < 180 ms | p95 = 28.4 ms en carga asistencial | Conforme |
-| **Eficiencia de Desempeño** | Consumo de memoria RAM en reposo del binario Go | Profiler `runtime.MemStats` | < 35 MB | 18.2 MB en reposo | Conforme |
-| **Eficiencia de Desempeño** | Velocidad de cálculo algorítmico Manchester | `BenchmarkTriageCalculation` | < 1 ms | **5.55 ns/op** (0 B/op, 0 allocs/op en > 218M ops) | Conforme |
-| **Eficiencia de Desempeño** | Tiempo de intercepción cruzada de alergias | `BenchmarkAllergyInterception` | < 90 ms | **3.23 µs/op** (0.00323 ms por cruce completo) | Conforme |
-| **Eficiencia de Desempeño** | Latencia pipeline completo de prescripción médica | `BenchmarkPrescriptionPipelineService` | < 50 ms | **2.96 µs/op** (validación + deducción inventario) | Conforme |
-| **Fiabilidad** | Tolerancia a fallos ante respuestas HTTP 500 del backend | Vitest Mock Harness (`ResilienceQuality.test.jsx`) | 0 pantallas blancas | Alerta accesible (`role="alert"`) y reintento funcional | Conforme |
-| **Seguridad** | Aislamiento por RBAC e inmutabilidad de folios cerrados | Go Security Suite / Triggers MySQL | 0 mutaciones no autorizadas | Bloqueo estricto 401/403 y trigger `SIGNAL 45000` | Conforme |
-| **Mantenibilidad** | Desacoplamiento de capas bajo Arquitectura Hexagonal | Análisis estático de interfaces (`core/ports`) | 0 dependencias directas de BD | 100% casos de uso desacoplados de infraestructura | Conforme |
-| **Usabilidad** | Accesibilidad visual, contraste y operabilidad | WCAG 2.1 AA / Vitest A11y Suite | Contraste >= 7:1 en datos críticos; <= 3 clics | Cumple WCAG 2.1 AA, paleta Manchester estandarizada | Conforme |
-| **Portabilidad** | Despliegue agnóstico en contenedores Docker | Docker Engine / Multi-OS | Cero dependencias locales | Contenedorización multi-etapa Go + React + MySQL | Conforme |
+| Característica ISO/IEC 25010 | Métrica Cuantitativa                                     | Herramienta de Medición                            | Umbral / Meta                                  | Resultado Obtenido                                      | Conformidad |
+| :--------------------------- | :------------------------------------------------------- | :------------------------------------------------- | :--------------------------------------------- | :------------------------------------------------------ | :---------- |
+| **Adecuación Funcional**     | Tasa de éxito en transacciones clínicas asistenciales    | Go Test Runner / Vitest                            | 100%                                           | 100% transacciones aprobadas sin discrepancias          | Conforme    |
+| **Eficiencia de Desempeño**  | Latencia percentil 95 (p95) en endpoints GoFiber         | Go Benchmarks / HTTP Load Harness                  | p95 < 180 ms                                   | p95 = 28.4 ms en carga asistencial                      | Conforme    |
+| **Eficiencia de Desempeño**  | Consumo de memoria RAM en reposo del binario Go          | Profiler `runtime.MemStats`                        | < 35 MB                                        | 18.2 MB en reposo                                       | Conforme    |
+| **Eficiencia de Desempeño**  | Velocidad de cálculo algorítmico Manchester              | `BenchmarkTriageCalculation`                       | < 1 ms                                         | **5.55 ns/op** (0 B/op, 0 allocs/op en > 218M ops)      | Conforme    |
+| **Eficiencia de Desempeño**  | Tiempo de intercepción cruzada de alergias               | `BenchmarkAllergyInterception`                     | < 90 ms                                        | **3.23 µs/op** (0.00323 ms por cruce completo)          | Conforme    |
+| **Eficiencia de Desempeño**  | Latencia pipeline completo de prescripción médica        | `BenchmarkPrescriptionPipelineService`             | < 50 ms                                        | **2.96 µs/op** (validación + deducción inventario)      | Conforme    |
+| **Fiabilidad**               | Tolerancia a fallos ante respuestas HTTP 500 del backend | Vitest Mock Harness (`ResilienceQuality.test.jsx`) | 0 pantallas blancas                            | Alerta accesible (`role="alert"`) y reintento funcional | Conforme    |
+| **Seguridad**                | Aislamiento por RBAC e inmutabilidad de folios cerrados  | Go Security Suite / Triggers MySQL                 | 0 mutaciones no autorizadas                    | Bloqueo estricto 401/403 y trigger `SIGNAL 45000`       | Conforme    |
+| **Mantenibilidad**           | Desacoplamiento de capas bajo Arquitectura Hexagonal     | Análisis estático de interfaces (`core/ports`)     | 0 dependencias directas de BD                  | 100% casos de uso desacoplados de infraestructura       | Conforme    |
+| **Usabilidad**               | Accesibilidad visual, contraste y operabilidad           | WCAG 2.1 AA / Vitest A11y Suite                    | Contraste >= 7:1 en datos críticos; <= 3 clics | Cumple WCAG 2.1 AA, paleta Manchester estandarizada     | Conforme    |
+| **Portabilidad**             | Despliegue agnóstico en contenedores Docker              | Docker Engine / Multi-OS                           | Cero dependencias locales                      | Contenedorización multi-etapa Go + React + MySQL        | Conforme    |
 
 ---
 
@@ -1866,6 +1898,7 @@ La siguiente matriz presenta los resultados empíricos y cuantitativos obtenidos
 Durante las pruebas de calidad y estrés hospitalario se identificaron, corrigieron y blindaron con pruebas de regresión automatizadas los siguientes cuatro defectos técnicos críticos:
 
 #### DEF-01: Bypass de Modificación en Folios Clínicos Cerrados
+
 - **Ubicación:** `src/backend/core/services/clinical_record_service.go`, `src/backend/adapters/http/handlers/clinical_record_handler.go`.
 - **Severidad:** Crítica (Violación médico-legal a la Resolución 1995 de 1999 de MinSalud y al principio de no repudio de la HCE).
 - **Causa Raíz:** La capa de servicio y los controladores HTTP permitían solicitudes de edición o cierre redundante sin verificar de manera atómica el booleano `is_closed` antes de llamar al repositorio, abriendo la posibilidad de que peticiones concurrentes sobreescribieran diagnósticos o planes terapéuticos de folios cerrados.
@@ -1877,6 +1910,7 @@ Durante las pruebas de calidad y estrés hospitalario se identificaron, corrigie
 - **Commit:** `fix(hce): enforce strict immutability check on closed records`.
 
 #### DEF-02: Condición de Carrera (Data Race) en Goroutines de Auditoría Forense
+
 - **Ubicación:** `src/backend/adapters/http/middleware/audit.go`.
 - **Severidad:** Alta (Pérdida de trazabilidad legal requerida por la Ley 1581 de 2012 y riesgo de pánico en el runtime de Go).
 - **Causa Raíz:** GoFiber reutiliza en un pool de memoria los buffers de `fasthttp.RequestCtx`. Al lanzar una goroutine asíncrona para insertar en `audit_logs`, la goroutine leía la referencia directa del cuerpo de la petición (`c.Body()`). Cuando la petición HTTP principal finalizaba, el buffer era reciclado por otra solicitud concurrente, corrompiendo los registros de auditoría o provocando desreferenciación de punteros nulos.
@@ -1885,6 +1919,7 @@ Durante las pruebas de calidad y estrés hospitalario se identificaron, corrigie
 - **Commit:** `fix(audit): clone request payload buffer before async logging goroutine`.
 
 #### DEF-03: Fuga de Memoria y Agotamiento del Pool de Conexiones MySQL bajo Concurrencia
+
 - **Ubicación:** `src/backend/adapters/storage/mysql/db.go`.
 - **Severidad:** Alta (Degradación progresiva y denegación de servicio en horas pico de urgencias).
 - **Causa Raíz:** La inicialización de `*sql.DB` carecía de límites máximos de conexiones y tiempos de vida para conexiones inactivas. Además, las consultas SQL se ejecutaban sin fecha límite de contexto (`context.Background()`), manteniendo sockets TCP abiertos indefinidamente ante bloqueos de fila.
@@ -1895,6 +1930,7 @@ Durante las pruebas de calidad y estrés hospitalario se identificaron, corrigie
 - **Commit:** `perf(db): configure connection pool limits and context deadlines`.
 
 #### DEF-04: Omisión de Alerta Cruzada ante Familias Farmacológicas y Faltas de Ortografía
+
 - **Ubicación:** `src/backend/core/domain/allergy.go`, `src/backend/core/services/prescription_service.go`.
 - **Severidad:** Crítica (Riesgo inminente de shock anafiláctico por prescripción de fármacos contraindicados).
 - **Causa Raíz:** La comparación de antecedentes alérgicos empleaba coincidencia simple de cadenas (`strings.EqualFold`). Si el paciente era alérgico a "Penicilina" y se formulaba "Amoxicilina" (antibiótico de la misma familia de betalactámicos), o si se ingresaba con acentos ("Ácido Acetilsalicílico" frente a "acido acetilsalicilico"), el sistema omitía la alerta.
@@ -1930,12 +1966,14 @@ Conforme a los lineamientos de la norma ISO/IEC 14764 e IEEE 1219, se estructura
 ### 14.5. Resumen de Pruebas Automatizadas y Benchmarks de Entrega-s2
 
 #### Pruebas de Regresión Go (`tests/backend/quality_regression_test.go`)
+
 - `TestRegression_ClosedRecordImmutability`: Valida el rechazo con HTTP 403 al intentar alterar folios sellados.
 - `TestRegression_CrossAllergyInterception`: Valida la intercepción automática de alergia cruzada por familia betalactámica.
 - `TestRegression_GlasgowBoundaryValidation`: Valida particiones equivalentes y valores frontera en la escala de Glasgow (rechazo de 2 y 16, aceptación de 3 y 15).
 - `TestRegression_HTTPTriageSecurityIntegration`: Valida seguridad y RBAC en `/api/v2/triage` (401 sin sesión, 403 para rol auditor y 200/201 para enfermero/médico).
 
 #### Benchmarks de Rendimiento Go (`tests/backend/performance_benchmark_test.go`)
+
 ```text
 goos: windows
 goarch: amd64
@@ -1947,6 +1985,7 @@ PASS
 ```
 
 #### Pruebas de Resiliencia Frontend Vitest (`tests/frontend/ResilienceQuality.test.jsx`)
+
 - Manejo accesible de caídas HTTP 500 del backend sin pantalla blanca y recuperación interactiva con reintento.
 - Bloqueo de folios cerrados mediante atributos `disabled` y `readOnly` en anamnesis, examen físico, diagnóstico CIE-11 y plan terapéutico.
 
@@ -1973,14 +2012,14 @@ PASS
 
 ### 14.7. Métricas Consolidadas de Líneas de Código (Rama prueba)
 
-| Componente / Capa del Sistema | Archivos Impactados | Líneas Nuevas (Añadidas) | Descripción Funcional |
-| :--- | :---: | :---: | :--- |
-| **Frontend Asistencial & Admin** | 38 | **6,190 líneas** | React 18, Tailwind CSS, Lucide Icons, autenticación split-screen, organigrama didáctico, enfermería, farmacia y banners. |
-| **Backend de Alta Concurrencia** | 16 | **2,632 líneas** | Go (Fiber), Arquitectura Hexagonal, puertos de dominio, servicios de prescripción, citas y triaje Manchester. |
-| **Suites de Pruebas Automatizadas** | 7 | **891 líneas** | Pruebas unitarias, de integración y resiliencia en Vitest (Frontend) y benchmarks de latencia en Go (Backend). |
-| **Documentación Técnica & QA** | 3 | **452 líneas** | Documentación exhaustiva en `README.md`, integración formal de QA bajo ISO/IEC 29119 y bitácoras de verificación regulatoria. |
-| **Configuración & Assets** | 2 | **4 líneas** | Iconografía oficial SVG/PNG, favicons y directivas de construcción Vite. |
-| **TOTAL CONSOLIDADO** | **66 archivos** | **10,169 líneas** | **Incremento neto de código productivo verificado.** |
+| Componente / Capa del Sistema       | Archivos Impactados | Líneas Nuevas (Añadidas) | Descripción Funcional                                                                                                         |
+| :---------------------------------- | :-----------------: | :----------------------: | :---------------------------------------------------------------------------------------------------------------------------- |
+| **Frontend Asistencial & Admin**    |         38          |     **6,190 líneas**     | React 18, Tailwind CSS, Lucide Icons, autenticación split-screen, organigrama didáctico, enfermería, farmacia y banners.      |
+| **Backend de Alta Concurrencia**    |         16          |     **2,632 líneas**     | Go (Fiber), Arquitectura Hexagonal, puertos de dominio, servicios de prescripción, citas y triaje Manchester.                 |
+| **Suites de Pruebas Automatizadas** |          7          |      **891 líneas**      | Pruebas unitarias, de integración y resiliencia en Vitest (Frontend) y benchmarks de latencia en Go (Backend).                |
+| **Documentación Técnica & QA**      |          3          |      **452 líneas**      | Documentación exhaustiva en `README.md`, integración formal de QA bajo ISO/IEC 29119 y bitácoras de verificación regulatoria. |
+| **Configuración & Assets**          |          2          |       **4 líneas**       | Iconografía oficial SVG/PNG, favicons y directivas de construcción Vite.                                                      |
+| **TOTAL CONSOLIDADO**               |   **66 archivos**   |    **10,169 líneas**     | **Incremento neto de código productivo verificado.**                                                                          |
 
 ---
 
@@ -2051,16 +2090,16 @@ La presente auditoría técnica integral y el diseño de la batería de pruebas 
 
 La evaluación del sistema contra las 8 características de calidad de la norma internacional ISO/IEC 25010 arrojó los siguientes resultados cuantitativos y cualitativos:
 
-| Característica ISO/IEC 25010 | Subcaracterísticas Auditadas | Métrica / Evidencia Técnica | Estado |
-| :--- | :--- | :--- | :--- |
-| **1. Adecuación Funcional** | Completitud, Corrección y Pertinencia | 100% de los casos de uso clínicos (Triaje Manchester, HCE Inmutable, Farmacia PDF417, Citas y Organigrama) operan sin desvíos de especificación. | Conforme |
+| Característica ISO/IEC 25010   | Subcaracterísticas Auditadas                      | Métrica / Evidencia Técnica                                                                                                                                                                             | Estado   |
+| :----------------------------- | :------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :------- |
+| **1. Adecuación Funcional**    | Completitud, Corrección y Pertinencia             | 100% de los casos de uso clínicos (Triaje Manchester, HCE Inmutable, Farmacia PDF417, Citas y Organigrama) operan sin desvíos de especificación.                                                        | Conforme |
 | **2. Eficiencia de Desempeño** | Comportamiento temporal y Utilización de recursos | Algoritmo de triaje en **5.55 ns/op** (0 B/op, 0 allocs); Intercepción ontológica de alergias en **3.23 µs/op**; Pipeline de prescripción en **2.96 µs/op**; Consumo de memoria RAM en reposo: 18.2 MB. | Conforme |
-| **3. Compatibilidad** | Coexistencia e Interoperabilidad | Interoperabilidad RIPS JSON conforme a la Res. 2275 de 2023; Lectura de cédulas colombianas en formato PDF417; APIs REST desacopladas preparadas para HL7/FHIR. | Conforme |
-| **4. Usabilidad** | Reconocimiento, Accesibilidad y Operabilidad | Cumplimiento estricto de WCAG 2.1 AA (ISO/IEC 40500) con ratio de contraste superior a 7:1 en datos vitales; interfaz ergonómica con atajos de teclado (`Ctrl + K`) y flujos en <= 3 clics. | Conforme |
-| **5. Fiabilidad** | Madurez, Tolerancia a fallos y Recuperabilidad | Manejo resiliente de caídas HTTP 500 en frontend sin pantalla blanca; Deadlines transaccionales (`context.WithTimeout`) de 3s en MySQL; Resistencia a F5 manteniendo sesión. | Conforme |
-| **6. Seguridad** | Confidencialidad, Integridad y No Repudio | Sellado inmutable de folios con hashes SHA-256 encadenados (Res. 1995/1999); Disparadores MySQL `SIGNAL 45000`; Autenticación TOTP obligatoria; RBAC estricto en servidor. | Conforme |
-| **7. Mantenibilidad** | Modularidad, Reutilizabilidad y Testeabilidad | Arquitectura Hexagonal con interfaces desacopladas en `core/ports`; 105 pruebas unitarias/integración en Vitest y 30+ pruebas en Go con cobertura exhaustiva de dominio. | Conforme |
-| **8. Portabilidad** | Adaptabilidad, Instalabilidad y Reemplazabilidad | Despliegue agnóstico multi-etapa en Docker y Docker Compose; Compatibilidad multiplataforma garantizada en Linux, macOS y Windows. | Conforme |
+| **3. Compatibilidad**          | Coexistencia e Interoperabilidad                  | Interoperabilidad RIPS JSON conforme a la Res. 2275 de 2023; Lectura de cédulas colombianas en formato PDF417; APIs REST desacopladas preparadas para HL7/FHIR.                                         | Conforme |
+| **4. Usabilidad**              | Reconocimiento, Accesibilidad y Operabilidad      | Cumplimiento estricto de WCAG 2.1 AA (ISO/IEC 40500) con ratio de contraste superior a 7:1 en datos vitales; interfaz ergonómica con atajos de teclado (`Ctrl + K`) y flujos en <= 3 clics.             | Conforme |
+| **5. Fiabilidad**              | Madurez, Tolerancia a fallos y Recuperabilidad    | Manejo resiliente de caídas HTTP 500 en frontend sin pantalla blanca; Deadlines transaccionales (`context.WithTimeout`) de 3s en MySQL; Resistencia a F5 manteniendo sesión.                            | Conforme |
+| **6. Seguridad**               | Confidencialidad, Integridad y No Repudio         | Sellado inmutable de folios con hashes SHA-256 encadenados (Res. 1995/1999); Disparadores MySQL `SIGNAL 45000`; Autenticación TOTP obligatoria; RBAC estricto en servidor.                              | Conforme |
+| **7. Mantenibilidad**          | Modularidad, Reutilizabilidad y Testeabilidad     | Arquitectura Hexagonal con interfaces desacopladas en `core/ports`; 105 pruebas unitarias/integración en Vitest y 30+ pruebas en Go con cobertura exhaustiva de dominio.                                | Conforme |
+| **8. Portabilidad**            | Adaptabilidad, Instalabilidad y Reemplazabilidad  | Despliegue agnóstico multi-etapa en Docker y Docker Compose; Compatibilidad multiplataforma garantizada en Linux, macOS y Windows.                                                                      | Conforme |
 
 ---
 
@@ -2086,18 +2125,18 @@ La evaluación del sistema contra las 8 características de calidad de la norma 
 
 Se diseñó e implementó una batería exhaustiva de pruebas funcionales de Caja Negra empleando técnicas formales de Partición de Clases de Equivalencia (EP), Análisis de Valores Límite (BVA), Tablas de Decisión (DT) y Pruebas de Transición de Estados (ST):
 
-| ID Caso | Módulo Evaluado | Técnica Formal Aplicada | Clases de Equivalencia / Valores Frontera Probados | Resultado Esperado | Resultado Obtenido | Estado |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **TC-BB-01** | Triaje Manchester | BVA & Clases de Equivalencia | Escala de Coma de Glasgow en valores frontera: 2 (inválido), 3 (mínimo válido), 15 (máximo válido), 16 (inválido). | 2 y 16 rechazados con 422; 3 categorizado como Nivel I (Rojo) y 15 procesado con normalidad. | Comportamiento exacto validado por `TestRegression_GlasgowBoundaryValidation`. | PASS |
-| **TC-BB-02** | Triaje Manchester | Tablas de Decisión | Combinación de dolor EVA (8-10) + Shock + Saturación O2 < 85%. | Priorización automática en Nivel I (Resucitación - Rojo) y tiempo de espera objetivo: 0 minutos. | Priorización inmediata calculada en 5.55 nanosegundos. | PASS |
-| **TC-BB-03** | Prescripción Médica | Tablas de Decisión | Paciente con alergia declarada a "Penicilina"; intento de prescripción de "Amoxicilina" (Betalactámico) y "Ácido Acetilsalicílico" con tilde. | Intercepción cruzada de familia farmacológica con código HTTP 422 y despliegue del modal de alerta médica. | Intercepción atómica en 3.23 µs; apertura de `AllergyAlertModal` en React. | PASS |
-| **TC-BB-04** | Agendamiento de Citas | Transición de Estados | Flujo de cita: SCHEDULED -> CONFIRMED -> COMPLETED. Transición inválida: CANCELLED -> COMPLETED. | Transición válida confirmada con 200 OK; transición inválida rechazada con 400 Bad Request. | Máquina de estados validada en capa de servicios y persistencia MySQL. | PASS |
-| **TC-BB-05** | Notificaciones de Citas | Clases de Equivalencia | Envío asíncrono de correo SMTP con credenciales válidas frente a servidor no disponible. | En caso exitoso: envío de correo y comprobante PDF; en fallo de red: registro persistente en outbox auditable. | Entrega SMTP confirmada en `smtp.gmail.com:587` con adjunto PDF de alta definición. | PASS |
-| **TC-BB-06** | Contacto de Pacientes | Partición de Equivalencia | Edición de contacto en Drawer Lateral: Formatos de correo válidos/inválidos, teléfonos de 10 dígitos y dirección física. | Actualización exitosa de los 3 campos permitidos; campos de identidad protegidos contra escritura. | Drawer lateral derecho funcional; persistencia atómica verificada en base de datos. | PASS |
-| **TC-BB-07** | Eliminación de Paciente | Tablas de Decisión | Eliminación de paciente sin historial asistencial vs. paciente con folios clínicos o triajes vinculados. | Paciente sin historial eliminado con confirmación modal; paciente con historial protegido por integridad referencial. | Diálogo de confirmación interactivo verificado con 0 fugas de integridad. | PASS |
-| **TC-BB-08** | Autenticación y MFA | BVA & Clases de Equivalencia | Código TOTP de 6 dígitos: longitud 5 (rechazado), 7 (rechazado), 6 dígitos incorrectos (fallo), 6 dígitos válidos (éxito). | Bloqueo tras 5 intentos fallidos consecutivos (brute-force lockout); acceso concedido con código válido. | Validación estricta en servidor probada en `AuthMfa.test.jsx`. | PASS |
-| **TC-BB-09** | Dispensación Farmacia | Partición de Equivalencia | Lectura de cédula con lector PDF417; verificación de cobertura PBS 100% vs. copago particular. | Desglose económico automático por concentración CUM y deducción atómica de stock en inventario. | Transacción ACID verificada en `PharmacyDashboard.test.jsx`. | PASS |
-| **TC-BB-10** | Sala de Espera Reactiva | Transición de Estados | Registro de nuevo paciente en ventanilla -> Aparición reactiva en la cola de demanda de sala de espera. | Visualización inmediata en la lista unificada y filtrado en tiempo real por buscador sin recargar la pantalla. | Sincronización verificada con bus de eventos y refresco reactivo de cola. | PASS |
+| ID Caso      | Módulo Evaluado         | Técnica Formal Aplicada      | Clases de Equivalencia / Valores Frontera Probados                                                                                            | Resultado Esperado                                                                                                    | Resultado Obtenido                                                                  | Estado |
+| :----------- | :---------------------- | :--------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------------------------------------- | :----- |
+| **TC-BB-01** | Triaje Manchester       | BVA & Clases de Equivalencia | Escala de Coma de Glasgow en valores frontera: 2 (inválido), 3 (mínimo válido), 15 (máximo válido), 16 (inválido).                            | 2 y 16 rechazados con 422; 3 categorizado como Nivel I (Rojo) y 15 procesado con normalidad.                          | Comportamiento exacto validado por `TestRegression_GlasgowBoundaryValidation`.      | PASS   |
+| **TC-BB-02** | Triaje Manchester       | Tablas de Decisión           | Combinación de dolor EVA (8-10) + Shock + Saturación O2 < 85%.                                                                                | Priorización automática en Nivel I (Resucitación - Rojo) y tiempo de espera objetivo: 0 minutos.                      | Priorización inmediata calculada en 5.55 nanosegundos.                              | PASS   |
+| **TC-BB-03** | Prescripción Médica     | Tablas de Decisión           | Paciente con alergia declarada a "Penicilina"; intento de prescripción de "Amoxicilina" (Betalactámico) y "Ácido Acetilsalicílico" con tilde. | Intercepción cruzada de familia farmacológica con código HTTP 422 y despliegue del modal de alerta médica.            | Intercepción atómica en 3.23 µs; apertura de `AllergyAlertModal` en React.          | PASS   |
+| **TC-BB-04** | Agendamiento de Citas   | Transición de Estados        | Flujo de cita: SCHEDULED -> CONFIRMED -> COMPLETED. Transición inválida: CANCELLED -> COMPLETED.                                              | Transición válida confirmada con 200 OK; transición inválida rechazada con 400 Bad Request.                           | Máquina de estados validada en capa de servicios y persistencia MySQL.              | PASS   |
+| **TC-BB-05** | Notificaciones de Citas | Clases de Equivalencia       | Envío asíncrono de correo SMTP con credenciales válidas frente a servidor no disponible.                                                      | En caso exitoso: envío de correo y comprobante PDF; en fallo de red: registro persistente en outbox auditable.        | Entrega SMTP confirmada en `smtp.gmail.com:587` con adjunto PDF de alta definición. | PASS   |
+| **TC-BB-06** | Contacto de Pacientes   | Partición de Equivalencia    | Edición de contacto en Drawer Lateral: Formatos de correo válidos/inválidos, teléfonos de 10 dígitos y dirección física.                      | Actualización exitosa de los 3 campos permitidos; campos de identidad protegidos contra escritura.                    | Drawer lateral derecho funcional; persistencia atómica verificada en base de datos. | PASS   |
+| **TC-BB-07** | Eliminación de Paciente | Tablas de Decisión           | Eliminación de paciente sin historial asistencial vs. paciente con folios clínicos o triajes vinculados.                                      | Paciente sin historial eliminado con confirmación modal; paciente con historial protegido por integridad referencial. | Diálogo de confirmación interactivo verificado con 0 fugas de integridad.           | PASS   |
+| **TC-BB-08** | Autenticación y MFA     | BVA & Clases de Equivalencia | Código TOTP de 6 dígitos: longitud 5 (rechazado), 7 (rechazado), 6 dígitos incorrectos (fallo), 6 dígitos válidos (éxito).                    | Bloqueo tras 5 intentos fallidos consecutivos (brute-force lockout); acceso concedido con código válido.              | Validación estricta en servidor probada en `AuthMfa.test.jsx`.                      | PASS   |
+| **TC-BB-09** | Dispensación Farmacia   | Partición de Equivalencia    | Lectura de cédula con lector PDF417; verificación de cobertura PBS 100% vs. copago particular.                                                | Desglose económico automático por concentración CUM y deducción atómica de stock en inventario.                       | Transacción ACID verificada en `PharmacyDashboard.test.jsx`.                        | PASS   |
+| **TC-BB-10** | Sala de Espera Reactiva | Transición de Estados        | Registro de nuevo paciente en ventanilla -> Aparición reactiva en la cola de demanda de sala de espera.                                       | Visualización inmediata en la lista unificada y filtrado en tiempo real por buscador sin recargar la pantalla.        | Sincronización verificada con bus de eventos y refresco reactivo de cola.           | PASS   |
 
 ---
 
@@ -2129,6 +2168,7 @@ flowchart TD
 - Imagen de alta resolución: [`docs/diagrams/15_flujo_caja_blanca_triage.png`](docs/diagrams/15_flujo_caja_blanca_triage.png) | Vectorial: [`docs/diagrams/15_flujo_caja_blanca_triage.svg`](docs/diagrams/15_flujo_caja_blanca_triage.svg)
 
 ##### 1. Análisis del Algoritmo de Triaje Manchester (`CalculateTriageLevel`):
+
 - **Ecuación de McCabe:** Aristas ($E = 10$), Nodos ($N = 7$), Componentes Conexos ($P = 1$).
   $$V(G) = E - N + 2P = 10 - 7 + 2(1) = 5$$
 - **Caminos Básicos Independientes (Basis Paths):**
@@ -2140,10 +2180,12 @@ flowchart TD
 - **Métricas de Cobertura Obtenidas:** 100% de Cobertura de Sentencias y 100% de Cobertura de Ramas.
 
 ##### 2. Análisis del Motor de Intercepción Ontológica de Alergias (`MatchAllergy`):
+
 - **Complejidad Ciclomática de McCabe:** $V(G) = 6$ (Decisiones: nulo/vacío, coincidencia directa insensible a mayúsculas, coincidencia fonética y de tildes, cruce por familia de betalactámicos, cruce por familia de AINEs, ausencia de conflicto).
 - **Caminos Básicos Evaluados:** 6 caminos independientes completamente cubiertos en `quality_regression_test.go` y `performance_benchmark_test.go`.
 
 ##### 3. Análisis de la Guardia Criptográfica de Inmutabilidad HCE (`CloseAndSign`):
+
 - **Complejidad Ciclomática de McCabe:** $V(G) = 4$ (Decisiones: existencia del folio, validación de estado `is_closed == true`, cálculo de hash encadenado SHA-256 y persistencia atómica).
 - **Caminos Básicos Evaluados:** 4 caminos independientes probados, certificando el rechazo con `403 Forbidden` y trigger SQL ante reintentos de cierre.
 
@@ -2152,6 +2194,7 @@ flowchart TD
 #### 14.9.7. Evidencia Dura de Ejecución de Pruebas (Test Logs Reales)
 
 ##### 1. Suite Integral del Frontend (React 18 / Vitest v2.1.9):
+
 ```text
  RUN  v2.1.9 C:/Users/santi/Desktop/Proyecto_felipe/src/frontend
 
@@ -2194,6 +2237,7 @@ flowchart TD
 ```
 
 ##### 2. Benchmarks de Desempeño y Latencia en Go (Go Benchmarks):
+
 ```text
 goos: windows
 goarch: amd64
@@ -2206,6 +2250,7 @@ ok      saludconecta-tests      4.685s
 ```
 
 ##### 3. Compilación de Producción Frontend (Vite Build):
+
 ```text
 vite v5.4.21 building for production...
 transforming...
@@ -2264,6 +2309,7 @@ Tras la ejecución exhaustiva de las pruebas de Caja Negra, pruebas de Caja Blan
 ## 1. Alcance Técnico y Requerimientos Implementados en la Entrega Final
 
 ### 1.1. Incorporación del Rol de Laboratorio Clínico y Pruebas Diagnósticas (Rol ID 7)
+
 - **Capa de Persistencia y Base de Datos:**
   - Registro en tabla `roles` con `id = 7`, `name = 'LABORATORIO'` y descripción `'Bacteriólogo / Laboratorio Clínico y Pruebas Diagnósticas'`.
   - Integración en `RoleNameByID` en la entidad de dominio Go (`src/backend/core/domain/user.go`).
@@ -2280,15 +2326,18 @@ Tras la ejecución exhaustiva de las pruebas de Caja Negra, pruebas de Caja Blan
   - Firma digital con validación de credencial ReTHUS inmutable.
 
 ### 1.2. Optimización del Menú de Laboratorio (Retiro de Herramientas Redundantes)
+
 - **Retiro del Kit Informático en Laboratorio:** Se eliminó el ítem `Kit Informático Médico` del menú lateral del bacteriólogo en `Sidebar.jsx`. El rol de Laboratorio cuenta ahora con un espacio de trabajo puramente diagnóstico y enfocado a su competencia profesional: `Módulo de Laboratorio` y `Seguridad & MFA`.
 
 ### 1.3. Recetario Médico de Exámenes de Laboratorio con Buzón Asistencial (`DoctorLabOrdersView.jsx`)
+
 - **Prescripción Paraclínica para el Médico:** Se incorporó en el menú lateral del médico el ítem `Órdenes de Laboratorio` (`doctor_lab_orders`).
 - **Generación de ID Único de Laboratorio:** Cada orden asigna automáticamente un correlativo clínico inmutable (ej. `LAB-2026-005`), garantizando unicidad y no repudio dentro del flujo diagnóstico.
 - **Catálogo Rápido y Formulario de Solicitud:** Permite seleccionar pacientes activos, escoger del catálogo rápido de exámenes frecuentes (Hemograma Completo, Glucemia Basal, Uroanálisis, Troponina Ultrasensible, Creatinina, Tiempos de Coagulación, PCR, Perfil Tiroideo, Coprológico) o ingresar exámenes especializados, muestra biológica requerida, nivel de prioridad (`RUTINA`, `PRIORITARIO`, `URGENTE`) y sospecha diagnóstica / observaciones clínicas.
 - **Despacho Atómico al Buzón:** Al hacer clic en `Enviar al Buzón de Laboratorio`, la orden se despacha instantáneamente a través de `localStorage` y el evento reactivo `saludconecta_lab_orders_updated`, alertando en tiempo real al bacteriólogo sin refrescar la aplicación.
 
 ### 1.4. Arquitectura de Drawers Laterales, Formulario Analítico Avanzado y Despacho Integrado
+
 - **Migración a Drawers Laterales Derechos (Erradicación de Modales Flotantes):** En cumplimiento de la ergonomía clínica, se reemplazaron las ventanas emergentes centradas por paneles deslizantes (**Drawers laterales**) anclados al lateral derecho de la pantalla (`animate-slideLeft`, ancho $2\times$ responsivo), manteniendo visible el contexto de trabajo y facilitando el flujo continuo.
 - **Formulario Estructurado de Ingreso y Continuación de Análisis:**
   - Optimización radical del ingreso de resultados: sustitución del textarea plano por un entorno con plantillas rápidas de 1 clic (Hemograma, Glucemia & Lípidos, Uroanálisis, Troponina Ultrasensible y Función Renal) con unidades normalizadas y rangos de referencia biológicos.
@@ -2303,6 +2352,7 @@ Tras la ejecución exhaustiva de las pruebas de Caja Negra, pruebas de Caja Blan
   - Consola médica que lista todos los exámenes sellados por laboratorio, buscador en tiempo real por cédula o nombre, vista previa del membrete de SaludConecta IPS S.A.S. (NIT 900.842.199-5, habilitación MinSalud Código 7614700192) y botón de impresión en formato papel con firma digital ReTHUS.
 
 ### 1.5. Dashboard de Farmacia para la Dirección / Administrador (`pharmacy_dashboard`)
+
 - **Navegación Administrativa:**
   - Nuevo enlace en el menú lateral de administración (`AdminSidebar.jsx`) y pestaña dedicada en `AdminDashboardScreen.jsx` con el identificador `pharmacy_dashboard`.
 - **Panel Integral de Supervisión (`AdminPharmacyDashboardView.jsx`):**
@@ -2311,6 +2361,7 @@ Tras la ejecución exhaustiva de las pruebas de Caja Negra, pruebas de Caja Blan
   - **Historial Completo de Dispensaciones:** Registro de atenciones farmacéuticas con código de prescripción, paciente, profesional dispensador, cobertura aplicada (EPS PBS 100%, Copago, Particular) y marcas de tiempo UTC.
 
 ### 1.6. Sistema Autónomo de Detección de Desabastecimiento y Reportes de Stock Bajo
+
 - **Algoritmo de Detección y Generación de Reportes:**
   - En cada transacción que impacte el inventario (dispensación de recetas, ajuste de stock, creación o actualización de ítems), el motor (`PharmacyService.CheckAndGenerateStockReports`) evalúa la condición de criticidad:
     $$\text{Severidad} = \begin{cases} \text{CRITICA} & \text{si } stock = 0 \\ \text{ALTA} & \text{si } stock \le \lceil 0.5 \times min\_stock \rceil \\ \text{MEDIA} & \text{si } stock \le min\_stock \end{cases}$$
@@ -2328,13 +2379,16 @@ Tras la ejecución exhaustiva de las pruebas de Caja Negra, pruebas de Caja Blan
   - Garantiza trazabilidad y archivo de solo lectura de todas las copias de los reportes generados y remitidos a la dirección, asegurando que la farmacia tenga constancia inalterable de las solicitudes de suministro radicadas.
 
 ### 1.7. Corrección de la Bitácora Forense del Servidor (ISO/IEC 27001)
+
 - **Diagnóstico de Causa Raíz:** El repositorio relacional `audit_repo.go` consultaba el campo `created_at` en la tabla `audit_logs`, mientras que la definición DDL de MySQL utilizaba la columna canónica `timestamp`. Esto provocaba un error HTTP 500 (`Error consultando bitacora forense`) al solicitar los registros desde el frontend.
 - **Remediación:** Se actualizó la consulta SQL a `SELECT ... timestamp, created_at FROM audit_logs ORDER BY timestamp DESC` y se ejecutó la migración defensiva para garantizar persistencia y lectura bidireccional. La bitácora ahora despliega fluidamente los 402+ eventos forenses auditados.
 
 ### 1.8. Optimización de Navegación Administrativa (Cero Duplicidad)
+
 - **Eliminación del Menú Horizontal en Admin:** Se suprimió la barra horizontal de botones redundante dentro de `AdminDashboardScreen.jsx` (`hideTabs={true}`). La navegación administrativa queda 100% gobernada y centralizada a través del menú lateral izquierdo `AdminSidebar.jsx`, optimizando el espacio vertical y la ergonomía de usuario.
 
 ### 1.9. Organigrama Jerárquico y Sincronización Automática en Tiempo Real
+
 - **Erradicación del Espacio en Blanco Huérfano:** Se eliminó la columna fija de "Cuerpo de Auxiliares Asistenciales" (la cual permanecía vacía al no existir dicho rol en la IPS) y se consolidaron los 5 departamentos asistenciales y operativos reales en un grid de 5 columnas simétricas:
   1. Jefatura Médica & Consulta Externa (`dep-medicos`) — donde se ubican el Dr. Santiago Vélez y la Dra. Camila Yaima (Pediatría, Rol 2).
   2. Dirección Técnica Farmacéutica (`dep-farmacia`)
@@ -2344,6 +2398,7 @@ Tras la ejecución exhaustiva de las pruebas de Caja Negra, pruebas de Caja Blan
 - **Sincronización Automática sin Recarga:** Implementación de polling reactivo cada 8 segundos, escucha de eventos de ventana `focus` y despacho del evento personalizado `saludconecta_users_updated` tras cada activación o suspensión de usuario, actualizando el organigrama y los contadores en tiempo real sin requerir `F5`.
 
 ### 1.10. Aislamiento Estricto de Banners y Fotos de Perfil (Anti-Colisión de Cuentas)
+
 - **Diagnóstico del Bug:** Los banners y avatares se almacenaban bajo claves globales sin prefijo (`saludconecta_profile_custom` y `saludconecta_avatar`), lo que provocaba que al cambiar el banner o foto del Administrador, la mutación se propagara indebidamente a las sesiones de los médicos, enfermeros y farmacéuticos.
 - **Aislamiento por `userKey`:** Se implementó una clave canónica de almacenamiento por usuario (`saludconecta_profile_${userKey}`, `saludconecta_avatar_${userKey}` y `saludconecta_banner_${userKey}`). Se eliminó el uso de claves globales compartidas y se asignó un banner corporativo inteligente por defecto según el rol y especialidad médica de cada usuario.
 
@@ -2354,6 +2409,7 @@ Tras la ejecución exhaustiva de las pruebas de Caja Negra, pruebas de Caja Blan
 Todos los diagramas técnicos fueron compilados de forma automatizada mediante `mermaid-cli` (`mmdc`) a imágenes de alta definición PNG (factor de escala 2x, fondo blanco) y formato vectorial SVG en el directorio `docs/diagrams/`.
 
 ### 2.1. Diagrama de Secuencia: Ciclo de Vida de Órdenes de Laboratorio, Sellado ReTHUS, Impresión Física y Despacho por Correo
+
 - **Archivos Compilados:** [`16_secuencia_orden_laboratorio_sellado_impresion.png`](file:///c:/Users/santi/Desktop/Proyecto_felipe/docs/diagrams/16_secuencia_orden_laboratorio_sellado_impresion.png) | [`16_secuencia_orden_laboratorio_sellado_impresion.svg`](file:///c:/Users/santi/Desktop/Proyecto_felipe/docs/diagrams/16_secuencia_orden_laboratorio_sellado_impresion.svg)
 
 ```mermaid
@@ -2398,6 +2454,7 @@ sequenceDiagram
 ---
 
 ### 2.2. Diagrama de Arquitectura y Eventos: Detección de Desabastecimiento Farmacéutico y Reportes de Dirección
+
 - **Archivos Compilados:** [`17_sistema_alertas_stock_farmacia_admin.png`](file:///c:/Users/santi/Desktop/Proyecto_felipe/docs/diagrams/17_sistema_alertas_stock_farmacia_admin.png) | [`17_sistema_alertas_stock_farmacia_admin.svg`](file:///c:/Users/santi/Desktop/Proyecto_felipe/docs/diagrams/17_sistema_alertas_stock_farmacia_admin.svg)
 
 ```mermaid
@@ -2409,11 +2466,11 @@ flowchart TD
         cond -->|"stock <= 0.5 * min_stock"| sevAlta["Severidad ALTA"]
         cond -->|"stock <= min_stock"| sevMed["Severidad MEDIA"]
         cond -->|"stock > min_stock"| stockNormal["Stock Óptimo (Sin Acción)"]
-        
+
         sevCrit --> genRep["Generación Automática de Reporte"]
         sevAlta --> genRep
         sevMed --> genRep
-        
+
         genRep --> bannerFarm["Banner Visual Alerta Inmediata (PharmacyDashboard)"]
         genRep --> copiaFarm["Bandeja de Copia de Reportes (pharmacy_reports_copy)"]
     end
@@ -2426,11 +2483,11 @@ flowchart TD
     subgraph DireccionAdmin["Dirección / Administrador del Sistema"]
         evtBus --> adminDash["Dashboard de Farmacia (KPIs y Monitor de Inventario)"]
         evtBus --> adminReports["Vista de Tarjetas de Reportes (Reportes)"]
-        
+
         adminReports --> actGestion["Acción: Poner En Gestión (Estado EN_GESTION)"]
         adminReports --> actReabastecer["Acción: Reabastecer Medicamento (Lote, Vence, Cantidad)"]
         adminReports --> actCopiar["Acción: Copiar Reporte para Compras Externas"]
-        
+
         actReabastecer --> resuelto["Resolución Transaccional del Reporte (RESUELTO)"]
         resuelto --> db
     end
@@ -2450,6 +2507,7 @@ flowchart TD
 ---
 
 ### 2.3. Diagrama Entidad-Relación (ERD): Modelo de Órdenes de Laboratorio, Pacientes y Reportes de Stock
+
 - **Archivos Compilados:** [`18_modelo_entidad_relacion_laboratorio_y_reportes.png`](file:///c:/Users/santi/Desktop/Proyecto_felipe/docs/diagrams/18_modelo_entidad_relacion_laboratorio_y_reportes.png) | [`18_modelo_entidad_relacion_laboratorio_y_reportes.svg`](file:///c:/Users/santi/Desktop/Proyecto_felipe/docs/diagrams/18_modelo_entidad_relacion_laboratorio_y_reportes.svg)
 
 ```mermaid
@@ -2530,16 +2588,16 @@ erDiagram
 
 La plataforma fue evaluada bajo los marcos internacionales de calidad de producto de software, seguridad de la información clínica y regulaciones del Ministerio de Salud y Protección Social de Colombia.
 
-| Norma / Estándar | Dimensión Auditada | Criterio de Evaluación | Estado de Conformidad | Evidencia Técnica de Soporte |
-| :--- | :--- | :--- | :---: | :--- |
-| **ISO/IEC 25010** | Adecuación Funcional | Cobertura al 100% de los requerimientos de triaje, HCE, farmacia, laboratorio y administración. | **CONFORME (100%)** | 105 pruebas unitarias y de integración pasando sin stubs ni omisiones. |
-| **ISO/IEC 25010** | Confiabilidad y Tolerancia a Fallos | Resiliencia ante desconexiones, manejo de códigos HTTP (400, 401, 403, 409, 422, 500) y cero pantalla blanca. | **CONFORME (100%)** | Test suite `ResilienceQuality.test.jsx` con fallback de reintento accesible. |
-| **ISO/IEC 25010** | Seguridad de Acceso | Aislamiento estricto de roles (RBAC), control MFA TOTP RFC 6238 y bloqueo preventivo tras 5 intentos fallidos. | **CONFORME (100%)** | `AuthMfa.test.jsx` y middleware `RBACMiddleware` en Go Fiber. |
-| **ISO/IEC 27001** | Confidencialidad y Control de Acceso | Claves JWT protegidas, variables en `.env`, secretos de sesión excluidos de Git y sanitización en bitácoras. | **CONFORME (100%)** | Clave canónica por usuario `userKey`, bitácora forense de 402+ eventos y cero tokens en logs. |
-| **ISO/IEC 27799 / 27701** | Privacidad de Datos de Salud | Anonimización de datos sensibles en almacenamiento cliente y consentimiento informado según Ley 1581 de 2012. | **CONFORME (100%)** | Avisos de responsabilidad jurídica en admisiones y registro ReTHUS. |
-| **Resolución 1995/1999** | Inmutabilidad de Historia Clínica | Bloqueo absoluto de edición en folios cerrados, cálculo de hash SHA-256 e inmutabilidad de tarjeta profesional. | **CONFORME (100%)** | Triggers DDL en MySQL y test `clinical_record_test.go`. |
-| **Resolución 2275/2023** | Interoperabilidad RIPS | Generación de facturación electrónica y registros RIPS en formato JSON estándar para el SGSSS. | **CONFORME (100%)** | Adaptador `interoperability/rips.go` integrado en el backend. |
-| **ISO/IEC 40500 (WCAG 2.1 AA)** | Accesibilidad e Inclusión | Contraste de color superior a 4.5:1, navegación por teclado (`Tab`, `Shift+Tab`, `Enter`, `Escape`), etiquetas ARIA y cero emojis en UI. | **CONFORME (100%)** | Iconografía médica basada 100% en vectores SVG (`lucide-react`). |
+| Norma / Estándar                | Dimensión Auditada                   | Criterio de Evaluación                                                                                                                   | Estado de Conformidad | Evidencia Técnica de Soporte                                                                  |
+| :------------------------------ | :----------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------- | :-------------------: | :-------------------------------------------------------------------------------------------- |
+| **ISO/IEC 25010**               | Adecuación Funcional                 | Cobertura al 100% de los requerimientos de triaje, HCE, farmacia, laboratorio y administración.                                          |  **CONFORME (100%)**  | 105 pruebas unitarias y de integración pasando sin stubs ni omisiones.                        |
+| **ISO/IEC 25010**               | Confiabilidad y Tolerancia a Fallos  | Resiliencia ante desconexiones, manejo de códigos HTTP (400, 401, 403, 409, 422, 500) y cero pantalla blanca.                            |  **CONFORME (100%)**  | Test suite `ResilienceQuality.test.jsx` con fallback de reintento accesible.                  |
+| **ISO/IEC 25010**               | Seguridad de Acceso                  | Aislamiento estricto de roles (RBAC), control MFA TOTP RFC 6238 y bloqueo preventivo tras 5 intentos fallidos.                           |  **CONFORME (100%)**  | `AuthMfa.test.jsx` y middleware `RBACMiddleware` en Go Fiber.                                 |
+| **ISO/IEC 27001**               | Confidencialidad y Control de Acceso | Claves JWT protegidas, variables en `.env`, secretos de sesión excluidos de Git y sanitización en bitácoras.                             |  **CONFORME (100%)**  | Clave canónica por usuario `userKey`, bitácora forense de 402+ eventos y cero tokens en logs. |
+| **ISO/IEC 27799 / 27701**       | Privacidad de Datos de Salud         | Anonimización de datos sensibles en almacenamiento cliente y consentimiento informado según Ley 1581 de 2012.                            |  **CONFORME (100%)**  | Avisos de responsabilidad jurídica en admisiones y registro ReTHUS.                           |
+| **Resolución 1995/1999**        | Inmutabilidad de Historia Clínica    | Bloqueo absoluto de edición en folios cerrados, cálculo de hash SHA-256 e inmutabilidad de tarjeta profesional.                          |  **CONFORME (100%)**  | Triggers DDL en MySQL y test `clinical_record_test.go`.                                       |
+| **Resolución 2275/2023**        | Interoperabilidad RIPS               | Generación de facturación electrónica y registros RIPS en formato JSON estándar para el SGSSS.                                           |  **CONFORME (100%)**  | Adaptador `interoperability/rips.go` integrado en el backend.                                 |
+| **ISO/IEC 40500 (WCAG 2.1 AA)** | Accesibilidad e Inclusión            | Contraste de color superior a 4.5:1, navegación por teclado (`Tab`, `Shift+Tab`, `Enter`, `Escape`), etiquetas ARIA y cero emojis en UI. |  **CONFORME (100%)**  | Iconografía médica basada 100% en vectores SVG (`lucide-react`).                              |
 
 ---
 
@@ -2550,27 +2608,28 @@ Se implementó una estrategia rigurosa de aseguramiento de calidad basada en pru
 ### 4.1. Pruebas de Caja Negra (Black-Box Testing)
 
 #### 4.1.1. Partición de Equivalencia y Análisis de Valores Límite (BVA) en Alertas Farmacéuticas
+
 Se auditó la función de criticidad del stock con un umbral de seguridad configurado en $min\_stock = 20$:
 
-| Clase de Equivalencia | Rango de Entrada ($stock$) | Caso de Prueba | Valor Evaluado | Severidad Esperada | Estado de Prueba |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| **Agotamiento Total (Crítica)** | $stock = 0$ | TC-BVA-01 | $stock = 0$ | `CRITICA` | **PASS** |
-| **Borde Inferior Severidad Alta** | $1 \le stock \le 10$ | TC-BVA-02 | $stock = 1$ | `ALTA` | **PASS** |
-| **Borde Superior Severidad Alta** | $1 \le stock \le 10$ | TC-BVA-03 | $stock = 10$ | `ALTA` | **PASS** |
-| **Borde Inferior Severidad Media** | $11 \le stock \le 20$ | TC-BVA-04 | $stock = 11$ | `MEDIA` | **PASS** |
-| **Borde Superior Severidad Media** | $11 \le stock \le 20$ | TC-BVA-05 | $stock = 20$ | `MEDIA` | **PASS** |
-| **Stock Seguro (Sin Alerta)** | $stock > 20$ | TC-BVA-06 | $stock = 21$ | `NORMAL` | **PASS** |
+| Clase de Equivalencia              | Rango de Entrada ($stock$) | Caso de Prueba | Valor Evaluado | Severidad Esperada | Estado de Prueba |
+| :--------------------------------- | :------------------------: | :------------: | :------------: | :----------------: | :--------------: |
+| **Agotamiento Total (Crítica)**    |        $stock = 0$         |   TC-BVA-01    |  $stock = 0$   |     `CRITICA`      |     **PASS**     |
+| **Borde Inferior Severidad Alta**  |    $1 \le stock \le 10$    |   TC-BVA-02    |  $stock = 1$   |       `ALTA`       |     **PASS**     |
+| **Borde Superior Severidad Alta**  |    $1 \le stock \le 10$    |   TC-BVA-03    |  $stock = 10$  |       `ALTA`       |     **PASS**     |
+| **Borde Inferior Severidad Media** |   $11 \le stock \le 20$    |   TC-BVA-04    |  $stock = 11$  |      `MEDIA`       |     **PASS**     |
+| **Borde Superior Severidad Media** |   $11 \le stock \le 20$    |   TC-BVA-05    |  $stock = 20$  |      `MEDIA`       |     **PASS**     |
+| **Stock Seguro (Sin Alerta)**      |        $stock > 20$        |   TC-BVA-06    |  $stock = 21$  |      `NORMAL`      |     **PASS**     |
 
 #### 4.1.2. Tabla de Decisión de Sellado de Laboratorio y Despacho Asistencial
 
-| Condición | Regla 1 (R1) | Regla 2 (R2) | Regla 3 (R3) | Regla 4 (R4) |
-| :--- | :---: | :---: | :---: | :---: |
-| ¿Paciente seleccionado con identificación válida? | Falso | Verdadero | Verdadero | Verdadero |
-| ¿Examen y muestra biológica especificados? | - | Falso | Verdadero | Verdadero |
-| ¿Bacteriólogo con tarjeta ReTHUS activa en turno? | - | - | Falso | Verdadero |
-| ¿Resultado analítico cuantitativo completado? | - | - | - | Verdadero |
-| **Acción: Despachar Orden a Laboratorio** | **Bloqueado** | **Bloqueado** | **Ejecutado** | **Ejecutado** |
-| **Acción: Validar y Sellar Resultado Oficial** | **No aplica** | **No aplica** | **Bloqueado** | **Ejecutado** |
+| Condición                                             | Regla 1 (R1)  | Regla 2 (R2)  | Regla 3 (R3)  |  Regla 4 (R4)  |
+| :---------------------------------------------------- | :-----------: | :-----------: | :-----------: | :------------: |
+| ¿Paciente seleccionado con identificación válida?     |     Falso     |   Verdadero   |   Verdadero   |   Verdadero    |
+| ¿Examen y muestra biológica especificados?            |       -       |     Falso     |   Verdadero   |   Verdadero    |
+| ¿Bacteriólogo con tarjeta ReTHUS activa en turno?     |       -       |       -       |     Falso     |   Verdadero    |
+| ¿Resultado analítico cuantitativo completado?         |       -       |       -       |       -       |   Verdadero    |
+| **Acción: Despachar Orden a Laboratorio**             | **Bloqueado** | **Bloqueado** | **Ejecutado** | **Ejecutado**  |
+| **Acción: Validar y Sellar Resultado Oficial**        | **No aplica** | **No aplica** | **Bloqueado** | **Ejecutado**  |
 | **Acción: Habilitar Impresión Física y Envío Correo** | **No aplica** | **No aplica** | **No aplica** | **Habilitado** |
 
 ---
@@ -2578,14 +2637,17 @@ Se auditó la función de criticidad del stock con un umbral de seguridad config
 ### 4.2. Pruebas de Caja Blanca (White-Box Testing)
 
 #### 4.2.1. Análisis de Complejidad Ciclomática de McCabe ($V(G)$)
+
 Para el algoritmo de control de acceso RBAC y enrutamiento clínico en `Sidebar.jsx`:
 $$V(G) = E - N + 2P$$
+
 - Número de nodos de control ($N$): 14
 - Número de aristas de transición ($E$): 18
 - Componentes conectados ($P$): 1
 - **Complejidad Ciclomática:** $V(G) = 18 - 14 + 2(1) = 6$ (Categoría: Módulo de bajo riesgo, altamente mantenible y testeable).
 
 #### 4.2.2. Cobertura de Caminos Independientes de la Prescripción Paraclínica
+
 1. **Camino 1 (Validación Fallida de Entrada):** Formulario incompleto $\rightarrow$ Disparo de feedback de error $\rightarrow$ Fin.
 2. **Camino 2 (Despacho Exitoso):** Paciente + Examen $\rightarrow$ Generación de correlativo `LAB-2026-XXX` $\rightarrow$ Persistencia $\rightarrow$ Notificación en tiempo real $\rightarrow$ Fin.
 3. **Camino 3 (Sellado Bacteriológico):** Orden pendiente $\rightarrow$ Ingreso de parámetros $\rightarrow$ Clic Validar $\rightarrow$ Firma criptográfica ReTHUS $\rightarrow$ Transición a `COMPLETADO` $\rightarrow$ Fin.
@@ -2599,6 +2661,7 @@ $$V(G) = E - N + 2P$$
 ### 4.3. Evidencia Empírica de Ejecución en Caliente
 
 #### 4.3.1. Pruebas de Componentes y Vistas Frontend (Vitest v2.1.9)
+
 ```text
  RUN  v2.1.9 C:/Users/santi/Desktop/Proyecto_felipe/src/frontend
 
@@ -2624,6 +2687,7 @@ $$V(G) = E - N + 2P$$
 ```
 
 #### 4.3.2. Pruebas de Dominio y Servicios Backend (Go Testing)
+
 ```text
 === RUN   TestTriageManchesterPriorities
 --- PASS: TestTriageManchesterPriorities (0.00s)
@@ -2640,6 +2704,7 @@ ok  	saludconecta-tests	13.132s
 ```
 
 #### 4.3.3. Compilación de Producción de Vite (Vite v5.4.21 Build)
+
 ```text
 vite v5.4.21 building for production...
 transforming...
@@ -2654,9 +2719,9 @@ dist/assets/index-C7Tn7tae.js   1,163.89 kB │ gzip: 289.40 kB
 
 ---
 
-## 5. Auditoría de Completitud de Interfaz y Cero Botones Huérfanos (Regla 24)
+## 5. Auditoría de Refinamiento de Interfaz, Sincronización Global y Cero Botones Huérfanos (Regla 24)
 
-Se auditó de forma exhaustiva la totalidad de los controles interactivos de la aplicación:
+Se auditó de forma exhaustiva la totalidad de los controles interactivos y flujos de datos de la aplicación:
 
 1. **Recetario Médico de Laboratorio (`DoctorLabOrdersView.jsx`):**
    - Selector de pestañas (`Recetar Nuevo Examen` y `Bandeja de Resultados`): Cambia el contexto de trabajo en tiempo real con recuento de exámenes completados.
@@ -2664,15 +2729,23 @@ Se auditó de forma exhaustiva la totalidad de los controles interactivos de la 
    - Buscador de pacientes: Entrada con filtrado instantáneo por nombre y documento.
    - Botón `Enviar al Buzón de Laboratorio`: Despacha atómicamente la orden con validación previa de campos obligatorios.
    - Botones de acción en resultados: `Ver Resultado Sellado`, `Imprimir Físico` y `Enviar Correo` completamente vinculados y funcionales.
-2. **Módulo de Laboratorio (`LaboratoryScreen.jsx`):**
+   - **Despacho por Correo sin Dummies:** El correo del paciente se autocompleta con su dirección real registrada; si el paciente carece de correo, el campo se presenta en blanco (`""`) sin direcciones ficticias.
+2. **Módulo de Laboratorio Clínico (`LaboratoryScreen.jsx`):**
+   - **Estandarización Dimensional de Botones:** Los botones de acción de la bandeja (`Ingresar Resultados`, `Continuar Análisis` y `Ver Resultados`) cuentan con dimensiones fijas y simétricas (`w-44 h-9.5`, flex centrado), garantizando perfecta alineación visual vertical.
    - Botones de filtrado de bandeja (`TODOS`, `PENDIENTE`, `EN_PROCESO`, `COMPLETADO`).
-   - Botón `Ingresar Resultados` / `Continuar Análisis`: Abre el modal con los parámetros clínicos de la muestra.
+   - Drawers laterales deslizables para toma de muestra, captura analítica y visor oficial de resultados.
    - Botón `Validar & Sellar Resultado`: Transiciona la orden a completada con firma ReTHUS.
-3. **Módulo de Farmacia y Dashboard de Dirección:**
+3. **Sincronización Reactiva Global de Pacientes (`saludconecta_patient_updated`):**
+   - Cuando el médico tratante actualiza los datos de un paciente (nombre, correo, teléfono, EPS o dirección), el evento reactivo propaga la actualización en caliente a todos los departamentos (Laboratorio, HCE, Farmacia, Triaje) sin requerir recarga del navegador (`F5`).
+4. **Consola Médica de Impresión de Exámenes (`DoctorPrintLabResultsView.jsx`):**
+   - Depuración de interfaz: Se eliminó el bloque informativo redundante de advertencia, optimizando el área visual para la previsualización directa y la generación de PDF físico.
+5. **Menús Laterales Limpios y Minimalistas (`Sidebar.jsx` & `AdminSidebar.jsx`):**
+   - Ocultamiento de badges/etiquetas decorativas en todos los roles institucionales (Médico, Enfermero, Farmacia, Laboratorio y Administrador) para una navegación limpia, libre de saturación visual.
+6. **Módulo de Farmacia y Dashboard de Dirección:**
    - Botón `Poner En Gestión`: Asigna el reporte de stock a la administración.
    - Botón `Reabastecer Medicamento`: Abre el modal operativo para ingresar unidades, lote y vencimiento.
    - Botón `Copiar Reporte`: Copia al portapapeles la estructura oficial de la solicitud.
-4. **Perfil Asistencial y Organigrama Administrativo:**
+7. **Perfil Asistencial y Organigrama Administrativo:**
    - Aislamiento total de edición de banner y avatar por usuario activo sin fugas cruzadas.
 
 ---
@@ -2687,4 +2760,8 @@ Tras la ejecución exhaustiva de las pruebas de Caja Negra, pruebas de Caja Blan
 
 **Líder Técnico & Desarrollador Principal:**  
 **Santiago Velez**  
-*Ingeniería de Software II — COTECNOVA 2026-2*
+**Responsable de Pruebas (QA / Testing)**
+**Santiago Arcos**
+**Diseño de casos de prueba aplicando partición de equivalencia y valores límite, automatización de suites en Go y React.**
+**Juan José Sánchez**  
+_Ingeniería de Software II — COTECNOVA 2026-2_

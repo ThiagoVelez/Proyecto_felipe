@@ -83,9 +83,45 @@ export default function PatientEditDrawer({ isOpen, onClose, patient, onUpdated 
         address: address.trim(),
         phone: phone.trim(),
       });
+      const mergedPatient = {
+        ...patient,
+        ...updated,
+        email: email.trim(),
+        address: address.trim(),
+        phone: phone.trim(),
+      };
+
+      // Sincronizar en órdenes de laboratorio de todos los departamentos
+      try {
+        const rawOrders = localStorage.getItem('saludconecta_lab_orders');
+        if (rawOrders) {
+          const parsed = JSON.parse(rawOrders);
+          const updatedOrders = parsed.map((o) => {
+            if (
+              String(o.patient_id) === String(patient.id) ||
+              String(o.patient_document) === String(patient.document_number)
+            ) {
+              return {
+                ...o,
+                patient_name: mergedPatient.full_name || mergedPatient.name || o.patient_name,
+                patient_email: mergedPatient.email,
+                patient_phone: mergedPatient.phone,
+                patient_address: mergedPatient.address,
+              };
+            }
+            return o;
+          });
+          localStorage.setItem('saludconecta_lab_orders', JSON.stringify(updatedOrders));
+          window.dispatchEvent(new CustomEvent('saludconecta_lab_orders_updated', { detail: mergedPatient }));
+        }
+      } catch {}
+
+      // Emitir evento global reactivo para todos los módulos
+      window.dispatchEvent(new CustomEvent('saludconecta_patient_updated', { detail: mergedPatient }));
+
       setSubmitSuccess(true);
       if (onUpdated) {
-        onUpdated(updated);
+        onUpdated(mergedPatient);
       }
       setTimeout(() => {
         onClose();

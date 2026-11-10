@@ -30,7 +30,7 @@ export const DoctorPrintLabResultsView = ({ user, patient, onNavigate }) => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-  // Sincronizar en tiempo real
+  // Sincronizar en tiempo real órdenes
   useEffect(() => {
     const handleSync = () => {
       try {
@@ -44,6 +44,31 @@ export const DoctorPrintLabResultsView = ({ user, patient, onNavigate }) => {
       window.removeEventListener('saludconecta_lab_orders_updated', handleSync);
       window.removeEventListener('storage', handleSync);
     };
+  }, []);
+
+  // Sincronización reactiva si el médico o recepción actualiza datos del paciente
+  useEffect(() => {
+    const handlePatientSync = (e) => {
+      const updated = e.detail;
+      if (!updated) return;
+      setOrders((prevOrders) =>
+        prevOrders.map((o) => {
+          const sameId = updated.id && String(o.patient_id) === String(updated.id);
+          const sameDoc = updated.document_number && String(o.patient_document) === String(updated.document_number);
+          if (sameId || sameDoc) {
+            return {
+              ...o,
+              patient_name: updated.full_name || updated.name || o.patient_name,
+              patient_email: updated.email !== undefined ? updated.email : o.patient_email,
+              patient_phone: updated.phone || o.patient_phone,
+            };
+          }
+          return o;
+        })
+      );
+    };
+    window.addEventListener('saludconecta_patient_updated', handlePatientSync);
+    return () => window.removeEventListener('saludconecta_patient_updated', handlePatientSync);
   }, []);
 
   const doctorName = formatDoctorName(
@@ -309,14 +334,6 @@ export const DoctorPrintLabResultsView = ({ user, patient, onNavigate }) => {
                   </div>
                 </div>
               </div>
-
-              {/* NOTA PARA EL MÉDICO */}
-              <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-950 text-xs">
-                <p className="font-semibold">Instrucciones para entrega al paciente:</p>
-                <p className="text-[11px] mt-0.5">
-                  Al pulsar el botón de imprimir, el sistema generará el formato en tamaño carta médico con membrete oficial para firma manual o entrega directa en consulta.
-                </p>
-              </div>
             </div>
 
             {/* FOOTER DEL DRAWER */}
@@ -345,3 +362,4 @@ export const DoctorPrintLabResultsView = ({ user, patient, onNavigate }) => {
 };
 
 export default DoctorPrintLabResultsView;
+

@@ -138,6 +138,55 @@ export const DoctorLabOrdersView = ({ user, patient, onSelectPatient, onNavigate
     };
   }, []);
 
+  // Sincronización global reactiva si el médico o cualquier área actualiza datos de paciente
+  useEffect(() => {
+    const handlePatientSync = (e) => {
+      const updated = e.detail;
+      if (!updated) return;
+
+      setSelectedPatientLocal((prev) => {
+        if (!prev) return prev;
+        const sameId = updated.id && String(prev.id) === String(updated.id);
+        const sameDoc = updated.document_number && String(prev.document_number) === String(updated.document_number);
+        if (sameId || sameDoc) {
+          return { ...prev, ...updated };
+        }
+        return prev;
+      });
+
+      setAllPatients((prevList) =>
+        prevList.map((p) => {
+          const sameId = updated.id && String(p.id) === String(updated.id);
+          const sameDoc = updated.document_number && String(p.document_number) === String(updated.document_number);
+          if (sameId || sameDoc) {
+            return { ...p, ...updated };
+          }
+          return p;
+        })
+      );
+
+      setOrders((prevOrders) =>
+        prevOrders.map((o) => {
+          const sameId = updated.id && String(o.patient_id) === String(updated.id);
+          const sameDoc = updated.document_number && String(o.patient_document) === String(updated.document_number);
+          if (sameId || sameDoc) {
+            return {
+              ...o,
+              patient_name: updated.full_name || updated.name || o.patient_name,
+              patient_email: updated.email !== undefined ? updated.email : o.patient_email,
+              patient_phone: updated.phone || o.patient_phone,
+              patient_eps: updated.eps_name || updated.eps || o.patient_eps,
+            };
+          }
+          return o;
+        })
+      );
+    };
+
+    window.addEventListener('saludconecta_patient_updated', handlePatientSync);
+    return () => window.removeEventListener('saludconecta_patient_updated', handlePatientSync);
+  }, []);
+
   // Cargar lista de pacientes al montar
   useEffect(() => {
     let cancelled = false;
@@ -693,7 +742,13 @@ export const DoctorLabOrdersView = ({ user, patient, onSelectPatient, onNavigate
                               type="button"
                               onClick={() => {
                                 setViewingResultOrder(o);
-                                setEmailRecipient(o.patient_email || 'paciente@saludconecta.ips.gov.co');
+                                const cleanEmail =
+                                  o.patient_email &&
+                                  !o.patient_email.includes('saludconecta.ips.gov.co') &&
+                                  !o.patient_email.includes('ejemplo.com')
+                                    ? String(o.patient_email).trim()
+                                    : '';
+                                setEmailRecipient(cleanEmail);
                                 setIsEmailModalOpen(true);
                               }}
                               className="h-8 px-3 rounded-xl border border-purple-200 bg-purple-50 hover:bg-purple-100 text-xs font-semibold text-purple-900 flex items-center gap-1.5 cursor-pointer shadow-2xs"
@@ -901,14 +956,13 @@ export const DoctorLabOrdersView = ({ user, patient, onSelectPatient, onNavigate
                       </div>
                       <div>
                         <label className="block text-[11px] font-semibold text-on-surface mb-0.5 mt-1">
-                          Correo del Paciente *
+                          Correo del Paciente
                         </label>
                         <input
                           type="email"
-                          required
                           value={emailRecipient}
                           onChange={(e) => setEmailRecipient(e.target.value)}
-                          placeholder="correo@paciente.com"
+                          placeholder="Sin correo registrado (ingrese uno si desea despachar)..."
                           className="w-full h-8 px-2.5 rounded-lg border border-purple-200 bg-purple-50/30 text-xs font-mono text-on-surface focus:outline-none focus:ring-1 focus:ring-purple-700"
                         />
                       </div>
@@ -982,7 +1036,13 @@ export const DoctorLabOrdersView = ({ user, patient, onSelectPatient, onNavigate
                 <button
                   type="button"
                   onClick={() => {
-                    setEmailRecipient(viewingResultOrder.patient_email || 'paciente@saludconecta.ips.gov.co');
+                    const cleanEmail =
+                      viewingResultOrder.patient_email &&
+                      !viewingResultOrder.patient_email.includes('saludconecta.ips.gov.co') &&
+                      !viewingResultOrder.patient_email.includes('ejemplo.com')
+                        ? String(viewingResultOrder.patient_email).trim()
+                        : '';
+                    setEmailRecipient(cleanEmail);
                     setIsEmailModalOpen(!isEmailModalOpen);
                   }}
                   className="h-10 px-4 rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-bold text-xs flex items-center gap-2 cursor-pointer shadow-xs transition-all"

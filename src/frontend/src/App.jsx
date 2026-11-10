@@ -297,6 +297,25 @@ export function App() {
     setSelectedTriage(triage);
   };
 
+  // Sincronización reactiva global cuando cualquier departamento o médico actualiza un paciente
+  useEffect(() => {
+    const handlePatientGlobalSync = (e) => {
+      const updated = e.detail;
+      if (!updated) return;
+      setSelectedPatient((prev) => {
+        if (!prev) return prev;
+        const sameId = updated.id && String(prev.id) === String(updated.id);
+        const sameDoc = updated.document_number && String(prev.document_number) === String(updated.document_number);
+        if (sameId || sameDoc) {
+          return { ...prev, ...updated };
+        }
+        return prev;
+      });
+    };
+    window.addEventListener('saludconecta_patient_updated', handlePatientGlobalSync);
+    return () => window.removeEventListener('saludconecta_patient_updated', handlePatientGlobalSync);
+  }, []);
+
   const handleHeaderSearch = async (documentType, documentNumber) => {
     const cleanDoc = documentNumber.trim().replace(/[\.\s]/g, '');
     let found = null;

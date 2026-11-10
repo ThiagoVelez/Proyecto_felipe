@@ -77,7 +77,7 @@ LDL: 104 mg/dL (Ref: < 130 mg/dL)`,
     patient_name: 'Carlos Alberto Restrepo',
     patient_document: '16789012',
     patient_document_type: 'CC',
-    patient_email: 'carlos.restrepo@gmail.com',
+    patient_email: '',
     patient_eps: 'Emssanar (SUBSIDIADO)',
     patient_age: 54,
     patient_gender: 'Masculino',
@@ -215,12 +215,66 @@ export const LaboratoryScreen = ({ user }) => {
     } catch {}
   }, [orders]);
 
+  // Sincronización reactiva cuando cualquier departamento o médico actualiza los datos del paciente
+  useEffect(() => {
+    const handlePatientSync = (e) => {
+      const p = e.detail;
+      if (!p) return;
+      setOrders((prevOrders) =>
+        prevOrders.map((o) => {
+          const sameId = p.id && String(o.patient_id) === String(p.id);
+          const sameDoc = p.document_number && String(o.patient_document) === String(p.document_number);
+          if (sameId || sameDoc) {
+            return {
+              ...o,
+              patient_name: p.full_name || p.name || o.patient_name,
+              patient_email: p.email !== undefined ? p.email : o.patient_email,
+              patient_phone: p.phone !== undefined ? p.phone : o.patient_phone,
+              patient_address: p.address !== undefined ? p.address : o.patient_address,
+              patient_eps: p.eps_name || p.eps || o.patient_eps,
+            };
+          }
+          return o;
+        })
+      );
+
+      setSelectedOrder((prev) => {
+        if (!prev) return prev;
+        const sameId = p.id && String(prev.patient_id) === String(p.id);
+        const sameDoc = p.document_number && String(prev.patient_document) === String(p.document_number);
+        if (sameId || sameDoc) {
+          const updatedEmail = p.email !== undefined ? p.email : prev.patient_email;
+          setPatientEmailInput(updatedEmail || '');
+          return {
+            ...prev,
+            patient_name: p.full_name || p.name || prev.patient_name,
+            patient_email: updatedEmail,
+            patient_phone: p.phone !== undefined ? p.phone : prev.patient_phone,
+            patient_eps: p.eps_name || p.eps || prev.patient_eps,
+          };
+        }
+        return prev;
+      });
+    };
+
+    window.addEventListener('saludconecta_patient_updated', handlePatientSync);
+    return () => window.removeEventListener('saludconecta_patient_updated', handlePatientSync);
+  }, []);
+
   // Abrir Drawer de Resultados (Ingresar, Continuar o Ver)
   const handleOpenResultDrawer = (order) => {
     setSelectedOrder(order);
     setShowEmailSection(false);
     setEmailFeedback('');
-    setPatientEmailInput(order.patient_email || 'paciente@saludconecta.ips.gov.co');
+
+    // Si tiene correo real sale automáticamente; si no tiene, sale en blanco
+    const cleanEmail =
+      order.patient_email &&
+      order.patient_email !== 'paciente@saludconecta.ips.gov.co' &&
+      order.patient_email !== 'paciente@ejemplo.com'
+        ? String(order.patient_email).trim()
+        : '';
+    setPatientEmailInput(cleanEmail);
     setSendDoctorCopy(true);
 
     if (order.results) {
@@ -358,7 +412,7 @@ export const LaboratoryScreen = ({ user }) => {
       patient_eps: form.patient_eps.value.trim() || 'CaliEps (CONTRIBUTIVO)',
       patient_age: 35,
       patient_gender: 'General',
-      patient_email: form.patient_email?.value.trim() || 'paciente@saludconecta.ips.gov.co',
+      patient_email: form.patient_email?.value.trim() || '',
       test_type: form.test_type.value.trim(),
       ordering_doctor: form.ordering_doctor.value.trim() || 'Dr. Santiago Vélez',
       doctor_email: 'santiago.velez@saludconecta.ips.gov.co',
@@ -630,18 +684,18 @@ export const LaboratoryScreen = ({ user }) => {
                       <button
                         type="button"
                         onClick={() => handleOpenResultDrawer(order)}
-                        className="h-8.5 px-3.5 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors shadow-2xs"
+                        className="w-44 h-9.5 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-2xs"
                       >
-                        <Eye className="w-3.5 h-3.5 text-emerald-700" />
+                        <Eye className="w-4 h-4 text-emerald-700 shrink-0" />
                         <span>Ver Resultados</span>
                       </button>
                     ) : (
                       <button
                         type="button"
                         onClick={() => handleOpenResultDrawer(order)}
-                        className="h-8.5 px-4 rounded-xl bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+                        className="w-44 h-9.5 rounded-xl bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-xs transition-colors"
                       >
-                        <FileCheck2 className="w-3.5 h-3.5" />
+                        <FileCheck2 className="w-4 h-4 shrink-0" />
                         <span>
                           {order.status === 'EN_PROCESO'
                             ? 'Continuar Análisis'
@@ -988,14 +1042,13 @@ export const LaboratoryScreen = ({ user }) => {
                       </div>
                       <div>
                         <label className="block text-[11px] font-semibold text-on-surface mb-0.5 mt-1">
-                          Correo del Paciente *
+                          Correo del Paciente
                         </label>
                         <input
                           type="email"
-                          required
                           value={patientEmailInput}
                           onChange={(e) => setPatientEmailInput(e.target.value)}
-                          placeholder="correo@paciente.com"
+                          placeholder="Sin correo registrado (ingrese uno si desea despachar)..."
                           className="w-full h-8 px-2.5 rounded-lg border border-purple-200 bg-purple-50/30 text-xs font-mono text-on-surface focus:outline-none focus:ring-1 focus:ring-purple-700"
                         />
                       </div>

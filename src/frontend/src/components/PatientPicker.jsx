@@ -100,6 +100,9 @@ export const PatientPicker = ({ onSelect, title = 'Seleccionar paciente' }) => {
 
   const handleUpdated = (updated) => {
     loadPatients();
+    if (onSelectPatient && updated) {
+      onSelectPatient(updated);
+    }
   };
 
   const handleDeleteConfirm = async () => {
