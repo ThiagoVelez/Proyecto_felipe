@@ -31,4 +31,6 @@ Comentario «Verificación de Calidad (10 nov 2026)» con lo confirmado y lo que
 
 ## 4. Aviso
 
-Tarjeta «Revisión de Calidad R3 (10 nov) — resultados» en «Avisos», con resumen, enlaces al pull request, al informe (en `main` y en la rama) y Juan José Sánchez como miembro. Ver el resumen final de la revisión para el enlace del PR.
+Tarjeta «Revisión de Calidad R3 (10 nov) — resultados» en «Avisos» (https://trello.com/c/qDrwxeiZ), con el resumen, el enlace al pull request https://github.com/ThiagoVelez/Proyecto_felipe/pull/6, el informe en `main` y en la rama, y un comentario con el enlace del PR.
+
+**Pendiente a mano:** asignar a Juan José Sánchez como miembro (ID `6ac653fb695dd2c0e2162ce0`); la herramienta de Trello disponible no ofrece la acción para asignar miembros a una tarjeta (D-16).

@@ -112,5 +112,5 @@ Todos están en archivos nuevos o son correcciones pequeñas, una por commit:
 - [x] No se modificaron pruebas del equipo (solo se agregaron archivos de Calidad) ni tarjetas ajenas en Trello (solo comentarios).
 - [x] No hay secretos nuevos (búsqueda de tokens y claves en los archivos versionados sin resultados; las credenciales de prueba del backend local no se guardaron).
 - [x] El pipeline está en rojo y explicado: golangci-lint falla por 21 hallazgos nuevos en código del equipo (D-17) y el paso `-race` por los timeouts de 1 s de DEF-48 (D-08). Control de defectos, frontend y cobertura (68,8 %) en verde (`evidencias/r3/61-ci-run-42925930619.txt`).
-- [x] El pull request está abierto (ver la tarjeta de aviso en Trello).
-- [x] Trello actualizado (`trello-publicacion-r3.md`). Pendiente a mano: desmarcar «completada» en las 5 tarjetas reabiertas y asignar a Juan en la tarjeta de aviso si la herramienta no lo permitió.
+- [x] El pull request está abierto: https://github.com/ThiagoVelez/Proyecto_felipe/pull/6 (revisor ThiagoVelez).
+- [x] Trello actualizado (`trello-publicacion-r3.md`). Pendiente a mano: desmarcar «completada» en las 5 tarjetas reabiertas y asignar a Juan en la tarjeta de aviso (la herramienta no lo permite).
