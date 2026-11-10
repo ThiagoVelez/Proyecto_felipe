@@ -26,6 +26,7 @@ import (
 	"saludconecta-backend/core/domain"
 	"saludconecta-backend/core/ports"
 	"saludconecta-backend/core/services"
+	"saludconecta-backend/pkg/config"
 	"saludconecta-backend/pkg/logger"
 )
 
@@ -237,5 +238,13 @@ func TestR3DispensacionConcurrenteEntregaUnaSolaVez(t *testing.T) {
 	despues, _ := inv.GetByID(ctx, "inv-aceta-500")
 	if exitos != 1 || despues.StockQuantity != stockAntes-3 || despues.StockQuantity < 0 {
 		t.Fatalf("Dispensaciones exitosas %d (esperada 1); stock %d -> %d (esperado %d)", exitos, stockAntes, despues.StockQuantity, stockAntes-3)
+	}
+}
+
+// DEF-63 (ampliado en R3): el README publica `defina_un_secreto_aleatorio_de_32_o_mas` como ejemplo de JWT_SECRET;
+// con 39 caracteres superaba la validacion de longitud y se aceptaba como secreto real.
+func TestDEF63EjemploDelREADMENoEsSecretoValido(t *testing.T) {
+	if err := config.ValidateJWTSecret("defina_un_secreto_aleatorio_de_32_o_mas"); err == nil {
+		t.Fatal("El valor de ejemplo publicado en el README se acepta como JWT_SECRET")
 	}
 }

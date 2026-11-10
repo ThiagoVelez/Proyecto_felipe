@@ -22,6 +22,8 @@ var knownInsecureSecrets = []string{
 	"secret",
 	// DEF-63: marcador de .env.example; quien copia la plantilla sin editarla firmaria con un secreto publico.
 	"defina_un_secreto_aleatorio_de_al_menos_32_caracteres",
+	// DEF-63 (R3): ejemplo publicado en la tabla de variables del README.
+	"defina_un_secreto_aleatorio_de_32_o_mas",
 }
 
 // Config concentra la configuracion de arranque ya validada.
