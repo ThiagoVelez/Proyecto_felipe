@@ -114,16 +114,21 @@ jobs:
         env:
           CGO_ENABLED: '1'
         run: go test -race -count=1 -coverprofile=coverage-src.out ./...
-      # DEF-48 cerrado en R3: TestStaffRegisterRequiresAdmin usa un timeout de 30 s, por lo que ya no se excluye.
+      # DEF-48: TestStaffRegisterRequiresAdmin ya usa 30 s y no se excluye. Otras pruebas del equipo con el timeout
+      # de 1 s fallan aqui (DEF-48 reabierto en R3); no se excluyen para no ocultar el defecto.
       - name: Pruebas de integracion de tests/backend con detector de carreras
         working-directory: tests/backend
         env:
           CGO_ENABLED: '1'
         run: go test -race -count=1 ./...
+      # Se ejecutan aunque falle el paso -race (DEF-48 reabierto en R3) para medir la suite completa y la
+      # cobertura; el job sigue en rojo porque no hay continue-on-error.
       - name: Pruebas de integracion de tests/backend completas (cobertura sobre los paquetes reales)
+        if: ${{ !cancelled() }}
         working-directory: tests/backend
         run: go test -count=1 -coverpkg=saludconecta-backend/... -coverprofile=coverage-tests.out ./...
       - name: Verificar umbral de cobertura
+        if: ${{ !cancelled() }}
         working-directory: tests/backend
         run: |
           total=$(go tool cover -func=coverage-tests.out | awk '/^total:/ {sub("%","",$3); print $3}')
