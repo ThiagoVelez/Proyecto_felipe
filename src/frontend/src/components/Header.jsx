@@ -58,7 +58,12 @@ export const Header = ({
     currentUser.role_id === 6 ||
     currentUser.specialty?.toLowerCase().includes('farmac') ||
     (currentUser.full_name || currentUser.name || '').toLowerCase().includes('farma');
-  const roleLabel = isAdmin ? 'ADMIN TI' : isPharmacist ? 'FARMACIA' : currentUser.role || 'MEDICO';
+  const isLab =
+    currentUser.role === 'LABORATORIO' ||
+    Number(currentUser.role_id) === 7 ||
+    currentUser.specialty?.toLowerCase().includes('laborat') ||
+    currentUser.specialty?.toLowerCase().includes('bacteri');
+  const roleLabel = isAdmin ? 'ADMIN TI' : isPharmacist ? 'FARMACIA' : isLab ? 'LABORATORIO' : currentUser.role || 'MEDICO';
 
   // Temporizador de sesion asistencial
   useEffect(() => {

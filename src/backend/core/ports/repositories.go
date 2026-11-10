@@ -115,3 +115,13 @@ type HealthEducationRepository interface {
 	Update(ctx context.Context, post *domain.HealthEducationPost) error
 	Delete(ctx context.Context, id string) error
 }
+
+// PharmacyReportRepository define el contrato de persistencia para las alertas y reportes automáticos de stock bajo.
+type PharmacyReportRepository interface {
+	Create(ctx context.Context, report *domain.PharmacyStockReport) error
+	GetAll(ctx context.Context, status string) ([]domain.PharmacyStockReport, error)
+	GetByID(ctx context.Context, id string) (*domain.PharmacyStockReport, error)
+	GetOpenByItemID(ctx context.Context, itemID string) (*domain.PharmacyStockReport, error)
+	UpdateStatus(ctx context.Context, id, status, notes, resolvedBy string) error
+	GetMetrics(ctx context.Context) (map[string]interface{}, error)
+}

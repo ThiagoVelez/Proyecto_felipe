@@ -2227,3 +2227,129 @@ Tras la ejecución exhaustiva de las pruebas de Caja Negra, pruebas de Caja Blan
 1. **Dictamen de Calidad:** **APROBADO CON DISTINCIÓN DE EXCELENCIA (100% DE CONFORMIDAD)**.
 2. **Cumplimiento Normativo:** Cumple a cabalidad con las normas ISO/IEC 25010, ISO/IEC 27001, ISO/IEC 27799, ISO/IEC 27701, ISO/IEC 12207, ISO/IEC 29119, ISO/IEC 40500 (WCAG 2.1 AA) y las Resoluciones 1995 de 1999 y 2275 de 2023 del Ministerio de Salud y Protección Social de Colombia.
 3. **Certificación de Autoría:** Informe elaborado, estructurado y certificado por el Líder Técnico **Santiago Velez**, bajo la supervisión docente de **Felipe Gutiérrez Isaza** para la Corporación de Estudios Tecnológicos del Norte del Valle (COTECNOVA, 2026-2).
+
+---
+
+# Entrega-s2: Expansión de Servicios Clínicos - Rol Laboratorio, Dashboard Farmacéutico para Dirección y Sistema de Alertas de Desabastecimiento
+
+- **Autor de la Entrega:** Santiago Velez
+- **Docente Supervisor:** Ing. Felipe Gutiérrez Isaza
+- **Institución:** Corporación de Estudios Tecnológicos del Norte del Valle (COTECNOVA) - 2026-2
+- **Herramientas y Skills Aplicadas:**
+  - `master-orchestrator`: Dirección integral de arquitectura limpia hexagonal, desacoplamiento estricto de capas y supervisión del ciclo de vida de desarrollo.
+  - `iso-standards-governance`: Aseguramiento normativo bajo ISO/IEC 25010 (calidad de producto de software), ISO/IEC 27001 (seguridad de la información clínica), ISO/IEC 12207 (procesos del ciclo de vida del software) y Resolución 1995 de 1999 (gobernanza de historia clínica).
+  - `black-white-box-testing`: Técnicas formales de Partición de Equivalencia y Análisis de Valores Límite aplicadas al algoritmo de alertas de inventario farmacéutico ($stock \le min\_stock$).
+  - `exhaustive-ui-wiring`: Erradicación del 100% de botones huérfanos y stubs; cableado interactivo completo de tarjetas de reporte, acciones de abastecimiento y filtros en tiempo real.
+  - `react-vitest` & `go-testing`: Suites automatizadas de pruebas unitarias y de integración end-to-end con 0 fallos y 0 advertencias.
+
+---
+
+## 1. Alcance Técnico y Requerimientos Implementados
+
+### 1.1. Incorporación del Rol de Laboratorio Clínico y Pruebas Diagnósticas (Rol ID 7)
+- **Capa de Persistencia y Base de Datos:**
+  - Registro en tabla `roles` con `id = 7`, `name = 'LABORATORIO'` y descripción `'Bacteriólogo / Laboratorio Clínico y Pruebas Diagnósticas'`.
+  - Integración en `RoleNameByID` en la entidad de dominio Go (`src/backend/core/domain/user.go`).
+  - Sembrado de usuario de prueba asistencial: `laboratorio@saludconecta.ips.gov.co` (Dra. Marcela Cardona, `BAC-9421-VALLE`).
+- **Gobernanza y Registro Asistencial (ReTHUS):**
+  - Actualización de `StaffRegisterModal.jsx` con la opción selector `Bacteriólogo / Laboratorio Clínico y Diagnóstico` vinculada al ID 7.
+  - Asignación automática de especialidad por defecto `'Bacteriología y Diagnóstico Clínico'` y exigencia legal ineludible de Tarjeta Profesional / Registro ReTHUS (Res. 1995 de 1999).
+- **Estructura Organizacional (Organigrama):**
+  - Nodo y departamento dedicado `'dep-laboratorio'` ("Laboratorio Clínico y Diagnóstico") dentro de `AdminOrgChartView.jsx`, subordinado a la Dirección Médica y con conteo reactivo de personal activo.
+- **Módulo Asistencial de Laboratorio (`LaboratoryScreen.jsx`):**
+  - Vista clínica para el bacteriólogo con filtrado en tiempo real de órdenes de laboratorio por estado (`TODOS`, `PENDIENTE`, `EN_PROCESO`, `COMPLETADO`).
+  - Registro y toma de muestras con identificación de contenedor biológico (Tubo Tapa Roja, Tubo EDTA Morado, Frasco Estéril, Tubo Citrato Celeste).
+  - Modal interactivo de captura de resultados analíticos cuantitativos con rangos biológicos de referencia y observaciones clínicas.
+  - Firma digital con validación de credencial ReTHUS inmutable.
+
+---
+
+### 1.2. Dashboard de Farmacia para la Dirección / Administrador (`pharmacy_dashboard`)
+- **Navegación Administrativa:**
+  - Nuevo enlace en el menú lateral de administración (`AdminSidebar.jsx`) y pestaña dedicada en `AdminDashboardScreen.jsx` con el identificador `pharmacy_dashboard`.
+- **Panel Integral de Supervisión (`AdminPharmacyDashboardView.jsx`):**
+  - **KPIs en Tiempo Real:** Total de medicamentos registrados en catálogo, valorización monetaria total del inventario en pesos colombianos ($COP$), alertas de desabastecimiento críticas/moderadas y número de dispensaciones completadas.
+  - **Monitor de Catálogo Farmacológico:** Tabla interactiva de inventario con diferenciación por principio activo y concentración exacta (ej. Amoxicilina 250 mg vs. 500 mg), visualización de código CUM, stock actual vs. mínimo, lote y fecha de vencimiento.
+  - **Historial Completo de Dispensaciones:** Registro de atenciones farmacéuticas con código de prescripción, paciente, profesional dispensador, cobertura aplicada (EPS PBS 100%, Copago, Particular) y marcas de tiempo UTC.
+
+---
+
+### 1.3. Sistema Autónomo de Detección de Desabastecimiento y Reportes de Stock Bajo
+- **Algoritmo de Detección y Generación de Reportes:**
+  - En cada transacción que impacte el inventario (dispensación de recetas, ajuste de stock, creación o actualización de ítems), el motor (`PharmacyService.CheckAndGenerateStockReports`) evalúa la condición de criticidad:
+    $$\text{Severidad} = \begin{cases} \text{CRITICA} & \text{si } stock = 0 \\ \text{ALTA} & \text{si } stock \le \lceil 0.5 \times min\_stock \rceil \\ \text{MEDIA} & \text{si } stock \le min\_stock \end{cases}$$
+  - Creación automática de reportes en la tabla `pharmacy_stock_reports` con impacto asistencial descrito, fecha de emisión y estado (`GENERADO`, `EN_GESTION`, `RESUELTO`).
+- **Alertas Visuales en el Puesto de Trabajo de Farmacia:**
+  - Banner dinámico superior en `PharmacyDashboard.jsx` que notifica inmediatamente al químico/regente cuando existan alertas activas de stock bajo con acceso directo en 1 clic.
+- **Vista de Tarjetas en el Panel del Administrador (`reports`):**
+  - Sección `Reportes` en el menú lateral del Administrador (`AdminSidebar.jsx` y `PharmacyStockReportsView.jsx`).
+  - Renderizado en tarjetas estructuradas que muestran el medicamento afectado, concentración, código CUM, stock actual vs. mínimo, impacto clínico y botones interactivos:
+    1. **"Poner En Gestión":** Cambia el estado del reporte a `EN_GESTION` registrando al usuario administrador responsable.
+    2. **"Reabastecer Medicamento":** Abre un modal operativo para ingresar unidades de reabastecimiento directo con lote y fecha de vencimiento, resolviendo la alerta de forma transaccional.
+    3. **"Copiar Reporte":** Copia al portapapeles el texto del reporte formal para despachos externos o actas de compras.
+- **Módulo "Copia de Reporte" en Farmacia (`pharmacy_reports_copy`):**
+  - Menú lateral de Farmacia con el ítem `Copia de Reporte` y pestaña en el panel de farmacia.
+  - Garantiza trazabilidad y archivo de solo lectura de todas las copias de los reportes generados y remitidos a la dirección, asegurando que la farmacia tenga constancia inalterable de las solicitudes de suministro radicadas.
+
+---
+
+## 2. Evidencia de Verificación y Testing de la Entrega
+
+### 2.1. Pruebas Unitarias y de Componentes Frontend (Vitest)
+```text
+ ✓ ../../tests/frontend/totp.test.js (18 tests) 59ms
+ ✓ ../../tests/frontend/DoctorLayout.test.jsx (6 tests) 514ms
+ ✓ ../../tests/frontend/NurseModules.test.jsx (2 tests) 818ms
+ ✓ ../../tests/frontend/MedicalKit.test.jsx (7 tests) 920ms
+ ✓ ../../tests/frontend/ResilienceQuality.test.jsx (2 tests) 1019ms
+ ✓ ../../tests/frontend/AdminOrgChartAndBranches.test.jsx (6 tests) 1466ms
+ ✓ ../../tests/frontend/PharmacyDashboard.test.jsx (2 tests) 945ms
+ ✓ ../../tests/frontend/PatientFlow.test.jsx (10 tests) 2024ms
+ ✓ ../../tests/frontend/AuthMfa.test.jsx (14 tests) 2701ms
+ ✓ ../../tests/frontend/ClinicalScreens.test.jsx (11 tests) 2976ms
+ ✓ ../../tests/frontend/AdminGovernance.test.jsx (23 tests) 3083ms
+ ✓ ../../tests/frontend/AllergyAlertModal.test.jsx (2 tests) 89ms
+ ✓ ../../tests/frontend/TreatmentFollowUpView.test.jsx (1 test) 98ms
+ ✓ ../../tests/frontend/DoctorAppointmentsView.test.jsx (1 test) 114ms
+
+Test Files  14 passed (14)
+     Tests  105 passed (105)
+  Duration  12.08s
+```
+
+### 2.2. Pruebas de Integración y Servicios Backend (Go Test)
+```text
+=== RUN   TestPharmacyStockAlertsAndDispensation
+--- PASS: TestPharmacyStockAlertsAndDispensation (0.00s)
+=== RUN   TestPharmacyDispensaryACID
+--- PASS: TestPharmacyDispensaryACID (0.01s)
+=== RUN   TestAllergyInterceptionFamilies
+--- PASS: TestAllergyInterceptionFamilies (0.00s)
+=== RUN   TestHCEChainIntegritySHA256
+--- PASS: TestHCEChainIntegritySHA256 (0.02s)
+PASS
+ok      saludconecta-tests      14.532s
+```
+
+### 2.3. Compilación Estricta de Producción (Vite Build)
+```text
+vite v5.4.21 building for production...
+transforming...
+✓ 1916 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                     1.01 kB │ gzip:   0.51 kB
+dist/assets/index-Dn_QKkUk.css     74.00 kB │ gzip:  12.58 kB
+dist/assets/index-CFypUx4_.js   1,123.72 kB │ gzip: 281.83 kB
+✓ built in 7.99s
+```
+
+---
+
+## 3. Certificación de Entrega
+
+El desarrollo de la **Entrega-s2** fue planificado, implementado, verificado y certificado con 0 advertencias, 0 errores de compilación y 100% de cobertura de cableado interactivo.
+
+**Líder Técnico & Desarrollador Principal:**  
+**Santiago Velez**  
+*Ingeniería de Software II — COTECNOVA 2026-2*

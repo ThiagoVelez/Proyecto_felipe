@@ -16,9 +16,10 @@ func TestPharmacyDispensation_DeductsExactStock(t *testing.T) {
 	ds := memory.NewDataStore()
 	invRepo := memory.NewInventoryMemoryRepo(ds)
 	prescRepo := memory.NewPrescriptionV2MemoryRepo(ds)
+	repRepo := memory.NewPharmacyReportMemoryRepo(ds)
 	log := logger.New()
 
-	pharmSvc := services.NewPharmacyService(invRepo, prescRepo, log)
+	pharmSvc := services.NewPharmacyService(invRepo, prescRepo, repRepo, log)
 
 	// Verificar stock inicial de Amoxicilina 500mg (sembrado con 200 unds)
 	medID := "inv-amox-500"
@@ -92,9 +93,10 @@ func TestPharmacyDispensation_RejectsAlreadyDispensedWithConflict(t *testing.T) 
 	ds := memory.NewDataStore()
 	invRepo := memory.NewInventoryMemoryRepo(ds)
 	prescRepo := memory.NewPrescriptionV2MemoryRepo(ds)
+	repRepo := memory.NewPharmacyReportMemoryRepo(ds)
 	log := logger.New()
 
-	pharmSvc := services.NewPharmacyService(invRepo, prescRepo, log)
+	pharmSvc := services.NewPharmacyService(invRepo, prescRepo, repRepo, log)
 
 	presc := &domain.PrescriptionV2{
 		ID:              "rx-test-02",
@@ -148,9 +150,10 @@ func TestPharmacyDispensation_RejectsPatientDocumentMismatch(t *testing.T) {
 	ds := memory.NewDataStore()
 	invRepo := memory.NewInventoryMemoryRepo(ds)
 	prescRepo := memory.NewPrescriptionV2MemoryRepo(ds)
+	repRepo := memory.NewPharmacyReportMemoryRepo(ds)
 	log := logger.New()
 
-	pharmSvc := services.NewPharmacyService(invRepo, prescRepo, log)
+	pharmSvc := services.NewPharmacyService(invRepo, prescRepo, repRepo, log)
 
 	presc := &domain.PrescriptionV2{
 		ID:              "rx-test-03",

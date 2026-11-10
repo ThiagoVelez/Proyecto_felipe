@@ -185,5 +185,9 @@ func SetupRoutes(app *fiber.App, cfg RouterConfig) {
 		pharmGroup.Patch("/inventory/:id/stock", middlewares.RequireRoles("FARMACIA", "ADMIN"), cfg.PharmacyHandler.AdjustStock)
 		pharmGroup.Get("/prescriptions/lookup", middlewares.RequireRoles("FARMACIA", "ADMIN"), cfg.PharmacyHandler.LookupPrescription)
 		pharmGroup.Post("/dispense", middlewares.RequireRoles("FARMACIA", "ADMIN"), cfg.PharmacyHandler.Dispense)
+		pharmGroup.Get("/reports", middlewares.RequireRoles("FARMACIA", "ADMIN"), cfg.PharmacyHandler.GetStockReports)
+		pharmGroup.Post("/reports/check", middlewares.RequireRoles("FARMACIA", "ADMIN"), cfg.PharmacyHandler.CheckAndGenerateReports)
+		pharmGroup.Patch("/reports/:id/resolve", middlewares.RequireRoles("FARMACIA", "ADMIN"), cfg.PharmacyHandler.ResolveReport)
+		pharmGroup.Get("/metrics", middlewares.RequireRoles("FARMACIA", "ADMIN"), cfg.PharmacyHandler.GetMetrics)
 	}
 }

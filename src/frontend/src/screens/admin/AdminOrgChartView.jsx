@@ -22,6 +22,7 @@ import {
   Layers,
   ChevronDown,
   Info,
+  FlaskConical,
 } from 'lucide-react';
 import { apiClient } from '../../services/api';
 
@@ -157,6 +158,14 @@ export const AdminOrgChartView = ({ users: initialUsers = [] }) => {
       u.specialty?.toLowerCase().includes('asistencial')
   );
 
+  const labStaff = users.filter(
+    (u) =>
+      Number(u.role_id) === 7 ||
+      u.role === 'LABORATORIO' ||
+      u.specialty?.toLowerCase().includes('laborat') ||
+      u.specialty?.toLowerCase().includes('bacteri')
+  );
+
   const administrative = users.filter(
     (u) =>
       Number(u.role_id) === 1 ||
@@ -195,6 +204,15 @@ export const AdminOrgChartView = ({ users: initialUsers = [] }) => {
       color: 'blue',
       members: nurses,
       leadTitle: 'Jefatura de Turno',
+    },
+    {
+      id: 'dep-laboratorio',
+      title: 'Laboratorio Clínico y Diagnóstico',
+      roleCategory: 'Bacteriología & Procesamiento Diagnóstico',
+      icon: FlaskConical,
+      color: 'purple',
+      members: labStaff,
+      leadTitle: 'Coordinación de Laboratorio',
     },
     {
       id: 'dep-auxiliares',

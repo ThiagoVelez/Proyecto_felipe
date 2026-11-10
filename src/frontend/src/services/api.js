@@ -531,6 +531,30 @@ export const apiClient = {
     });
   },
 
+  async getPharmacyStockReports(status = '') {
+    const qs = status && status !== 'TODOS' ? `?status=${encodeURIComponent(status)}` : '';
+    return this.requestV2(`/pharmacy/reports${qs}`, { strict: true });
+  },
+
+  async checkPharmacyStockAlerts() {
+    return this.requestV2('/pharmacy/reports/check', {
+      strict: true,
+      method: 'POST',
+    });
+  },
+
+  async resolvePharmacyStockReport(id, notes = '', resolvedBy = '') {
+    return this.requestV2(`/pharmacy/reports/${encodeURIComponent(id)}/resolve`, {
+      strict: true,
+      method: 'PATCH',
+      body: JSON.stringify({ notes, resolved_by: resolvedBy }),
+    });
+  },
+
+  async getPharmacyMetrics() {
+    return this.requestV2('/pharmacy/metrics', { strict: true });
+  },
+
   // =========================================================================
   // METODOS DEL MURO DE SALUD Y CONCIENTIZACIÓN (KIT INFORMÁTICO MÉDICO)
   // =========================================================================

@@ -21,10 +21,13 @@ import {
   Trash2,
   Edit3,
   AlertTriangle,
+  FileWarning,
+  Boxes,
 } from 'lucide-react';
 import { BrowserPDF417Reader } from '@zxing/library';
 import { apiClient } from '../services/api';
 import { formatDoctorName } from '../utils/clinical';
+import PharmacyStockReportsView from '../components/PharmacyStockReportsView';
 
 const PRESENTATION_OPTIONS = [
   'Tableta',
@@ -448,6 +451,8 @@ export const PharmacyDashboard = ({ user, initialTab = 'inbox' }) => {
     );
   });
 
+  const lowStockItems = inventory.filter((i) => i.stock_quantity <= i.min_stock);
+
   return (
     <div className="space-y-6">
       {/* HEADER DE FARMACIA ADAPTATIVO */}
@@ -455,7 +460,7 @@ export const PharmacyDashboard = ({ user, initialTab = 'inbox' }) => {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800">
-              {activeTab === 'inbox' ? 'Dispensación Farmacéutica' : 'Gestión de Inventario'}
+              {activeTab === 'inbox' ? 'Dispensación Farmacéutica' : activeTab === 'inventory' ? 'Gestión de Inventario' : 'Copia de Reportes'}
             </span>
             <span className="text-xs text-on-surface-variant font-mono">
               Operador: {formatDoctorName(user?.full_name, user?.role || user?.role_name)} • Sede Cartago
@@ -468,7 +473,9 @@ export const PharmacyDashboard = ({ user, initialTab = 'inbox' }) => {
           <p className="text-sm text-on-surface-variant mt-0.5">
             {activeTab === 'inbox'
               ? 'Buzón de recetarios en tiempo real, liquidación de cobertura EPS y entrega atómica con lector PDF417.'
-              : 'Inventario valorizado por concentración exacta, control de lotes y registro de medicamentos.'}
+              : activeTab === 'inventory'
+              ? 'Inventario valorizado por concentración exacta, control de lotes y registro de medicamentos.'
+              : 'Trazabilidad y archivo de alertas automáticas de desabastecimiento emitidas al Administrador TI.'}
           </p>
         </div>
 
@@ -485,7 +492,7 @@ export const PharmacyDashboard = ({ user, initialTab = 'inbox' }) => {
             <ScanLine className="w-5 h-5" />
             Escanear Cédula del Paciente (PDF417)
           </button>
-        ) : (
+        ) : activeTab === 'inventory' ? (
           <button
             type="button"
             onClick={() => {
@@ -497,7 +504,73 @@ export const PharmacyDashboard = ({ user, initialTab = 'inbox' }) => {
             <Plus className="w-5 h-5" />
             Registrar Nuevo Medicamento
           </button>
-        )}
+        ) : null}
+      </div>
+
+      {/* ALERTA DE STOCK BAJO / DESABASTECIMIENTO */}
+      {lowStockItems.length > 0 && (
+        <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-950 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs animate-fadeIn">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-rose-100 border border-rose-300 flex items-center justify-center text-rose-800 shrink-0">
+              <AlertTriangle className="w-5 h-5 text-rose-700" />
+            </div>
+            <div>
+              <h4 className="font-bold text-xs sm:text-sm text-rose-900">
+                Alerta de Desabastecimiento: {lowStockItems.length} medicamento(s) en nivel crítico o bajo
+              </h4>
+              <p className="text-[11px] text-rose-800">
+                Se han generado automáticamente los reportes correspondientes y fueron remitidos al Administrador TI. Hay una copia disponible para farmacia.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setActiveTab('reports_copy')}
+            className="h-8 px-3.5 rounded-xl bg-rose-700 hover:bg-rose-800 text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer shrink-0 shadow-2xs"
+          >
+            <FileWarning className="w-3.5 h-3.5" />
+            <span>Ver Copia de Reportes</span>
+          </button>
+        </div>
+      )}
+
+      {/* SELECTOR DE PESTAÑAS DE FARMACIA */}
+      <div className="flex items-center gap-2 p-1 bg-surface-container-low rounded-xl border border-outline-variant/30 text-xs font-semibold w-fit">
+        <button
+          type="button"
+          onClick={() => setActiveTab('inbox')}
+          className={`h-8 px-3 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer ${
+            activeTab === 'inbox' ? 'bg-white text-primary font-bold shadow-xs' : 'text-outline hover:text-on-surface'
+          }`}
+        >
+          <Package className="w-3.5 h-3.5" />
+          <span>Buzón & Dispensación ({inbox.length})</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('inventory')}
+          className={`h-8 px-3 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer ${
+            activeTab === 'inventory' ? 'bg-white text-primary font-bold shadow-xs' : 'text-outline hover:text-on-surface'
+          }`}
+        >
+          <Boxes className="w-3.5 h-3.5" />
+          <span>Inventario de Medicamentos ({inventory.length})</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('reports_copy')}
+          className={`h-8 px-3 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer ${
+            activeTab === 'reports_copy' ? 'bg-white text-rose-700 font-bold shadow-xs' : 'text-outline hover:text-on-surface'
+          }`}
+        >
+          <FileWarning className="w-3.5 h-3.5" />
+          <span>Copia de Reporte</span>
+          {lowStockItems.length > 0 && (
+            <span className="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-rose-100 text-rose-800">
+              {lowStockItems.length}
+            </span>
+          )}
+        </button>
       </div>
 
       {/* CONTENIDO PESTAÑA 1: BUZON DE RECETAS */}
@@ -773,6 +846,11 @@ export const PharmacyDashboard = ({ user, initialTab = 'inbox' }) => {
             </div>
           )}
         </div>
+      )}
+
+      {/* CONTENIDO PESTAÑA 3: COPIA DE REPORTES DE DESABASTECIMIENTO */}
+      {activeTab === 'reports_copy' && (
+        <PharmacyStockReportsView isCopyMode={true} user={user} />
       )}
 
       {/* MODAL 1: REGISTRAR NUEVO MEDICAMENTO */}

@@ -92,7 +92,7 @@ func main() {
 
 	appointmentService := services.NewAppointmentService(repos.Appointment, repos.Patient, repos.User, pdfGen, emailSvc, log)
 	treatmentService := services.NewTreatmentService(repos.PrescriptionV2, repos.Patient, repos.User, pdfGen, emailSvc, log)
-	pharmacyService := services.NewPharmacyService(repos.Inventory, repos.PrescriptionV2, log)
+	pharmacyService := services.NewPharmacyService(repos.Inventory, repos.PrescriptionV2, repos.PharmacyReport, log)
 	healthEducationService := services.NewHealthEducationService(repos.HealthEducation)
 
 	// 7. Adaptadores de Interoperabilidad Normativa (MinSalud & HL7)

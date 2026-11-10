@@ -2,6 +2,7 @@ package memory
 
 import (
 	"context"
+	"fmt"
 	"sort"
 	"strings"
 	"sync"
@@ -37,6 +38,7 @@ type DataStore struct {
 	prescriptionsV2 map[string]*domain.PrescriptionV2
 	anatomicalNotes map[string]*domain.ClinicalAnatomicalNote
 	healthPosts     map[string]*domain.HealthEducationPost
+	pharmacyReports map[string]*domain.PharmacyStockReport
 }
 
 // NewDataStore crea el almacen en memoria. No siembra cuentas: el administrador inicial se crea con las
@@ -60,6 +62,7 @@ func NewDataStore() *DataStore {
 		prescriptionsV2: make(map[string]*domain.PrescriptionV2),
 		anatomicalNotes: make(map[string]*domain.ClinicalAnatomicalNote),
 		healthPosts:     make(map[string]*domain.HealthEducationPost),
+		pharmacyReports: make(map[string]*domain.PharmacyStockReport),
 	}
 
 	// Semilla de inventario diferenciado por concentracion
@@ -1168,4 +1171,128 @@ func (r *healthEducationMemoryRepo) Delete(ctx context.Context, id string) error
 	defer r.ds.mu.Unlock()
 	delete(r.ds.healthPosts, id)
 	return nil
+}
+
+type PharmacyReportMemoryRepo struct {
+	ds *DataStore
+}
+
+func NewPharmacyReportMemoryRepo(ds *DataStore) ports.PharmacyReportRepository {
+	return &PharmacyReportMemoryRepo{ds: ds}
+}
+
+func (r *PharmacyReportMemoryRepo) Create(_ context.Context, report *domain.PharmacyStockReport) error {
+	r.ds.mu.Lock()
+	defer r.ds.mu.Unlock()
+	copyRep := *report
+	r.ds.pharmacyReports[report.ID] = &copyRep
+	return nil
+}
+
+func (r *PharmacyReportMemoryRepo) GetAll(_ context.Context, status string) ([]domain.PharmacyStockReport, error) {
+	r.ds.mu.RLock()
+	defer r.ds.mu.RUnlock()
+	var list []domain.PharmacyStockReport
+	for _, rep := range r.ds.pharmacyReports {
+		if status == "" || status == "TODOS" || rep.Status == status {
+			list = append(list, *rep)
+		}
+	}
+	return list, nil
+}
+
+func (r *PharmacyReportMemoryRepo) GetByID(_ context.Context, id string) (*domain.PharmacyStockReport, error) {
+	r.ds.mu.RLock()
+	defer r.ds.mu.RUnlock()
+	rep, ok := r.ds.pharmacyReports[id]
+	if !ok {
+		return nil, fmt.Errorf("reporte no encontrado")
+	}
+	copyRep := *rep
+	return &copyRep, nil
+}
+
+func (r *PharmacyReportMemoryRepo) GetOpenByItemID(_ context.Context, itemID string) (*domain.PharmacyStockReport, error) {
+	r.ds.mu.RLock()
+	defer r.ds.mu.RUnlock()
+	for _, rep := range r.ds.pharmacyReports {
+		if rep.InventoryItemID == itemID && (rep.Status == "PENDIENTE" || rep.Status == "EN_GESTION") {
+			copyRep := *rep
+			return &copyRep, nil
+		}
+	}
+	return nil, nil
+}
+
+func (r *PharmacyReportMemoryRepo) UpdateStatus(_ context.Context, id, status, notes, resolvedBy string) error {
+	r.ds.mu.Lock()
+	defer r.ds.mu.Unlock()
+	rep, ok := r.ds.pharmacyReports[id]
+	if !ok {
+		return fmt.Errorf("reporte no encontrado")
+	}
+	rep.Status = status
+	if notes != "" {
+		rep.Notes = notes
+	}
+	if resolvedBy != "" {
+		rep.ResolvedBy = resolvedBy
+	}
+	if status == "REABASTECIDO" {
+		now := time.Now()
+		rep.ResolvedAt = &now
+	}
+	return nil
+}
+
+func (r *PharmacyReportMemoryRepo) GetMetrics(_ context.Context) (map[string]interface{}, error) {
+	r.ds.mu.RLock()
+	defer r.ds.mu.RUnlock()
+	metrics := make(map[string]interface{})
+	var totalStock int
+	var inventoryValue float64
+	var lowStockCount int
+	var outOfStockCount int
+	for _, it := range r.ds.inventoryItems {
+		totalStock += it.StockQuantity
+		inventoryValue += float64(it.StockQuantity) * it.UnitPrice
+		if it.StockQuantity <= it.MinStock && it.StockQuantity > 0 {
+			lowStockCount++
+		} else if it.StockQuantity == 0 {
+			outOfStockCount++
+		}
+	}
+	metrics["total_items"] = len(r.ds.inventoryItems)
+	metrics["total_stock"] = totalStock
+	metrics["inventory_value"] = inventoryValue
+	metrics["low_stock_count"] = lowStockCount
+	metrics["out_of_stock_count"] = outOfStockCount
+
+	var totalDispensed int
+	var totalDispensedAmount float64
+	for _, p := range r.ds.prescriptionsV2 {
+		if p.Status == domain.PrescriptionStatusDispensed {
+			totalDispensed++
+			totalDispensedAmount += p.SubtotalAmount
+		}
+	}
+	metrics["total_dispensed"] = totalDispensed
+	metrics["total_dispensed_amount"] = totalDispensedAmount
+
+	var pendingReports, managingReports, resolvedReports int
+	for _, rep := range r.ds.pharmacyReports {
+		if rep.Status == "PENDIENTE" {
+			pendingReports++
+		} else if rep.Status == "EN_GESTION" {
+			managingReports++
+		} else if rep.Status == "REABASTECIDO" {
+			resolvedReports++
+		}
+	}
+	metrics["pending_reports"] = pendingReports
+	metrics["managing_reports"] = managingReports
+	metrics["resolved_reports"] = resolvedReports
+	metrics["active_reports_count"] = pendingReports + managingReports
+
+	return metrics, nil
 }

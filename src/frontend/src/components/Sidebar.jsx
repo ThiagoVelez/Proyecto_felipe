@@ -13,6 +13,8 @@ import {
   Package,
   Boxes,
   Stethoscope,
+  FileWarning,
+  FlaskConical,
 } from 'lucide-react';
 
 export const Sidebar = ({
@@ -53,6 +55,12 @@ export const Sidebar = ({
       label: 'Seguimiento de Tratamiento',
       icon: Pill,
       badge: 'Tripartita',
+    },
+    {
+      id: 'pharmacy_reports_copy',
+      label: 'Copia de Reporte',
+      icon: FileWarning,
+      badge: 'Alertas',
     },
     {
       id: 'security',
@@ -152,7 +160,35 @@ export const Sidebar = ({
     },
   ];
 
-  const menuItems = isPharmacist ? pharmacyMenuItems : isNurse ? nurseMenuItems : doctorMenuItems;
+  const isLab =
+    user?.role === 'LABORATORIO' ||
+    Number(user?.role_id) === 7 ||
+    user?.specialty?.toLowerCase().includes('laborat') ||
+    user?.specialty?.toLowerCase().includes('bacteri') ||
+    (user?.full_name || user?.name || '').toLowerCase().includes('laborat');
+
+  const labMenuItems = [
+    {
+      id: 'laboratory',
+      label: 'Módulo de Laboratorio',
+      icon: FlaskConical,
+      badge: 'Diagnóstico',
+    },
+    {
+      id: 'medical_kit',
+      label: 'Kit Informático Médico',
+      icon: Stethoscope,
+      badge: 'Muro Salud',
+    },
+    {
+      id: 'security',
+      label: 'Seguridad & MFA',
+      icon: ShieldCheck,
+      badge: 'Activo',
+    },
+  ];
+
+  const menuItems = isPharmacist ? pharmacyMenuItems : isNurse ? nurseMenuItems : isLab ? labMenuItems : doctorMenuItems;
 
   return (
     <aside

@@ -15,6 +15,7 @@ import PharmacyDashboard from './screens/PharmacyDashboard';
 import NurseSummaryView from './screens/NurseSummaryView';
 import NurseChecklistView from './screens/NurseChecklistView';
 import MedicalKitScreen from './screens/MedicalKitScreen';
+import LaboratoryScreen from './screens/LaboratoryScreen';
 import { apiClient, SESSION_EXPIRED_EVENT } from './services/api';
 
 /**
@@ -72,6 +73,18 @@ const isNurseUser = (u) => {
     Number(u.role_id) === 3 ||
     u.specialty?.toLowerCase().includes('enferm') ||
     (u.full_name || u.name || '').toLowerCase().includes('enf')
+  );
+};
+
+const isLabUser = (u) => {
+  if (!u) return false;
+  return (
+    u.role === 'LABORATORIO' ||
+    Number(u.role_id) === 7 ||
+    u.specialty?.toLowerCase().includes('laborat') ||
+    u.specialty?.toLowerCase().includes('bacteri') ||
+    (u.full_name || u.name || '').toLowerCase().includes('laborat') ||
+    (u.full_name || u.name || '').toLowerCase().includes('bacteri')
   );
 };
 
@@ -166,19 +179,26 @@ export function App() {
         (currentUser.full_name || currentUser.name || '').toLowerCase().includes('farma');
 
       const isNurse = isNurseUser(currentUser);
+      const isLab = isLabUser(currentUser);
 
       if (
         isPharmacist &&
-        ['dashboard', 'appointments', 'triage', 'hce', 'nurse_summary', 'nurse_checklist', 'medical_kit'].includes(currentView)
+        ['dashboard', 'appointments', 'triage', 'hce', 'nurse_summary', 'nurse_checklist', 'medical_kit', 'laboratory'].includes(currentView)
       ) {
         setCurrentView('pharmacy');
         localStorage.setItem('saludconecta_current_view', 'pharmacy');
       } else if (
         isNurse &&
-        ['appointments', 'hce', 'treatment', 'pharmacy', 'inventory', 'prescription'].includes(currentView)
+        ['appointments', 'hce', 'treatment', 'pharmacy', 'inventory', 'prescription', 'laboratory'].includes(currentView)
       ) {
         setCurrentView('nurse_summary');
         localStorage.setItem('saludconecta_current_view', 'nurse_summary');
+      } else if (
+        isLab &&
+        ['dashboard', 'appointments', 'triage', 'hce', 'treatment', 'nurse_summary', 'nurse_checklist', 'pharmacy', 'inventory', 'prescription'].includes(currentView)
+      ) {
+        setCurrentView('laboratory');
+        localStorage.setItem('saludconecta_current_view', 'laboratory');
       }
     }
   }, [currentUser, currentView]);
@@ -199,6 +219,7 @@ export function App() {
         (enriched.full_name || enriched.name || '').toLowerCase().includes('farma');
 
       const isNurse = isNurseUser(enriched);
+      const isLab = isLabUser(enriched);
 
       if (isPharm) {
         setCurrentView('pharmacy');
@@ -206,6 +227,9 @@ export function App() {
       } else if (isNurse) {
         setCurrentView('nurse_summary');
         localStorage.setItem('saludconecta_current_view', 'nurse_summary');
+      } else if (isLab) {
+        setCurrentView('laboratory');
+        localStorage.setItem('saludconecta_current_view', 'laboratory');
       } else {
         setCurrentView('dashboard');
         localStorage.setItem('saludconecta_current_view', 'dashboard');
@@ -391,11 +415,15 @@ export function App() {
             />
           )}
 
-          {(currentView === 'pharmacy' || currentView === 'inventory' || currentView === 'prescription') && (
+          {(currentView === 'pharmacy' || currentView === 'inventory' || currentView === 'prescription' || currentView === 'pharmacy_reports_copy') && (
             <PharmacyDashboard
               user={currentUser}
-              initialTab={currentView === 'inventory' ? 'inventory' : 'inbox'}
+              initialTab={currentView === 'inventory' ? 'inventory' : currentView === 'pharmacy_reports_copy' ? 'reports_copy' : 'inbox'}
             />
+          )}
+
+          {currentView === 'laboratory' && (
+            <LaboratoryScreen user={currentUser} />
           )}
 
           {currentView === 'profile' && (

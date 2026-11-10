@@ -91,10 +91,20 @@ export const StaffRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onBranc
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === 'role_id' ? Number(value) : value,
-    }));
+    const numVal = name === 'role_id' ? Number(value) : value;
+    setFormData((prev) => {
+      const next = { ...prev, [name]: numVal };
+      if (name === 'role_id') {
+        if (numVal === 7 && (!prev.specialty || prev.specialty === 'Medicina de Urgencias')) {
+          next.specialty = 'Bacteriología y Diagnóstico Clínico';
+        } else if (numVal === 6 && (!prev.specialty || prev.specialty === 'Medicina de Urgencias')) {
+          next.specialty = 'Regencia de Farmacia y Control CUM';
+        } else if (numVal === 3 && (!prev.specialty || prev.specialty === 'Medicina de Urgencias')) {
+          next.specialty = 'Enfermería Asistencial y Triaje';
+        }
+      }
+      return next;
+    });
     setErrorMsg('');
   };
 
@@ -103,8 +113,8 @@ export const StaffRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onBranc
     setErrorMsg('');
 
     // Validacion de Tarjeta Profesional ReTHUS mandatoria segun Res. 1995 de 1999
-    if ((formData.role_id === 2 || formData.role_id === 3 || formData.role_id === 6) && !formData.professional_card.trim()) {
-      setErrorMsg('La Tarjeta Profesional o registro ReTHUS es de carácter obligatorio para médicos y enfermeros.');
+    if ((formData.role_id === 2 || formData.role_id === 3 || formData.role_id === 6 || formData.role_id === 7) && !formData.professional_card.trim()) {
+      setErrorMsg('La Tarjeta Profesional o registro ReTHUS es de carácter obligatorio para el personal de salud.');
       return;
     }
 
@@ -182,7 +192,7 @@ export const StaffRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onBranc
                 </p>
                 <div className="pt-2 border-t border-outline-variant/20 flex items-center justify-between text-[11px] font-mono text-outline">
                   <span>Tarjeta: {formData.professional_card}</span>
-                  <span>Rol: {formData.role_id === 2 ? 'MEDICO' : formData.role_id === 6 ? 'FARMACIA' : 'ENFERMERO'}</span>
+                  <span>Rol: {formData.role_id === 2 ? 'MEDICO' : formData.role_id === 6 ? 'FARMACIA' : formData.role_id === 7 ? 'LABORATORIO' : 'ENFERMERO'}</span>
                 </div>
               </div>
 
@@ -230,6 +240,7 @@ export const StaffRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onBranc
                     <option value={2}>Médico Asistencial (General / Especialista)</option>
                     <option value={3}>Personal de Enfermería y Triaje</option>
                     <option value={6}>Químico Farmacéutico / Farmacia e Inventario</option>
+                    <option value={7}>Bacteriólogo / Laboratorio Clínico y Diagnóstico</option>
                   </select>
                 </div>
 

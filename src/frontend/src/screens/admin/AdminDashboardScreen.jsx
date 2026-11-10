@@ -17,11 +17,15 @@ import {
   X,
   Loader2,
   Network,
+  Pill,
+  FileWarning,
 } from 'lucide-react';
 import { apiClient } from '../../services/api';
 import { loadBranches, saveBranches } from '../../services/branches';
 import StaffRegisterModal from '../../components/StaffRegisterModal';
 import AdminOrgChartView from './AdminOrgChartView';
+import AdminPharmacyDashboardView from './AdminPharmacyDashboardView';
+import PharmacyStockReportsView from '../../components/PharmacyStockReportsView';
 
 const ROLE_NAMES = {
   1: 'ADMIN',
@@ -29,6 +33,8 @@ const ROLE_NAMES = {
   3: 'ENFERMERO',
   4: 'ADMISION',
   5: 'AUDITOR',
+  6: 'FARMACIA',
+  7: 'LABORATORIO',
 };
 
 const AUDIT_LIMIT = 100;
@@ -346,6 +352,16 @@ export const AdminDashboardScreen = ({ initialTab = 'governance', onTabChange })
           <span>Diagrama Administrativo</span>
         </button>
 
+        <button type="button" onClick={() => setActiveTab('pharmacy_dashboard')} className={tabClass('pharmacy_dashboard')}>
+          <Pill className="w-4 h-4 text-teal-600" />
+          <span>Dashboard Farmacia</span>
+        </button>
+
+        <button type="button" onClick={() => setActiveTab('reports')} className={tabClass('reports')}>
+          <FileWarning className="w-4 h-4 text-rose-600" />
+          <span>Reportes & Alertas</span>
+        </button>
+
         <button type="button" onClick={() => setActiveTab('audit')} className={tabClass('audit')}>
           <Activity className="w-4 h-4" />
           <span>Auditoría Forense (ISO 25010 / Ley 1581)</span>
@@ -359,6 +375,14 @@ export const AdminDashboardScreen = ({ initialTab = 'governance', onTabChange })
 
       {activeTab === 'org_chart' && (
         <AdminOrgChartView users={users} />
+      )}
+
+      {activeTab === 'pharmacy_dashboard' && (
+        <AdminPharmacyDashboardView />
+      )}
+
+      {activeTab === 'reports' && (
+        <PharmacyStockReportsView isCopyMode={false} />
       )}
 
       {activeTab === 'governance' && (
@@ -505,6 +529,10 @@ export const AdminDashboardScreen = ({ initialTab = 'governance', onTabChange })
                                 ? 'bg-amber-100 text-amber-900 border border-amber-300'
                                 : Number(u.role_id) === 2
                                 ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                                : Number(u.role_id) === 6
+                                ? 'bg-teal-100 text-teal-900 border border-teal-300'
+                                : Number(u.role_id) === 7
+                                ? 'bg-purple-100 text-purple-900 border border-purple-300'
                                 : 'bg-blue-100 text-blue-900 border border-blue-300'
                             }`}
                           >

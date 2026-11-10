@@ -9,6 +9,8 @@ import {
   ChevronRight,
   Shield,
   FileText,
+  Pill,
+  FileWarning,
 } from 'lucide-react';
 
 export const AdminSidebar = ({
@@ -33,6 +35,20 @@ export const AdminSidebar = ({
       icon: Network,
       badge: 'Jerarquía',
       badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+    },
+    {
+      id: 'pharmacy_dashboard',
+      label: 'Dashboard Farmacia',
+      icon: Pill,
+      badge: 'Monitoreo',
+      badgeColor: 'bg-teal-100 text-teal-800 border-teal-300',
+    },
+    {
+      id: 'reports',
+      label: 'Reportes',
+      icon: FileWarning,
+      badge: 'Alertas Stock',
+      badgeColor: 'bg-rose-100 text-rose-800 border-rose-300',
     },
     {
       id: 'audit',

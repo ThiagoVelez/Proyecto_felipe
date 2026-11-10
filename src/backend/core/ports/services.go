@@ -116,6 +116,10 @@ type PharmacyService interface {
 	GetInbox(ctx context.Context, status *domain.PrescriptionStatusV2, query string) ([]domain.PrescriptionV2, error)
 	GetPrescriptionByCodeOrDocument(ctx context.Context, term string) (*domain.PrescriptionV2, error)
 	DispensePrescription(ctx context.Context, req domain.DispenseRequestDTO) (*domain.PrescriptionV2, error)
+	CheckAndGenerateStockReports(ctx context.Context) ([]domain.PharmacyStockReport, error)
+	GetStockReports(ctx context.Context, status string) ([]domain.PharmacyStockReport, error)
+	ResolveStockReport(ctx context.Context, id, notes, resolvedBy string) (*domain.PharmacyStockReport, error)
+	GetPharmacyMetrics(ctx context.Context) (map[string]interface{}, error)
 }
 
 // HealthEducationService define los casos de uso para el Muro de Salud, Prevención y Concientización (Kit Informático).

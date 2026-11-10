@@ -168,3 +168,63 @@ func (h *PharmacyHandler) Dispense(c *fiber.Ctx) error {
 	})
 }
 
+// GetStockReports entrega la lista de reportes de desabastecimiento/stock bajo
+func (h *PharmacyHandler) GetStockReports(c *fiber.Ctx) error {
+	status := c.Query("status")
+	reports, err := h.svc.GetStockReports(c.Context(), status)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(reports)
+}
+
+// CheckAndGenerateReports fuerza un escaneo preventivo de stock y genera los reportes correspondientes
+func (h *PharmacyHandler) CheckAndGenerateReports(c *fiber.Ctx) error {
+	reports, err := h.svc.CheckAndGenerateStockReports(c.Context())
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(fiber.Map{
+		"message": "Escaneo de stock completado exitosamente",
+		"reports": reports,
+	})
+}
+
+type ResolveReportDTO struct {
+	Notes      string `json:"notes"`
+	ResolvedBy string `json:"resolved_by"`
+}
+
+// ResolveReport actualiza o resuelve un reporte de stock bajo
+func (h *PharmacyHandler) ResolveReport(c *fiber.Ctx) error {
+	id := c.Params("id")
+	var dto ResolveReportDTO
+	_ = c.BodyParser(&dto)
+
+	if dto.ResolvedBy == "" {
+		if uName := c.Locals("user_name"); uName != nil {
+			dto.ResolvedBy = uName.(string)
+		} else {
+			dto.ResolvedBy = "Administrador TI / Farmacia"
+		}
+	}
+
+	updated, err := h.svc.ResolveStockReport(c.Context(), id, dto.Notes, dto.ResolvedBy)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(fiber.Map{
+		"message": "Reporte actualizado correctamente",
+		"report":  updated,
+	})
+}
+
+// GetMetrics entrega métricas cuantitativas del módulo de farmacia y reportes para el dashboard del admin
+func (h *PharmacyHandler) GetMetrics(c *fiber.Ctx) error {
+	metrics, err := h.svc.GetPharmacyMetrics(c.Context())
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(metrics)
+}
+
