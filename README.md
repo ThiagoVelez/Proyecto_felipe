@@ -2762,9 +2762,14 @@ Tras la ejecución exhaustiva de las pruebas de Caja Negra, pruebas de Caja Blan
 3. **Certificación de Autoría:** Todo el código, arquitectura, diseño de interfaces, diagramación técnica y suite de pruebas fueron consolidados y certificados por el Líder Técnico **Santiago Velez**, bajo la supervisión docente del **Ing. Felipe Gutiérrez Isaza** para la Corporación de Estudios Tecnológicos del Norte del Valle (**COTECNOVA**, 2026-2).
 
 **Líder Técnico & Desarrollador Principal:**  
+
 **Santiago Velez**  
+
 **Responsable de Pruebas (QA / Testing)**
+
 **Santiago Arcos**
+
 **Diseño de casos de prueba aplicando partición de equivalencia y valores límite, automatización de suites en Go y React.**
+
 **Juan José Sánchez**  
 _Ingeniería de Software II — COTECNOVA 2026-2_
