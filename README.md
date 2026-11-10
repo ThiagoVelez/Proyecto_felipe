@@ -2344,6 +2344,26 @@ dist/assets/index-CFypUx4_.js   1,123.72 kB │ gzip: 281.83 kB
 ✓ built in 7.99s
 ```
 
+### 1.4. Corrección de la Bitácora Forense del Servidor (ISO/IEC 27001)
+- **Diagnóstico de Causa Raíz:** El repositorio relacional `audit_repo.go` consultaba el campo `created_at` en la tabla `audit_logs`, mientras que la definición DDL de MySQL utilizaba la columna canónica `timestamp`. Esto provocaba un error HTTP 500 (`Error consultando bitacora forense`) al solicitar los registros desde el frontend.
+- **Remediación:** Se actualizó la consulta SQL a `SELECT ... timestamp, created_at FROM audit_logs ORDER BY timestamp DESC` y se ejecutó la migración defensiva para garantizar persistencia y lectura bidireccional. La bitácora ahora despliega fluidamente los 402+ eventos forenses auditados.
+
+### 1.5. Optimización de Navegación Administrativa (Cero Duplicidad)
+- **Eliminación del Menú Horizontal en Admin:** Se suprimió la barra horizontal de botones redundante dentro de `AdminDashboardScreen.jsx` (`hideTabs={true}`). La navegación administrativa queda 100% gobernada y centralizada a través del menú lateral izquierdo `AdminSidebar.jsx`, optimizando el espacio vertical y la ergonomía de usuario.
+
+### 1.6. Organigrama Jerárquico y Sincronización Automática en Tiempo Real
+- **Erradicación del Espacio en Blanco Huérfano:** Se eliminó la columna fija de "Cuerpo de Auxiliares Asistenciales" (la cual permanecía vacía al no existir dicho rol en la IPS) y se consolidaron los 5 departamentos asistenciales y operativos reales en un grid de 5 columnas simétricas:
+  1. Jefatura Médica & Consulta Externa (`dep-medicos`) — donde se ubican el Dr. Santiago Vélez y la Dra. Camila Yaima (Pediatría, Rol 2).
+  2. Dirección Técnica Farmacéutica (`dep-farmacia`)
+  3. Coordinación Asistencial de Enfermería (`dep-enfermeria`)
+  4. Laboratorio Clínico y Diagnóstico (`dep-laboratorio`)
+  5. Admisiones, Auditoría & Soporte TI (`dep-admin`)
+- **Sincronización Automática sin Recarga:** Implementación de polling reactivo cada 8 segundos, escucha de eventos de ventana `focus` y despacho del evento personalizado `saludconecta_users_updated` tras cada activación o suspensión de usuario, actualizando el organigrama y los contadores en tiempo real sin requerir `F5`.
+
+### 1.7. Aislamiento Estricto de Banners y Fotos de Perfil (Anti-Colisión de Cuentas)
+- **Diagnóstico del Bug:** Los banners y avatares se almacenaban bajo claves globales sin prefijo (`saludconecta_profile_custom` y `saludconecta_avatar`), lo que provocaba que al cambiar el banner o foto del Administrador, la mutación se propagara indebidamente a las sesiones de los médicos, enfermeros y farmacéuticos.
+- **Aislamiento por `userKey`:** Se implementó una clave canónica de almacenamiento por usuario (`saludconecta_profile_${userKey}`, `saludconecta_avatar_${userKey}` y `saludconecta_banner_${userKey}`). Se eliminó el uso de claves globales compartidas y se asignó un banner corporativo inteligente por defecto según el rol y especialidad médica de cada usuario.
+
 ---
 
 ## 3. Certificación de Entrega

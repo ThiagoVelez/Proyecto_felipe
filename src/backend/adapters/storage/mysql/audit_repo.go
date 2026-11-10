@@ -57,9 +57,9 @@ func (r *auditRepo) ListLogs(ctx context.Context, limit int) ([]*domain.AuditLog
 		limit = 100
 	}
 	query := `
-		SELECT id, user_id, role, action, resource, ip_address, correlation_id, details, created_at
+		SELECT id, user_id, role, action, resource, ip_address, correlation_id, details, timestamp
 		FROM audit_logs
-		ORDER BY created_at DESC
+		ORDER BY timestamp DESC
 		LIMIT ?
 	`
 	rows, err := r.db.QueryContext(ctx, query, limit)

@@ -84,7 +84,7 @@ const ErrorPanel = ({ message, onRetry, retrying }) => (
   </div>
 );
 
-export const AdminDashboardScreen = ({ initialTab = 'governance', onTabChange }) => {
+export const AdminDashboardScreen = ({ initialTab = 'governance', onTabChange, hideTabs = false }) => {
   const [internalTab, setInternalTab] = useState(initialTab);
   const activeTab = onTabChange ? (initialTab === 'profile' ? 'governance' : initialTab) : internalTab;
 
@@ -140,6 +140,26 @@ export const AdminDashboardScreen = ({ initialTab = 'governance', onTabChange })
   useEffect(() => {
     fetchUsers();
     fetchLogs();
+
+    // Actualización automática en tiempo real: polling cada 8 segundos
+    const pollInterval = setInterval(() => {
+      fetchUsers();
+      fetchLogs();
+    }, 8000);
+
+    // Refresco instantáneo al enfocar ventana o recibir evento custom
+    const handleSync = () => {
+      fetchUsers();
+      fetchLogs();
+    };
+    window.addEventListener('focus', handleSync);
+    window.addEventListener('saludconecta_users_updated', handleSync);
+
+    return () => {
+      clearInterval(pollInterval);
+      window.removeEventListener('focus', handleSync);
+      window.removeEventListener('saludconecta_users_updated', handleSync);
+    };
   }, [fetchUsers, fetchLogs]);
 
   useEffect(() => {
@@ -167,6 +187,8 @@ export const AdminDashboardScreen = ({ initialTab = 'governance', onTabChange })
           : `El acceso de ${user.full_name} fue suspendido y sus sesiones activas se invalidaron.`,
       });
       fetchLogs();
+      fetchUsers();
+      window.dispatchEvent(new CustomEvent('saludconecta_users_updated'));
     } catch (err) {
       setFeedback({
         type: 'error',
@@ -185,6 +207,7 @@ export const AdminDashboardScreen = ({ initialTab = 'governance', onTabChange })
     });
     fetchUsers();
     fetchLogs();
+    window.dispatchEvent(new CustomEvent('saludconecta_users_updated'));
   };
 
   const handleCreateBranch = (newBranch) => {
@@ -336,42 +359,44 @@ export const AdminDashboardScreen = ({ initialTab = 'governance', onTabChange })
         </div>
       </div>
 
-      <div className="flex items-center gap-1.5 p-1 bg-surface-container-low rounded-xl border border-outline-variant/30 text-xs font-semibold overflow-x-auto">
-        <button type="button" onClick={() => setActiveTab('governance')} className={tabClass('governance')}>
-          <Users className="w-4 h-4" />
-          <span>Gobernanza de Personal (ReTHUS)</span>
-          {usersReady && pendingStaff > 0 && (
-            <span className="px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">
-              {pendingStaff}
-            </span>
-          )}
-        </button>
+      {!hideTabs && (
+        <div className="flex items-center gap-1.5 p-1 bg-surface-container-low rounded-xl border border-outline-variant/30 text-xs font-semibold overflow-x-auto">
+          <button type="button" onClick={() => setActiveTab('governance')} className={tabClass('governance')}>
+            <Users className="w-4 h-4" />
+            <span>Gobernanza de Personal (ReTHUS)</span>
+            {usersReady && pendingStaff > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">
+                {pendingStaff}
+              </span>
+            )}
+          </button>
 
-        <button type="button" onClick={() => setActiveTab('org_chart')} className={tabClass('org_chart')}>
-          <Network className="w-4 h-4 text-emerald-600" />
-          <span>Diagrama Administrativo</span>
-        </button>
+          <button type="button" onClick={() => setActiveTab('org_chart')} className={tabClass('org_chart')}>
+            <Network className="w-4 h-4 text-emerald-600" />
+            <span>Diagrama Administrativo</span>
+          </button>
 
-        <button type="button" onClick={() => setActiveTab('pharmacy_dashboard')} className={tabClass('pharmacy_dashboard')}>
-          <Pill className="w-4 h-4 text-teal-600" />
-          <span>Dashboard Farmacia</span>
-        </button>
+          <button type="button" onClick={() => setActiveTab('pharmacy_dashboard')} className={tabClass('pharmacy_dashboard')}>
+            <Pill className="w-4 h-4 text-teal-600" />
+            <span>Dashboard Farmacia</span>
+          </button>
 
-        <button type="button" onClick={() => setActiveTab('reports')} className={tabClass('reports')}>
-          <FileWarning className="w-4 h-4 text-rose-600" />
-          <span>Reportes & Alertas</span>
-        </button>
+          <button type="button" onClick={() => setActiveTab('reports')} className={tabClass('reports')}>
+            <FileWarning className="w-4 h-4 text-rose-600" />
+            <span>Reportes & Alertas</span>
+          </button>
 
-        <button type="button" onClick={() => setActiveTab('audit')} className={tabClass('audit')}>
-          <Activity className="w-4 h-4" />
-          <span>Auditoría Forense (ISO 25010 / Ley 1581)</span>
-        </button>
+          <button type="button" onClick={() => setActiveTab('audit')} className={tabClass('audit')}>
+            <Activity className="w-4 h-4" />
+            <span>Auditoría Forense (ISO 25010 / Ley 1581)</span>
+          </button>
 
-        <button type="button" onClick={() => setActiveTab('branches')} className={tabClass('branches')}>
-          <Building2 className="w-4 h-4" />
-          <span>Red Asistencial y Sedes ({branches.length})</span>
-        </button>
-      </div>
+          <button type="button" onClick={() => setActiveTab('branches')} className={tabClass('branches')}>
+            <Building2 className="w-4 h-4" />
+            <span>Red Asistencial y Sedes ({branches.length})</span>
+          </button>
+        </div>
+      )}
 
       {activeTab === 'org_chart' && (
         <AdminOrgChartView users={users} />

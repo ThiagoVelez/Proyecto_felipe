@@ -659,3 +659,4 @@ Observación: Muestra sin hemólisis ni lipemia."
 };
 
 export default LaboratoryScreen;
+

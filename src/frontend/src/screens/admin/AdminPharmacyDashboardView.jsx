@@ -381,3 +381,4 @@ export const AdminPharmacyDashboardView = () => {
 };
 
 export default AdminPharmacyDashboardView;
+

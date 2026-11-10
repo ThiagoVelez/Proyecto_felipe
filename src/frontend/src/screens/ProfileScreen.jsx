@@ -89,31 +89,66 @@ const BannerArtwork = ({ bannerId }) => {
   }
 };
 
+export const getUserStorageKey = (u) => {
+  if (!u) return 'anonymous';
+  const email = u.email ? String(u.email).trim().toLowerCase() : '';
+  const doc = u.document_number ? String(u.document_number).trim() : '';
+  const id = u.id ? String(u.id).trim() : '';
+  return email || doc || id || 'anonymous';
+};
+
+export const getDefaultBannerForUser = (u) => {
+  if (!u) return 'urgencias';
+  const role = String(u.role || u.role_name || '').toUpperCase();
+  const roleId = Number(u.role_id);
+  const spec = String(u.specialty || '').toLowerCase();
+
+  if (role === 'FARMACIA' || roleId === 6 || spec.includes('farmac')) {
+    return 'farmacia';
+  }
+  if (role === 'LABORATORIO' || roleId === 7 || spec.includes('laborat') || spec.includes('bacteri')) {
+    return 'cirugia';
+  }
+  if (spec.includes('pediatr')) {
+    return 'pediatria';
+  }
+  if (role === 'ADMIN' || roleId === 1) {
+    return 'cardiologia';
+  }
+  return 'urgencias';
+};
+
 export const ProfileScreen = ({ user, onUpdateUser, onNavigate }) => {
   const fileInputRef = useRef(null);
-  const userKey = user?.email || user?.document_number || user?.id || 'current';
+  const userKey = getUserStorageKey(user);
+
+  // Limpiar claves legacy globales para erradicar cualquier contaminación cruzada entre cuentas
+  try {
+    localStorage.removeItem('saludconecta_profile_custom');
+    localStorage.removeItem('saludconecta_avatar');
+  } catch {}
 
   const savedProfile = (() => {
     try {
       const userSpecific = localStorage.getItem(`saludconecta_profile_${userKey}`);
       if (userSpecific) return JSON.parse(userSpecific);
-      return JSON.parse(localStorage.getItem('saludconecta_profile_custom') || '{}');
-    } catch {
-      return {};
-    }
+    } catch {}
+    return {};
   })();
+
+  const defaultBanner = getDefaultBannerForUser(user);
+  const initialBanner = savedProfile.bannerId || user?.bannerId || defaultBanner;
 
   const savedAvatarPersisted =
     user?.avatar ||
     localStorage.getItem(`saludconecta_avatar_${userKey}`) ||
-    localStorage.getItem('saludconecta_avatar') ||
     savedProfile.avatarUrl ||
     '';
 
   const [activeTab, setActiveTab] = useState('info'); // 'info' | 'banners' | 'rethus' | 'security'
   const [isEditing, setIsEditing] = useState(false);
 
-  const [bannerId, setBannerId] = useState(savedProfile.bannerId || user?.bannerId || 'urgencias');
+  const [bannerId, setBannerId] = useState(initialBanner);
   const [avatarUrl, setAvatarUrl] = useState(savedAvatarPersisted);
   const [fullName, setFullName] = useState(user?.full_name || user?.name || 'Dr. Santiago Vélez');
   const [phone, setPhone] = useState(savedProfile.phone || user?.phone || '312 345 6789');
@@ -143,9 +178,8 @@ export const ProfileScreen = ({ user, onUpdateUser, onNavigate }) => {
         const resultUrl = event.target?.result;
         if (resultUrl) {
           setAvatarUrl(resultUrl);
-          // Persistencia inmediata para evitar pérdida al navegar o recargar
+          // Persistencia individual estricta por usuario
           localStorage.setItem(`saludconecta_avatar_${userKey}`, resultUrl);
-          localStorage.setItem('saludconecta_avatar', resultUrl);
           const updatedUser = {
             ...user,
             avatar: resultUrl,
@@ -174,10 +208,8 @@ export const ProfileScreen = ({ user, onUpdateUser, onNavigate }) => {
     };
 
     localStorage.setItem(`saludconecta_profile_${userKey}`, JSON.stringify(updatedCustom));
-    localStorage.setItem('saludconecta_profile_custom', JSON.stringify(updatedCustom));
     if (avatarUrl) {
       localStorage.setItem(`saludconecta_avatar_${userKey}`, avatarUrl);
-      localStorage.setItem('saludconecta_avatar', avatarUrl);
     }
 
     const updatedUser = {
@@ -631,7 +663,6 @@ export const ProfileScreen = ({ user, onUpdateUser, onNavigate }) => {
                     );
                     const updated = { ...currentPref, bannerId: b.id };
                     localStorage.setItem(`saludconecta_profile_${userKey}`, JSON.stringify(updated));
-                    localStorage.setItem('saludconecta_profile_custom', JSON.stringify(updated));
                     setSaveFeedback(`Portada seleccionada: "${b.name}". Guarde los cambios para confirmar.`);
                     setTimeout(() => setSaveFeedback(''), 3000);
                   }}

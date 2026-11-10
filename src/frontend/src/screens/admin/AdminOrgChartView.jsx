@@ -214,15 +214,19 @@ export const AdminOrgChartView = ({ users: initialUsers = [] }) => {
       members: labStaff,
       leadTitle: 'Coordinación de Laboratorio',
     },
-    {
-      id: 'dep-auxiliares',
-      title: 'Cuerpo de Auxiliares Asistenciales',
-      roleCategory: 'Soporte Asistencial & Camillería',
-      icon: Layers,
-      color: 'indigo',
-      members: assistants,
-      leadTitle: 'Supervisión Asistencial',
-    },
+    ...(assistants.length > 0
+      ? [
+          {
+            id: 'dep-auxiliares',
+            title: 'Cuerpo de Auxiliares Asistenciales',
+            roleCategory: 'Soporte Asistencial & Camillería',
+            icon: Layers,
+            color: 'indigo',
+            members: assistants,
+            leadTitle: 'Supervisión Asistencial',
+          },
+        ]
+      : []),
     {
       id: 'dep-admin',
       title: 'Admisiones, Auditoría & Soporte TI',

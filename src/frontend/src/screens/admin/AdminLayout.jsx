@@ -124,6 +124,7 @@ export const AdminLayout = ({ user, onLogout, onUpdateUser }) => {
               <AdminDashboardScreen
                 initialTab={adminView}
                 onTabChange={(tab) => setAdminView(tab)}
+                hideTabs={true}
               />
             </>
           )}

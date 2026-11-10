@@ -156,22 +156,38 @@ const BannerArtwork = ({ bannerId }) => {
 
 export const UserProfileModal = ({ isOpen, onClose, user, onUpdateUser }) => {
   const fileInputRef = useRef(null);
+  const userKey = user?.email || user?.document_number || user?.id || 'anonymous';
 
-  // Cargar preferencias guardadas en localStorage
+  // Cargar preferencias guardadas en localStorage aisladas estrictamente por usuario
   const savedProfile = (() => {
     try {
-      return JSON.parse(localStorage.getItem('saludconecta_profile_custom') || '{}');
+      const userSpecific = localStorage.getItem(`saludconecta_profile_${userKey}`);
+      if (userSpecific) return JSON.parse(userSpecific);
     } catch {
       return {};
     }
+    return {};
+  })();
+
+  const defaultBanner = (() => {
+    const role = String(user?.role || user?.role_name || '').toUpperCase();
+    const roleId = Number(user?.role_id);
+    const spec = String(user?.specialty || '').toLowerCase();
+    if (role === 'FARMACIA' || roleId === 6 || spec.includes('farmac')) return 'farmacia';
+    if (role === 'LABORATORIO' || roleId === 7 || spec.includes('laborat') || spec.includes('bacteri')) return 'cirugia';
+    if (spec.includes('pediatr')) return 'pediatria';
+    if (role === 'ADMIN' || roleId === 1) return 'cardiologia';
+    return 'urgencias';
   })();
 
   const [activeTab, setActiveTab] = useState('info'); // 'info' | 'banners' | 'rethus' | 'security'
   const [isEditing, setIsEditing] = useState(false);
 
   // Estados del perfil
-  const [bannerId, setBannerId] = useState(savedProfile.bannerId || 'urgencias');
-  const [avatarUrl, setAvatarUrl] = useState(savedProfile.avatarUrl || user?.avatar || '');
+  const [bannerId, setBannerId] = useState(savedProfile.bannerId || user?.bannerId || defaultBanner);
+  const [avatarUrl, setAvatarUrl] = useState(
+    user?.avatar || localStorage.getItem(`saludconecta_avatar_${userKey}`) || savedProfile.avatarUrl || ''
+  );
   const [fullName, setFullName] = useState(user?.full_name || user?.name || 'Dr. Santiago Vélez');
   const [phone, setPhone] = useState(savedProfile.phone || user?.phone || '312 345 6789');
   const [specialty, setSpecialty] = useState(user?.specialty || 'Medicina de Urgencias');
@@ -220,7 +236,10 @@ export const UserProfileModal = ({ isOpen, onClose, user, onUpdateUser }) => {
       branch,
     };
 
-    localStorage.setItem('saludconecta_profile_custom', JSON.stringify(updatedCustom));
+    localStorage.setItem(`saludconecta_profile_${userKey}`, JSON.stringify(updatedCustom));
+    if (avatarUrl) {
+      localStorage.setItem(`saludconecta_avatar_${userKey}`, avatarUrl);
+    }
 
     // Actualizar usuario en el estado padre y localStorage global
     const updatedUser = {
@@ -620,10 +639,12 @@ export const UserProfileModal = ({ isOpen, onClose, user, onUpdateUser }) => {
                         key={b.id}
                         onClick={() => {
                           setBannerId(b.id);
-                          // Guardar de inmediato la preferencia
-                          const currentPref = JSON.parse(localStorage.getItem('saludconecta_profile_custom') || '{}');
+                          // Guardar de inmediato la preferencia individual
+                          const currentPref = JSON.parse(
+                            localStorage.getItem(`saludconecta_profile_${userKey}`) || '{}'
+                          );
                           localStorage.setItem(
-                            'saludconecta_profile_custom',
+                            `saludconecta_profile_${userKey}`,
                             JSON.stringify({ ...currentPref, bannerId: b.id })
                           );
                           setSaveFeedback(`Banner "${b.name}" aplicado a su portada.`);

@@ -18,21 +18,56 @@ import MedicalKitScreen from './screens/MedicalKitScreen';
 import LaboratoryScreen from './screens/LaboratoryScreen';
 import { apiClient, SESSION_EXPIRED_EVENT } from './services/api';
 
+const getUserStorageKey = (u) => {
+  if (!u) return 'anonymous';
+  const email = u.email ? String(u.email).trim().toLowerCase() : '';
+  const doc = u.document_number ? String(u.document_number).trim() : '';
+  const id = u.id ? String(u.id).trim() : '';
+  return email || doc || id || 'anonymous';
+};
+
+const getDefaultBannerForUser = (u) => {
+  if (!u) return 'urgencias';
+  const role = String(u.role || u.role_name || '').toUpperCase();
+  const roleId = Number(u.role_id);
+  const spec = String(u.specialty || '').toLowerCase();
+
+  if (role === 'FARMACIA' || roleId === 6 || spec.includes('farmac')) {
+    return 'farmacia';
+  }
+  if (role === 'LABORATORIO' || roleId === 7 || spec.includes('laborat') || spec.includes('bacteri')) {
+    return 'cirugia';
+  }
+  if (spec.includes('pediatr')) {
+    return 'pediatria';
+  }
+  if (role === 'ADMIN' || roleId === 1) {
+    return 'cardiologia';
+  }
+  return 'urgencias';
+};
+
 /**
  * Enriquecer el usuario con su foto de perfil y configuración personalizada persistida.
- * Garantiza que la foto de perfil nunca se pierda en recargas (F5), navegación o reingreso.
+ * Garantiza aislamiento estricto por usuario: nunca se mezclan fotos ni banners entre cuentas.
  */
 function enrichUserWithCustomProfile(rawUser) {
   if (!rawUser) return rawUser;
-  const userKey = rawUser.id || rawUser.document_number || rawUser.email || 'current';
+  const userKey = getUserStorageKey(rawUser);
+
+  // Limpiar cualquier clave residual compartida para erradicar contaminaciones pasadas
+  try {
+    localStorage.removeItem('saludconecta_profile_custom');
+    localStorage.removeItem('saludconecta_avatar');
+  } catch {}
 
   let customProfile = {};
   try {
     const rawCustom =
       localStorage.getItem(`saludconecta_profile_${userKey}`) ||
-      (rawUser.email ? localStorage.getItem(`saludconecta_profile_${rawUser.email}`) : null) ||
+      (rawUser.email ? localStorage.getItem(`saludconecta_profile_${String(rawUser.email).trim().toLowerCase()}`) : null) ||
       (rawUser.document_number ? localStorage.getItem(`saludconecta_profile_${rawUser.document_number}`) : null) ||
-      localStorage.getItem('saludconecta_profile_custom');
+      (rawUser.id ? localStorage.getItem(`saludconecta_profile_${rawUser.id}`) : null);
     if (rawCustom) {
       customProfile = JSON.parse(rawCustom);
     }
@@ -41,21 +76,22 @@ function enrichUserWithCustomProfile(rawUser) {
   const savedAvatar =
     rawUser.avatar ||
     localStorage.getItem(`saludconecta_avatar_${userKey}`) ||
-    (rawUser.email ? localStorage.getItem(`saludconecta_avatar_${rawUser.email}`) : null) ||
+    (rawUser.email ? localStorage.getItem(`saludconecta_avatar_${String(rawUser.email).trim().toLowerCase()}`) : null) ||
     (rawUser.document_number ? localStorage.getItem(`saludconecta_avatar_${rawUser.document_number}`) : null) ||
     (rawUser.id ? localStorage.getItem(`saludconecta_avatar_${rawUser.id}`) : null) ||
     customProfile.avatarUrl ||
-    localStorage.getItem('saludconecta_avatar') ||
     '';
+
+  const defaultBanner = getDefaultBannerForUser(rawUser);
 
   const merged = {
     ...rawUser,
     avatar: savedAvatar || '',
-    bannerId: rawUser.bannerId || customProfile.bannerId || 'urgencias',
-    phone: rawUser.phone || customProfile.phone || '',
-    bio: rawUser.bio || customProfile.bio || '',
-    specialty: rawUser.specialty || customProfile.specialty || rawUser.specialty,
-    branch: rawUser.branch || customProfile.branch || rawUser.branch,
+    bannerId: customProfile.bannerId || rawUser.bannerId || defaultBanner,
+    phone: customProfile.phone || rawUser.phone || '',
+    bio: customProfile.bio || rawUser.bio || '',
+    specialty: customProfile.specialty || rawUser.specialty,
+    branch: customProfile.branch || rawUser.branch,
   };
 
   try {

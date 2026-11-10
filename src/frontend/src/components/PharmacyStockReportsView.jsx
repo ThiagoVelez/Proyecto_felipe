@@ -721,3 +721,4 @@ Notas de Gestión: ${report.notes || 'Ninguna'}
 };
 
 export default PharmacyStockReportsView;
+
