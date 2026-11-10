@@ -719,143 +719,263 @@ export const DoctorLabOrdersView = ({ user, patient, onSelectPatient, onNavigate
         </div>
       )}
 
-      {/* MODAL MAESTRO DE RESULTADO DE LABORATORIO SELLADO */}
+      {/* DRAWER LATERAL DERECHO: VISOR DE RESULTADO DE LABORATORIO SELLADO */}
       {viewingResultOrder && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-3xl w-full border border-surface-container-high shadow-2xl overflow-hidden my-8 animate-scaleIn">
-            {/* ENCABEZADO DEL MODAL */}
-            <div className="px-6 py-4 border-b border-surface-container-high flex items-center justify-between bg-gradient-to-r from-purple-900 to-indigo-900 text-white">
-              <div className="flex items-center gap-2.5">
-                <FlaskConical className="w-6 h-6 text-purple-300" />
+        <div className="fixed inset-0 z-50 overflow-hidden bg-black/50 backdrop-blur-xs flex justify-end animate-fadeIn">
+          <div className="w-full max-w-2xl bg-white h-full shadow-2xl flex flex-col justify-between border-l border-slate-300 animate-slideLeft">
+            {/* ENCABEZADO STICKY DEL DRAWER */}
+            <div className="px-6 py-4.5 border-b border-surface-container-high flex items-center justify-between bg-gradient-to-r from-purple-950 via-purple-900 to-indigo-950 text-white shrink-0 shadow-xs">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center text-purple-200">
+                  <FlaskConical className="w-5 h-5" />
+                </div>
                 <div>
-                  <h3 className="font-bold text-base leading-tight">
-                    Informe Oficial de Resultados • {viewingResultOrder.id}
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-purple-800/80 text-purple-200">
+                      {viewingResultOrder.id}
+                    </span>
+                    <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-200">
+                      Resultado Validado & Sellado
+                    </span>
+                  </div>
+                  <h3 className="font-bold text-base text-white mt-0.5">
+                    Informe Oficial de Resultados Paraclínicos
                   </h3>
-                  <p className="text-xs text-purple-200">
-                    Laboratorio Clínico y Diagnóstico • SaludConecta IPS (Habilitación Res. 1995/1999)
-                  </p>
                 </div>
               </div>
               <button
                 type="button"
-                onClick={() => setViewingResultOrder(null)}
+                onClick={() => {
+                  setViewingResultOrder(null);
+                  setIsEmailModalOpen(false);
+                }}
                 className="p-1.5 rounded-xl hover:bg-white/20 text-white cursor-pointer transition-colors"
+                title="Cerrar panel"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* CONTENIDO IMPRIMIBLE DEL REPORTE */}
-            <div id="printable-lab-report" className="p-6 sm:p-8 space-y-6 text-on-surface">
-              {/* MEMBRETE INSTITUCIONAL PARA IMPRESIÓN FÍSICA */}
-              <div className="border-b-2 border-slate-800 pb-4 flex items-start justify-between">
-                <div>
-                  <h2 className="text-lg font-black text-slate-900 uppercase tracking-tight">
-                    SaludConecta IPS S.A.S.
-                  </h2>
-                  <p className="text-xs text-slate-600">
-                    Sede Central Cartago • Red Norte del Valle • NIT: 900.842.199-5
-                  </p>
-                  <p className="text-[11px] text-slate-500">
-                    Habilitación MinSalud Código 7614700192 • Laboratorio Clínico Nivel II
-                  </p>
-                </div>
-                <div className="text-right">
-                  <span className="inline-block px-3 py-1 rounded-lg bg-purple-100 text-purple-950 font-mono text-xs font-bold border border-purple-200">
-                    ORDEN: {viewingResultOrder.id}
-                  </span>
-                  <div className="text-[11px] text-slate-500 font-mono mt-1">
-                    Fecha de Emisión: {viewingResultOrder.validated_at?.slice(0, 10) || new Date().toISOString().slice(0, 10)}
+            {/* CUERPO SCROLLEABLE DEL DRAWER (CONTENIDO IMPRIMIBLE) */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {/* DOCUMENTO OFICIAL FORMATEADO */}
+              <div id="printable-lab-report" className="border-2 border-slate-300 p-6 rounded-2xl bg-white space-y-5 text-on-surface shadow-xs">
+                {/* MEMBRETE INSTITUCIONAL PARA IMPRESIÓN FÍSICA */}
+                <div className="border-b-2 border-slate-800 pb-3 flex items-start justify-between">
+                  <div>
+                    <h2 className="text-base font-black text-slate-900 uppercase tracking-tight">
+                      SaludConecta IPS S.A.S.
+                    </h2>
+                    <p className="text-xs text-slate-600">
+                      Sede Central Cartago • Red Norte del Valle • NIT: 900.842.199-5
+                    </p>
+                    <p className="text-[10px] text-slate-500">
+                      Habilitación MinSalud Código 7614700192 • Laboratorio Clínico Nivel II
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <span className="inline-block px-2.5 py-0.5 rounded bg-purple-100 text-purple-950 font-mono text-xs font-bold border border-purple-200">
+                      ORDEN: {viewingResultOrder.id}
+                    </span>
+                    <div className="text-[10px] text-slate-500 font-mono mt-0.5">
+                      Fecha: {viewingResultOrder.validated_at?.slice(0, 10) || new Date().toISOString().slice(0, 10)}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* FICHA TÉCNICA Y DATOS COMPLETOS DEL PACIENTE */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs">
-                <div>
-                  <span className="text-[10px] uppercase font-bold text-slate-500 block">Paciente:</span>
-                  <span className="font-bold text-slate-900">{viewingResultOrder.patient_name}</span>
-                </div>
-                <div>
-                  <span className="text-[10px] uppercase font-bold text-slate-500 block">Identificación:</span>
-                  <span className="font-mono font-bold text-slate-900">
-                    {viewingResultOrder.patient_document_type || 'CC'} {viewingResultOrder.patient_document}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-[10px] uppercase font-bold text-slate-500 block">Edad / Sexo:</span>
-                  <span className="font-semibold text-slate-900">
-                    {viewingResultOrder.patient_age || 32} años • {viewingResultOrder.patient_gender || 'No registrado'}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-[10px] uppercase font-bold text-slate-500 block">Aseguradora / EPS:</span>
-                  <span className="font-semibold text-slate-900">{viewingResultOrder.patient_eps}</span>
-                </div>
-                <div>
-                  <span className="text-[10px] uppercase font-bold text-slate-500 block">Médico Solicitante:</span>
-                  <span className="font-medium text-slate-900">{viewingResultOrder.ordering_doctor}</span>
-                </div>
-                <div>
-                  <span className="text-[10px] uppercase font-bold text-slate-500 block">ReTHUS Médico:</span>
-                  <span className="font-mono text-slate-900">{viewingResultOrder.doctor_license || 'RM-94821-VALLE'}</span>
-                </div>
-                <div>
-                  <span className="text-[10px] uppercase font-bold text-slate-500 block">Muestra / Tubo:</span>
-                  <span className="font-medium text-slate-900">{viewingResultOrder.sample_type}</span>
-                </div>
-                <div>
-                  <span className="text-[10px] uppercase font-bold text-slate-500 block">Prioridad:</span>
-                  <span className="font-bold text-purple-900">{viewingResultOrder.priority}</span>
-                </div>
-              </div>
-
-              {/* ANÁLISIS REALIZADO Y PARÁMETROS */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                  <h4 className="font-bold text-sm text-slate-900">
-                    Examen: {viewingResultOrder.test_type}
-                  </h4>
-                  <span className="text-xs font-mono font-semibold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-full">
-                    ESTADO: VALIDADO Y SELLADO
-                  </span>
-                </div>
-
-                {/* TABLA DE PARÁMETROS ANALÍTICOS */}
-                <div className="p-4 rounded-2xl bg-white border border-slate-300 font-mono text-xs whitespace-pre-wrap leading-relaxed text-slate-800">
-                  {typeof viewingResultOrder.results === 'string'
-                    ? viewingResultOrder.results
-                    : JSON.stringify(viewingResultOrder.results, null, 2)}
-                </div>
-              </div>
-
-              {/* SELLO DE VALIDACIÓN RE-THUS */}
-              <div className="p-4 rounded-2xl bg-purple-50 border border-purple-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-5 h-5 text-purple-700 shrink-0" />
+                {/* FICHA TÉCNICA Y DATOS COMPLETOS DEL PACIENTE */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 bg-slate-50 p-3.5 rounded-xl border border-slate-200 text-xs">
                   <div>
-                    <strong className="text-purple-950 font-bold block">
-                      Validación Bacteriológica & Diagnóstica (ReTHUS):
-                    </strong>
-                    <span className="text-purple-900 text-[11px]">
-                      Firmado digitalmente por: <strong>{viewingResultOrder.validated_by || 'Bacteriólogo de Turno'}</strong> (Licencia: {viewingResultOrder.bacteriologist_license || 'BAC-9421-VALLE'})
+                    <span className="text-[9px] uppercase font-bold text-slate-500 block">Paciente:</span>
+                    <span className="font-bold text-slate-900">{viewingResultOrder.patient_name}</span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] uppercase font-bold text-slate-500 block">Identificación:</span>
+                    <span className="font-mono font-bold text-slate-900">
+                      {viewingResultOrder.patient_document_type || 'CC'} {viewingResultOrder.patient_document}
                     </span>
                   </div>
+                  <div>
+                    <span className="text-[9px] uppercase font-bold text-slate-500 block">Edad / Sexo:</span>
+                    <span className="font-semibold text-slate-900">
+                      {viewingResultOrder.patient_age || 32} años • {viewingResultOrder.patient_gender || 'General'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] uppercase font-bold text-slate-500 block">Aseguradora / EPS:</span>
+                    <span className="font-semibold text-slate-900">{viewingResultOrder.patient_eps}</span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] uppercase font-bold text-slate-500 block">Médico Solicitante:</span>
+                    <span className="font-medium text-slate-900">{viewingResultOrder.ordering_doctor}</span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] uppercase font-bold text-slate-500 block">ReTHUS Médico:</span>
+                    <span className="font-mono text-slate-900">{viewingResultOrder.doctor_license || 'RM-94821-VALLE'}</span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] uppercase font-bold text-slate-500 block">Muestra / Tubo:</span>
+                    <span className="font-medium text-slate-900">{viewingResultOrder.sample_type}</span>
+                  </div>
+                  <div>
+                    <span className="text-[9px] uppercase font-bold text-slate-500 block">Prioridad:</span>
+                    <span className="font-bold text-purple-900">{viewingResultOrder.priority}</span>
+                  </div>
                 </div>
-                <div className="text-right text-[10px] font-mono text-purple-800">
-                  Sello Digital: SHA-256-VALID-OK
+
+                {/* ANÁLISIS REALIZADO Y PARÁMETROS */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between border-b border-slate-200 pb-1">
+                    <h4 className="font-bold text-xs text-slate-900 uppercase">
+                      Examen: {viewingResultOrder.test_type}
+                    </h4>
+                    <span className="text-[10px] font-mono font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">
+                      VALIDADO & SELLADO
+                    </span>
+                  </div>
+
+                  {/* TABLA DE PARÁMETROS ANALÍTICOS */}
+                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 font-mono text-xs whitespace-pre-wrap leading-relaxed text-slate-900">
+                    {typeof viewingResultOrder.results === 'string'
+                      ? viewingResultOrder.results
+                      : JSON.stringify(viewingResultOrder.results, null, 2)}
+                  </div>
+                </div>
+
+                {/* SELLO DE VALIDACIÓN RE-THUS */}
+                <div className="p-3 rounded-xl bg-purple-50/70 border border-purple-200 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-purple-700 shrink-0" />
+                    <div>
+                      <strong className="text-purple-950 font-bold block text-[11px]">
+                        Validación Bacteriológica & Diagnóstica (ReTHUS):
+                      </strong>
+                      <span className="text-purple-900 text-[10px]">
+                        Firmado digitalmente por: <strong>{viewingResultOrder.validated_by || 'Dra. Marcela Cardona'}</strong> (Licencia: {viewingResultOrder.bacteriologist_license || 'BAC-9421-VALLE'})
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-right text-[9px] font-mono text-purple-800 font-bold">
+                    Sello Digital: SHA-256-OK
+                  </div>
                 </div>
               </div>
+
+              {/* SECCIÓN INTEGRADA DE DESPACHO POR CORREO EN LA PARTE INFERIOR DEL DRAWER */}
+              {isEmailModalOpen && (
+                <div className="p-5 rounded-2xl bg-purple-50/70 border-2 border-purple-300 space-y-4 animate-slideDown shadow-xs">
+                  <div className="flex items-center justify-between border-b border-purple-200 pb-2.5">
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-purple-700" />
+                      <h4 className="font-bold text-xs text-purple-950 uppercase tracking-wider">
+                        Despacho Oficial por Correo Electrónico
+                      </h4>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsEmailModalOpen(false)}
+                      className="p-1 rounded-lg text-purple-800 hover:bg-purple-200/50 cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  {emailFeedback && (
+                    <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-950 text-xs font-semibold flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>{emailFeedback}</span>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    {/* DATOS DEL PACIENTE DESTINATARIO */}
+                    <div className="p-3 rounded-xl bg-white border border-purple-200 space-y-1.5">
+                      <span className="text-[10px] font-bold uppercase text-purple-900 block">
+                        Paciente Destinatario:
+                      </span>
+                      <div className="font-bold text-on-surface">
+                        {viewingResultOrder.patient_name}
+                      </div>
+                      <div className="text-[11px] text-outline font-mono">
+                        Identificación: {viewingResultOrder.patient_document_type || 'CC'} {viewingResultOrder.patient_document}
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-semibold text-on-surface mb-0.5 mt-1">
+                          Correo del Paciente *
+                        </label>
+                        <input
+                          type="email"
+                          required
+                          value={emailRecipient}
+                          onChange={(e) => setEmailRecipient(e.target.value)}
+                          placeholder="correo@paciente.com"
+                          className="w-full h-8 px-2.5 rounded-lg border border-purple-200 bg-purple-50/30 text-xs font-mono text-on-surface focus:outline-none focus:ring-1 focus:ring-purple-700"
+                        />
+                      </div>
+                    </div>
+
+                    {/* COPIA ASISTENCIAL AL MÉDICO TRATANTE */}
+                    <div className="p-3 rounded-xl bg-white border border-purple-200 space-y-2 flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[10px] font-bold uppercase text-purple-900">
+                            Copia al Médico Tratante:
+                          </span>
+                          <span className="px-1.5 py-0.2 rounded bg-purple-100 text-purple-900 text-[9px] font-bold">
+                            Trazabilidad
+                          </span>
+                        </div>
+                        <div className="font-bold text-on-surface text-xs">
+                          {viewingResultOrder.ordering_doctor}
+                        </div>
+                        <div className="text-[11px] font-mono text-outline">
+                          santiago.velez@saludconecta.ips.gov.co
+                        </div>
+                      </div>
+
+                      <div className="text-[10px] text-purple-900/90 pt-1 border-t border-purple-100 font-semibold">
+                        Copia médica archivada en el folio digital
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2.5 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setIsEmailModalOpen(false)}
+                      className="h-9 px-4 rounded-xl border border-purple-200 bg-white hover:bg-purple-50 text-xs font-semibold text-purple-900 cursor-pointer"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSendEmailResult}
+                      disabled={isSendingEmail}
+                      className="h-9 px-5 rounded-xl bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold flex items-center gap-2 cursor-pointer shadow-xs disabled:opacity-50 transition-all"
+                    >
+                      {isSendingEmail ? (
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Send className="w-3.5 h-3.5" />
+                      )}
+                      <span>{isSendingEmail ? 'Despachando...' : 'Confirmar y Despachar Correos'}</span>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* BOTONES DE ACCIÓN: IMPRIMIR, ENVIAR CORREO, CERRAR */}
-            <div className="px-6 py-4 bg-slate-50 border-t border-surface-container-high flex flex-wrap items-center justify-between gap-3">
+            {/* BOTONES DE ACCIÓN EN EL FOOTER DEL DRAWER */}
+            <div className="px-6 py-4 bg-slate-50 border-t border-surface-container-high flex flex-wrap items-center justify-between gap-3 shrink-0">
               <button
                 type="button"
-                onClick={() => setViewingResultOrder(null)}
+                onClick={() => {
+                  setViewingResultOrder(null);
+                  setIsEmailModalOpen(false);
+                }}
                 className="h-10 px-5 rounded-xl border border-surface-container-high bg-white hover:bg-surface-container-low text-xs font-semibold text-on-surface cursor-pointer"
               >
-                Cerrar Visor
+                Cerrar Panel
               </button>
 
               <div className="flex items-center gap-2.5">
@@ -863,101 +983,23 @@ export const DoctorLabOrdersView = ({ user, patient, onSelectPatient, onNavigate
                   type="button"
                   onClick={() => {
                     setEmailRecipient(viewingResultOrder.patient_email || 'paciente@saludconecta.ips.gov.co');
-                    setIsEmailModalOpen(true);
+                    setIsEmailModalOpen(!isEmailModalOpen);
                   }}
-                  className="h-10 px-4 rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-bold text-xs flex items-center gap-2 cursor-pointer shadow-sm transition-all"
+                  className="h-10 px-4 rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-bold text-xs flex items-center gap-2 cursor-pointer shadow-xs transition-all"
                 >
                   <Mail className="w-4 h-4" />
-                  <span>Enviar por Correo al Paciente</span>
+                  <span>{isEmailModalOpen ? 'Ocultar Correo' : 'Enviar por Correo al Paciente'}</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={handlePrintPhysicalReport}
-                  className="h-10 px-5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-2 cursor-pointer shadow-sm transition-all"
+                  className="h-10 px-5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-2 cursor-pointer shadow-xs transition-all"
                 >
                   <Printer className="w-4 h-4" />
                   <span>Imprimir Formato Físico (PDF)</span>
                 </button>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL DE DESPACHO POR CORREO */}
-      {isEmailModalOpen && (
-        <div className="fixed inset-0 z-60 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full border border-surface-container-high shadow-2xl p-6 space-y-4 animate-scaleIn">
-            <div className="flex items-center justify-between border-b border-surface-container pb-3">
-              <div className="flex items-center gap-2">
-                <Mail className="w-5 h-5 text-purple-700" />
-                <h3 className="font-bold text-sm text-on-surface">
-                  Enviar Examen por Correo Electrónico
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsEmailModalOpen(false)}
-                className="p-1 rounded-lg text-outline hover:text-on-surface cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {emailFeedback && (
-              <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-950 text-xs font-semibold flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>{emailFeedback}</span>
-              </div>
-            )}
-
-            <div className="space-y-3 text-xs">
-              <div>
-                <label className="block font-semibold text-on-surface mb-1">
-                  Correo Electrónico de Destino *
-                </label>
-                <input
-                  type="email"
-                  required
-                  placeholder="ejemplo@paciente.com"
-                  value={emailRecipient}
-                  onChange={(e) => setEmailRecipient(e.target.value)}
-                  className="w-full h-10 px-3 rounded-xl border border-surface-container-high bg-surface-container-low text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-purple-700"
-                />
-              </div>
-
-              <div className="p-3 rounded-xl bg-purple-50 border border-purple-200 text-purple-950 text-[11px] space-y-1">
-                <strong className="block font-bold">Adjunto Incluido:</strong>
-                <p>
-                  Certificado médico-legal en formato PDF vectorial con firma y sello ReTHUS del Laboratorio Clínico de SaludConecta IPS.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-surface-container">
-              <button
-                type="button"
-                onClick={() => setIsEmailModalOpen(false)}
-                className="h-9 px-4 rounded-xl border border-surface-container-high text-xs font-semibold text-outline hover:bg-surface-container cursor-pointer"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={handleSendEmailResult}
-                disabled={isSendingEmail}
-                className="h-9 px-5 rounded-xl bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-              >
-                {isSendingEmail ? (
-                  <span>Despachando...</span>
-                ) : (
-                  <>
-                    <Send className="w-3.5 h-3.5" />
-                    <span>Confirmar y Enviar</span>
-                  </>
-                )}
-              </button>
             </div>
           </div>
         </div>

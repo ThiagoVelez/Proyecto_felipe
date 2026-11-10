@@ -15,6 +15,7 @@ import {
   Stethoscope,
   FileWarning,
   FlaskConical,
+  Printer,
 } from 'lucide-react';
 
 export const Sidebar = ({
@@ -151,6 +152,12 @@ export const Sidebar = ({
       label: 'Órdenes de Laboratorio',
       icon: FlaskConical,
       badge: 'Exámenes',
+    },
+    {
+      id: 'doctor_print_lab_results',
+      label: 'Imprimir Resultado de Examen',
+      icon: Printer,
+      badge: 'PDF',
     },
     {
       id: 'prescription',

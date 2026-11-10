@@ -2288,11 +2288,19 @@ Tras la ejecución exhaustiva de las pruebas de Caja Negra, pruebas de Caja Blan
 - **Catálogo Rápido y Formulario de Solicitud:** Permite seleccionar pacientes activos, escoger del catálogo rápido de exámenes frecuentes (Hemograma Completo, Glucemia Basal, Uroanálisis, Troponina Ultrasensible, Creatinina, Tiempos de Coagulación, PCR, Perfil Tiroideo, Coprológico) o ingresar exámenes especializados, muestra biológica requerida, nivel de prioridad (`RUTINA`, `PRIORITARIO`, `URGENTE`) y sospecha diagnóstica / observaciones clínicas.
 - **Despacho Atómico al Buzón:** Al hacer clic en `Enviar al Buzón de Laboratorio`, la orden se despacha instantáneamente a través de `localStorage` y el evento reactivo `saludconecta_lab_orders_updated`, alertando en tiempo real al bacteriólogo sin refrescar la aplicación.
 
-### 1.4. Validación, Sellado ReTHUS, Impresión Física y Despacho por Correo de Resultados
-- **Flujo de Trabajo en Laboratorio (`LaboratoryScreen.jsx`):** El bacteriólogo visualiza las órdenes recibidas en su bandeja con badges de urgencia, procesa la muestra, ingresa los parámetros cuantitativos/cualitativos y al hacer clic en `Validar & Sellar Resultado`, la orden queda sellada bajo su firma digital y credencial profesional ReTHUS.
-- **Ficha Técnica Oficial Sellada:** Despliega membrete oficial hospitalario de SaludConecta IPS S.A.S. (NIT 900.842.199-5, Habilitación MinSalud Código 7614700192), datos del paciente (CC, edad, sexo, EPS), médico solicitante, parámetros analíticos y firma del bacteriólogo.
-- **Impresión Física en Formato Papel (PDF):** Integración con `window.print()` y estilos `@media print` para generar la copia física con membrete y sello médico-legal para entrega inmediata al paciente.
-- **Despacho por Correo Electrónico:** Modal interactivo de envío por correo tanto en el puesto del médico como del laboratorio, permitiendo remitir el informe oficial al paciente o aseguradora con confirmación reactiva.
+### 1.4. Arquitectura de Drawers Laterales, Formulario Analítico Avanzado y Despacho Integrado
+- **Migración a Drawers Laterales Derechos (Erradicación de Modales Flotantes):** En cumplimiento de la ergonomía clínica, se reemplazaron las ventanas emergentes centradas por paneles deslizantes (**Drawers laterales**) anclados al lateral derecho de la pantalla (`animate-slideLeft`, ancho $2\times$ responsivo), manteniendo visible el contexto de trabajo y facilitando el flujo continuo.
+- **Formulario Estructurado de Ingreso y Continuación de Análisis:**
+  - Optimización radical del ingreso de resultados: sustitución del textarea plano por un entorno con plantillas rápidas de 1 clic (Hemograma, Glucemia & Lípidos, Uroanálisis, Troponina Ultrasensible y Función Renal) con unidades normalizadas y rangos de referencia biológicos.
+  - Botón **"Guardar Avance (En Proceso)"** para pausar y continuar el análisis en cualquier momento.
+  - Botón **"Validar & Sellar Resultado"** con firma digital y credencial ReTHUS del bacteriólogo.
+- **Despacho Oficial por Correo Integrado en la Base del Drawer:**
+  - Al completar o inspeccionar la orden sellada, se habilita el botón **"Enviar por Correo al Paciente"**, el cual despliega fluidamente en la parte inferior del mismo drawer el panel de despacho sin abrir popups adicionales.
+  - **Identificación Clara del Paciente Destinatario:** Despliega nombre completo, número de cédula y campo editable prellenado con el correo electrónico del paciente.
+  - **Copia Asistencial Obligatoria al Médico Tratante:** Muestra el nombre y correo del médico solicitante con casilla de verificación de trazabilidad para archivar la copia en su buzón clínico.
+- **Módulo Médico Exclusivo: "Imprimir Resultado de Examen" (`DoctorPrintLabResultsView.jsx`):**
+  - Se incorporó en el menú lateral del médico el ítem **"Imprimir Resultado de Examen"** (`doctor_print_lab_results`, ícono `Printer`, badge `PDF`).
+  - Consola médica que lista todos los exámenes sellados por laboratorio, buscador en tiempo real por cédula o nombre, vista previa del membrete de SaludConecta IPS S.A.S. (NIT 900.842.199-5, habilitación MinSalud Código 7614700192) y botón de impresión en formato papel con firma digital ReTHUS.
 
 ### 1.5. Dashboard de Farmacia para la Dirección / Administrador (`pharmacy_dashboard`)
 - **Navegación Administrativa:**
