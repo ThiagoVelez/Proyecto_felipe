@@ -2230,11 +2230,13 @@ Tras la ejecución exhaustiva de las pruebas de Caja Negra, pruebas de Caja Blan
 
 ---
 
-# Entrega-s2: Expansión de Servicios Clínicos - Rol Laboratorio, Dashboard Farmacéutico para Dirección y Sistema de Alertas de Desabastecimiento
+# Entrega-s2 / Entrega Final (Tag: entrega-final): Expansión de Servicios Clínicos - Rol Laboratorio, Dashboard Farmacéutico para Dirección y Sistema de Alertas de Desabastecimiento
 
 - **Autor de la Entrega:** Santiago Velez
 - **Docente Supervisor:** Ing. Felipe Gutiérrez Isaza
 - **Institución:** Corporación de Estudios Tecnológicos del Norte del Valle (COTECNOVA) - 2026-2
+- **Rama Oficial de Entrega:** `prueba`
+- **Etiqueta Git (Tag):** `entrega-final`
 - **Herramientas y Skills Aplicadas:**
   - `master-orchestrator`: Dirección integral de arquitectura limpia hexagonal, desacoplamiento estricto de capas y supervisión del ciclo de vida de desarrollo.
   - `iso-standards-governance`: Aseguramiento normativo bajo ISO/IEC 25010 (calidad de producto de software), ISO/IEC 27001 (seguridad de la información clínica), ISO/IEC 12207 (procesos del ciclo de vida del software) y Resolución 1995 de 1999 (gobernanza de historia clínica).
@@ -2368,7 +2370,7 @@ dist/assets/index-CFypUx4_.js   1,123.72 kB │ gzip: 281.83 kB
 
 ## 3. Certificación de Entrega
 
-El desarrollo de la **Entrega-s2** fue planificado, implementado, verificado y certificado con 0 advertencias, 0 errores de compilación y 100% de cobertura de cableado interactivo.
+El desarrollo de la **Entrega-s2 / Entrega Final (tag: `entrega-final`)** en la rama **`prueba`** fue planificado, implementado, verificado y certificado con 0 advertencias, 0 errores de compilación y 100% de cobertura de cableado interactivo.
 
 **Líder Técnico & Desarrollador Principal:**  
 **Santiago Velez**  
