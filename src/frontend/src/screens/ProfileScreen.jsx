@@ -1,6 +1,5 @@
 import React, { useState, useRef } from 'react';
 import {
-  ArrowLeft,
   Camera,
   Check,
   ShieldCheck,
@@ -237,17 +236,8 @@ export const ProfileScreen = ({ user, onUpdateUser, onNavigate }) => {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-12 animate-fade-in">
-      {/* BARRA SUPERIOR DE NAVEGACION */}
-      <div className="flex items-center justify-between">
-        <button
-          type="button"
-          onClick={() => onNavigate && onNavigate('dashboard')}
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-surface-container-high hover:bg-surface-container-low text-xs font-semibold text-on-surface shadow-xs transition-colors cursor-pointer"
-        >
-          <ArrowLeft className="w-4 h-4 text-primary" />
-          <span>Volver al Panel Principal</span>
-        </button>
-
+      {/* BARRA SUPERIOR DE INFORMACION DE PERFIL */}
+      <div className="flex items-center justify-end">
         <div className="flex items-center gap-2 text-xs text-outline font-medium">
           <span>Mi Perfil Asistencial</span>
           <span>•</span>

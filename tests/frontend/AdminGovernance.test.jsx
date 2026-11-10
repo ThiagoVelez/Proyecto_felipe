@@ -381,10 +381,11 @@ describe('ProfileScreen - Pantalla Completa Desacoplada sin Ventana Flotante', (
     branch: 'Sede Cartago - Hospital Central (Nivel II)',
   };
 
-  it('renderiza la pantalla completa de perfil con botón de retorno y portadas médicas', () => {
+  it('renderiza la pantalla completa de perfil con datos asistenciales y portadas médicas', () => {
     render(<ProfileScreen user={mockUser} onUpdateUser={() => {}} onNavigate={() => {}} />);
 
-    expect(screen.getByText(/Volver al Panel Principal/i)).toBeInTheDocument();
+    expect(screen.getByText(/Mi Perfil Asistencial/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Volver al Panel Principal/i)).not.toBeInTheDocument();
     expect(screen.getByText(/Trayectoria & Perfil Asistencial/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Editar Perfil/i })).toBeInTheDocument();
 

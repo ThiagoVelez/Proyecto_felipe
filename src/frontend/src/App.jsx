@@ -287,9 +287,39 @@ export function App() {
     setCurrentView('dashboard');
   };
 
-  const handleNavigate = (view) => {
+  // Sincronización con botones Atrás y Adelante del navegador (History API)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const hashView = window.location.hash ? window.location.hash.replace('#', '') : null;
+    const initialView = hashView || currentView || 'dashboard';
+
+    // Establecer la entrada inicial para activar las flechas de navegación nativas del navegador
+    window.history.replaceState({ view: initialView }, '', `#${initialView}`);
+
+    const handlePopState = (event) => {
+      const targetView =
+        event.state?.view ||
+        (window.location.hash ? window.location.hash.replace('#', '') : null) ||
+        'dashboard';
+
+      if (targetView) {
+        setCurrentView(targetView);
+        localStorage.setItem('saludconecta_current_view', targetView);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const handleNavigate = (view, shouldPush = true) => {
+    if (view === currentView) return;
     setCurrentView(view);
     localStorage.setItem('saludconecta_current_view', view);
+    if (shouldPush && typeof window !== 'undefined') {
+      window.history.pushState({ view }, '', `#${view}`);
+    }
   };
 
   const handleSelectPatient = (patient, triage = null) => {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { LogOut, ShieldCheck, ChevronRight, ChevronLeft } from 'lucide-react';
 import BrandLogo from '../../components/BrandLogo';
 import AdminDashboardScreen from './AdminDashboardScreen';
@@ -11,6 +11,36 @@ export const AdminLayout = ({ user, onLogout, onUpdateUser }) => {
   const currentUser = user || {};
   const displayName = currentUser.full_name || currentUser.name || 'Administrador';
   const initials = displayName.slice(0, 2).toUpperCase();
+
+  // Sincronización de navegación administrativa con botones Atrás/Adelante del navegador
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const hash = window.location.hash ? window.location.hash.replace('#admin-', '').replace('#', '') : null;
+    const initialView = hash || adminView || 'governance';
+    window.history.replaceState({ adminView: initialView }, '', `#admin-${initialView}`);
+
+    const handlePopState = (event) => {
+      const targetView =
+        event.state?.adminView ||
+        (window.location.hash ? window.location.hash.replace('#admin-', '').replace('#', '') : null) ||
+        'governance';
+      if (targetView) {
+        setAdminView(targetView);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const handleAdminNavigate = (view, shouldPush = true) => {
+    if (view === adminView) return;
+    setAdminView(view);
+    if (shouldPush && typeof window !== 'undefined') {
+      window.history.pushState({ adminView: view }, '', `#admin-${view}`);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-surface flex flex-col font-sans">
@@ -37,7 +67,7 @@ export const AdminLayout = ({ user, onLogout, onUpdateUser }) => {
           {/* Perfil del Administrador (Navega a la Pantalla Completa de Perfil) */}
           <button
             type="button"
-            onClick={() => setAdminView(adminView === 'profile' ? 'governance' : 'profile')}
+            onClick={() => handleAdminNavigate(adminView === 'profile' ? 'governance' : 'profile')}
             className="flex items-center gap-2.5 pl-3 border-l border-surface-container-high hover:opacity-85 transition-opacity cursor-pointer text-left"
             title="Ver pantalla de perfil de administrador y cambiar banner"
           >
@@ -86,7 +116,7 @@ export const AdminLayout = ({ user, onLogout, onUpdateUser }) => {
         {/* MENÚ LATERAL ADMINISTRATIVO */}
         <AdminSidebar
           currentView={adminView}
-          setCurrentView={setAdminView}
+          setCurrentView={handleAdminNavigate}
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
         />
@@ -101,7 +131,7 @@ export const AdminLayout = ({ user, onLogout, onUpdateUser }) => {
             <ProfileScreen
               user={currentUser}
               onUpdateUser={onUpdateUser}
-              onNavigate={() => setAdminView('governance')}
+              onNavigate={() => handleAdminNavigate('governance')}
             />
           ) : (
             <>

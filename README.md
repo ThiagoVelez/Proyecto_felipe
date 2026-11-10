@@ -2747,6 +2747,9 @@ Se auditó de forma exhaustiva la totalidad de los controles interactivos y fluj
    - Botón `Copiar Reporte`: Copia al portapapeles la estructura oficial de la solicitud.
 7. **Perfil Asistencial y Organigrama Administrativo:**
    - Aislamiento total de edición de banner y avatar por usuario activo sin fugas cruzadas.
+8. **Habilitación de Navegación Nativa del Navegador & Retiro de Botón Redundante en Perfiles (`ProfileScreen.jsx`, `App.jsx`, `AdminLayout.jsx`):**
+   - **Retiro de Botón en Perfil:** Se eliminó el botón redundante `<- Volver al Panel Principal` en la cabecera del perfil para todos los roles asistenciales y administrativos, delegando el retorno en los controles universales del navegador.
+   - **Desbloqueo de Flechas del Navegador (History API):** Se integró la History API de HTML5 (`window.history.pushState`, `window.history.replaceState` y captura reactiva del evento `popstate`) en los layouts clínicos y administrativos (`App.jsx` y `AdminLayout.jsx`). Esto activa y desbloquea de forma inmediata las flechas nativas de Atrás (`<-`) y Adelante (`->`) del navegador (Chrome, Edge, etc.), permitiendo que el usuario retorne fluidamente a la vista anterior con un solo clic y sin recargas de página (`F5`).
 
 ---
 
