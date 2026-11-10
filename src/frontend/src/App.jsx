@@ -16,6 +16,7 @@ import NurseSummaryView from './screens/NurseSummaryView';
 import NurseChecklistView from './screens/NurseChecklistView';
 import MedicalKitScreen from './screens/MedicalKitScreen';
 import LaboratoryScreen from './screens/LaboratoryScreen';
+import DoctorLabOrdersView from './screens/DoctorLabOrdersView';
 import { apiClient, SESSION_EXPIRED_EVENT } from './services/api';
 
 const getUserStorageKey = (u) => {
@@ -429,6 +430,15 @@ export function App() {
             <TreatmentFollowUpView
               user={currentUser}
               patient={selectedPatient}
+              onNavigate={handleNavigate}
+            />
+          )}
+
+          {currentView === 'doctor_lab_orders' && (
+            <DoctorLabOrdersView
+              user={currentUser}
+              patient={selectedPatient}
+              onSelectPatient={handleSelectPatient}
               onNavigate={handleNavigate}
             />
           )}

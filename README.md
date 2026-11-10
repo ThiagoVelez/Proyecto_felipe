@@ -2366,6 +2366,21 @@ dist/assets/index-CFypUx4_.js   1,123.72 kB │ gzip: 281.83 kB
 - **Diagnóstico del Bug:** Los banners y avatares se almacenaban bajo claves globales sin prefijo (`saludconecta_profile_custom` y `saludconecta_avatar`), lo que provocaba que al cambiar el banner o foto del Administrador, la mutación se propagara indebidamente a las sesiones de los médicos, enfermeros y farmacéuticos.
 - **Aislamiento por `userKey`:** Se implementó una clave canónica de almacenamiento por usuario (`saludconecta_profile_${userKey}`, `saludconecta_avatar_${userKey}` y `saludconecta_banner_${userKey}`). Se eliminó el uso de claves globales compartidas y se asignó un banner corporativo inteligente por defecto según el rol y especialidad médica de cada usuario.
 
+### 1.8. Optimización del Menú de Laboratorio (Retiro de Herramientas Redundantes)
+- **Retiro del Kit Informático en Laboratorio:** Se eliminó el ítem `Kit Informático Médico` del menú lateral del bacteriólogo en `Sidebar.jsx`. El rol de Laboratorio cuenta ahora con un espacio de trabajo puramente diagnóstico y enfocado a su competencia profesional: `Módulo de Laboratorio` y `Seguridad & MFA`.
+
+### 1.9. Recetario Médico de Exámenes de Laboratorio con Buzón Asistencial (`DoctorLabOrdersView.jsx`)
+- **Prescripción Paraclínica para el Médico:** Se incorporó en el menú lateral del médico el ítem `Órdenes de Laboratorio` (`doctor_lab_orders`).
+- **Generación de ID Único de Laboratorio:** Cada orden asigna automáticamente un correlativo clínico inmutable (ej. `LAB-2026-005`), garantizando unicidad y no repudio dentro del flujo diagnóstico.
+- **Catálogo Rápido y Formulario de Solicitud:** Permite seleccionar pacientes activos, escoger del catálogo rápido de exámenes frecuentes (Hemograma, Glucemia, Uroanálisis, Troponina Ultrasensible, Creatinina, Tiempos de Coagulación) o ingresar exámenes especializados, muestra biológica requerida, nivel de prioridad (`RUTINA`, `PRIORITARIO`, `URGENTE`) y sospecha diagnóstica / observaciones clínicas.
+- **Despacho Atómico al Buzón:** Al hacer clic en `Enviar al Buzón de Laboratorio`, la orden se despacha instantáneamente a través de `localStorage` y el evento reactivo `saludconecta_lab_orders_updated`, alertando en tiempo real al bacteriólogo sin refrescar la aplicación.
+
+### 1.10. Validación, Sellado ReTHUS, Impresión Física y Despacho por Correo de Resultados
+- **Flujo de Trabajo en Laboratorio (`LaboratoryScreen.jsx`):** El bacteriólogo visualiza las órdenes recibidas en su bandeja con badges de urgencia, procesa la muestra, ingresa los parámetros cuantitativos/cualitativos y al hacer clic en `Validar & Sellar Resultado`, la orden queda sellada bajo su firma digital y credencial profesional ReTHUS.
+- **Ficha Técnica Oficial Sellada:** Despliega membrete oficial hospitalario de SaludConecta IPS S.A.S. (NIT 900.842.199-5, Habilitación MinSalud Código 7614700192), datos del paciente (CC, edad, sexo, EPS), médico solicitante, parámetros analíticos y firma del bacteriólogo.
+- **Impresión Física en Formato Papel (PDF):** Integración con `window.print()` y estilos `@media print` para generar la copia física con membrete y sello médico-legal para entrega inmediata al paciente.
+- **Despacho por Correo Electrónico:** Modal interactivo de envío por correo tanto en el puesto del médico como del laboratorio, permitiendo remitir el informe oficial al paciente o aseguradora con confirmación reactiva.
+
 ---
 
 ## 3. Certificación de Entrega

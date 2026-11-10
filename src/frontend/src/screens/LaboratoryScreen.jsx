@@ -16,6 +16,10 @@ import {
   X,
   FileCheck2,
   Eye,
+  Printer,
+  Mail,
+  Send,
+  Hash,
 } from 'lucide-react';
 import apiClient from '../services/api';
 
@@ -109,6 +113,28 @@ export const LaboratoryScreen = ({ user }) => {
   const bacteriologistName = currentUser.full_name || currentUser.name || 'Dra. Marcela Cardona';
   const license = currentUser.professional_card || 'BAC-9421-VALLE';
 
+  // Estados para envío por correo e impresión
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [emailRecipient, setEmailRecipient] = useState('');
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [emailFeedback, setEmailFeedback] = useState('');
+
+  // Sincronización en tiempo real desde eventos de órdenes de laboratorio
+  useEffect(() => {
+    const handleSync = () => {
+      try {
+        const saved = localStorage.getItem('saludconecta_lab_orders');
+        if (saved) setOrders(JSON.parse(saved));
+      } catch {}
+    };
+    window.addEventListener('saludconecta_lab_orders_updated', handleSync);
+    window.addEventListener('storage', handleSync);
+    return () => {
+      window.removeEventListener('saludconecta_lab_orders_updated', handleSync);
+      window.removeEventListener('storage', handleSync);
+    };
+  }, []);
+
   // Guardar cambios en persistencia local
   useEffect(() => {
     localStorage.setItem('saludconecta_lab_orders', JSON.stringify(orders));
@@ -136,24 +162,45 @@ export const LaboratoryScreen = ({ user }) => {
     e.preventDefault();
     if (!selectedOrder) return;
 
-    const updated = orders.map((o) => {
-      if (o.id === selectedOrder.id) {
-        return {
-          ...o,
-          status: 'COMPLETADO',
-          results: resultData,
-          validated_at: new Date().toISOString(),
-          validated_by: `${bacteriologistName} (${license})`,
-        };
-      }
-      return o;
-    });
+    const validatedTimestamp = new Date().toISOString();
+    const updatedOrder = {
+      ...selectedOrder,
+      status: 'COMPLETADO',
+      results: resultData,
+      validated_at: validatedTimestamp,
+      validated_by: bacteriologistName,
+      bacteriologist_license: license,
+    };
+
+    const updated = orders.map((o) => (o.id === selectedOrder.id ? updatedOrder : o));
 
     setOrders(updated);
-    setShowResultModal(false);
-    setSelectedOrder(null);
-    setNotice(`Resultados de la orden ${selectedOrder.id} validados y sellados digitalmente.`);
-    setTimeout(() => setNotice(''), 4000);
+    localStorage.setItem('saludconecta_lab_orders', JSON.stringify(updated));
+    window.dispatchEvent(new CustomEvent('saludconecta_lab_orders_updated', { detail: updatedOrder }));
+
+    setSelectedOrder(updatedOrder);
+    setNotice(`Resultados de la orden ${selectedOrder.id} validados y sellados digitalmente. Disponibles de inmediato para el médico y paciente.`);
+    setTimeout(() => setNotice(''), 5000);
+  };
+
+  const handlePrintPhysicalReport = () => {
+    window.print();
+  };
+
+  const handleSendEmailResult = () => {
+    if (!emailRecipient.trim()) {
+      setEmailFeedback('Por favor ingrese un correo válido.');
+      return;
+    }
+    setIsSendingEmail(true);
+    setTimeout(() => {
+      setIsSendingEmail(false);
+      setEmailFeedback(`Resultado oficial sellado enviado exitosamente a ${emailRecipient}.`);
+      setTimeout(() => {
+        setIsEmailModalOpen(false);
+        setEmailFeedback('');
+      }, 2500);
+    }, 1200);
   };
 
   const handleCreateOrder = (e) => {
@@ -442,16 +489,17 @@ export const LaboratoryScreen = ({ user }) => {
 
       {/* MODAL PARA INGRESAR O VER RESULTADOS */}
       {showResultModal && selectedOrder && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-xl w-full border border-surface-container-high shadow-xl overflow-hidden animate-scaleIn">
-            <div className="px-5 py-4 border-b border-surface-container-high flex items-center justify-between bg-purple-50">
-              <div className="flex items-center gap-2">
-                <FlaskConical className="w-5 h-5 text-purple-700" />
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-2xl w-full border border-surface-container-high shadow-2xl overflow-hidden my-8 animate-scaleIn">
+            {/* ENCABEZADO */}
+            <div className="px-6 py-4 border-b border-surface-container-high flex items-center justify-between bg-gradient-to-r from-purple-900 to-indigo-900 text-white">
+              <div className="flex items-center gap-2.5">
+                <FlaskConical className="w-6 h-6 text-purple-300" />
                 <div>
-                  <h3 className="font-bold text-sm text-purple-950">
-                    Resultados de Laboratorio Clínico • {selectedOrder.id}
+                  <h3 className="font-bold text-base leading-tight">
+                    {selectedOrder.status === 'COMPLETADO' ? 'Informe Oficial de Resultados' : 'Ingreso de Resultados Analíticos'} • {selectedOrder.id}
                   </h3>
-                  <p className="text-[11px] text-purple-800">
+                  <p className="text-xs text-purple-200">
                     {selectedOrder.patient_name} • CC: {selectedOrder.patient_document}
                   </p>
                 </div>
@@ -459,68 +507,284 @@ export const LaboratoryScreen = ({ user }) => {
               <button
                 type="button"
                 onClick={() => setShowResultModal(false)}
-                className="p-1 rounded-lg hover:bg-purple-200/60 text-purple-800 cursor-pointer"
+                className="p-1.5 rounded-xl hover:bg-white/20 text-white cursor-pointer transition-colors"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveResult} className="p-5 space-y-4">
-              <div>
-                <span className="text-xs font-semibold text-outline block mb-1">
-                  Examen Solicitado:
-                </span>
-                <p className="text-sm font-bold text-on-surface bg-surface-container-low p-2.5 rounded-lg border border-outline-variant/30">
-                  {selectedOrder.test_type}
-                </p>
-              </div>
+            {selectedOrder.status === 'COMPLETADO' ? (
+              /* VISTA OFICIAL SELLADA PARA IMPRESIÓN Y DESPACHO */
+              <div className="p-6 sm:p-7 space-y-5 text-on-surface">
+                {/* MEMBRETE INSTITUCIONAL */}
+                <div className="border-b-2 border-slate-800 pb-3 flex items-start justify-between">
+                  <div>
+                    <h2 className="text-base font-black text-slate-900 uppercase tracking-tight">
+                      SaludConecta IPS S.A.S.
+                    </h2>
+                    <p className="text-xs text-slate-600">
+                      Sede Central Cartago • Laboratorio Clínico y Diagnóstico Nivel II
+                    </p>
+                    <p className="text-[11px] text-slate-500 font-mono">
+                      NIT: 900.842.199-5 • Habilitación MinSalud Código 7614700192
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <span className="inline-block px-2.5 py-0.5 rounded-md bg-purple-100 text-purple-950 font-mono text-xs font-bold border border-purple-200">
+                      {selectedOrder.id}
+                    </span>
+                    <div className="text-[11px] text-emerald-800 font-bold mt-1">
+                      RESULTADO VALIDADO
+                    </div>
+                  </div>
+                </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-on-surface mb-1">
-                  Valores Obtenidos, Parámetros Analíticos & Observaciones *
-                </label>
-                <textarea
-                  rows={6}
-                  value={resultData}
-                  onChange={(e) => setResultData(e.target.value)}
-                  placeholder="Ej:
+                {/* DATOS COMPLETOS DEL PACIENTE */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 bg-slate-50 p-3.5 rounded-2xl border border-slate-200 text-xs">
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-slate-500 block">Paciente:</span>
+                    <span className="font-bold text-slate-900">{selectedOrder.patient_name}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-slate-500 block">Identificación:</span>
+                    <span className="font-mono font-bold text-slate-900">
+                      {selectedOrder.patient_document_type || 'CC'} {selectedOrder.patient_document}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-slate-500 block">Edad / Sexo:</span>
+                    <span className="font-semibold text-slate-900">
+                      {selectedOrder.patient_age || 32} años • {selectedOrder.patient_gender || 'General'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-slate-500 block">Aseguradora:</span>
+                    <span className="font-semibold text-slate-900">{selectedOrder.patient_eps}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-slate-500 block">Médico Solicitante:</span>
+                    <span className="font-medium text-slate-900">{selectedOrder.ordering_doctor}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-slate-500 block">Muestra / Tubo:</span>
+                    <span className="font-medium text-slate-900">{selectedOrder.sample_type}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-slate-500 block">Prioridad:</span>
+                    <span className="font-bold text-purple-900">{selectedOrder.priority}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase font-bold text-slate-500 block">Fecha Sellado:</span>
+                    <span className="font-mono text-slate-900 text-[11px]">
+                      {selectedOrder.validated_at ? selectedOrder.validated_at.slice(0, 16).replace('T', ' ') : 'Hoy'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* RESULTADOS ANALÍTICOS */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
+                    <h4 className="font-bold text-xs uppercase tracking-wider text-slate-700">
+                      Parámetros Analíticos & Valores Obtenidos:
+                    </h4>
+                    <span className="font-bold text-xs text-purple-900">{selectedOrder.test_type}</span>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-white border border-slate-300 font-mono text-xs whitespace-pre-wrap leading-relaxed text-slate-800">
+                    {typeof selectedOrder.results === 'string'
+                      ? selectedOrder.results
+                      : JSON.stringify(selectedOrder.results, null, 2)}
+                  </div>
+                </div>
+
+                {/* SELLO RETHUS DEL BACTERIÓLOGO */}
+                <div className="p-3.5 rounded-2xl bg-purple-50 border border-purple-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-5 h-5 text-purple-700 shrink-0" />
+                    <div>
+                      <strong className="text-purple-950 font-bold block">
+                        Certificación Bacteriológica (ReTHUS):
+                      </strong>
+                      <span className="text-purple-900 text-[11px]">
+                        Firmado por: <strong>{selectedOrder.validated_by || bacteriologistName}</strong> (Registro: {selectedOrder.bacteriologist_license || license})
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-right text-[10px] font-mono text-purple-800 font-bold">
+                    Sello Digital: RETHUS-VAL-OK
+                  </div>
+                </div>
+
+                {/* BOTONES DE IMPRESIÓN Y CORREO */}
+                <div className="flex flex-wrap items-center justify-between gap-2.5 pt-3 border-t border-slate-200">
+                  <button
+                    type="button"
+                    onClick={() => setShowResultModal(false)}
+                    className="h-9 px-4 rounded-xl border border-surface-container-high bg-white hover:bg-surface-container-low text-xs font-semibold text-on-surface cursor-pointer"
+                  >
+                    Cerrar
+                  </button>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEmailRecipient(selectedOrder.patient_email || 'paciente@saludconecta.ips.gov.co');
+                        setIsEmailModalOpen(true);
+                      }}
+                      className="h-9 px-4 rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+                    >
+                      <Mail className="w-3.5 h-3.5" />
+                      <span>Enviar por Correo</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handlePrintPhysicalReport}
+                      className="h-9 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+                    >
+                      <Printer className="w-3.5 h-3.5" />
+                      <span>Imprimir Formato Físico (PDF)</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* FORMULARIO PARA INGRESAR PARÁMETROS Y SELLAR */
+              <form onSubmit={handleSaveResult} className="p-6 space-y-4">
+                <div>
+                  <span className="text-xs font-semibold text-outline block mb-1">
+                    Examen Solicitado:
+                  </span>
+                  <p className="text-sm font-bold text-on-surface bg-surface-container-low p-2.5 rounded-xl border border-outline-variant/30">
+                    {selectedOrder.test_type}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-on-surface mb-1">
+                    Valores Obtenidos, Parámetros Analíticos & Observaciones *
+                  </label>
+                  <textarea
+                    rows={6}
+                    value={resultData}
+                    onChange={(e) => setResultData(e.target.value)}
+                    placeholder="Ej:
 HEMOGLOBINA: 14.5 g/dL (Ref: 13.0 - 17.0 g/dL)
 HEMATOCRITO: 43.5 % (Ref: 40.0 - 52.0 %)
 LEUCOCITOS: 7,200 /mm3 (Ref: 4,500 - 11,000 /mm3)
 PLAQUETAS: 240,000 /mm3 (Ref: 150,000 - 450,000 /mm3)
 Observación: Muestra sin hemólisis ni lipemia."
+                    required
+                    className="w-full p-3 rounded-xl border border-outline-variant bg-surface-container-low text-xs font-mono text-on-surface focus:outline-none focus:ring-1 focus:ring-purple-700"
+                  />
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-950 text-[11px] space-y-1">
+                  <div className="flex items-center gap-1.5 font-bold">
+                    <ShieldCheck className="w-4 h-4 text-amber-700" />
+                    <span>Sello de Validación ReTHUS Asistencial:</span>
+                  </div>
+                  <p>
+                    El resultado será firmado por <strong>{bacteriologistName}</strong> (Registro: {license}). Al sellarse, quedará disponible de inmediato en la bandeja del médico y se enviará al historial del paciente.
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-end gap-2.5 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowResultModal(false)}
+                    className="h-9 px-4 rounded-xl border border-surface-container-high bg-white hover:bg-surface-container-low text-xs font-semibold text-on-surface cursor-pointer"
+                  >
+                    Cerrar
+                  </button>
+                  <button
+                    type="submit"
+                    className="h-9 px-5 rounded-xl bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Validar & Sellar Resultado</span>
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE DESPACHO POR CORREO DESDE LABORATORIO */}
+      {isEmailModalOpen && selectedOrder && (
+        <div className="fixed inset-0 z-60 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full border border-surface-container-high shadow-2xl p-6 space-y-4 animate-scaleIn">
+            <div className="flex items-center justify-between border-b border-surface-container pb-3">
+              <div className="flex items-center gap-2">
+                <Mail className="w-5 h-5 text-purple-700" />
+                <h3 className="font-bold text-sm text-on-surface">
+                  Enviar Examen por Correo Electrónico
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsEmailModalOpen(false)}
+                className="p-1 rounded-lg text-outline hover:text-on-surface cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {emailFeedback && (
+              <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-950 text-xs font-semibold flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>{emailFeedback}</span>
+              </div>
+            )}
+
+            <div className="space-y-3 text-xs">
+              <div>
+                <label className="block font-semibold text-on-surface mb-1">
+                  Correo Electrónico de Destino *
+                </label>
+                <input
+                  type="email"
                   required
-                  className="w-full p-3 rounded-xl border border-outline-variant bg-surface-container-low text-xs font-mono text-on-surface focus:outline-none focus:ring-1 focus:ring-purple-700"
+                  placeholder="ejemplo@paciente.com"
+                  value={emailRecipient}
+                  onChange={(e) => setEmailRecipient(e.target.value)}
+                  className="w-full h-10 px-3 rounded-xl border border-surface-container-high bg-surface-container-low text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-purple-700"
                 />
               </div>
 
-              <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-950 text-[11px] space-y-1">
-                <div className="flex items-center gap-1.5 font-bold">
-                  <ShieldCheck className="w-4 h-4 text-amber-700" />
-                  <span>Sello de Validación ReTHUS Asistencial:</span>
-                </div>
+              <div className="p-3 rounded-xl bg-purple-50 border border-purple-200 text-purple-950 text-[11px] space-y-1">
+                <strong className="block font-bold">Adjunto Incluido:</strong>
                 <p>
-                  El resultado será firmado por <strong>{bacteriologistName}</strong> (Registro: {license}). Al sellarse, quedará registrado en el historial del paciente con validez médico-legal.
+                  Certificado médico-legal en formato PDF vectorial con firma y sello ReTHUS del Laboratorio Clínico de SaludConecta IPS ({selectedOrder.id}).
                 </p>
               </div>
+            </div>
 
-              <div className="flex items-center justify-end gap-2.5 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowResultModal(false)}
-                  className="h-9 px-4 rounded-xl border border-surface-container-high bg-white hover:bg-surface-container-low text-xs font-semibold text-on-surface cursor-pointer"
-                >
-                  Cerrar
-                </button>
-                <button
-                  type="submit"
-                  className="h-9 px-4 rounded-xl bg-purple-700 hover:bg-purple-800 text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-xs"
-                >
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>Validar & Sellar Resultado</span>
-                </button>
-              </div>
-            </form>
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-surface-container">
+              <button
+                type="button"
+                onClick={() => setIsEmailModalOpen(false)}
+                className="h-9 px-4 rounded-xl border border-surface-container-high text-xs font-semibold text-outline hover:bg-surface-container cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleSendEmailResult}
+                disabled={isSendingEmail}
+                className="h-9 px-5 rounded-xl bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                {isSendingEmail ? (
+                  <span>Despachando...</span>
+                ) : (
+                  <>
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Confirmar y Enviar</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

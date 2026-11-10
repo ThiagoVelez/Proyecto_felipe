@@ -147,6 +147,12 @@ export const Sidebar = ({
       badge: 'Tripartita',
     },
     {
+      id: 'doctor_lab_orders',
+      label: 'Órdenes de Laboratorio',
+      icon: FlaskConical,
+      badge: 'Exámenes',
+    },
+    {
       id: 'prescription',
       label: 'Prescripcion & Farmacia',
       icon: Package,
@@ -173,12 +179,6 @@ export const Sidebar = ({
       label: 'Módulo de Laboratorio',
       icon: FlaskConical,
       badge: 'Diagnóstico',
-    },
-    {
-      id: 'medical_kit',
-      label: 'Kit Informático Médico',
-      icon: Stethoscope,
-      badge: 'Muro Salud',
     },
     {
       id: 'security',
