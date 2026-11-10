@@ -99,3 +99,18 @@ Todos están en archivos nuevos o son correcciones pequeñas, una por commit:
 | Docker | No | Healthchecks de Compose y cabeceras de nginx evaluados por configuración |
 | Navegador automatizado | No | axe-core y Lighthouse no ejecutados; contraste calculado con un script |
 | Acceso a Trello | No | Tarjetas entregadas como texto para copiar |
+
+## Criterios de aceptación R3 (10 nov 2026)
+
+- [x] Todos los defectos registrados tienen veredicto R3 con evidencia: DEF-01 a DEF-48 en su sección «Verificación R3»; DEF-49 a DEF-92 con evidencia R3 en su ficha.
+- [x] Todas las afirmaciones de la sección 1.3 de la tarea tienen veredicto: 48 afirmaciones en `informe-revision-r3.md`, sección 4.
+- [x] Los 5 módulos nuevos fueron revisados (`informe-revision-r3.md`, sección 5).
+- [x] Los defectos nuevos tienen ficha completa (DEF-85 a DEF-92 en la bitácora).
+- [x] Las cifras coinciden en todos los documentos: `python -X utf8 docs/calidad/anexos/verificar_cifras_r3.py` devuelve «Documentos comprobados: 11; errores: 0».
+- [x] `defectos-abiertos.txt` coincide con la bitácora: `controldefectos` sin incoherencias y 22 de 22 reproducciones (local y CI con `-race`).
+- [x] El README solo tiene los 7 cambios autorizados (`git diff origin/main -- README.md`: badge, listas de Trello, rango de requisitos, `JWT_SECRET`, `ADMIN_INITIAL_PASSWORD`, bitácora en la tabla de roles y enlace al informe R3).
+- [x] No se modificaron pruebas del equipo (solo se agregaron archivos de Calidad) ni tarjetas ajenas en Trello (solo comentarios).
+- [x] No hay secretos nuevos (búsqueda de tokens y claves en los archivos versionados sin resultados; las credenciales de prueba del backend local no se guardaron).
+- [x] El pipeline está en rojo y explicado: golangci-lint falla por 21 hallazgos nuevos en código del equipo (D-17) y el paso `-race` por los timeouts de 1 s de DEF-48 (D-08). Control de defectos, frontend y cobertura (68,8 %) en verde (`evidencias/r3/61-ci-run-42925930619.txt`).
+- [x] El pull request está abierto (ver la tarjeta de aviso en Trello).
+- [x] Trello actualizado (`trello-publicacion-r3.md`). Pendiente a mano: desmarcar «completada» en las 5 tarjetas reabiertas y asignar a Juan en la tarjeta de aviso si la herramienta no lo permitió.

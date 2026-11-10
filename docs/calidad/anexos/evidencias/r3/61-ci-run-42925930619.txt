@@ -1,0 +1,15 @@
+# gh run view 42925930619 (iteracion 2 del pipeline, commit ae8ff0e)
+Backend - analisis estatico: failure | fallan: golangci-lint (hallazgos nuevos)
+Backend - control de defectos abiertos: success | fallan: 
+Backend - pruebas con -race y cobertura: failure | fallan: Pruebas de integracion de tests/backend con detector de carreras
+Frontend - lint, pruebas, build y auditoria: success | fallan: 
+
+Defectos abiertos reproducidos como se espera: 22 de 22.
+--- FAIL: TestDualTokenLoginAndRefreshFlow (4.04s)
+--- FAIL: TestRefreshTokenRevocationOnUserDeactivation (4.21s)
+ok  	saludconecta-tests	14.277s	coverage: 68.8% of statements in saludconecta-backend/...
+^[[36;1mecho "Cobertura total: ${total} % (minimo ${COBERTURA_MINIMA_BACKEND} %)"^[[0m
+Cobertura total: 68.8 % (minimo 60 %)
+
+# golangci-lint (hallazgos nuevos):
+21
