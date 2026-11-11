@@ -18,6 +18,8 @@ var knownInsecureSecrets = []string{
 	"clave_secreta_jwt_saludconecta_ips_v24_iso25010_2026",
 	"super_secret_seed_key",
 	"tu_clave_secreta_jwt_de_alta_entropia_aqui",
+	"defina_un_secreto_aleatorio_de_32_o_mas",
+	"defina_un_secreto_aleatorio_de_al_menos_32_caracteres",
 	"changeme",
 	"secret",
 }

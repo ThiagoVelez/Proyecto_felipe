@@ -37,6 +37,12 @@ func BootstrapAdmin(ctx context.Context, userRepo ports.UserRepository, email, p
 	if email == "" || password == "" {
 		return false, ErrBootstrapCredentialsMissing
 	}
+	if strings.EqualFold(email, "admin@su-institucion.example") {
+		return false, errors.New("el correo del administrador inicial coincide con el ejemplo de la plantilla; defina un correo real")
+	}
+	if strings.EqualFold(password, "defina_una_clave_privada_larga") || strings.EqualFold(password, "changeme") {
+		return false, errors.New("la contraseña del administrador inicial coincide con el ejemplo de la plantilla; defina una contraseña segura y privada")
+	}
 	if utf8.RuneCountInString(password) < MinBootstrapPasswordLength {
 		return false, ErrBootstrapPasswordWeak
 	}

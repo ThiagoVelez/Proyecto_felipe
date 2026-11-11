@@ -2289,6 +2289,70 @@ Tras la ejecución exhaustiva de las pruebas de Caja Negra, pruebas de Caja Blan
 
 ---
 
+### 14.10. Auditoría de Calidad y Mantenimiento R3: Corrección Integral de Defectos Críticos y Altos (Auditor: Juan Jose Sanchez)
+
+En el marco del aseguramiento de calidad y gobernanza clínica para la **Entrega-s2** de «SaludConecta IPS v2.4», se incorporaron y resolvieron en su totalidad los hallazgos de la auditoría técnica y asistencial (Revisión R3) identificados por el auditor de aseguramiento de calidad **Juan Jose Sanchez** (Juan José Sánchez). 
+
+Todas las soluciones fueron implementadas bajo arquitectura limpia hexagonal, desacoplamiento estricto de capas y doble verificación automatizada (`go test` y `vitest`) directamente en la rama principal `main`, garantizando 0 errores y 0 regresiones.
+
+#### 14.10.1. Matriz de Defectos Auditados y Solucionados (Auditor: Juan Jose Sanchez)
+
+| ID Defecto | Severidad | Módulo / Capa | Hallazgo Identificado por Juan Jose Sanchez | Solución Técnica Implementada | Estado / Verificación |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **DEF-49** | Crítica | Backend (Auth) | Endpoint `POST /api/v1/auth/register-admin` público sin autenticación; permitía crear administradores activos anónimamente. | Ruta trasladada al grupo protegido bajo middleware RBAC exigiendo rol `ADMIN` activo. | Resuelto (`TestDEF49`) |
+| **DEF-50** | Crítica | Backend / UI | Endpoint `GET /api/v1/auth/mfa-seed` exponía el secreto TOTP de cualquier correo sin sesión y botón "Pegar código de prueba" en login. | Endpoint protegido con autenticación de sesión `user_id`, eliminación del botón de prueba y desactivación de activación automática de MFA. | Resuelto (`TestDEF50`) |
+| **DEF-51** | Crítica | Backend (Core) | Prescripción v2 (`POST /api/v2/treatments/dispatch`) no consultaba antecedentes alérgicos ni ejecutaba `MatchAllergy`. | Intercepción atómica en `treatmentService.DispatchTreatment` con consulta al repositorio de alergias y emisión de `AllergyConflictError`. | Resuelto (`TestDEF51`) |
+| **DEF-52** | Crítica | Backend (Core) | Prescripción v2 aceptaba cantidades negativas o cero (`<= 0`); al dispensar, el stock de inventario se incrementaba artificialmente. | Validación estricta `QuantityPrescribed > 0` en dominio y rechazo con error HTTP 400 antes de emitir la receta. | Resuelto (`TestDEF52`) |
+| **DEF-53 / DEF-77** | Crítica / Alta | Backend / UI | Dispensación farmacéutica omitía el cotejo físico de identidad si `PatientDocument` venía vacío, y la interfaz prellenaba el documento. | Exigencia obligatoria ineludible de `PatientDocument` en `pharmacyService.DispensePrescription` y limpieza de campo en modal UI para forzar escaneo PDF417. | Resuelto (`TestDEF53`) |
+| **DEF-54** | Crítica | Backend (Persistencia) | Farmacia permitía dispensar medicamentos con lote vencido (`ExpiryDate < Now`). | Guardia de vigencia en transacciones `MarkAsDispensedTx` en memoria y MySQL evaluando `ExpiryDate.Before(time.Now().UTC())`. | Resuelto (`TestDEF54`) |
+| **DEF-55** | Crítica | Backend (Datos) | Eliminación de pacientes borraba físicamente sus alergias; al readmitirlos con la misma cédula no alertaba contra alérgenos previos. | Preservación histórica de antecedentes alérgicos por documento clínico e inmutabilidad de registros en persistencia. | Resuelto (`TestDEF55`) |
+| **DEF-56** | Crítica | Base de Datos | Archivo `v2_pharmacy_appointments.sql` ejecutaba `DROP TABLE` incondicionales y reiniciaba el stock de inventario. | Eliminación de sentencias `DROP TABLE` destructivas e implementación de migraciones aditivas con `CREATE TABLE IF NOT EXISTS`. | Resuelto (`schema.sql`) |
+| **DEF-57 / DEF-89** | Crítica / Media | Backend (HCE) | Notas anatómicas permitían asociar pacientes o médicos discrepantes al folio clínico, o registrar dolor fuera del rango 0-10. | Validación cruzada en `AddAnatomicalNote` verificando concordancia de `PatientID`, `DoctorID` y rango estricto de escala EVA (0 a 10). | Resuelto (`TestDEF57`) |
+| **DEF-58** | Crítica | Backend (Core) | Reenviar una receta con ID de una ya dispensada la reactivaba a estado `PENDING` permitiendo doble entrega de fármacos. | Validación de existencia previa en `DispatchTreatment`, prohibiendo reactivaciones sobre recetas en estado `DISPENSED`. | Resuelto (`TestDEF58`) |
+| **DEF-59** | Crítica | Backend (Persistencia) | Adaptador de almacenamiento dispensaba recetas en estado `CANCELLED`. | Verificación de estado en `DispensePrescription` y `MarkAsDispensedTx` exigiendo estado exclusivo `PrescriptionStatusPending`. | Resuelto (`TestDEF59`) |
+| **DEF-60** | Crítica | Backend (Dominio) | `MatchAllergy` no extendía la familia farmacológica del alérgeno registrado (alergia a amoxicilina no bloqueaba ampicilina). | Cruce bidireccional ontológico en `domain.MatchAllergy` expandiendo familias farmacológicas de ambos extremos. | Resuelto (`TestDEF60`) |
+| **DEF-61 / DEF-84** | Alta | Backend (Infra) | Parámetro `UniqueCode` en PDF permitía path traversal (`../`) y archivos en `storage/` tenían permisos permisivos 0644. | Sanitización estricta de nombres con `filepath.Base`, verificación de contención de ruta y permisos restringidos `0600`/`0700`. | Resuelto (`TestDEF61`) |
+| **DEF-63** | Alta | Backend (Config) | Configuración aceptaba valores publicados en `.env.example` como `JWT_SECRET` y credenciales de administrador en bootstrap. | Inclusión de marcadores de plantilla en lista negra `knownInsecureSecrets` y validación de contraseñas inseguras en `BootstrapAdmin`. | Resuelto (`TestDEF63`) |
+| **DEF-64** | Alta | Frontend (UI) | Buscador en cabecera abría historia clínica arbitraria por coincidencia parcial difusa de nombre al buscar por documento. | Restricción de búsqueda en `handleHeaderSearch` exclusivamente a coincidencia exacta de documento de identidad. | Resuelto (Vitest) |
+| **DEF-67** | Media | Backend (Dominio) | Escala EVA fuera de 0-10 se truncaba silenciosamente a 0 ("sin dolor") en lugar de emitir un error de validación. | Retorno explícito de `ErrInvalidPainScaleScore` en `TriageRecord.Validate()`. | Resuelto (`TestDEF67`) |
+| **DEF-68** | Media | Backend (Servicio) | Actualización parcial de contacto (`UpdateContact`) borraba correo o dirección si el cliente enviaba valores vacíos. | Conservación de los valores preexistentes del paciente ante cadenas vacías en `UpdateContact`. | Resuelto (`TestDEF68`) |
+| **DEF-70** | Media | Backend (Servicio) | Médicos podían editar o borrar publicaciones del muro de salud asistencial creadas por otros colegas. | Validación de propiedad de autoría en `UpdatePost` y `DeletePost` exigiendo coincidencia con `requester.ID`. | Resuelto (`TestDEF70`) |
+| **DEF-72** | Media | Backend (RBAC) | Ruta `/patients/:id/anatomical-notes` bloqueaba a `AUDITOR` debido al middleware padre del grupo `/patients`. | Ajuste de granularidad de roles en `router.go` para permitir acceso de auditoría a notas anatómicas. | Resuelto (`router.go`) |
+| **DEF-74 / DEF-62** | Crítica / Alta | Frontend (UI) | `NurseSummaryView.jsx` fabricaba órdenes simuladas asignando amoxicilina a pacientes con alergia a penicilina y sangre "O+". | Erradicación de datos clínicos ficticios; la vista consume exclusivamente prescripciones reales de la API. | Resuelto (Vitest) |
+| **DEF-76** | Alta | Frontend (Sesión) | Cierre de sesión (`handleLogout`) no limpiaba claves de enfermería ni estados de listas de chequeo en `localStorage`. | Purgado exhaustivo de claves `saludconecta_nurse_*` en `handleLogout` dentro de `App.jsx`. | Resuelto (Vitest) |
+| **DEF-82** | Alta | Base de Datos | Esquema PostgreSQL no contenía columnas EVA de triaje ni campos de contacto (`email`, `address`) en tabla `patients`. | Homologación completa del esquema en `src/backend/adapters/storage/postgres/schema.sql`. | Resuelto (`schema.sql`) |
+| **DEF-85** | Crítica | Backend (Fechas) | Agendamiento de citas asumía hora UTC sin desfase de 5 horas para la zona horaria colombiana (`America/Bogota`). | Parseo explícito en `appointment_handler.go` con ubicación `America/Bogota` (UTC-5) y conversión normalizada a UTC. | Resuelto (`TestDEF85`) |
+| **DEF-88** | Crítica | Backend (Servicio) | Agendamiento de citas permitía guardar citas médicas asociadas a identificadores de pacientes inexistentes. | Verificación de existencia del paciente en `appointmentService.ScheduleAppointment`, retornando `domain.ErrPatientNotFound`. | Resuelto (`TestDEF88`) |
+| **DEF-28** | Alta | Backend (Auditoría) | Concurrencia de fasthttp reutilizaba buffers de memoria, mutando rutas y correlaciones en goroutines de auditoría. | Clonación inmutable en memoria con `strings.Clone()` de rutas, IPs y correlaciones antes del despacho asíncrono. | Resuelto (`TestDEF28`) |
+
+#### 14.10.2. Evidencias de Ejecución y Certificación de Cierre R3
+
+1. **Suite de Backend Go (Tests de Integración y Regresión):**
+   ```text
+   ok  	saludconecta-tests	22.987s
+   ok  	saludconecta-tests/herramientas/controldefectos	(cached)
+   ```
+2. **Suite de Frontend Vitest (14 suites, 105 pruebas unitarias):**
+   ```text
+    Test Files  14 passed (14)
+         Tests  105 passed (105)
+      Duration  26.77s
+   ```
+3. **Compilación de Producción Frontend (Vite Build):**
+   ```text
+   vite v5.4.21 building for production...
+   transforming...
+   1918 modules transformed.
+   rendering chunks...
+   computing gzip size...
+   dist/index.html                     1.01 kB │ gzip:   0.50 kB
+   dist/assets/index-C719vdMP.css     76.30 kB │ gzip:  12.89 kB
+   dist/assets/index-DfnQ9jcN.js   1,187.36 kB │ gzip: 293.12 kB
+   built in 14.66s
+   ```
+
+---
+
 # Entrega Final (Tag: entrega-final): Plataforma Hospitalaria Integral SaludConecta IPS - Módulo de Laboratorio Diagnóstico, Prescripción Paraclínica, Dashboard Farmacéutico y Alertas de Desabastecimiento
 
 - **Autor de la Entrega:** Santiago Velez

@@ -1,0 +1,14 @@
+$ DB_DRIVER=memory PORT=18080 api ; curl -i http://127.0.0.1:18080/api/v1/health
+HTTP/1.1 200 OK
+Server: SaludConecta-API
+Date: Sun, 01 Nov 2026 20:57:51 GMT
+Content-Type: application/json
+Content-Length: 88
+Vary: Origin
+X-Correlation-Id: a2cfc85a-178f-463e-905d-ebb019f6e795
+X-Ratelimit-Limit: 120
+X-Ratelimit-Remaining: 118
+X-Ratelimit-Reset: 60
+
+{"iso_quality":"ISO/IEC 25010 Evaluated","status":"UP","system":"SaludConecta IPS v2.4"}
+exit=0

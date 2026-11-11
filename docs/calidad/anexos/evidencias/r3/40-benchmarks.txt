@@ -1,0 +1,17 @@
+$ go test -run ^$ -bench . -benchmem -count=3 .
+goos: windows
+goarch: amd64
+pkg: saludconecta-tests
+cpu: AMD Ryzen 5 3500U with Radeon Vega Mobile Gfx  
+BenchmarkTriageCalculation-8             	124521487	         9.472 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTriageCalculation-8             	120773650	         9.609 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTriageCalculation-8             	125973403	         9.973 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAllergyInterception-8           	  206557	      5792 ns/op	     924 B/op	      53 allocs/op
+BenchmarkAllergyInterception-8           	  237553	      5389 ns/op	     924 B/op	      53 allocs/op
+BenchmarkAllergyInterception-8           	  190416	      5275 ns/op	     924 B/op	      53 allocs/op
+BenchmarkPrescriptionPipelineService-8   	  265965	      5777 ns/op	    1593 B/op	      34 allocs/op
+BenchmarkPrescriptionPipelineService-8   	  185821	      6468 ns/op	    1563 B/op	      34 allocs/op
+BenchmarkPrescriptionPipelineService-8   	  231466	      5156 ns/op	    1582 B/op	      34 allocs/op
+PASS
+ok  	saludconecta-tests	14.358s
+# codigo de salida: 0

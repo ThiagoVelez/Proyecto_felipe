@@ -1,0 +1,6 @@
+$ gocyclo -over 15 .
+17 domain (*TriageRecord).SuggestManchesterPriority core\domain\triage.go:69:1
+exit=1
+
+$ gocyclo -avg . (promedio)
+Average: 3.42

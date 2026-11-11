@@ -13,10 +13,13 @@ import (
 )
 
 // CorrelationIDMiddleware asegura que cada solicitud cuente con un identificador de correlacion unico.
+// Exige que cualquier valor entrante sea un UUID valido; si no lo es, genera uno nuevo para evitar inyeccion en logs.
 func CorrelationIDMiddleware() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		correlationID := c.Get("X-Correlation-ID")
-		if correlationID == "" {
+		correlationID := strings.TrimSpace(c.Get("X-Correlation-ID"))
+		if parsed, err := uuid.Parse(correlationID); err == nil {
+			correlationID = parsed.String()
+		} else {
 			correlationID = uuid.New().String()
 		}
 
@@ -77,12 +80,12 @@ func AuditMiddleware(log *logger.Logger, auditRepo ports.AuditRepository) fiber.
 				UserID:        userIDPtr,
 				Role:          rolePtr,
 				Action:        action,
-				Resource:      c.Path(),
-				IPAddress:     c.IP(),
-				CorrelationID: correlationID,
+				Resource:      strings.Clone(c.Path()),
+				IPAddress:     strings.Clone(c.IP()),
+				CorrelationID: strings.Clone(correlationID),
 				Details: map[string]interface{}{
 					"status_code": statusCode,
-					"method":      method,
+					"method":      strings.Clone(method),
 					"latency_ms":  latency.Milliseconds(),
 				},
 				Timestamp: time.Now().UTC(),

@@ -1,0 +1,11 @@
+=== RUN   TestDEF41CorrelationIDSoloAceptaUUID
+    correlacion_id_regression_test.go:39: Entrada "no-es-un-uuid": la cabecera devuelta "no-es-un-uuid" no es un UUID
+    correlacion_id_regression_test.go:45: Entrada "no-es-un-uuid" aceptada sin validar como identificador de correlacion
+    correlacion_id_regression_test.go:39: Entrada "AAAAAAAAAAAAAAAAAAAA": la cabecera devuelta "AAAAAAAAAAAAAAAAAAAA" no es un UUID
+    correlacion_id_regression_test.go:45: Entrada "AAAAAAAAAAAAAAAAAAAA" aceptada sin validar como identificador de correlacion
+    correlacion_id_regression_test.go:39: Entrada "x\",\"level\":\"ERROR\",\"": la cabecera devuelta "x\",\"level\":\"ERROR\",\"" no es un UUID
+    correlacion_id_regression_test.go:45: Entrada "x\",\"level\":\"ERROR\",\"" aceptada sin validar como identificador de correlacion
+--- FAIL: TestDEF41CorrelationIDSoloAceptaUUID (0.00s)
+FAIL
+FAIL	saludconecta-tests	0.020s
+FAIL

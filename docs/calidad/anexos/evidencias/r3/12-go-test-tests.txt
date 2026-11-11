@@ -1,0 +1,5 @@
+$ (cd tests/backend && go test -count=1 -coverpkg=saludconecta-backend/... -coverprofile=coverage-tests.out ./...)
+ok  	saludconecta-tests	15.594s	coverage: 68.9% of statements in saludconecta-backend/...
+ok  	saludconecta-tests/herramientas/controldefectos	0.045s	coverage: [no statements]
+# codigo de salida: 0
+# Pruebas de nivel superior en tests/backend (go test -json):  {'pass': 91, 'skip': 22}

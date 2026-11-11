@@ -51,65 +51,7 @@ export const NurseSummaryView = ({ user, patient, onNavigate, onSelectPatient })
           storedOrders = [];
         }
 
-        // Si no hay órdenes guardadas, inicializar con prescripciones de ejemplo para los pacientes registrados
-        if (storedOrders.length === 0 && pList.length > 0) {
-          const defaultOrders = pList.slice(0, 3).map((p, idx) => ({
-            id: `ORD-2026-${p.id.slice(0, 4)}`,
-            unique_code: `RX-2026-${10000 + idx * 142}`,
-            created_at: new Date().toISOString(),
-            patient_id: p.id,
-            patient_document: p.document_number,
-            patient_name: `${p.first_name} ${p.last_name}`,
-            patient_eps: p.eps_name || 'Nueva EPS',
-            birth_date: p.birth_date,
-            gender: p.gender,
-            blood_type: p.blood_type || 'O+',
-            allergies: p.allergies || (idx === 0 ? 'Penicilina, Betalactámicos' : 'Ninguna conocida'),
-            diagnosis: idx === 0
-              ? 'Neumonía adquirida en la comunidad (CIE-11: CA40)'
-              : idx === 1
-              ? 'Crisis Hipertensiva Grado II (CIE-11: BA00)'
-              : 'Gastroenteritis aguda con deshidratación leve',
-            duration: idx === 0 ? '7 días' : '10 días',
-            doctor_notes: idx === 0
-              ? 'Iniciar antibioterapia endovenosa. Vigilar mecánica ventilatoria y curvas térmicas cada 4 horas. Dieta blanda normosódica.'
-              : idx === 1
-              ? 'Monitorear presión arterial cada 2 horas. Restricción estricta de sodio. Administrar dosis matutina con alimentos.'
-              : 'Hidratación oral guiada según tolerancia. Vigilar diuresis y signos de deshidratación.',
-            doctor_name: 'Dr. Santiago Vélez',
-            items: idx === 0
-              ? [
-                  {
-                    medication_name: 'Amoxicilina + Ácido Clavulánico (Amoxal)',
-                    dosage: '500 mg',
-                    presentation: 'Tableta',
-                    quantity_prescribed: 21,
-                    instructions: 'Tomar 1 tableta cada 8 horas por 7 días con los alimentos',
-                  },
-                  {
-                    medication_name: 'Acetaminofén (Dolex Forte)',
-                    dosage: '1000 mg',
-                    presentation: 'Tableta',
-                    quantity_prescribed: 14,
-                    instructions: 'Tomar 1 tableta cada 8 horas si hay fiebre > 38°C o dolor pleurítico',
-                  },
-                ]
-              : [
-                  {
-                    medication_name: 'Losartán Potásico (Cozaar)',
-                    dosage: '50 mg',
-                    presentation: 'Tableta',
-                    quantity_prescribed: 30,
-                    instructions: 'Tomar 1 tableta diaria en ayunas. Control de PA matutino.',
-                  },
-                ],
-            status: 'ASIGNADO_ENFERMERIA',
-          }));
-
-          localStorage.setItem('saludconecta_nurse_orders', JSON.stringify(defaultOrders));
-          storedOrders = defaultOrders;
-        }
-
+        // Si no hay órdenes guardadas, no fabricar datos clínicos ficticios (DEF-74)
         setNurseOrders(storedOrders);
 
         // Seleccionar paciente por defecto
@@ -292,7 +234,7 @@ export const NurseSummaryView = ({ user, patient, onNavigate, onSelectPatient })
                 <div>
                   <span className="text-outline block text-[11px] font-semibold">Grupo Sanguíneo</span>
                   <span className="font-mono font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded inline-block">
-                    {activePatient.blood_type || activeOrder?.blood_type || 'O+'}
+                    {activePatient.blood_type || activeOrder?.blood_type || 'Sin registrar'}
                   </span>
                 </div>
                 <div>

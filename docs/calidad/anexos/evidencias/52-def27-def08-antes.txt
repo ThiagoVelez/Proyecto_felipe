@@ -1,0 +1,14 @@
+$ go test -count=1 -run "TestDEF27|TestDEF08" -v ./...  (ANTES de las correcciones)
+=== RUN   TestDEF27FrecuenciaCardiacaLimiteSuperior
+    triaje_limites_regression_test.go:32: FC=301: se esperaba los signos vitales contienen valores fuera del rango fisiologico plausible y se obtuvo <nil>
+    triaje_limites_regression_test.go:32: FC=1000: se esperaba los signos vitales contienen valores fuera del rango fisiologico plausible y se obtuvo <nil>
+--- FAIL: TestDEF27FrecuenciaCardiacaLimiteSuperior (0.00s)
+=== RUN   TestDEF08NivelManchesterFueraDelCatalogo
+    triaje_limites_regression_test.go:50: Nivel "NIVEL_VI": se esperaba ErrInvalidManchesterLevel y se obtuvo <nil>
+    triaje_limites_regression_test.go:50: Nivel "rojo": se esperaba ErrInvalidManchesterLevel y se obtuvo <nil>
+    triaje_limites_regression_test.go:50: Nivel "NIVEL_I ": se esperaba ErrInvalidManchesterLevel y se obtuvo <nil>
+--- FAIL: TestDEF08NivelManchesterFueraDelCatalogo (0.54s)
+FAIL
+FAIL	saludconecta-tests	0.567s
+FAIL
+exit=1

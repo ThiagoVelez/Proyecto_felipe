@@ -1,0 +1,24 @@
+| Metodo | Ruta | ADMIN | MEDICO | ENFERMERO | ADMISION | AUDITOR | Sin token |
+|---|---|---|---|---|---|---|---|
+| POST | `/api/v1/auth/mfa/setup` | 500 | 500 | 500 | 500 | 500 | 401 |
+| POST | `/api/v1/auth/mfa/enable` | 400 | 400 | 400 | 400 | 400 | 401 |
+| GET | `/api/v1/admin/users` | 200 | 403 | 403 | 403 | 403 | 401 |
+| POST | `/api/v1/admin/users` | 400 | 403 | 403 | 403 | 403 | 401 |
+| PATCH | `/api/v1/admin/users/x/status` | 404 | 403 | 403 | 403 | 403 | 401 |
+| GET | `/api/v1/admin/audit-logs` | 200 | 403 | 403 | 403 | 403 | 401 |
+| POST | `/api/v1/triage/` | 403 | 422 | 422 | 403 | 403 | 401 |
+| GET | `/api/v1/triage/` | 403 | 200 | 200 | 403 | 403 | 401 |
+| GET | `/api/v1/triage/x` | 403 | 404 | 404 | 403 | 403 | 401 |
+| PATCH | `/api/v1/triage/x/status` | 403 | 400 | 400 | 403 | 403 | 401 |
+| POST | `/api/v1/clinical-records/` | 403 | 400 | 403 | 403 | 403 | 401 |
+| POST | `/api/v1/clinical-records/x/close` | 403 | 400 | 403 | 403 | 403 | 401 |
+| POST | `/api/v1/clinical-records/x/clarifications` | 403 | 400 | 403 | 403 | 403 | 401 |
+| GET | `/api/v1/clinical-records/x` | 403 | 404 | 403 | 403 | 403 | 401 |
+| GET | `/api/v1/clinical-records/patient/x` | 403 | 200 | 403 | 403 | 403 | 401 |
+| GET | `/api/v1/clinical-records/x/verify` | 403 | 500 | 403 | 403 | 500 | 401 |
+| GET | `/api/v1/clinical-records/x/rips` | 403 | 404 | 403 | 403 | 404 | 401 |
+| GET | `/api/v1/clinical-records/x/fhir` | 403 | 404 | 403 | 403 | 404 | 401 |
+| POST | `/api/v1/prescriptions/` | 403 | 400 | 403 | 403 | 403 | 401 |
+| GET | `/api/v1/prescriptions/x` | 403 | 404 | 403 | 403 | 403 | 401 |
+| GET | `/api/v1/prescriptions/record/x` | 403 | 404 | 403 | 403 | 403 | 401 |
+| POST | `/api/v1/sync/batch` | 403 | 400 | 403 | 403 | 403 | 401 |

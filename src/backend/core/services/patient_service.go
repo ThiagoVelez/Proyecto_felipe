@@ -146,9 +146,24 @@ func (s *patientService) GetAllergies(ctx context.Context, patientID string) ([]
 }
 
 func (s *patientService) UpdateContact(ctx context.Context, id string, email, address, phone string) (*domain.Patient, error) {
+	existing, err := s.patientRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
 	email = strings.TrimSpace(email)
 	address = strings.TrimSpace(address)
 	phone = strings.TrimSpace(phone)
+
+	if email == "" {
+		email = existing.Email
+	}
+	if address == "" {
+		address = existing.Address
+	}
+	if phone == "" && existing.Phone != nil {
+		phone = *existing.Phone
+	}
 
 	if err := s.patientRepo.UpdateContact(ctx, id, email, address, phone); err != nil {
 		return nil, err

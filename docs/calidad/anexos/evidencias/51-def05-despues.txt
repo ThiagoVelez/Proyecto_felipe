@@ -1,0 +1,10 @@
+$ go test -count=1 -run TestDEF05 -v ./...  (DESPUES)
+=== RUN   TestDEF05PrescripcionRechazaPacienteDistintoAlFolio
+--- PASS: TestDEF05PrescripcionRechazaPacienteDistintoAlFolio (0.58s)
+PASS
+ok  	saludconecta-tests	0.602s
+exit=0
+
+$ go test -count=1 ./...  (suite completa tests/backend)
+ok  	saludconecta-tests	6.369s
+exit=0

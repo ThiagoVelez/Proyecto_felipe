@@ -263,8 +263,8 @@ func (s *authService) GetMFASeed(ctx context.Context, email string) (string, str
 			}
 			secret = newSecret
 			user.MFASecret = &newSecret
-			user.MFAEnabled = true
-			_ = s.userRepo.UpdateMFA(ctx, user.ID, newSecret, true)
+			// No activar MFAEnabled aquí; solo se activa cuando el usuario verifica y habilita explícitamente en EnableMFA
+			_ = s.userRepo.UpdateMFA(ctx, user.ID, newSecret, false)
 		}
 	} else {
 		// Semilla determinista Base32 calculada a partir del hash del correo para que cada cuenta tenga un QR único

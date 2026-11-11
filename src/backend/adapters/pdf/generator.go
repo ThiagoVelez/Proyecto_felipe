@@ -21,7 +21,7 @@ func NewGenerator(outputDir string) *Generator {
 	if outputDir == "" {
 		outputDir = "storage/documents"
 	}
-	_ = os.MkdirAll(outputDir, 0755)
+	_ = os.MkdirAll(outputDir, 0700)
 	return &Generator{outputDir: outputDir}
 }
 
@@ -169,8 +169,27 @@ func buildMinimalPDF(title string, lines []string, barcodeText string) []byte {
 
 // GenerateAppointmentPDF crea el comprobante de cita médica para el paciente
 func (g *Generator) GenerateAppointmentPDF(app *domain.Appointment) (string, []byte, error) {
-	filename := fmt.Sprintf("cita_%s_%s.pdf", app.PatientDocument, time.Now().Format("20060102_150405"))
+	safeDoc := filepath.Base(app.PatientDocument)
+	safeDoc = strings.ReplaceAll(safeDoc, "..", "")
+	safeDoc = strings.ReplaceAll(safeDoc, "/", "")
+	safeDoc = strings.ReplaceAll(safeDoc, "\\", "")
+	if safeDoc == "" || safeDoc == "." {
+		safeDoc = "paciente"
+	}
+	filename := fmt.Sprintf("cita_%s_%s.pdf", safeDoc, time.Now().Format("20060102_150405"))
 	fullPath := filepath.Join(g.outputDir, filename)
+
+	absDir, err := filepath.Abs(g.outputDir)
+	if err != nil {
+		return "", nil, err
+	}
+	absTarget, err := filepath.Abs(fullPath)
+	if err != nil {
+		return "", nil, err
+	}
+	if !strings.HasPrefix(absTarget, absDir+string(filepath.Separator)) {
+		return "", nil, fmt.Errorf("intento de path traversal detectado en generacion de PDF de cita")
+	}
 
 	lines := []string{
 		"### INFORMACION DE LA CITA PROGRAMADA",
@@ -192,11 +211,11 @@ func (g *Generator) GenerateAppointmentPDF(app *domain.Appointment) (string, []b
 		app.Observations,
 	}
 
-	barcode := fmt.Sprintf("CITA-%s-%s", app.PatientDocument, app.AppointmentDate.Format("20060102"))
+	barcode := fmt.Sprintf("CITA-%s-%s", safeDoc, app.AppointmentDate.Format("20060102"))
 	data := buildMinimalPDF("COMPROBANTE DE ASIGNACION DE CITA MEDICA", lines, barcode)
 
-	_ = os.MkdirAll(filepath.Dir(fullPath), 0755)
-	if err := os.WriteFile(fullPath, data, 0644); err != nil {
+	_ = os.MkdirAll(filepath.Dir(fullPath), 0700)
+	if err := os.WriteFile(fullPath, data, 0600); err != nil {
 		return "", nil, err
 	}
 	return fullPath, data, nil
@@ -204,8 +223,27 @@ func (g *Generator) GenerateAppointmentPDF(app *domain.Appointment) (string, []b
 
 // GeneratePrescriptionPDF crea el comprobante y receta clínica tripartita
 func (g *Generator) GeneratePrescriptionPDF(presc *domain.PrescriptionV2) (string, []byte, error) {
-	filename := fmt.Sprintf("receta_%s_%s.pdf", presc.UniqueCode, time.Now().Format("20060102_150405"))
+	safeCode := filepath.Base(presc.UniqueCode)
+	safeCode = strings.ReplaceAll(safeCode, "..", "")
+	safeCode = strings.ReplaceAll(safeCode, "/", "")
+	safeCode = strings.ReplaceAll(safeCode, "\\", "")
+	if safeCode == "" || safeCode == "." {
+		safeCode = "receta"
+	}
+	filename := fmt.Sprintf("receta_%s_%s.pdf", safeCode, time.Now().Format("20060102_150405"))
 	fullPath := filepath.Join(g.outputDir, filename)
+
+	absDir, err := filepath.Abs(g.outputDir)
+	if err != nil {
+		return "", nil, err
+	}
+	absTarget, err := filepath.Abs(fullPath)
+	if err != nil {
+		return "", nil, err
+	}
+	if !strings.HasPrefix(absTarget, absDir+string(filepath.Separator)) {
+		return "", nil, fmt.Errorf("intento de path traversal detectado en generacion de PDF de receta")
+	}
 
 	lines := []string{
 		"### INFORMACION DE LA RECETA MEDICA (PRESCRIPCION TRIPARTITA)",
@@ -242,8 +280,8 @@ func (g *Generator) GeneratePrescriptionPDF(presc *domain.PrescriptionV2) (strin
 
 	data := buildMinimalPDF("ORDEN MEDICA Y RECETARIO AMBULATORIO", lines, presc.UniqueCode)
 
-	_ = os.MkdirAll(filepath.Dir(fullPath), 0755)
-	if err := os.WriteFile(fullPath, data, 0644); err != nil {
+	_ = os.MkdirAll(filepath.Dir(fullPath), 0700)
+	if err := os.WriteFile(fullPath, data, 0600); err != nil {
 		return "", nil, err
 	}
 	return fullPath, data, nil

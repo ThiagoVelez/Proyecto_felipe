@@ -1,0 +1,10 @@
+$ gosec -fmt text ./...  (src/backend; se omiten los fragmentos de codigo para no reproducir credenciales de semilla)
+[src\backend\pkg\crypto\crypto.go:135] - G115 (CWE-190): integer overflow conversion int64 -> uint64 (Confidence: MEDIUM, Severity: HIGH)
+[src\backend\adapters\storage\mysql\seeder.go:126] - G101 (CWE-798): Potential hardcoded credentials (Confidence: LOW, Severity: HIGH)
+[src\backend\adapters\storage\memory\memory_repos.go:50] - G101 (CWE-798): Potential hardcoded credentials (Confidence: LOW, Severity: HIGH)
+[src\backend\pkg\crypto\crypto.go:6] - G505 (CWE-327): Blocklisted import crypto/sha1: weak cryptographic primitive (Confidence: HIGH, Severity: MEDIUM)
+  Files  : 48
+  Lines  : 6314
+  Nosec  : 0
+  Issues : 4
+exit=1

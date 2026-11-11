@@ -1,0 +1,549 @@
+{
+ "resumen": {
+  "defectos_registrados": 92,
+  "verificacion_01_48": {
+   "Verificado — corregido": 26,
+   "Corregido parcialmente": 9,
+   "Sigue abierto": 12,
+   "Corrección presente; ejecución No medida": 1
+  },
+  "verificacion_01_48_ids": {
+   "Verificado — corregido": [
+    1,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    11,
+    12,
+    13,
+    14,
+    16,
+    17,
+    18,
+    19,
+    20,
+    23,
+    24,
+    26,
+    27,
+    31,
+    34,
+    37,
+    42,
+    46,
+    47
+   ],
+   "Corregido parcialmente": [
+    2,
+    10,
+    15,
+    21,
+    22,
+    33,
+    38,
+    40,
+    48
+   ],
+   "Sigue abierto": [
+    3,
+    28,
+    29,
+    30,
+    32,
+    35,
+    36,
+    39,
+    41,
+    43,
+    44,
+    45
+   ],
+   "Corrección presente; ejecución No medida": [
+    25
+   ]
+  },
+  "abiertos_en_main": 63,
+  "abiertos_en_main_por_severidad": {
+   "Crítica": 18,
+   "Media": 28,
+   "Alta": 9,
+   "Baja": 8
+  },
+  "corregidos_en_rama_pendientes_de_fusion": [
+   "DEF-28",
+   "DEF-41",
+   "DEF-63"
+  ],
+  "nuevos_v2_publicados_en_r3": 36,
+  "nuevos_r3": 8,
+  "nuevos_r3_por_severidad": {
+   "Crítica": 1,
+   "Media": 6,
+   "Alta": 1
+  },
+  "kloc_productivo": 30.157,
+  "densidad_abiertos_por_kloc": 2.09
+ },
+ "medidas": {
+  "pruebas_backend": "91 pasan, 0 fallan, 22 reproducciones omitidas (evidencias/r3/12-go-test-tests.txt)",
+  "cobertura_backend": "68,9 %",
+  "vitest": "108 pruebas en 15 archivos (105 en 14 archivos del equipo), todas pasan",
+  "cobertura_frontend": "72,85 %",
+  "reproducciones_abiertas": "22 de 22",
+  "golangci_lint": "62 hallazgos (21 nuevos desde la v1)",
+  "gocyclo": "16 funciones con complejidad mayor de 15",
+  "govulncheck": "1 vulnerabilidad alcanzable (GO-2026-6888)",
+  "npm_audit": "0 en producción; 6 en desarrollo",
+  "eslint": "0 errores, 89 avisos",
+  "p95": "1,38 ms HTTP real; 3,92 a 7,86 ms en proceso",
+  "memoria": "11,5 a 16,3 MB",
+  "afirmaciones": "48 evaluadas: 7 verificadas, 24 parciales, 2 no verificadas, 15 falsas",
+  "rtm": "5 de 21 requisitos se sostienen",
+  "dictamen": "No conforme con ISO/IEC 25010:2023"
+ },
+ "filas": [
+  [
+   "DEF-05",
+   "Crítica",
+   "Verificado — corregido"
+  ],
+  [
+   "DEF-06",
+   "Crítica",
+   "Verificado — corregido"
+  ],
+  [
+   "DEF-07",
+   "Crítica",
+   "Verificado — corregido"
+  ],
+  [
+   "DEF-08",
+   "Crítica",
+   "Verificado — corregido"
+  ],
+  [
+   "DEF-09",
+   "Crítica",
+   "Verificado — corregido"
+  ],
+  [
+   "DEF-10",
+   "Crítica",
+   "Corregido parcialmente"
+  ],
+  [
+   "DEF-11",
+   "Crítica",
+   "Verificado — corregido"
+  ],
+  [
+   "DEF-12",
+   "Alta",
+   "Verificado — corregido"
+  ],
+  [
+   "DEF-13",
+   "Alta",
+   "Verificado — corregido"
+  ],
+  [
+   "DEF-14",
+   "Alta",
+   "Verificado — corregido"
+  ],
+  [
+   "DEF-15",
+   "Media",
+   "Corregido parcialmente"
+  ],
+  [
+   "DEF-16",
+   "Alta",
+   "Verificado — corregido"
+  ],
+  [
+   "DEF-17",
+   "Alta",
+   "Verificado — corregido"
+  ],
+  [
+   "DEF-18",
+   "Alta",
+   "Verificado — corregido"
+  ],
+  [
+   "DEF-19",
+   "Alta",
+   "Verificado — corregido"
+  ],
+  [
+   "DEF-20",
+   "Alta",
+   "Verificado — corregido"
+  ],
+  [
+   "DEF-21",
+   "Alta",
+   "Corregido parcialmente"
+  ],
+  [
+   "DEF-22",
+   "Media",
+   "Corregido parcialmente"
+  ],
+  [
+   "DEF-23",
+   "Alta",
+   "Verificado — corregido"
+  ],
+  [
+   "DEF-24",
+   "Alta",
+   "Verificado — corregido"
+  ],
+  [
+   "DEF-25",
+   "Alta",
+   "Corrección presente; ejecución No medida"
+  ],
+  [
+   "DEF-26",
+   "Alta",
+   "Verificado — corregido"
+  ],
+  [
+   "DEF-27",
+   "Media",
+   "Verificado — corregido"
+  ],
+  [
+   "DEF-28",
+   "Media",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-29",
+   "Media",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-30",
+   "Media",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-31",
+   "Media",
+   "Verificado — corregido"
+  ],
+  [
+   "DEF-32",
+   "Media",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-33",
+   "Media",
+   "Corregido parcialmente"
+  ],
+  [
+   "DEF-34",
+   "Media",
+   "Verificado — corregido"
+  ],
+  [
+   "DEF-35",
+   "Media",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-36",
+   "Media",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-37",
+   "Media",
+   "Verificado — corregido"
+  ],
+  [
+   "DEF-38",
+   "Baja",
+   "Corregido parcialmente"
+  ],
+  [
+   "DEF-39",
+   "Media",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-40",
+   "Media",
+   "Corregido parcialmente"
+  ],
+  [
+   "DEF-41",
+   "Baja",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-42",
+   "Baja",
+   "Verificado — corregido"
+  ],
+  [
+   "DEF-43",
+   "Baja",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-44",
+   "Baja",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-45",
+   "Baja",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-46",
+   "Media",
+   "Verificado — corregido"
+  ],
+  [
+   "DEF-47",
+   "Alta",
+   "Verificado — corregido"
+  ],
+  [
+   "DEF-48",
+   "Baja",
+   "Corregido parcialmente"
+  ],
+  [
+   "DEF-49",
+   "Crítica",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-50",
+   "Crítica",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-51",
+   "Crítica",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-52",
+   "Crítica",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-53",
+   "Crítica",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-54",
+   "Crítica",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-55",
+   "Crítica",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-56",
+   "Crítica",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-57",
+   "Crítica",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-58",
+   "Crítica",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-59",
+   "Crítica",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-60",
+   "Crítica",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-61",
+   "Alta",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-62",
+   "Alta",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-63",
+   "Alta",
+   "Corregido en rama"
+  ],
+  [
+   "DEF-64",
+   "Alta",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-65",
+   "Alta",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-66",
+   "Media",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-67",
+   "Media",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-68",
+   "Media",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-69",
+   "Media",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-70",
+   "Media",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-71",
+   "Media",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-72",
+   "Media",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-73",
+   "Baja",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-74",
+   "Crítica",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-75",
+   "Crítica",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-76",
+   "Alta",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-77",
+   "Alta",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-78",
+   "Crítica",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-79",
+   "Crítica",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-80",
+   "Media",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-81",
+   "Media",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-82",
+   "Baja",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-83",
+   "Media",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-84",
+   "Media",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-85",
+   "Crítica",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-86",
+   "Media",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-87",
+   "Media",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-88",
+   "Media",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-89",
+   "Media",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-90",
+   "Media",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-91",
+   "Alta",
+   "Sigue abierto"
+  ],
+  [
+   "DEF-92",
+   "Media",
+   "Sigue abierto"
+  ]
+ ]
+}

@@ -1,0 +1,13 @@
+# Contraste WCAG 2.x (formula de luminancia relativa) con la paleta Tailwind 3; script en anexos/linea-base-r3.md
+texto red-950 sobre red-50: 14.76:1  AA(4,5)=si  AAA(7)=si
+texto red-900 sobre red-50 (copia del test): 9.16:1  AA(4,5)=si  AAA(7)=si
+texto red-700 sobre blanco (dato de severidad): 6.47:1  AA(4,5)=si  AAA(7)=no
+texto red-700 sobre red-50: 5.91:1  AA(4,5)=si  AAA(7)=no
+texto red-800 sobre red-50 (nota al pie): 7.60:1  AA(4,5)=si  AAA(7)=si
+blanco sobre red-600 (icono): 4.83:1  AA(4,5)=si  AAA(7)=no
+# DEF-36: texto blanco sobre el color mas claro de cada degradado de banner (UserProfileModal.jsx MEDICAL_BANNERS)
+blanco sobre pediatria to-[#F59E0B]: 2.15:1  AA=no  AAA=no
+blanco sobre pediatria via-[#0D9488]: 3.74:1  AA=no  AAA=no
+blanco sobre farmacia via-[#047857]: 5.48:1  AA=si  AAA=no
+blanco sobre urgencias to-[#075985]: 7.56:1  AA=si  AAA=si
+blanco sobre cirugia via-[#1E3A8A]: 10.36:1  AA=si  AAA=si

@@ -1,0 +1,41 @@
+$ golangci-lint run ./... (config por defecto)
+adapters\storage\mysql\audit_repo.go:69:18: Error return value of `rows.Close` is not checked (errcheck)
+	defer rows.Close()
+	                ^
+adapters\storage\mysql\clinical_record_repo.go:130:18: Error return value of `rows.Close` is not checked (errcheck)
+	defer rows.Close()
+	                ^
+adapters\storage\mysql\clinical_record_repo.go:196:18: Error return value of `rows.Close` is not checked (errcheck)
+	defer rows.Close()
+	                ^
+adapters\storage\mysql\clinical_record_repo.go:214:19: Error return value of `tx.Rollback` is not checked (errcheck)
+	defer tx.Rollback()
+	                 ^
+adapters\storage\mysql\clinical_record_repo.go:228:18: Error return value of `stmt.Close` is not checked (errcheck)
+	defer stmt.Close()
+	                ^
+adapters\storage\mysql\prescription_repo.go:26:19: Error return value of `tx.Rollback` is not checked (errcheck)
+	defer tx.Rollback()
+	                 ^
+adapters\storage\mysql\prescription_repo.go:52:18: Error return value of `stmt.Close` is not checked (errcheck)
+	defer stmt.Close()
+	                ^
+adapters\storage\postgres\clinical_record_repo.go:207:19: Error return value of `tx.Rollback` is not checked (errcheck)
+	defer tx.Rollback()
+	                 ^
+adapters\storage\postgres\clinical_record_repo.go:221:18: Error return value of `stmt.Close` is not checked (errcheck)
+	defer stmt.Close()
+	                ^
+cmd\api\main.go:68:19: Error return value is not checked (errcheck)
+	defer repos.Close()
+	                 ^
+pkg\logger\logger.go:70:14: Error return value of `fmt.Fprintln` is not checked (errcheck)
+	fmt.Fprintln(l.out, string(payload))
+	            ^
+adapters\storage\postgres\user_repo.go:133:3: ineffectual assignment to argIdx (ineffassign)
+		argIdx++
+		^
+12 issues:
+* errcheck: 11
+* ineffassign: 1
+exit=1

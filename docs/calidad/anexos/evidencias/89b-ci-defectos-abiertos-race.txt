@@ -1,0 +1,24 @@
+$ gh run view --job 125012764011 --log  (job informativo de defectos abiertos, -race)
+shell: /usr/bin/bash -e {0}
+--- PASS: TestDEF28AuditoriaConservaDatosTrasFinalizarPeticion (0.01s)
+--- FAIL: TestDEF06CruceAlergiasReactividadCruzadaYTildes (9.26s)
+--- FAIL: TestDEF07SincronizacionNoSobrescribeFolioCerrado (4.64s)
+--- FAIL: TestDEF09HipotermiaSeveraNoEsNoUrgente (0.00s)
+--- FAIL: TestDEF13TokenDeUsuarioDesactivadoEsRechazado (4.64s)
+--- FAIL: TestDEF14SetupMFANoDesactivaSegundoFactor (9.34s)
+--- FAIL: TestDEF16CierreConcurrenteNoBifurcaCadena (4.71s)
+--- FAIL: TestDEF17MedicoNoCierraFolioAjeno (4.90s)
+--- FAIL: TestDEF18SincronizacionUsaMedicoAutenticado (5.06s)
+--- FAIL: TestDEF29HashSinColisionPorDelimitador (0.00s)
+--- FAIL: TestDEF30VerificacionValidaEnlaceConFolioAnterior (4.75s)
+--- FAIL: TestDEF31LoginNoRevelaCuentaInactivaConClaveErronea (4.75s)
+WARNING: DATA RACE
+      /home/runner/work/Proyecto_felipe/Proyecto_felipe/src/backend/adapters/storage/memory/memory_repos.go:368 +0x234
+      /home/runner/work/Proyecto_felipe/Proyecto_felipe/src/backend/adapters/storage/memory/memory_repos.go:368 +0x234
+    testing.go:1867: race detected during execution of test
+--- FAIL: TestDEF37LecturaConcurrenteDeFolioSinCarrera (4.75s)
+--- PASS: TestDEF41CorrelationIDSoloAceptaUUID (0.00s)
+--- PASS: TestDEF05PrescripcionRechazaPacienteDistintoAlFolio (4.69s)
+--- PASS: TestDEF27FrecuenciaCardiacaLimiteSuperior (0.00s)
+--- PASS: TestDEF08NivelManchesterFueraDelCatalogo (4.69s)
+FAIL	saludconecta-tests	66.195s

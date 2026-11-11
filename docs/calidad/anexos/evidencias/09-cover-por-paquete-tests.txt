@@ -1,0 +1,8 @@
+  64.2%  saludconecta-backend/adapters/http
+   4.2%  saludconecta-backend/adapters/http/handlers
+  35.5%  saludconecta-backend/adapters/http/middlewares
+  53.4%  saludconecta-backend/adapters/storage/memory
+  43.3%  saludconecta-backend/core/domain
+  64.8%  saludconecta-backend/core/services
+  39.1%  saludconecta-backend/pkg/crypto
+   0.0%  saludconecta-backend/pkg/logger

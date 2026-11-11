@@ -1,0 +1,25 @@
+Lenguaje | Archivos | Lineas
+go | 57 | 7124
+jsx | 22 | 8423
+js | 8 | 649
+css | 1 | 57
+sql | 1 | 254
+html | 6 | 2613
+yml | 1 | 99
+md | 5 | 1471
+
+Total archivos versionados: 163
+
+Go por directorio:
+src/backend/core: 1238
+src/backend/adapters: 4753
+src/backend/cmd: 141
+src/backend/pkg: 315
+src/backend/database: 0
+tests/backend: 677
+
+Archivos > 500 lineas:
+2233 src/frontend/src/screens/admin/AdminDashboardScreen.jsx
+786 src/frontend/src/components/UserProfileModal.jsx
+741 src/frontend/src/screens/ProfileScreen.jsx
+556 src/backend/adapters/storage/memory/memory_repos.go

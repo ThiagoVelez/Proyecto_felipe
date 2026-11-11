@@ -222,9 +222,18 @@ export const PharmacyDashboard = ({ user, initialTab = 'inbox' }) => {
     }
   };
 
-  // Confirmar dispensación atómica
+  // Confirmar dispensación atómica con cotejo obligatorio
   const handleConfirmDispense = async () => {
     if (!selectedPrescription) return;
+
+    const docCotejo = scannedDocument.trim();
+    if (!docCotejo) {
+      setDispenseFeedback({
+        type: 'error',
+        message: 'Debe escanear con la cámara o ingresar manualmente el documento físico del paciente para el cotejo obligatorio de entrega.',
+      });
+      return;
+    }
 
     setIsDispensing(true);
     setDispenseFeedback(null);
@@ -232,7 +241,7 @@ export const PharmacyDashboard = ({ user, initialTab = 'inbox' }) => {
     try {
       const res = await apiClient.dispensePrescription({
         prescription_id: selectedPrescription.id,
-        patient_document: scannedDocument || selectedPrescription.patient_document,
+        patient_document: docCotejo,
         coverage_type: dispenseCoverage,
         payment_method: dispensePaymentMethod,
       });
@@ -700,9 +709,10 @@ export const PharmacyDashboard = ({ user, initialTab = 'inbox' }) => {
                             <button
                               type="button"
                               onClick={() => {
-                                setScannedDocument(p.patient_document);
+                                setScannedDocument('');
                                 setSelectedPrescription(p);
                                 setIsScanModalOpen(true);
+                                startScanner();
                               }}
                               className="px-2.5 py-1.5 rounded-lg bg-primary text-white text-[11px] font-semibold hover:bg-primary/90 transition-all cursor-pointer"
                             >

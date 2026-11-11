@@ -63,12 +63,8 @@ CREATE TABLE IF NOT EXISTS inventory_items (
     INDEX idx_med_dosage (generic_name, dosage)
 ) ENGINE=InnoDB;
 
--- 5. Prescripciones y Recetario para Farmacia
--- Dropeamos si estan vacias para reconstruir con llaves foraneas a inventory_items y campos comerciales
-DROP TABLE IF EXISTS prescription_items;
-DROP TABLE IF EXISTS prescriptions;
-
-CREATE TABLE prescriptions (
+-- 5. Prescripciones y Recetario para Farmacia (Migración no destructiva DEF-56)
+CREATE TABLE IF NOT EXISTS prescriptions (
     id VARCHAR(36) PRIMARY KEY,
     hce_id VARCHAR(36) NOT NULL,
     doctor_id VARCHAR(36) NOT NULL,
@@ -96,7 +92,7 @@ CREATE TABLE prescriptions (
 ) ENGINE=InnoDB;
 
 -- 6. Items Formulados asociados a la Concentracion Exacta
-CREATE TABLE prescription_items (
+CREATE TABLE IF NOT EXISTS prescription_items (
     id VARCHAR(36) PRIMARY KEY,
     prescription_id VARCHAR(36) NOT NULL,
     inventory_item_id VARCHAR(36) NOT NULL,

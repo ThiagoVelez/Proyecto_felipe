@@ -1,0 +1,15 @@
+        | Escenario | p50 (ms) | p95 (ms) | p99 (ms) | max (ms) |
+        |---|---|---|---|---|
+        | emision de prescripcion | 0.76 | 7.86 | 11.49 | 18.80 |
+        | intercepcion de alergia | 0.00 | 3.92 | 17.95 | 25.48 |
+        | lectura de historia clinica | 0.18 | 4.69 | 12.36 | 24.01 |
+        | Escenario | p50 (ms) | p95 (ms) | p99 (ms) | max (ms) |
+        |---|---|---|---|---|
+        | emision de prescripcion | 0.63 | 6.87 | 11.49 | 21.31 |
+        | intercepcion de alergia | 0.23 | 3.97 | 7.94 | 25.46 |
+        | lectura de historia clinica | 0.00 | 4.89 | 11.51 | 20.91 |
+        | Escenario | p50 (ms) | p95 (ms) | p99 (ms) | max (ms) |
+        |---|---|---|---|---|
+        | emision de prescripcion | 0.56 | 6.77 | 10.64 | 23.45 |
+        | intercepcion de alergia | 0.51 | 4.97 | 16.17 | 25.71 |
+        | lectura de historia clinica | 0.23 | 4.11 | 16.74 | 27.28 |

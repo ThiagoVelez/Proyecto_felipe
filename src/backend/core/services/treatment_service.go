@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -46,10 +47,19 @@ func (s *treatmentService) DispatchTreatment(ctx context.Context, presc *domain.
 		return nil, domain.ErrEmptyPrescriptionItems
 	}
 
-	// 1. Generar identificadores unicos
-	if presc.ID == "" {
+	// 1. Validar que la receta no exista previamente ni pueda reactivarse (DEF-58)
+	if presc.ID != "" {
+		existing, err := s.prescRepo.GetByID(ctx, presc.ID)
+		if err == nil && existing != nil {
+			if existing.Status == domain.PrescriptionStatusDispensed {
+				return nil, domain.ErrAlreadyDispensed
+			}
+			return nil, errors.New("la receta ya existe y no puede ser recreada")
+		}
+	} else {
 		presc.ID = uuid.New().String()
 	}
+
 	if presc.UniqueCode == "" {
 		presc.UniqueCode = GenerateRandomRXCode()
 	}
@@ -59,7 +69,7 @@ func (s *treatmentService) DispatchTreatment(ctx context.Context, presc *domain.
 	presc.CreatedAt = time.Now().UTC()
 	presc.Status = domain.PrescriptionStatusPending
 
-	// 2. Completar datos asistenciales del medico y paciente
+	// 2. Completar y validar datos asistenciales del medico y paciente
 	if presc.DoctorName == "" && presc.DoctorID != "" {
 		doc, err := s.userRepo.GetByID(ctx, presc.DoctorID)
 		if err == nil && doc != nil {
@@ -70,17 +80,34 @@ func (s *treatmentService) DispatchTreatment(ctx context.Context, presc *domain.
 	var patientEmail string
 	if presc.PatientID != "" {
 		pat, err := s.patientRepo.GetByID(ctx, presc.PatientID)
-		if err == nil && pat != nil {
-			if presc.PatientName == "" {
-				presc.PatientName = fmt.Sprintf("%s %s", pat.FirstName, pat.LastName)
+		if err != nil || pat == nil {
+			return nil, domain.ErrPatientNotFound
+		}
+		if presc.PatientName == "" {
+			presc.PatientName = fmt.Sprintf("%s %s", pat.FirstName, pat.LastName)
+		}
+		if presc.PatientDocument == "" {
+			presc.PatientDocument = pat.DocumentNumber
+		}
+		if presc.PatientEPS == "" {
+			presc.PatientEPS = pat.EPSName
+		}
+		patientEmail = pat.Email
+	}
+
+	// 2.1. Validar antecedentes alergicos del paciente (DEF-51) y cantidades positivas (DEF-52)
+	allergies, _ := s.patientRepo.GetPatientAllergies(ctx, presc.PatientID)
+	for _, it := range presc.Items {
+		if it.QuantityPrescribed <= 0 {
+			return nil, errors.New("la cantidad prescrita debe ser un entero positivo")
+		}
+		if conflict := domain.MatchAllergy(allergies, it.MedicationName); conflict != nil {
+			return nil, &domain.AllergyConflictError{
+				PatientID:        presc.PatientID,
+				ActiveIngredient: conflict.ActiveIngredient,
+				Severity:         conflict.Severity,
+				MedicationName:   it.MedicationName,
 			}
-			if presc.PatientDocument == "" {
-				presc.PatientDocument = pat.DocumentNumber
-			}
-			if presc.PatientEPS == "" {
-				presc.PatientEPS = pat.EPSName
-			}
-			patientEmail = pat.Email
 		}
 	}
 
@@ -88,6 +115,9 @@ func (s *treatmentService) DispatchTreatment(ctx context.Context, presc *domain.
 	var subtotal float64
 	for i := range presc.Items {
 		it := &presc.Items[i]
+		if it.QuantityPrescribed <= 0 {
+			return nil, errors.New("la cantidad prescrita debe ser un entero positivo")
+		}
 		if it.ID == "" {
 			it.ID = uuid.New().String()
 		}

@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -191,6 +192,22 @@ func (s *clinicalRecordService) VerifyIntegrity(ctx context.Context, recordID st
 		prevHash = *record.PreviousHash
 	}
 
+	if prevHash != GenesisHash {
+		patientRecords, err := s.recordRepo.ListByPatient(ctx, record.PatientID)
+		if err == nil {
+			foundPrev := false
+			for _, pr := range patientRecords {
+				if pr.ID != record.ID && pr.IsClosed && pr.HashSHA256 != nil && *pr.HashSHA256 == prevHash {
+					foundPrev = true
+					break
+				}
+			}
+			if !foundPrev {
+				return false, nil
+			}
+		}
+	}
+
 	recalculated := crypto.CalculateChainedRecordHash(
 		prevHash,
 		record.PatientID,
@@ -220,6 +237,10 @@ func (s *clinicalRecordService) AddAnatomicalNote(ctx context.Context, note *dom
 	}
 	note.DoctorName = doctor.FullName
 
+	if note.PainLevel < 0 || note.PainLevel > 10 {
+		return nil, fmt.Errorf("la escala de dolor EVA debe estar entre 0 y 10 (valor recibido: %d)", note.PainLevel)
+	}
+
 	if note.ClinicalRecordID != nil && *note.ClinicalRecordID != "" {
 		record, err := s.recordRepo.GetByID(ctx, *note.ClinicalRecordID)
 		if err != nil {
@@ -227,6 +248,12 @@ func (s *clinicalRecordService) AddAnatomicalNote(ctx context.Context, note *dom
 		}
 		if !record.CanModify() {
 			return nil, domain.ErrRecordAlreadyClosed
+		}
+		if record.PatientID != note.PatientID {
+			return nil, fmt.Errorf("el paciente de la nota anatomica (%s) no coincide con el del folio clinico (%s)", note.PatientID, record.PatientID)
+		}
+		if record.DoctorID != note.DoctorID {
+			return nil, fmt.Errorf("el medico de la nota anatomica (%s) no coincide con el del folio clinico (%s)", note.DoctorID, record.DoctorID)
 		}
 	}
 

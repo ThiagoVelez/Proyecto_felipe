@@ -63,36 +63,18 @@ export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
     return () => clearInterval(timer);
   }, []);
 
-  // Sincronización de semilla y QR exclusivo según el correo institucional ingresado
+  // Código QR para enrolamiento si el flujo lo requiere (sin consultar semillas anónimas)
   useEffect(() => {
     let isMounted = true;
     const targetEmail = identifier.trim().toLowerCase() || 'usuario@saludconecta.ips.gov.co';
-
-    const debounce = setTimeout(async () => {
-      try {
-        const seedData = await apiClient.getMfaSeed(targetEmail);
-        if (!isMounted) return;
-        const secret = seedData?.secret || 'JBSWY3DPEHPK3PXP';
-        const uri = seedData?.otpauth_uri || buildOtpAuthUri(secret, targetEmail, 'SaludConecta IPS');
-        setMfaSecret(secret);
-        const url = await generateQrDataUrl(uri, 140);
-        if (isMounted && url) {
-          setQrDataUrl(url);
-        }
-      } catch {
-        if (!isMounted) return;
-        const fallbackUri = buildOtpAuthUri(mfaSecret, targetEmail, 'SaludConecta IPS');
-        generateQrDataUrl(fallbackUri, 140).then((url) => {
-          if (isMounted && url) setQrDataUrl(url);
-        });
-      }
-    }, 600);
-
+    const uri = buildOtpAuthUri(mfaSecret, targetEmail, 'SaludConecta IPS');
+    generateQrDataUrl(uri, 140).then((url) => {
+      if (isMounted && url) setQrDataUrl(url);
+    });
     return () => {
       isMounted = false;
-      clearTimeout(debounce);
     };
-  }, [identifier]);
+  }, [identifier, mfaSecret]);
 
   // Rotación manual de semilla para pruebas de laboratorio
   const handleManualRotate = async () => {
@@ -180,7 +162,7 @@ export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
     } catch (err) {
       if (err.data?.mfa_required && code.length < 6) {
         showStatus(
-          'Su cuenta requiere segundo factor. Ingrese el código de 6 dígitos o pulse "Pegar código de prueba".',
+          'Su cuenta requiere segundo factor. Ingrese el código de 6 dígitos de su aplicación autenticadora.',
           true
         );
         digitRefs.current[0]?.focus();
@@ -378,13 +360,6 @@ export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
                       <span className="text-[10px] font-semibold text-slate-600">
                         Código de 6 dígitos:
                       </span>
-                      <button
-                        type="button"
-                        onClick={handleAutofillTest}
-                        className="text-[10px] text-teal-700 font-semibold hover:text-teal-900 hover:underline cursor-pointer"
-                      >
-                        Pegar código de prueba
-                      </button>
                     </div>
 
                     <div className="flex items-center justify-between gap-1">

@@ -1,0 +1,22 @@
+$ (cd src/backend && go test -count=1 -coverprofile=coverage-src.out ./...)
+# fecha: 2026-11-10T22:58:36Z
+	saludconecta-backend/adapters/email		coverage: 0.0% of statements
+	saludconecta-backend/adapters/http		coverage: 0.0% of statements
+	saludconecta-backend/adapters/http/handlers		coverage: 0.0% of statements
+	saludconecta-backend/adapters/http/middlewares		coverage: 0.0% of statements
+	saludconecta-backend/adapters/interoperability		coverage: 0.0% of statements
+	saludconecta-backend/adapters/pdf		coverage: 0.0% of statements
+	saludconecta-backend/adapters/storage		coverage: 0.0% of statements
+	saludconecta-backend/adapters/storage/catalog		coverage: 0.0% of statements
+	saludconecta-backend/adapters/storage/memory		coverage: 0.0% of statements
+	saludconecta-backend/adapters/storage/mysql		coverage: 0.0% of statements
+	saludconecta-backend/adapters/storage/postgres		coverage: 0.0% of statements
+	saludconecta-backend/cmd/api		coverage: 0.0% of statements
+	saludconecta-backend/core/domain		coverage: 0.0% of statements
+?   	saludconecta-backend/core/ports	[no test files]
+ok  	saludconecta-backend/core/services	0.109s	coverage: 0.0% of statements
+ok  	saludconecta-backend/pkg/config	0.074s	coverage: 36.4% of statements
+ok  	saludconecta-backend/pkg/crypto	2.350s	coverage: 22.2% of statements
+	saludconecta-backend/pkg/logger		coverage: 0.0% of statements
+# codigo de salida: 0
+# Pruebas de nivel superior en src/backend:  {'pass': 6}

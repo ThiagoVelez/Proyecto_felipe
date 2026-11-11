@@ -1,0 +1,14 @@
+$ go test -count=1 -run TestDEF28 -v . (con audit_middleware.go de origin/main 9bacb0a)
+    auditoria_concurrencia_regression_test.go:77: Entrada 15 alterada tras finalizar la peticion: resource="/api/v1/recurso-0019" correlation="3d4cc217-32c1-4508-beb5-2d1d4ef797d2"; se esperaba "/api/v1/recurso-0015" / "73f6f27d-c90f-4590-97ed-dbd6d1990a3e"
+    auditoria_concurrencia_regression_test.go:77: Entrada 16 alterada tras finalizar la peticion: resource="/api/v1/recurso-0019" correlation="3d4cc217-32c1-4508-beb5-2d1d4ef797d2"; se esperaba "/api/v1/recurso-0016" / "b6885710-94da-4a12-9c66-f66bc9d95da7"
+    auditoria_concurrencia_regression_test.go:77: Entrada 17 alterada tras finalizar la peticion: resource="/api/v1/recurso-0019" correlation="3d4cc217-32c1-4508-beb5-2d1d4ef797d2"; se esperaba "/api/v1/recurso-0017" / "f977bef3-5ff9-4652-952a-dfecb27eff49"
+    auditoria_concurrencia_regression_test.go:77: Entrada 18 alterada tras finalizar la peticion: resource="/api/v1/recurso-0019" correlation="3d4cc217-32c1-4508-beb5-2d1d4ef797d2"; se esperaba "/api/v1/recurso-0018" / "6c045d68-7949-4c9a-a145-16646e7f1d18"
+--- FAIL: TestDEF28AuditoriaConservaDatosTrasFinalizarPeticion (0.00s)
+FAIL
+FAIL	saludconecta-tests	0.024s
+FAIL
+$ go test -count=1 -run TestDEF28 -v . (rama calidad/revision-r3)
+--- PASS: TestDEF28AuditoriaConservaDatosTrasFinalizarPeticion (0.00s)
+PASS
+ok  	saludconecta-tests	0.025s
+# Entradas alteradas de 20 en tres corridas con el codigo de origin/main: 18 18 18 

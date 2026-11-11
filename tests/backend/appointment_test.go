@@ -24,6 +24,10 @@ func TestAppointment_RejectsPastDates(t *testing.T) {
 	pdfGen := pdf.NewGenerator(t.TempDir())
 	emailSvc := email.NewService(email.Config{}, log)
 
+	_ = userRepo.Create(context.Background(), newDoctorFixture("doc-01", "RM-01"))
+	_ = patientRepo.Create(context.Background(), newPatientFixture("pat-01", "DOC-01"))
+	_ = patientRepo.Create(context.Background(), newPatientFixture("pat-02", "DOC-02"))
+
 	svc := services.NewAppointmentService(appRepo, patientRepo, userRepo, pdfGen, emailSvc, log)
 
 	// Cita en fecha pasada (ayer)
@@ -52,6 +56,10 @@ func TestAppointment_RejectsScheduleOverlap(t *testing.T) {
 
 	pdfGen := pdf.NewGenerator(t.TempDir())
 	emailSvc := email.NewService(email.Config{}, log)
+
+	_ = userRepo.Create(context.Background(), newDoctorFixture("doc-01", "RM-01"))
+	_ = patientRepo.Create(context.Background(), newPatientFixture("pat-01", "DOC-01"))
+	_ = patientRepo.Create(context.Background(), newPatientFixture("pat-02", "DOC-02"))
 
 	svc := services.NewAppointmentService(appRepo, patientRepo, userRepo, pdfGen, emailSvc, log)
 
@@ -105,6 +113,10 @@ func TestAppointment_ScheduleSuccessAndRetrieve(t *testing.T) {
 
 	pdfGen := pdf.NewGenerator(t.TempDir())
 	emailSvc := email.NewService(email.Config{}, log)
+
+	_ = userRepo.Create(context.Background(), newDoctorFixture("doc-01", "RM-01"))
+	_ = patientRepo.Create(context.Background(), newPatientFixture("pat-01", "DOC-01"))
+	_ = patientRepo.Create(context.Background(), newPatientFixture("pat-02", "DOC-02"))
 
 	svc := services.NewAppointmentService(appRepo, patientRepo, userRepo, pdfGen, emailSvc, log)
 

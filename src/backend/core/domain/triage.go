@@ -13,6 +13,7 @@ var (
 	ErrInvalidOxygenSaturation = errors.New("la saturacion de oxigeno debe estar entre 0 y 100%")
 	ErrInvalidManchesterLevel  = errors.New("el nivel Manchester no pertenece al catalogo o es menos urgente que el calculado por los signos vitales")
 	ErrInvalidTriageStatus     = errors.New("el estado de triaje no pertenece al catalogo")
+	ErrInvalidPainScaleScore   = errors.New("la escala de dolor EVA debe estar entre 0 y 10 puntos")
 )
 
 // ManchesterLevel define la prioridad clinica segun el protocolo internacional de Manchester.
@@ -91,7 +92,7 @@ type TriageRecord struct {
 // Validate verifica la coherencia y rangos fisiologicos plausibles de los datos ingresados.
 func (t *TriageRecord) Validate() error {
 	if t.PainScaleScore < 0 || t.PainScaleScore > 10 {
-		t.PainScaleScore = 0
+		return ErrInvalidPainScaleScore
 	}
 	if t.GlasgowScore < 3 || t.GlasgowScore > 15 {
 		return ErrInvalidGlasgowScore

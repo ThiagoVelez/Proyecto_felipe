@@ -2,8 +2,9 @@ package services
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
-	"math/rand"
+	"math/big"
 	"time"
 
 	"github.com/google/uuid"
@@ -60,22 +61,24 @@ func (s *appointmentService) ScheduleAppointment(ctx context.Context, app *domai
 
 	// 3. Completar datos asistenciales del profesional
 	doctor, err := s.userRepo.GetByID(ctx, app.DoctorID)
-	if err == nil && doctor != nil {
-		app.DoctorName = doctor.FullName
-		app.DoctorSpecialty = doctor.Specialty
-		app.DoctorCard = doctor.ProfessionalCard
+	if err != nil || doctor == nil || !doctor.IsDoctor() {
+		return nil, domain.ErrUserNotFound
 	}
+	app.DoctorName = doctor.FullName
+	app.DoctorSpecialty = doctor.Specialty
+	app.DoctorCard = doctor.ProfessionalCard
 
-	// 4. Completar datos clinicos del paciente
+	// 4. Completar datos clinicos del paciente (DEF-88: paciente obligatorio)
 	patient, err := s.patientRepo.GetByID(ctx, app.PatientID)
-	if err == nil && patient != nil {
-		app.PatientName = fmt.Sprintf("%s %s", patient.FirstName, patient.LastName)
-		app.PatientDocument = patient.DocumentNumber
-		if patient.Phone != nil {
-			app.PatientPhone = *patient.Phone
-		}
-		app.PatientEmail = patient.Email
+	if err != nil || patient == nil {
+		return nil, domain.ErrPatientNotFound
 	}
+	app.PatientName = fmt.Sprintf("%s %s", patient.FirstName, patient.LastName)
+	app.PatientDocument = patient.DocumentNumber
+	if patient.Phone != nil {
+		app.PatientPhone = *patient.Phone
+	}
+	app.PatientEmail = patient.Email
 
 	if app.ID == "" {
 		app.ID = uuid.New().String()
@@ -134,8 +137,12 @@ func (s *appointmentService) GetDoctorAppointmentsByRange(ctx context.Context, d
 	return s.appRepo.GetByDateRange(ctx, doctorID, start, end)
 }
 
-// GenerateRandomRXCode genera un codigo alfanumerico unico y legible para recetas de farmacia
+// GenerateRandomRXCode genera un codigo alfanumerico unico y criptograficamente seguro para recetas de farmacia
 func GenerateRandomRXCode() string {
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	return fmt.Sprintf("RX-%d-%05d", time.Now().Year(), r.Intn(90000)+10000)
+	nBig, err := rand.Int(rand.Reader, big.NewInt(90000))
+	n := 10000
+	if err == nil {
+		n += int(nBig.Int64())
+	}
+	return fmt.Sprintf("RX-%d-%05d", time.Now().Year(), n)
 }

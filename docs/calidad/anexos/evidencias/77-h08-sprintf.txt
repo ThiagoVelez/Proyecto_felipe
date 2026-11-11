@@ -1,0 +1,7 @@
+src/backend/adapters/storage/mysql/connection.go:26:	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&loc=UTC&charset=utf8mb4&collatio
+src/backend/adapters/storage/mysql/seeder.go:37:			alterQuery := fmt.Sprintf("ALTER TABLE users ADD COLUMN %s %s", col.name, col.dtyp)
+src/backend/adapters/storage/mysql/user_repo.go:138:	query := fmt.Sprintf(`
+src/backend/adapters/storage/postgres/connection.go:32:	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",
+src/backend/adapters/storage/postgres/user_repo.go:126:		conditions = append(conditions, fmt.Sprintf("u.role_id = $%d", argIdx))
+src/backend/adapters/storage/postgres/user_repo.go:131:		conditions = append(conditions, fmt.Sprintf("u.is_active = $%d", argIdx))
+src/backend/adapters/storage/postgres/user_repo.go:141:	query := fmt.Sprintf(`

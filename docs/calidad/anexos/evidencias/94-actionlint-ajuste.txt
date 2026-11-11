@@ -1,0 +1,2 @@
+$ actionlint .github/workflows/calidad.yml
+exit=0

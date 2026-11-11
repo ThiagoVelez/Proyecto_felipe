@@ -355,8 +355,14 @@ func (h *AuthHandler) RegisterAdmin(c *fiber.Ctx) error {
 	})
 }
 
-// GetMFASeed retorna el secreto TOTP único y la URI otpauth para el correo consultado en el login
+// GetMFASeed retorna el secreto TOTP único y la URI otpauth exigiendo autenticacion previa
 func (h *AuthHandler) GetMFASeed(c *fiber.Ctx) error {
+	userID, ok := c.Locals("user_id").(string)
+	if !ok || userID == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Autenticacion requerida para consultar secretos MFA",
+		})
+	}
 	email := c.Query("email")
 	secret, uri, err := h.authService.GetMFASeed(c.Context(), email)
 	if err != nil {

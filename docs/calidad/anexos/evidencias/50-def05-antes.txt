@@ -1,0 +1,7 @@
+$ go test -count=1 -run TestDEF05 ./...  (ANTES de la correccion; solo existe el error de dominio)
+--- FAIL: TestDEF05PrescripcionRechazaPacienteDistintoAlFolio (0.56s)
+    prescripcion_paciente_regression_test.go:32: Se esperaba ErrPrescriptionPatientMismatch al prescribir con un paciente ajeno al folio; se obtuvo <nil>
+FAIL
+FAIL	saludconecta-tests	0.586s
+FAIL
+exit=1

@@ -57,16 +57,19 @@ func ComputeSHA256(data string) string {
 // CalculateChainedRecordHash genera el hash SHA-256 encadenado garantizando inmutabilidad.
 // Combina el hash del folio previo con los datos clinicos determinantes del folio actual.
 func CalculateChainedRecordHash(previousHash, patientID, doctorID, anamnesis, physicalExam, cie11, diagnosis, plan, closedAt string) string {
+	escape := func(s string) string {
+		return strings.ReplaceAll(strings.ReplaceAll(s, "\\", "\\\\"), "|", "\\|")
+	}
 	normalized := fmt.Sprintf("%s|%s|%s|%s|%s|%s|%s|%s|%s",
-		strings.TrimSpace(previousHash),
-		strings.TrimSpace(patientID),
-		strings.TrimSpace(doctorID),
-		strings.TrimSpace(anamnesis),
-		strings.TrimSpace(physicalExam),
-		strings.TrimSpace(cie11),
-		strings.TrimSpace(diagnosis),
-		strings.TrimSpace(plan),
-		strings.TrimSpace(closedAt),
+		escape(strings.TrimSpace(previousHash)),
+		escape(strings.TrimSpace(patientID)),
+		escape(strings.TrimSpace(doctorID)),
+		escape(strings.TrimSpace(anamnesis)),
+		escape(strings.TrimSpace(physicalExam)),
+		escape(strings.TrimSpace(cie11)),
+		escape(strings.TrimSpace(diagnosis)),
+		escape(strings.TrimSpace(plan)),
+		escape(strings.TrimSpace(closedAt)),
 	)
 	return ComputeSHA256(normalized)
 }

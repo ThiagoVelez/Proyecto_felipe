@@ -256,19 +256,27 @@ func (r *prescriptionV2Repository) MarkAsDispensedTx(ctx context.Context, req do
 	if currentStatus == string(domain.PrescriptionStatusDispensed) {
 		return domain.ErrAlreadyDispensed
 	}
-	if currentStatus == string(domain.PrescriptionStatusCancelled) {
-		return domain.ErrPrescriptionCancelled
+	if currentStatus != string(domain.PrescriptionStatusPending) {
+		return fmt.Errorf("la prescripcion no esta en estado pendiente para dispensacion (estado: %s)", currentStatus)
 	}
-	if req.PatientDocument != "" && req.PatientDocument != patientDoc {
+	if req.PatientDocument == "" {
+		return fmt.Errorf("se requiere el documento de identidad del paciente para cotejo físico obligatorio")
+	}
+	if req.PatientDocument != patientDoc {
 		return domain.ErrDocumentMismatch
 	}
 
-	// 2. Descontar stock de cada concentracion de forma atomica
+	// 2. Descontar stock de cada concentracion de forma atomica comprobando vigencia de lote
 	for _, it := range items {
 		var currentStock int
-		stockCheck := `SELECT stock_quantity FROM inventory_items WHERE id = ? FOR UPDATE`
-		if err := tx.QueryRowContext(ctx, stockCheck, it.InventoryItemID).Scan(&currentStock); err != nil {
+		var expiryDate *time.Time
+		stockCheck := `SELECT stock_quantity, expiry_date FROM inventory_items WHERE id = ? FOR UPDATE`
+		if err := tx.QueryRowContext(ctx, stockCheck, it.InventoryItemID).Scan(&currentStock, &expiryDate); err != nil {
 			return fmt.Errorf("error verificando stock para %s: %w", it.MedicationName, err)
+		}
+
+		if expiryDate != nil && !expiryDate.IsZero() && expiryDate.Before(time.Now().UTC()) {
+			return fmt.Errorf("el medicamento %s se encuentra vencido desde %s", it.MedicationName, expiryDate.Format("2006-01-02"))
 		}
 
 		if currentStock < it.QuantityPrescribed {

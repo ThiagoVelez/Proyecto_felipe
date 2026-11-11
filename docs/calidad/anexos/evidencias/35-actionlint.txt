@@ -1,0 +1,11 @@
+$ actionlint -version
+v1.7.12
+installed by building from source
+built with go1.27.3 compiler for windows/amd64
+$ actionlint .github/workflows/calidad.yml
+exit=0
+$ node -e "js-yaml load" .github/ISSUE_TEMPLATE/defecto.yml .golangci.yml
+.github/ISSUE_TEMPLATE/defecto.yml OK campos=15
+.golangci.yml OK 
+.github/workflows/calidad.yml OK 
+exit=0

@@ -66,9 +66,15 @@ func (p *HealthEducationPost) Validate() error {
 	if len(strings.TrimSpace(p.Content)) == 0 {
 		return ErrInvalidPostContent
 	}
-	// Restricción: Videos cortos máximo de 2 minutos (120 segundos)
-	if p.VideoDurationSec > 120 {
+	// Restricción: Videos cortos máximo de 2 minutos (120 segundos) y no negativos
+	if p.VideoDurationSec < 0 || p.VideoDurationSec > 120 {
 		return ErrVideoDurationTooLong
+	}
+	if strings.TrimSpace(p.VideoURL) != "" {
+		vurl := strings.TrimSpace(p.VideoURL)
+		if strings.HasPrefix(vurl, "data:") && !strings.HasPrefix(vurl, "data:video/") {
+			return errors.New("el formato de video adjunto no es válido: se requiere un archivo de video")
+		}
 	}
 	return nil
 }

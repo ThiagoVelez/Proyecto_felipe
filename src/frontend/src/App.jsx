@@ -282,6 +282,17 @@ export function App() {
     localStorage.removeItem('saludconecta_token');
     localStorage.removeItem('saludconecta_refresh_token');
     localStorage.removeItem('saludconecta_current_view');
+    localStorage.removeItem('saludconecta_nurse_orders');
+    // Limpieza de claves volátiles de enfermería (DEF-76)
+    try {
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith('saludconecta_nurse_checklist_')) {
+          localStorage.removeItem(key);
+        }
+      });
+    } catch {
+      // Ignorar en entornos restringidos
+    }
     setIsAuthenticated(false);
     setCurrentUser(null);
     setCurrentView('dashboard');
@@ -356,12 +367,7 @@ export function App() {
         const list = await apiClient.listPatients({ limit: 200 });
         found = list.find((p) => {
           const doc = String(p.document_number ?? '').trim();
-          const name = (p.full_name || `${p.first_name || ''} ${p.last_name || ''}`).toLowerCase();
-          return (
-            doc === cleanDoc ||
-            doc === documentNumber.trim() ||
-            name.includes(documentNumber.trim().toLowerCase())
-          );
+          return doc === cleanDoc || doc === documentNumber.trim();
         });
       } catch {
         // Ignorar

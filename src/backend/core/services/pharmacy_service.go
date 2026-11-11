@@ -140,11 +140,17 @@ func (s *pharmacyService) DispensePrescription(ctx context.Context, req domain.D
 		return nil, err
 	}
 
-	// 2. Validacion de seguridad y reglas de negocio
+	// 2. Validacion de seguridad y reglas de negocio (DEF-53, DEF-59)
 	if presc.Status == domain.PrescriptionStatusDispensed {
 		return nil, domain.ErrAlreadyDispensed
 	}
-	if req.PatientDocument != "" && req.PatientDocument != presc.PatientDocument {
+	if presc.Status != domain.PrescriptionStatusPending {
+		return nil, fmt.Errorf("la prescripción no está en estado pendiente para dispensación (estado actual: %s)", presc.Status)
+	}
+	if req.PatientDocument == "" {
+		return nil, fmt.Errorf("se requiere el documento de identidad del paciente para cotejo físico obligatorio")
+	}
+	if req.PatientDocument != presc.PatientDocument {
 		return nil, domain.ErrDocumentMismatch
 	}
 

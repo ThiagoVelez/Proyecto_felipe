@@ -26,6 +26,7 @@ type DataStore struct {
 	patients        map[string]*domain.Patient
 	patientsByDoc   map[string]*domain.Patient
 	allergies       map[string][]domain.PatientAllergy
+	allergiesByDoc  map[string][]domain.PatientAllergy
 	triages         map[string]*domain.TriageRecord
 	clinicalRecords map[string]*domain.ClinicalRecord
 	clarifications  map[string][]domain.ClinicalRecordClarification
@@ -50,6 +51,7 @@ func NewDataStore() *DataStore {
 		patients:        make(map[string]*domain.Patient),
 		patientsByDoc:   make(map[string]*domain.Patient),
 		allergies:       make(map[string][]domain.PatientAllergy),
+		allergiesByDoc:  make(map[string][]domain.PatientAllergy),
 		triages:         make(map[string]*domain.TriageRecord),
 		clinicalRecords: make(map[string]*domain.ClinicalRecord),
 		clarifications:  make(map[string][]domain.ClinicalRecordClarification),
@@ -283,6 +285,16 @@ func (r *PatientMemoryRepo) Create(_ context.Context, patient *domain.Patient) e
 	stored.Allergies = nil
 	r.ds.patients[stored.ID] = &stored
 	r.ds.patientsByDoc[key] = &stored
+
+	// Si el paciente registra antecedentes alérgicos históricos por documento, restaurarlos (DEF-55)
+	if prevAllergies, ok := r.ds.allergiesByDoc[key]; ok && len(prevAllergies) > 0 {
+		restored := make([]domain.PatientAllergy, len(prevAllergies))
+		for i, a := range prevAllergies {
+			a.PatientID = stored.ID
+			restored[i] = a
+		}
+		r.ds.allergies[stored.ID] = restored
+	}
 	return nil
 }
 
@@ -323,6 +335,10 @@ func (r *PatientMemoryRepo) AddPatientAllergy(_ context.Context, allergy *domain
 	defer r.ds.mu.Unlock()
 	allergy.ID = len(r.ds.allergies[allergy.PatientID]) + 1
 	r.ds.allergies[allergy.PatientID] = append(r.ds.allergies[allergy.PatientID], *allergy)
+	if p, ok := r.ds.patients[allergy.PatientID]; ok {
+		key := string(p.DocumentType) + "_" + p.DocumentNumber
+		r.ds.allergiesByDoc[key] = append(r.ds.allergiesByDoc[key], *allergy)
+	}
 	return nil
 }
 
@@ -350,7 +366,7 @@ func (r *PatientMemoryRepo) Delete(_ context.Context, id string) error {
 	key := string(p.DocumentType) + "_" + p.DocumentNumber
 	delete(r.ds.patients, id)
 	delete(r.ds.patientsByDoc, key)
-	delete(r.ds.allergies, id)
+	// DEF-55: No se eliminan los antecedentes alergicos del historial asistencial
 	return nil
 }
 
@@ -1073,15 +1089,24 @@ func (r *PrescriptionV2MemoryRepo) MarkAsDispensedTx(_ context.Context, req doma
 	if p.Status == domain.PrescriptionStatusDispensed {
 		return domain.ErrAlreadyDispensed
 	}
-	if req.PatientDocument != "" && req.PatientDocument != p.PatientDocument {
+	if p.Status != domain.PrescriptionStatusPending {
+		return fmt.Errorf("la prescripcion no esta pendiente para dispensacion (estado: %s)", p.Status)
+	}
+	if req.PatientDocument == "" {
+		return fmt.Errorf("se requiere el documento de identidad del paciente para cotejo físico obligatorio")
+	}
+	if req.PatientDocument != p.PatientDocument {
 		return domain.ErrDocumentMismatch
 	}
 
-	// Verificar y descontar stock
+	// Verificar y descontar stock y vigencia de lote
 	for _, it := range items {
 		inv, ok := r.ds.inventoryItems[it.InventoryItemID]
 		if !ok {
 			return domain.ErrInventoryItemNotFound
+		}
+		if !inv.ExpiryDate.IsZero() && inv.ExpiryDate.Before(time.Now().UTC()) {
+			return fmt.Errorf("el lote %s del medicamento %s se encuentra vencido desde %s", inv.BatchNumber, inv.GenericName, inv.ExpiryDate.Format("2006-01-02"))
 		}
 		if inv.StockQuantity < it.QuantityPrescribed {
 			return domain.ErrInsufficientStock

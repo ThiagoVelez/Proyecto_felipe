@@ -49,11 +49,11 @@ func SetupRoutes(app *fiber.App, cfg RouterConfig) {
 	auth.Post("/login", loginLimit, cfg.AuthHandler.Login)
 	auth.Post("/refresh", refreshLimit, cfg.AuthHandler.RefreshToken)
 	auth.Post("/logout", cfg.AuthHandler.Logout)
-	auth.Post("/register-admin", adminRegLimit, cfg.AuthHandler.RegisterAdmin)
-	auth.Get("/mfa-seed", seedLimit, cfg.AuthHandler.GetMFASeed)
 
 	authProtected := auth.Use(authMW)
 	authProtected.Get("/me", cfg.AuthHandler.Me)
+	authProtected.Post("/register-admin", adminRegLimit, middlewares.RequireRoles("ADMIN"), cfg.AuthHandler.RegisterAdmin)
+	authProtected.Get("/mfa-seed", seedLimit, cfg.AuthHandler.GetMFASeed)
 	authProtected.Post("/mfa/setup", loginLimit, cfg.AuthHandler.SetupMFA)
 	authProtected.Post("/mfa/enable", loginLimit, cfg.AuthHandler.EnableMFA)
 
@@ -72,20 +72,20 @@ func SetupRoutes(app *fiber.App, cfg RouterConfig) {
 	// 4. Modulo Admision de Pacientes y Antecedentes Alergicos (ADMISION, ENFERMERO, MEDICO)
 	if cfg.PatientHandler != nil {
 		patientRoles := middlewares.RequireRoles("ADMISION", "ENFERMERO", "MEDICO")
-		patients := protected.Group("/patients", patientRoles)
-		patients.Post("/", cfg.PatientHandler.Create)
-		patients.Get("/", cfg.PatientHandler.List)
-		patients.Get("/lookup", cfg.PatientHandler.Lookup)
-		patients.Get("/:id", cfg.PatientHandler.GetByID)
-		patients.Put("/:id", cfg.PatientHandler.UpdateContact)
-		patients.Patch("/:id", cfg.PatientHandler.UpdateContact)
-		patients.Delete("/:id", cfg.PatientHandler.Delete)
-		patients.Post("/:id/allergies", cfg.PatientHandler.AddAllergy)
-		patients.Get("/:id/allergies", cfg.PatientHandler.GetAllergies)
-		if cfg.ClinicalRecordHandler != nil {
-			patients.Get("/:id/anatomical-notes", middlewares.RequireRoles("MEDICO", "ENFERMERO", "AUDITOR"), cfg.ClinicalRecordHandler.GetPatientAnatomicalNotes)
-			patients.Post("/:id/anatomical-notes", middlewares.RequireRoles("MEDICO"), cfg.ClinicalRecordHandler.CreateAnatomicalNote)
-		}
+		patients := protected.Group("/patients")
+		patients.Post("/", patientRoles, cfg.PatientHandler.Create)
+		patients.Get("/", patientRoles, cfg.PatientHandler.List)
+		patients.Get("/lookup", patientRoles, cfg.PatientHandler.Lookup)
+		patients.Get("/:id", patientRoles, cfg.PatientHandler.GetByID)
+		patients.Put("/:id", patientRoles, cfg.PatientHandler.UpdateContact)
+		patients.Patch("/:id", patientRoles, cfg.PatientHandler.UpdateContact)
+		patients.Delete("/:id", patientRoles, cfg.PatientHandler.Delete)
+		patients.Post("/:id/allergies", patientRoles, cfg.PatientHandler.AddAllergy)
+		patients.Get("/:id/allergies", patientRoles, cfg.PatientHandler.GetAllergies)
+	}
+	if cfg.ClinicalRecordHandler != nil {
+		protected.Get("/patients/:id/anatomical-notes", middlewares.RequireRoles("MEDICO", "ENFERMERO", "AUDITOR"), cfg.ClinicalRecordHandler.GetPatientAnatomicalNotes)
+		protected.Post("/patients/:id/anatomical-notes", middlewares.RequireRoles("MEDICO"), cfg.ClinicalRecordHandler.CreateAnatomicalNote)
 	}
 
 	// 5. Modulo Triaje Manchester (Exclusivo Asistencial: ENFERMERO, MEDICO)

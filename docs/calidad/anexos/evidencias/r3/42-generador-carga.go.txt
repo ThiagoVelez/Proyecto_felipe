@@ -1,0 +1,59 @@
+// Generador de carga minimo para la revision R3: N peticiones GET con C trabajadores; imprime p50/p95/p99.
+package main
+
+import (
+	"flag"
+	"fmt"
+	"net/http"
+	"sort"
+	"sync"
+	"time"
+)
+
+func main() {
+	url := flag.String("url", "", "URL")
+	n := flag.Int("n", 2000, "peticiones")
+	c := flag.Int("c", 20, "concurrencia")
+	tok := flag.String("token", "", "bearer")
+	flag.Parse()
+	lat := make([]time.Duration, *n)
+	codigos := map[int]int{}
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+	trabajos := make(chan int)
+	cli := &http.Client{Timeout: 10 * time.Second}
+	for w := 0; w < *c; w++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for i := range trabajos {
+				req, _ := http.NewRequest(http.MethodGet, *url, nil)
+				if *tok != "" {
+					req.Header.Set("Authorization", "Bearer "+*tok)
+				}
+				t0 := time.Now()
+				res, err := cli.Do(req)
+				lat[i] = time.Since(t0)
+				mu.Lock()
+				if err != nil {
+					codigos[-1]++
+				} else {
+					codigos[res.StatusCode]++
+					res.Body.Close()
+				}
+				mu.Unlock()
+			}
+		}()
+	}
+	inicio := time.Now()
+	for i := 0; i < *n; i++ {
+		trabajos <- i
+	}
+	close(trabajos)
+	wg.Wait()
+	total := time.Since(inicio)
+	sort.Slice(lat, func(a, b int) bool { return lat[a] < lat[b] })
+	p := func(q float64) float64 { return float64(lat[int(q*float64(len(lat)-1))].Microseconds()) / 1000 }
+	fmt.Printf("url=%s n=%d c=%d codigos=%v duracion=%s rps=%.0f\n", *url, *n, *c, codigos, total.Round(time.Millisecond), float64(*n)/total.Seconds())
+	fmt.Printf("p50=%.2f ms p95=%.2f ms p99=%.2f ms max=%.2f ms\n", p(0.50), p(0.95), p(0.99), float64(lat[len(lat)-1].Microseconds())/1000)
+}

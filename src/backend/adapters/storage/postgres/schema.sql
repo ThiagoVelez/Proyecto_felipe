@@ -16,7 +16,9 @@ INSERT INTO roles (id, name, description) VALUES
     (2, 'MEDICO', 'Medico Especialista o General Asistencial'),
     (3, 'ENFERMERO', 'Personal de Enfermeria y Triaje'),
     (4, 'ADMISION', 'Admisiones y Facturacion'),
-    (5, 'AUDITOR', 'Auditoria Medica y Forense')
+    (5, 'AUDITOR', 'Auditoria Medica y Forense'),
+    (6, 'FARMACIA', 'Personal de Farmacia, Inventario y Dispensación'),
+    (7, 'LABORATORIO', 'Bacteriólogo / Laboratorio Clínico y Pruebas Diagnósticas')
 ON CONFLICT (id) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS users (
@@ -51,6 +53,8 @@ CREATE TABLE IF NOT EXISTS patients (
     blood_type VARCHAR(5) NOT NULL CHECK (blood_type IN ('A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-')),
     eps_name VARCHAR(100) NOT NULL,
     affiliation_status VARCHAR(12) DEFAULT 'ACTIVO' CHECK (affiliation_status IN ('ACTIVO', 'INACTIVO', 'SUSPENDIDO')),
+    email VARCHAR(120) NULL,
+    address VARCHAR(200) NULL,
     phone VARCHAR(20),
     is_rural_zone BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -80,6 +84,8 @@ CREATE TABLE IF NOT EXISTS triage_records (
     glasgow_score INT NOT NULL,
     manchester_level VARCHAR(10) NOT NULL CHECK (manchester_level IN ('NIVEL_I', 'NIVEL_II', 'NIVEL_III', 'NIVEL_IV', 'NIVEL_V')),
     reason_for_consultation TEXT NOT NULL,
+    pain_scale_score INT NOT NULL DEFAULT 0,
+    pain_scale_observations TEXT NULL,
     status VARCHAR(12) DEFAULT 'PENDIENTE' CHECK (status IN ('PENDIENTE', 'EN_ATENCION', 'FINALIZADO')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

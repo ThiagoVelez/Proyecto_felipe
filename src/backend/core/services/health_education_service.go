@@ -99,6 +99,10 @@ func (s *healthEducationService) UpdatePost(ctx context.Context, requester *doma
 		return nil, err
 	}
 
+	if existing.DoctorID != "" && existing.DoctorID != requester.ID {
+		return nil, domain.ErrUnauthorizedRole
+	}
+
 	existing.Title = post.Title
 	existing.Category = post.Category
 	existing.Summary = post.Summary
@@ -121,6 +125,13 @@ func (s *healthEducationService) UpdatePost(ctx context.Context, requester *doma
 
 func (s *healthEducationService) DeletePost(ctx context.Context, requester *domain.User, id string) error {
 	if requester == nil || !requester.IsDoctor() {
+		return domain.ErrUnauthorizedRole
+	}
+	existing, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if existing != nil && existing.DoctorID != "" && existing.DoctorID != requester.ID {
 		return domain.ErrUnauthorizedRole
 	}
 	return s.repo.Delete(ctx, id)

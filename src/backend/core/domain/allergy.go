@@ -137,6 +137,7 @@ func ingredientClasses(component string) []string {
 func matchComponents(allergenParts []string, drugParts []string) bool {
 	for _, allergen := range allergenParts {
 		canonAllergen := canonicalToken(allergen)
+		allergenClasses := ingredientClasses(canonAllergen)
 		for _, drug := range drugParts {
 			canonDrug := canonicalToken(drug)
 			if canonAllergen == canonDrug ||
@@ -144,9 +145,20 @@ func matchComponents(allergenParts []string, drugParts []string) bool {
 				strings.HasPrefix(canonAllergen, canonDrug+" ") {
 				return true
 			}
-			for _, class := range ingredientClasses(canonDrug) {
+			drugClasses := ingredientClasses(canonDrug)
+			for _, class := range drugClasses {
 				if canonAllergen == class {
 					return true
+				}
+			}
+			for _, aClass := range allergenClasses {
+				if canonDrug == aClass {
+					return true
+				}
+				for _, dClass := range drugClasses {
+					if aClass == dClass {
+						return true
+					}
 				}
 			}
 		}

@@ -1,0 +1,19 @@
+$ (cd . && gocyclo -over 15 src/backend tests/backend)
+# fecha: 2026-11-10T22:58:36Z
+39 domain (*TriageRecord).SuggestManchesterPriority src\backend\core\domain\triage.go:114:1
+23 services (*syncService).processOnce src\backend\core\services\sync_service.go:50:1
+22 services (*treatmentService).DispatchTreatment src\backend\core\services\treatment_service.go:44:1
+20 backend_test TestMySQLChainSyncAndTimestamps tests\backend\mysql_integration_test.go:24:1
+20 handlers (*ClinicalRecordHandler).CreateAnatomicalNote src\backend\adapters\http\handlers\clinical_record_handler.go:265:1
+19 main ejecutar tests\backend\herramientas\controldefectos\main.go:255:1
+19 main evaluar tests\backend\herramientas\controldefectos\main.go:199:1
+18 backend_test TestDualTokenLoginAndRefreshFlow tests\backend\auth_security_test.go:297:1
+18 services (*patientService).RegisterPatient src\backend\core\services\patient_service.go:53:1
+18 domain (*TriageRecord).Validate src\backend\core\domain\triage.go:92:1
+18 domain ingredientClasses src\backend\core\domain\allergy.go:113:1
+17 services (*prescriptionService).IssuePrescription src\backend\core\services\prescription_service.go:32:1
+17 middlewares AuditMiddleware src\backend\adapters\http\middlewares\audit_middleware.go:35:1
+16 backend_test TestAdmissionPatientAndAllergyAPI tests\backend\patient_api_test.go:20:1
+16 mysql (*prescriptionV2Repository).MarkAsDispensedTx src\backend\adapters\storage\mysql\prescription_v2_repo.go:238:1
+16 handlers (*PrescriptionHandler).Create src\backend\adapters\http\handlers\prescription_handler.go:35:1
+# codigo de salida: 1

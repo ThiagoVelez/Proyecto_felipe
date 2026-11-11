@@ -42,16 +42,22 @@ func (h *AppointmentHandler) Create(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "el paciente y la fecha/hora son obligatorios"})
 	}
 
+	loc, _ := time.LoadLocation("America/Bogota")
+	if loc == nil {
+		loc = time.FixedZone("COT", -5*3600)
+	}
+
 	parsedDate, err := time.Parse(time.RFC3339, dto.AppointmentDate)
 	if err != nil {
-		parsedDate, err = time.Parse("2006-01-02 15:04", dto.AppointmentDate)
+		parsedDate, err = time.ParseInLocation("2006-01-02 15:04", dto.AppointmentDate, loc)
 		if err != nil {
-			parsedDate, err = time.Parse("2006-01-02T15:04", dto.AppointmentDate)
+			parsedDate, err = time.ParseInLocation("2006-01-02T15:04", dto.AppointmentDate, loc)
 			if err != nil {
 				return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "formato de fecha inválido, use YYYY-MM-DD HH:mm"})
 			}
 		}
 	}
+	parsedDate = parsedDate.UTC()
 
 	app := &domain.Appointment{
 		DoctorID:        doctorID.(string),
