@@ -11,7 +11,7 @@
 > - Afirmaciones publicadas: 48 evaluadas: 7 verificadas, 24 parciales, 2 no verificadas, 15 falsas. RTM: 5 de 21 requisitos se sostienen. Dictamen: **No conforme con ISO/IEC 25010:2023**.
 <!-- /cifras-r3 -->
 
-**Verificación documental R3.** Las 48 afirmaciones del README, de `QA.md` (integrado en el README) y de las tarjetas de «Pruebas QA» se evalúan en `informe-revision-r3.md`, sección 4. El README de `main` vuelve a publicar las listas antiguas de Trello y el rango «RF01 a RF12»; esta rama aplica solo los cambios autorizados (sección 7.2 de la tarea).
+**Verificación documental R3.** Las 48 afirmaciones del README, de `QA.md` (integrado en el README) y de las tarjetas de «Pruebas QA» se evalúan en `informe-revision-r3.md`, sección 4. El README de `main` vuelve a publicar las listas antiguas de Trello y el rango «RF01 a RF12»; esta rama aplica solo los cambios autorizados (cambios autorizados por el equipo).
 
 Documentos contrastados: `README.md`, `docs/especificacion.md`, `docs/plan-de-pruebas.md` y `docs/informe-calidad.md` (versión `6492f07`), contra el código, las pruebas y las mediciones de `anexos/`.
 

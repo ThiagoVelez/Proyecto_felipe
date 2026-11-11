@@ -72,11 +72,11 @@
 ## 2. Alcance y método
 
 - **Alcance:** todo el código de `origin/main` (backend, frontend, despliegue y documentación), las tarjetas de Trello de «Bugs solucionados» y «Pruebas QA», y el README (que desde `94f7a96` incluye el contenido del antiguo `QA.md`).
-- **Diagnóstico previo:** `anexos/diagnostico-r3.md`. La revisión 2 se había ejecutado solo en parte; sus hallazgos se reverificaron y se publican aquí (decisión D-02).
+- **Diagnóstico previo:** `anexos/diagnostico-r3.md`. La revisión 2 se había ejecutado solo en parte; sus hallazgos se reverificaron y se publican aquí.
 - **Línea base y análisis estático:** `anexos/linea-base-r3.md` y `anexos/analisis-estatico-r3.md`.
 - **Técnicas:** ejecución de las pruebas existentes; pruebas de reproducción nuevas (fallan mientras el defecto exista); lectura de código con referencias `archivo:línea`; ejecución real del backend en memoria; medición de rendimiento y memoria; cálculo de contraste WCAG; scripts de comprobación de la RTM y del mapa SEC -> DEF.
 - **No medido:** `go test -race` en local (sin gcc; se ejecuta en CI), Docker Compose, MySQL y PostgreSQL, axe-core y Lighthouse.
-- **Reglas de veredicto:** sección 5 de la tarea (Verificado — corregido / Corregido parcialmente / Sigue abierto / Ya no aplica / Regresión). Se añade «Corrección presente; ejecución No medida» para el caso en que el código corregido existe pero no hay motor de base de datos para ejecutarlo (D-06).
+- **Reglas de veredicto:** plan de la revisión R3 (Verificado — corregido / Corregido parcialmente / Sigue abierto / Ya no aplica / Regresión). Se añade «Corrección presente; ejecución No medida» para el caso en que el código corregido existe pero no hay motor de base de datos para ejecutarlo.
 
 ---
 
@@ -112,7 +112,7 @@ DEF-28 y DEF-41 siguen abiertos en `main` porque sus correcciones son de Calidad
 | DEF-10 | Corregido parcialmente | Con MySQL el servicio termina si no conecta. Con `DB_DRIVER=postgres`, `factory.go:152-163` usa memoria sin aviso para citas, inventario, recetas v2 y muro |
 | DEF-11 | Verificado | No hay cuentas sembradas; el backend arrancado solo crea el administrador definido por el operador |
 
-### 3.3 Casos señalados por la tarea
+### 3.3 Casos de atención especial
 
 - **DEF-02 (caché de alergias):** sigue sin existir. El README reutiliza ahora el identificador DEF-02 para otro defecto (DEF-92). Veredicto: corregido parcialmente (solo el índice).
 - **DEF-10:** la decisión de diseño pendiente para MySQL se resolvió bien (fallar al arrancar). Queda decidir qué hacer con los módulos v2 en PostgreSQL.

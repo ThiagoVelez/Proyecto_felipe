@@ -37,7 +37,7 @@ Responsable: Juan José Sánchez (Responsable de Calidad). Ejecutado en `C:\User
 
 ## 4. Pull requests (`gh pr list --state all`)
 
-La tarea indicaba que el repositorio no tenía pull requests. **No es así** (dato verificado):
+Se partía de que el repositorio no tenía pull requests. **No es así** (dato verificado):
 
 | PR | Título | Rama | Estado |
 |---|---|---|---|
@@ -48,7 +48,7 @@ Se abrió un pull request nuevo desde `calidad/revision-r3` y el PR #1 se dejó 
 
 ## 5. Trello
 
-Herramientas MCP de Trello disponibles. Se leyó el tablero completo (49 tarjetas abiertas):
+Se leyó el tablero completo (49 tarjetas abiertas):
 
 | Lista | Tarjetas | Observaciones |
 |---|---|---|

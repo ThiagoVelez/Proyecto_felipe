@@ -43,5 +43,5 @@ Comandos y salidas completas en `evidencias/r3/` (script `tests/backend/herramie
 ## 4. Configuración de los linters y del pipeline
 
 - Los pasos informativos de `calidad.yml` (staticcheck, gosec, govulncheck, gocyclo y `npm audit` completo) siguen con `continue-on-error` porque sus hallazgos de línea base corresponden a defectos registrados y abiertos (DEF-44, DEF-45, DEF-64, DEF-83). Ningún paso bloqueante (compilación, vet, golangci-lint nuevo, pruebas con `-race`, cobertura, control de defectos, ESLint, Vitest, build y `npm audit` de producción) usa `continue-on-error`.
-- En R3 se retiró el `-skip` de `TestStaffRegisterRequiresAdmin` del paso con `-race`. El pipeline mostró entonces la misma causa en otras dos pruebas del equipo y DEF-48 se reabrió (D-08). Los pasos siguientes del job se ejecutan con `if: ${{ !cancelled() }}` para obtener la suite completa y la cobertura aunque falle `-race`; el job sigue en rojo.
-- golangci-lint (bloqueante) falla con 21 hallazgos nuevos desde `6492f07`, todos en código del equipo (D-17).
+- En R3 se retiró el `-skip` de `TestStaffRegisterRequiresAdmin` del paso con `-race`. El pipeline mostró entonces la misma causa en otras dos pruebas del equipo y DEF-48 se reabrió. Los pasos siguientes del job se ejecutan con `if: ${{ !cancelled() }}` para obtener la suite completa y la cobertura aunque falle `-race`; el job sigue en rojo.
+- golangci-lint (bloqueante) falla con 21 hallazgos nuevos desde `6492f07`, todos en código del equipo; no se ocultan actualizando `new-from-rev`.
