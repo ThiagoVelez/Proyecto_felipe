@@ -1,0 +1,25 @@
+| Defecto | Prueba | Resultado | Detalle |
+|---|---|---|---|
+| DEF-29 | TestDEF29HashSinColisionPorDelimitador | reproducido | falla como se espera |
+| DEF-30 | TestDEF30VerificacionValidaEnlaceConFolioAnterior | reproducido | falla como se espera |
+| DEF-49 | TestDEF49RegistroDeAdministradorRequiereAutenticacion | reproducido | falla como se espera |
+| DEF-50 | TestDEF50SemillaMFANoSeExponeSinAutenticacion | reproducido | falla como se espera |
+| DEF-51 | TestDEF51PrescripcionV2CruzaAlergias | reproducido | falla como se espera |
+| DEF-52 | TestDEF52RecetaV2RechazaCantidadNoPositiva | reproducido | falla como se espera |
+| DEF-53 | TestDEF53DispensacionExigeDocumentoDelPaciente | reproducido | falla como se espera |
+| DEF-54 | TestDEF54NoDispensaMedicamentoVencido | reproducido | falla como se espera |
+| DEF-55 | TestDEF55EliminarPacienteNoPierdeAntecedentesAlergicos | reproducido | falla como se espera |
+| DEF-57 | TestDEF57NotaAnatomicaCoincideConPacienteDelFolio | reproducido | falla como se espera |
+| DEF-58 | TestDEF58RecetaDispensadaNoSeReactiva | reproducido | falla como se espera |
+| DEF-59 | TestDEF59NoDispensaRecetaCancelada | reproducido | falla como se espera |
+| DEF-60 | TestDEF60AlergiaAFarmacoSeExtiendeASuFamilia | reproducido | falla como se espera |
+| DEF-61 | TestDEF61PDFNoSaleDelDirectorioDeDocumentos | reproducido | falla como se espera |
+| DEF-67 | TestDEF67EscalaEVAFueraDeRangoSeRechaza | reproducido | falla como se espera |
+| DEF-68 | TestDEF68ActualizacionParcialConservaContacto | reproducido | falla como se espera |
+| DEF-70 | TestDEF70PublicacionSoloLaEditaSuAutor | reproducido | falla como se espera |
+| DEF-72 | TestDEF72AuditorConsultaNotasAnatomicasDelPaciente | reproducido | falla como se espera |
+| DEF-85 | TestDEF85CitaConservaLaHoraLocalDeColombia | reproducido | falla como se espera |
+| DEF-87 | TestDEF87MuroNoConfiaEnLaDuracionDeclaradaPorElCliente | reproducido | falla como se espera |
+| DEF-88 | TestDEF88CitaExigePacienteExistente | reproducido | falla como se espera |
+| DEF-89 | TestDEF89NotaAnatomicaRechazaEVAFueraDeRango | reproducido | falla como se espera |
+Defectos abiertos reproducidos como se espera: 22 de 22.

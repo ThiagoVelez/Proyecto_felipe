@@ -1,0 +1,120 @@
+Vulnerability #1: GO-2025-3845
+  Module: github.com/gofiber/fiber/v2
+    Found in: github.com/gofiber/fiber/v2@v2.52.5
+    Fixed in: github.com/gofiber/fiber/v2@v2.52.9
+Vulnerability #1: GO-2026-5585
+  Module: github.com/gofiber/fiber/v2
+    Found in: github.com/gofiber/fiber/v2@v2.52.5
+    Fixed in: github.com/gofiber/fiber/v2@v2.52.13
+Vulnerability #2: GO-2026-5024
+  Module: golang.org/x/sys
+    Found in: golang.org/x/sys@v0.21.0
+    Fixed in: golang.org/x/sys@v0.44.0
+Vulnerability #3: GO-2026-4950
+  Module: github.com/valyala/fasthttp
+    Found in: github.com/valyala/fasthttp@v1.51.0
+    Fixed in: github.com/valyala/fasthttp@v1.70.0
+Vulnerability #4: GO-2026-4543
+  Module: github.com/gofiber/fiber/v2
+    Found in: github.com/gofiber/fiber/v2@v2.52.5
+    Fixed in: github.com/gofiber/fiber/v2@v2.52.12
+Vulnerability #5: GO-2026-4503
+  Module: filippo.io/edwards25519
+    Found in: filippo.io/edwards25519@v1.1.0
+    Fixed in: filippo.io/edwards25519@v1.1.1
+Vulnerability #6: GO-2026-4471
+  Module: github.com/gofiber/fiber/v2
+    Found in: github.com/gofiber/fiber/v2@v2.52.5
+    Fixed in: github.com/gofiber/fiber/v2@v2.52.11
+Vulnerability #1: GO-2026-6355
+  Module: golang.org/x/crypto
+    Found in: golang.org/x/crypto@v0.24.0
+    Fixed in: golang.org/x/crypto@v0.56.0
+Vulnerability #2: GO-2026-6354
+  Module: golang.org/x/crypto
+    Found in: golang.org/x/crypto@v0.24.0
+    Fixed in: golang.org/x/crypto@v0.56.0
+Vulnerability #3: GO-2026-6303
+  Module: golang.org/x/crypto
+    Found in: golang.org/x/crypto@v0.24.0
+    Fixed in: golang.org/x/crypto@v0.55.0
+Vulnerability #4: GO-2026-5932
+  Module: golang.org/x/crypto
+    Found in: golang.org/x/crypto@v0.24.0
+    Fixed in: N/A
+Vulnerability #5: GO-2026-5841
+  Module: github.com/klauspost/compress
+    Found in: github.com/klauspost/compress@v1.17.9
+    Fixed in: github.com/klauspost/compress@v1.18.7
+Vulnerability #6: GO-2026-5033
+  Module: golang.org/x/crypto
+    Found in: golang.org/x/crypto@v0.24.0
+    Fixed in: golang.org/x/crypto@v0.52.0
+Vulnerability #7: GO-2026-5023
+  Module: golang.org/x/crypto
+    Found in: golang.org/x/crypto@v0.24.0
+    Fixed in: golang.org/x/crypto@v0.52.0
+Vulnerability #8: GO-2026-5021
+  Module: golang.org/x/crypto
+    Found in: golang.org/x/crypto@v0.24.0
+    Fixed in: golang.org/x/crypto@v0.52.0
+Vulnerability #9: GO-2026-5020
+  Module: golang.org/x/crypto
+    Found in: golang.org/x/crypto@v0.24.0
+    Fixed in: golang.org/x/crypto@v0.52.0
+Vulnerability #10: GO-2026-5019
+  Module: golang.org/x/crypto
+    Found in: golang.org/x/crypto@v0.24.0
+    Fixed in: golang.org/x/crypto@v0.52.0
+Vulnerability #11: GO-2026-5018
+  Module: golang.org/x/crypto
+    Found in: golang.org/x/crypto@v0.24.0
+    Fixed in: golang.org/x/crypto@v0.52.0
+Vulnerability #12: GO-2026-5017
+  Module: golang.org/x/crypto
+    Found in: golang.org/x/crypto@v0.24.0
+    Fixed in: golang.org/x/crypto@v0.52.0
+Vulnerability #13: GO-2026-5016
+  Module: golang.org/x/crypto
+    Found in: golang.org/x/crypto@v0.24.0
+    Fixed in: golang.org/x/crypto@v0.52.0
+Vulnerability #14: GO-2026-5015
+  Module: golang.org/x/crypto
+    Found in: golang.org/x/crypto@v0.24.0
+    Fixed in: golang.org/x/crypto@v0.52.0
+Vulnerability #15: GO-2026-5014
+  Module: golang.org/x/crypto
+    Found in: golang.org/x/crypto@v0.24.0
+    Fixed in: golang.org/x/crypto@v0.52.0
+Vulnerability #16: GO-2026-5013
+  Module: golang.org/x/crypto
+    Found in: golang.org/x/crypto@v0.24.0
+    Fixed in: golang.org/x/crypto@v0.52.0
+Vulnerability #17: GO-2026-5006
+  Module: golang.org/x/crypto
+    Found in: golang.org/x/crypto@v0.24.0
+    Fixed in: golang.org/x/crypto@v0.52.0
+Vulnerability #18: GO-2026-5005
+  Module: golang.org/x/crypto
+    Found in: golang.org/x/crypto@v0.24.0
+    Fixed in: golang.org/x/crypto@v0.52.0
+Vulnerability #19: GO-2025-4135
+  Module: golang.org/x/crypto
+    Found in: golang.org/x/crypto@v0.24.0
+    Fixed in: golang.org/x/crypto@v0.45.0
+Vulnerability #20: GO-2025-4134
+  Module: golang.org/x/crypto
+    Found in: golang.org/x/crypto@v0.24.0
+    Fixed in: golang.org/x/crypto@v0.45.0
+Vulnerability #21: GO-2025-4116
+  Module: golang.org/x/crypto
+    Found in: golang.org/x/crypto@v0.24.0
+    Fixed in: golang.org/x/crypto@v0.43.0
+Vulnerability #22: GO-2025-3487
+  Module: golang.org/x/crypto
+    Found in: golang.org/x/crypto@v0.24.0
+    Fixed in: golang.org/x/crypto@v0.35.0
+Vulnerability #23: GO-2024-3321
+  Module: golang.org/x/crypto
+    Found in: golang.org/x/crypto@v0.24.0
+    Fixed in: golang.org/x/crypto@v0.31.0

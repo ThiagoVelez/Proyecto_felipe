@@ -1,0 +1,6 @@
+$ go test -count=1 -run TestDEF27 -v ./...  (DESPUES)
+=== RUN   TestDEF27FrecuenciaCardiacaLimiteSuperior
+--- PASS: TestDEF27FrecuenciaCardiacaLimiteSuperior (0.00s)
+PASS
+ok  	saludconecta-tests	0.023s
+exit=0

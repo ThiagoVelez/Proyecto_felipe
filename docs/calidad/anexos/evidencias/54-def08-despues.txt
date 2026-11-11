@@ -1,0 +1,9 @@
+$ go test -count=1 -run TestDEF08 -v ./...  (DESPUES)
+=== RUN   TestDEF08NivelManchesterFueraDelCatalogo
+--- PASS: TestDEF08NivelManchesterFueraDelCatalogo (0.57s)
+PASS
+ok  	saludconecta-tests	0.590s
+exit=0
+$ go test -count=1 ./...
+ok  	saludconecta-tests	6.660s
+exit=0

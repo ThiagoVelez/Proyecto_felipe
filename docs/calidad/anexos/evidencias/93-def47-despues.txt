@@ -1,0 +1,16 @@
+$ npx vitest run ../../tests/frontend/totp.regression.test.js ../../tests/frontend/totp.test.js  (DESPUES)
+ ✓ ../../tests/frontend/totp.regression.test.js (3 tests) 16ms
+ ✓ ../../tests/frontend/totp.test.js (4 tests) 81ms
+      Tests  7 passed (7)
+exit=0
+$ npx vitest run  (suite completa)
+ Test Files  5 passed (5)
+      Tests  31 passed (31)
+exit=0
+$ npx eslint src
+✖ 68 problems (0 errors, 68 warnings)
+
+exit=0
+$ npm run build
+✓ built in 10.30s
+exit=0

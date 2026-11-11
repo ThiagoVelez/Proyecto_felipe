@@ -1,0 +1,42 @@
+# Defectos abiertos con prueba de reproduccion automatizada.
+#
+# Fuente para el job «Backend - control de defectos abiertos» de .github/workflows/calidad.yml.
+# Cada prueba afirma el comportamiento correcto y por eso debe FALLAR mientras el defecto exista.
+# El job pasa si todas fallan por la causa declarada y falla si alguna pasa (el defecto parece
+# corregido) o si falla por otra causa (panico, error de compilacion, preparacion fallida).
+#
+# Formato: <ID> <prueba en tests/backend> <tipo>
+#   marcador: la prueba debe fallar con «DEFECTO-REPRODUCIDO <ID>» (helper defectoReproducido).
+#   carrera:  la prueba debe fallar porque el detector -race reporta «WARNING: DATA RACE».
+#
+# Al corregir un defecto: eliminar su linea en el mismo PR que la correccion, convertir la prueba
+# en regresion permanente (quitar requireDefectoAbierto) y actualizar 04-bitacora-defectos.md.
+
+# Reverificacion v2 (7 nov 2026): DEF-06, 07, 09, 13, 14, 16, 17, 18, 31 y 37 se cerraron (corregidos por el
+# equipo) y sus pruebas pasaron a calidad_defectos_corregidos_v2_regression_test.go como regresion permanente.
+
+# Revision R3 (10 nov 2026): DEF-01 a DEF-48 reverificados (anexos/cifras-r3.json). Se agregan DEF-85, 87, 88 y 89
+# (calidad_revision_r3_regression_test.go). DEF-49 a DEF-72 siguen reproduciendose (evidencias/r3/30-...).
+
+DEF-29 TestDEF29HashSinColisionPorDelimitador marcador
+DEF-30 TestDEF30VerificacionValidaEnlaceConFolioAnterior marcador
+DEF-49 TestDEF49RegistroDeAdministradorRequiereAutenticacion marcador
+DEF-50 TestDEF50SemillaMFANoSeExponeSinAutenticacion marcador
+DEF-51 TestDEF51PrescripcionV2CruzaAlergias marcador
+DEF-52 TestDEF52RecetaV2RechazaCantidadNoPositiva marcador
+DEF-53 TestDEF53DispensacionExigeDocumentoDelPaciente marcador
+DEF-54 TestDEF54NoDispensaMedicamentoVencido marcador
+DEF-55 TestDEF55EliminarPacienteNoPierdeAntecedentesAlergicos marcador
+DEF-57 TestDEF57NotaAnatomicaCoincideConPacienteDelFolio marcador
+DEF-58 TestDEF58RecetaDispensadaNoSeReactiva marcador
+DEF-59 TestDEF59NoDispensaRecetaCancelada marcador
+DEF-60 TestDEF60AlergiaAFarmacoSeExtiendeASuFamilia marcador
+DEF-61 TestDEF61PDFNoSaleDelDirectorioDeDocumentos marcador
+DEF-67 TestDEF67EscalaEVAFueraDeRangoSeRechaza marcador
+DEF-68 TestDEF68ActualizacionParcialConservaContacto marcador
+DEF-70 TestDEF70PublicacionSoloLaEditaSuAutor marcador
+DEF-72 TestDEF72AuditorConsultaNotasAnatomicasDelPaciente marcador
+DEF-85 TestDEF85CitaConservaLaHoraLocalDeColombia marcador
+DEF-87 TestDEF87MuroNoConfiaEnLaDuracionDeclaradaPorElCliente marcador
+DEF-88 TestDEF88CitaExigePacienteExistente marcador
+DEF-89 TestDEF89NotaAnatomicaRechazaEVAFueraDeRango marcador

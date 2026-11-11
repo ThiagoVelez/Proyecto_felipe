@@ -1,0 +1,5 @@
+ README.md                                     | 226 ++++++++++++++++++++++++++
+ docs/diagrams/15_flujo_caja_blanca_triage.mmd |  15 ++
+ docs/diagrams/15_flujo_caja_blanca_triage.png | Bin 0 -> 171438 bytes
+ docs/diagrams/15_flujo_caja_blanca_triage.svg |  99 +++++++++++
+ 4 files changed, 340 insertions(+)

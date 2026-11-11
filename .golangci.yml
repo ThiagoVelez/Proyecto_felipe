@@ -1,0 +1,55 @@
+# Configuracion de golangci-lint v2 para SaludConecta IPS (paquete de calidad, docs/calidad/).
+#
+# Seleccion de linters: se activan solo los que detectan defectos reales con baja tasa de falsos
+# positivos en este dominio (errores ignorados, codigo muerto, asignaciones inutiles, cuerpos HTTP
+# sin cerrar, SQL con cadenas formateadas y concurrencia). Se descartan los linters puramente
+# estilisticos para no bloquear al equipo por formato.
+#
+# Linea base: el codigo previo a la auditoria tiene deuda registrada en DEF-44. Para no romper el
+# pipeline del equipo, solo se reportan hallazgos nuevos respecto del commit 6492f07 (rama main al
+# iniciar la auditoria). La deuda historica se gestiona en docs/calidad/06-plan-mantenimiento.md.
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true
+
+issues:
+  new-from-rev: 6492f07
+
+linters:
+  default: none
+  enable:
+    - errcheck      # errores de retorno ignorados (ver exclusiones justificadas abajo)
+    - govet         # analisis oficial del compilador, incluye copylocks y printf
+    - ineffassign   # asignaciones sin efecto
+    - staticcheck   # bugs, API obsoleta y simplificaciones
+    - unused        # codigo muerto
+    - bodyclose     # cuerpos HTTP sin cerrar
+    - noctx         # peticiones o consultas sin contexto
+    - rowserrcheck  # rows.Err() sin verificar tras iterar resultados SQL
+    - sqlclosecheck # sql.Rows y sql.Stmt sin cerrar
+    - gosec         # seguridad: SQL dinamico, cripto debil, secretos
+  settings:
+    errcheck:
+      # Cierres diferidos y Rollback tras Commit: el error no es accionable y su verificacion
+      # solo agrega ruido; los errores de Exec/Query/Commit si se verifican.
+      exclude-functions:
+        - (*database/sql.Rows).Close
+        - (*database/sql.Stmt).Close
+        - (*database/sql.Tx).Rollback
+        - (io.Closer).Close
+        - fmt.Fprintln
+        - fmt.Fprintf
+    gosec:
+      excludes:
+        - G505 # crypto/sha1 es obligatorio en HOTP/TOTP segun RFC 4226 y RFC 6238
+        - G115 # conversion int64 a uint64 del contador TOTP: el intervalo nunca es negativo
+  exclusions:
+    rules:
+      # En pruebas, fiber.App.Test devuelve una respuesta en memoria sin conexion real que liberar.
+      - path: _test\.go
+        linters:
+          - gosec
+          - noctx
+          - bodyclose

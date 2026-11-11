@@ -1,0 +1,24 @@
+# Verificacion de la RTM de README.md (seccion 4.5, lineas 336-358) contra el codigo de pruebas
+# Comando: python (script en anexos/linea-base-r3.md, H39). Existe = la funcion Test o el archivo existe en el repositorio.
+RF01: 5/5 referencias existen; TestDeactivatedUserLosesAccessImmediately=existe; TestMFASetupRequiresCurrentCode=existe; TestLoginBruteForceLockout=existe; totp.test.js=existe; AuthMfa.test.jsx=existe
+RF02: 4/4 referencias existen; TestTriageEquivalencePartitioningAndBoundaryValues=existe; TestTriageRejectsClientLevelOutsideCatalog=existe; TestTriageTemperatureDiscriminators=existe; ClinicalScreens.test.jsx=existe
+RF03: 3/3 referencias existen; TestClinicalRecordImmutabilityAndClosingPolicy=existe; TestRecordObjectLevelAccess=existe; ClinicalScreens.test.jsx=existe
+RF04: 4/4 referencias existen; TestChainedSHA256Integrity=existe; TestConcurrentClosesKeepChainLinear=existe; TestClosedAtIsSealedToSeconds=existe; TestRepositoryRejectsForkedChainLink=existe
+RF05: 4/4 referencias existen; TestPrescriptionAllergyInterceptor=existe; TestAllergyCrossCheckUsesRecordPatient=existe; TestAllergyFamilyAndAccentMatching=existe; AllergyAlertModal.test.jsx=existe
+RF06: 2/2 referencias existen; TestRuralOfflineBatchSynchronization=existe; TestSyncNeverRewritesClosedRecordsNorTrustsClient=existe
+RF07: 3/3 referencias existen; TestStaffGovernanceAndReTHUSVerification=existe; TestStaffRegisterRequiresAdmin=existe; AdminGovernance.test.jsx=existe
+RF08: 2/2 referencias existen; TestRoleComesFromStoreNotToken=existe; AdminGovernance.test.jsx=existe
+RF09: 1/1 referencias existen; DoctorLayout.test.jsx=existe
+RF10: 2/2 referencias existen; DoctorLayout.test.jsx=existe; AuthMfa.test.jsx=existe
+RF11: 2/2 referencias existen; TestAdmissionPatientAndAllergyAPI=existe; PatientFlow.test.jsx=existe
+RF12: 2/2 referencias existen; TestConcurrentPrescriptionsDoNotRaceOnStock=existe; TestGetMedicationReturnsCopy=existe
+RF13: 4/4 referencias existen; TestAnatomicalNotesCreationAndDoctorLicensing=existe; TestAnatomicalNotesImmutabilityOnClosedRecord=existe; TestAnatomicalNotesDoctorOwnership=existe; MedicalKit.test.jsx=existe
+RNF01: 0/0 referencias existen; 
+RNF02: 1/1 referencias existen; TestStaffGovernanceAndReTHUSVerification=existe
+RNF03: 0/0 referencias existen; auth_security_test.go=n/a; prescription_security_test.go=n/a
+RNF04: 1/1 referencias existen; trg_prevent_update_closed_record=n/a; TestMySQLChainSyncAndTimestamps=existe
+RNF05: 1/1 referencias existen; TestRuralOfflineBatchSynchronization=existe
+RNF06: 1/1 referencias existen; TestJWTSecretValidation=existe
+RNF07: 2/2 referencias existen; TestBootstrapAdminNeverUsesDefaults=existe; TestMemoryStoreHasNoPublishedAccounts=existe
+RNF08: 0/0 referencias existen; -race=n/a
+# Requisitos con todas sus referencias existentes: 18/21

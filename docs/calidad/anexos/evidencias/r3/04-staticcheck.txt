@@ -1,0 +1,4 @@
+$ (cd src/backend && staticcheck ./...)
+# fecha: 2026-11-10T22:57:23Z
+adapters\storage\postgres\user_repo.go:133:3: this value of argIdx is never used (SA4006)
+# codigo de salida: 1

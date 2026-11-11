@@ -1,0 +1,41 @@
+$ go test -v -coverpkg=saludconecta-backend/... -coverprofile=coverage.out ./...  (tests/backend, sin -race)
+=== RUN   TestStaffGovernanceAndReTHUSVerification
+--- PASS: TestStaffGovernanceAndReTHUSVerification (1.25s)
+=== RUN   TestClinicalRecordImmutabilityAndClosingPolicy
+--- PASS: TestClinicalRecordImmutabilityAndClosingPolicy (0.62s)
+=== RUN   TestPrescriptionAllergyInterceptor
+=== RUN   TestPrescriptionAllergyInterceptor/Intercepcion_Inmediata_de_Alergia_a_Betalactamicos_(<_150_ms)
+=== RUN   TestPrescriptionAllergyInterceptor/Prescripcion_Exitosa_con_Farmaco_No_Contraindicado_(Paracetamol)
+--- PASS: TestPrescriptionAllergyInterceptor (1.22s)
+    --- PASS: TestPrescriptionAllergyInterceptor/Intercepcion_Inmediata_de_Alergia_a_Betalactamicos_(<_150_ms) (0.61s)
+    --- PASS: TestPrescriptionAllergyInterceptor/Prescripcion_Exitosa_con_Farmaco_No_Contraindicado_(Paracetamol) (0.61s)
+=== RUN   TestStaffRegisterRequiresAdmin
+=== RUN   TestStaffRegisterRequiresAdmin/ruta_publica_retirada
+=== RUN   TestStaffRegisterRequiresAdmin/ruta_publica_de_personal_retirada
+=== RUN   TestStaffRegisterRequiresAdmin/ruta_retirada_con_sesion
+=== RUN   TestStaffRegisterRequiresAdmin/admin_sin_sesion
+=== RUN   TestStaffRegisterRequiresAdmin/admin_con_rol_medico
+=== RUN   TestStaffRegisterRequiresAdmin/admin_con_rol_admin
+--- PASS: TestStaffRegisterRequiresAdmin (1.01s)
+    --- PASS: TestStaffRegisterRequiresAdmin/ruta_publica_retirada (0.00s)
+    --- PASS: TestStaffRegisterRequiresAdmin/ruta_publica_de_personal_retirada (0.00s)
+    --- PASS: TestStaffRegisterRequiresAdmin/ruta_retirada_con_sesion (0.00s)
+    --- PASS: TestStaffRegisterRequiresAdmin/admin_sin_sesion (0.00s)
+    --- PASS: TestStaffRegisterRequiresAdmin/admin_con_rol_medico (0.00s)
+    --- PASS: TestStaffRegisterRequiresAdmin/admin_con_rol_admin (0.39s)
+=== RUN   TestRuralOfflineBatchSynchronization
+--- PASS: TestRuralOfflineBatchSynchronization (0.68s)
+=== RUN   TestTriageEquivalencePartitioningAndBoundaryValues
+=== RUN   TestTriageEquivalencePartitioningAndBoundaryValues/Particion_Invalida:_Glasgow_fuera_de_rango_superior_(Limite_16)
+=== RUN   TestTriageEquivalencePartitioningAndBoundaryValues/Particion_Invalida:_Frecuencia_Cardiaca_imposible_(FC_=_0)
+=== RUN   TestTriageEquivalencePartitioningAndBoundaryValues/Particion_Valida_Limite:_Nivel_I_(Emergencia_Extrema_/_Glasgow_=_7)
+=== RUN   TestTriageEquivalencePartitioningAndBoundaryValues/Particion_Valida:_Nivel_V_(No_Urgente_/_Parametros_Fisiologicos_Estables)
+--- PASS: TestTriageEquivalencePartitioningAndBoundaryValues (0.61s)
+    --- PASS: TestTriageEquivalencePartitioningAndBoundaryValues/Particion_Invalida:_Glasgow_fuera_de_rango_superior_(Limite_16) (0.00s)
+    --- PASS: TestTriageEquivalencePartitioningAndBoundaryValues/Particion_Invalida:_Frecuencia_Cardiaca_imposible_(FC_=_0) (0.00s)
+    --- PASS: TestTriageEquivalencePartitioningAndBoundaryValues/Particion_Valida_Limite:_Nivel_I_(Emergencia_Extrema_/_Glasgow_=_7) (0.00s)
+    --- PASS: TestTriageEquivalencePartitioningAndBoundaryValues/Particion_Valida:_Nivel_V_(No_Urgente_/_Parametros_Fisiologicos_Estables) (0.00s)
+PASS
+coverage: 38.7% of statements in saludconecta-backend/...
+ok  	saludconecta-tests	5.416s	coverage: 38.7% of statements in saludconecta-backend/...
+exit=0

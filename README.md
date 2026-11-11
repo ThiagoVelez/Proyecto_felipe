@@ -1,5 +1,7 @@
 # Corporación de Estudios Tecnológicos del Norte del Valle (COTECNOVA)
 
+[![calidad](https://github.com/ThiagoVelez/Proyecto_felipe/actions/workflows/calidad.yml/badge.svg)](https://github.com/ThiagoVelez/Proyecto_felipe/actions/workflows/calidad.yml)
+
 ## Ingeniería de Sistemas - Ingeniería de Software II
 
 ### Periodo Académico: 2026-2 | Docente: Felipe Gutiérrez Isaza
@@ -32,7 +34,7 @@
 | :----------------------------------------------------- | :------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------ |
 | **Santiago Vélez**                                     | Líder Técnico / Arquitecto de Software | Diseño de arquitectura hexagonal, definición de puertos y adaptadores, gobernanza ReTHUS, coordinación Go/Fiber y persistencia. |
 | **Santiago Arcos**                                     | Responsable de Pruebas (QA / Testing)  | Diseño de casos de prueba aplicando partición de equivalencia y valores límite, automatización de suites en Go y React.         |
-| **Juan José Sánchez**                                  | Responsable de Calidad (ISO/IEC 25010) | Evaluación de características de calidad ISO 25010, bitácora de defectos (DEF-01 a DEF-04) y verificación de seguridad.         |
+| **Juan José Sánchez**                                  | Responsable de Calidad (ISO/IEC 25010) | Evaluación de características de calidad ISO 25010, bitácora de defectos (DEF-01 a DEF-92) y verificación de seguridad.         |
 | **Santiago Vélez, Santiago Arcos y Juan José Sánchez** | Responsables de Documentación          | Elaboración de especificaciones formales de requisitos, marco normativo (Res. 1995 / 2275), criterios BDD y manuales técnicos.  |
 
 ### Persona de Pruebas Clínicas
@@ -49,10 +51,12 @@ El flujo de trabajo, la priorización de requisitos y el ciclo de vida del desar
 
 ### Organización de las Listas Operativas:
 
-1. **Por hacer (Backlog):** Requisitos funcionales (RF01 a RF12) priorizados mediante técnica MoSCoW, diseño de modelos de dominio y contratos de interfaces.
-2. **En curso (In Progress):** Módulos y adaptadores en desarrollo activo (handlers HTTP, repositorios MySQL/Postgres y componentes de interfaz de usuario).
-3. **En revisión (In Review / Code Review):** Inspección de código estricta, análisis estático con `go vet` y verificación de desacoplamiento de capas según la Arquitectura Hexagonal.
-4. **Hecho (Done):** Incrementos de software con pruebas automatizadas aprobadas (100% pass), sin defectos críticos abiertos y con trazabilidad documental completa.
+1. **Avisos:** comunicados del equipo (fechas de entrega, sincronización del repositorio).
+2. **Tareas por realizar:** trabajo pendiente del equipo, incluidos los requisitos funcionales RF01 a RF16 aún no terminados.
+3. **Tareas realizadas:** trabajo terminado.
+4. **Bugs encontrados para solucionar:** defectos abiertos registrados por Calidad (fichas en `docs/calidad/04-bitacora-defectos.md`).
+5. **Pruebas QA:** diseño, automatización y resultados de pruebas del Responsable de Pruebas.
+6. **Bugs solucionados:** defectos corregidos; Calidad comenta en cada tarjeta el resultado de la verificación.
 
 ---
 
@@ -1661,12 +1665,12 @@ Siguiendo la política de protección de infraestructura sensible (Regla 27), to
 | `DB_USER`                | Usuario de conexión con permisos DDL/DML                  | `root`                                        |
 | `DB_PASSWORD`            | Clave de acceso a la base de datos                        | `secret_password`                             |
 | `DB_NAME`                | Nombre de la base de datos clínica                        | `saludconecta_db`                             |
-| `JWT_SECRET`             | Obligatoria: firma de tokens HS256 (mínimo 32 caracteres aleatorios; el servicio no arranca sin ella) | `defina_un_secreto_aleatorio_de_32_o_mas` |
+| `JWT_SECRET`             | Obligatoria: firma de tokens HS256 (mínimo 32 caracteres aleatorios; el servicio no arranca sin ella) | (obligatorio; generar con `openssl rand -base64 48`; los valores publicados se rechazan) |
 | `JWT_ACCESS_TTL_MINUTES` | Vigencia del Access Token de corta duración (por defecto 15 minutos) | `15` |
 | `JWT_REFRESH_TTL_HOURS`  | Vigencia del Refresh Token rotado de larga duración (por defecto 7 días) | `168` |
 | `CORS_ALLOWED_ORIGINS`   | Orígenes web autorizados para consumo de la API           | `http://localhost:5173,http://localhost:5174` |
 | `ADMIN_INITIAL_EMAIL`    | Correo del administrador inicial (se crea solo si no hay ninguno) | `admin@su-institucion.example`        |
-| `ADMIN_INITIAL_PASSWORD` | Clave inicial para inicialización automática              | `defina_una_clave_privada_larga`              |
+| `ADMIN_INITIAL_PASSWORD` | Clave inicial para inicialización automática              | (obligatoria para crear el administrador; mínimo 12 caracteres, privada y generada por el operador) |
 | `IPS_NIT`                | NIT de la institución prestadora de salud                 | `900123456`                                   |
 | `TRUSTED_PROXIES`        | IPs/CIDR del proxy inverso cuya cabecera `X-Real-IP` se acepta como IP del cliente | `127.0.0.1,::1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16` |
 | `DB_ROOT_PASSWORD`       | Solo `docker compose`: clave root de MySQL                | `defina_una_clave_privada`                    |
@@ -1680,7 +1684,7 @@ Para consultar el detalle extendido de la ingeniería del proyecto, accede a los
 
 1. [Especificación de Requisitos de Software (`docs/especificacion.md`)](docs/especificacion.md):
    - Marco regulatorio: Resolución 1995 de 1999 (HCE), Resolución 2275 de 2023 (RIPS) y Ley 1581 de 2012 (Habeas Data).
-   - Requisitos Funcionales (RF01 a RF12) y No Funcionales (RNF01 a RNF08); el detalle vigente de cada uno está en la sección 5 de este README.
+   - Requisitos Funcionales (RF01 a RF12 en la especificación; la sección 5 de este README define RF01 a RF16) y No Funcionales (RNF01 a RNF08); el detalle vigente de cada uno está en la sección 5 de este README.
    - Escenarios de aceptación formales en formato BDD (Dado-Cuando-Entonces / Gherkin).
 
 2. [Plan de Pruebas y Técnicas de Diseño (`docs/plan-de-pruebas.md`)](docs/plan-de-pruebas.md):
@@ -1698,6 +1702,9 @@ Para consultar el detalle extendido de la ingeniería del proyecto, accede a los
 
 5. [Informe Integral de Aseguramiento de Calidad y Pruebas (Sección 4 de este README)](#4-informe-integral-de-aseguramiento-de-calidad-y-pruebas-qa---isoiecieee-29119):
    - Matriz de Trazabilidad de Requisitos (RTM), análisis BVA/EP de constantes vitales, suites automatizadas Go/React y dictamen formal de QA (Santiago Arcos).
+
+6. [Informe de la revisión de calidad R3 (`docs/calidad/informe-revision-r3.md`)](docs/calidad/informe-revision-r3.md):
+   - Verificación de las correcciones y de las afirmaciones publicadas, revisión de los módulos nuevos y dictamen ISO/IEC 25010:2023 del Responsable de Calidad (10 nov 2026).
 
 ---
 

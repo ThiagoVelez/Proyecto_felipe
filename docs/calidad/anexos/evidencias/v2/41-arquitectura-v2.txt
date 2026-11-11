@@ -1,0 +1,27 @@
+== saludconecta-backend/core/domain
+errors
+fmt
+strings
+time
+unicode
+== saludconecta-backend/core/ports
+context
+saludconecta-backend/core/domain
+time
+== saludconecta-backend/core/services
+context
+errors
+fmt
+github.com/google/uuid
+math/rand
+saludconecta-backend/adapters/email
+saludconecta-backend/adapters/pdf
+saludconecta-backend/core/domain
+saludconecta-backend/core/ports
+saludconecta-backend/pkg/crypto
+saludconecta-backend/pkg/logger
+sort
+strings
+sync
+time
+unicode/utf8

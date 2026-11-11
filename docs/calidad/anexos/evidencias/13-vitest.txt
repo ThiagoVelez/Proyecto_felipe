@@ -1,0 +1,29 @@
+$ npx vitest run
+
+ RUN  v2.1.9 src/frontend
+
+ ✓ ../../tests/frontend/totp.test.js (4 tests) 128ms
+ ✓ ../../tests/frontend/AllergyAlertModal.test.jsx (2 tests) 278ms
+ ✓ ../../tests/frontend/DoctorLayout.test.jsx (4 tests) 281ms
+stderr | ../../tests/frontend/AdminGovernance.test.jsx > AdminDashboardScreen - Panel de Control y Separación RBAC > muestra las métricas de gobernanza y la lista de personal asistencial
+[API Conexión/Fallback] /admin/users: Failed to parse URL from /api/v1/admin/users
+[API Conexión/Fallback] /admin/audit-logs?limit=100: Failed to parse URL from /api/v1/admin/audit-logs?limit=100
+
+stderr | ../../tests/frontend/AdminGovernance.test.jsx > AdminDashboardScreen - Panel de Control y Separación RBAC > permite cambiar a la pestaña de Red Asistencial y Sedes con CRUD
+[API Conexión/Fallback] /admin/users: Failed to parse URL from /api/v1/admin/users
+[API Conexión/Fallback] /admin/audit-logs?limit=100: Failed to parse URL from /api/v1/admin/audit-logs?limit=100
+
+stderr | ../../tests/frontend/AdminGovernance.test.jsx > AdminDashboardScreen - Panel de Control y Separación RBAC > permite cambiar a la pestaña de Catálogo CUM Farmacológico con CRUD
+[API Conexión/Fallback] /admin/users: Failed to parse URL from /api/v1/admin/users
+[API Conexión/Fallback] /admin/audit-logs?limit=100: Failed to parse URL from /api/v1/admin/audit-logs?limit=100
+
+ ✓ ../../tests/frontend/AdminGovernance.test.jsx (18 tests) 2446ms
+   ✓ StaffRegisterModal - Registro y Gobernanza ReTHUS > renderiza todos los campos obligatorios del registro asistencial 303ms
+   ✓ AuthScreen - El acceso depende de la respuesta del servidor > abre sesión con el token emitido por el servidor 324ms
+
+ Test Files  4 passed (4)
+      Tests  28 passed (28)
+   Start at  15:52:42
+   Duration  8.79s (transform 1.56s, setup 1.47s, collect 4.22s, tests 3.13s, environment 8.92s, prepare 1.27s)
+
+exit=0

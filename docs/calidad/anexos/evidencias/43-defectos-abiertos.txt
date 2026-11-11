@@ -1,0 +1,41 @@
+$ CALIDAD_DEFECTOS_ABIERTOS=1 go test -count=1 -v -run "TestDEF" ./...
+=== RUN   TestDEF06CruceAlergiasReactividadCruzadaYTildes
+    calidad_defectos_abiertos_regression_test.go:63: Alergia "PENICILINA" frente a "AMOXICILINA": se esperaba bloqueo por alergia y se obtuvo err=<nil>
+    calidad_defectos_abiertos_regression_test.go:63: Alergia "ÁCIDO ACETILSALICÍLICO" frente a "ACIDO ACETILSALICILICO": se esperaba bloqueo por alergia y se obtuvo err=<nil>
+--- FAIL: TestDEF06CruceAlergiasReactividadCruzadaYTildes (1.09s)
+=== RUN   TestDEF07SincronizacionNoSobrescribeFolioCerrado
+    calidad_defectos_abiertos_regression_test.go:87: El folio cerrado fue modificado por la sincronizacion: anamnesis="Anamnesis ALTERADA" cerrado=false
+--- FAIL: TestDEF07SincronizacionNoSobrescribeFolioCerrado (0.54s)
+=== RUN   TestDEF09HipotermiaSeveraNoEsNoUrgente
+    calidad_defectos_abiertos_regression_test.go:96: Temperatura 30.0 °C clasificada como NIVEL_V; se esperaba un nivel urgente
+--- FAIL: TestDEF09HipotermiaSeveraNoEsNoUrgente (0.00s)
+=== RUN   TestDEF13TokenDeUsuarioDesactivadoEsRechazado
+    calidad_defectos_abiertos_regression_test.go:116: Usuario desactivado obtuvo estado 200 con su token previo; se esperaba 401/403
+--- FAIL: TestDEF13TokenDeUsuarioDesactivadoEsRechazado (0.56s)
+=== RUN   TestDEF14SetupMFANoDesactivaSegundoFactor
+    calidad_defectos_abiertos_regression_test.go:140: Tras SetupMFA el login sin TOTP devolvio err=<nil>; se esperaba ErrMFARequired
+--- FAIL: TestDEF14SetupMFANoDesactivaSegundoFactor (1.32s)
+=== RUN   TestDEF16CierreConcurrenteNoBifurcaCadena
+    calidad_defectos_abiertos_regression_test.go:188: Ambos folios encadenan al mismo hash previo (GENESIS_SALUDCON...); la cadena se bifurco
+--- FAIL: TestDEF16CierreConcurrenteNoBifurcaCadena (0.53s)
+=== RUN   TestDEF17MedicoNoCierraFolioAjeno
+    calidad_defectos_abiertos_regression_test.go:205: Otro medico cerro el folio ajeno sin error; VerifyIntegrity posterior=false
+--- FAIL: TestDEF17MedicoNoCierraFolioAjeno (0.55s)
+=== RUN   TestDEF18SincronizacionUsaMedicoAutenticado
+    calidad_defectos_abiertos_regression_test.go:225: El folio sincronizado quedo firmado por "usr-suplantado"; se esperaba el medico autenticado "usr-med-0002"
+--- FAIL: TestDEF18SincronizacionUsaMedicoAutenticado (0.54s)
+=== RUN   TestDEF29HashSinColisionPorDelimitador
+    calidad_defectos_abiertos_regression_test.go:235: Dos folios con anamnesis y examen fisico distintos producen el mismo hash: 9ec719652898a8478a33fca0ba5b66da1f34b659a204906608331027c1da96d2
+--- FAIL: TestDEF29HashSinColisionPorDelimitador (0.00s)
+=== RUN   TestDEF30VerificacionValidaEnlaceConFolioAnterior
+    calidad_defectos_abiertos_regression_test.go:258: Un folio cuyo previous_hash no corresponde a ningun folio anterior se reporta como integro
+--- FAIL: TestDEF30VerificacionValidaEnlaceConFolioAnterior (0.53s)
+=== RUN   TestDEF31LoginNoRevelaCuentaInactivaConClaveErronea
+    calidad_defectos_abiertos_regression_test.go:269: Login con clave incorrecta sobre cuenta inactiva devolvio el usuario se encuentra inactivo o pendiente de aprobacion rethus; se esperaba ErrInvalidCredentials
+--- FAIL: TestDEF31LoginNoRevelaCuentaInactivaConClaveErronea (0.58s)
+=== RUN   TestDEF37LecturaConcurrenteDeFolioSinCarrera
+--- PASS: TestDEF37LecturaConcurrenteDeFolioSinCarrera (0.54s)
+FAIL
+FAIL	saludconecta-tests	6.803s
+FAIL
+exit=1

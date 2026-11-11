@@ -1,0 +1,70 @@
+src\backend\pkg\config\config.go:89:16: Error return value of `os.Setenv` is not checked (errcheck)
+						os.Setenv(key, val)
+						         ^
+src\backend\adapters\email\smtp.go:60:7: G306: Expect WriteFile permissions to be 0600 or less (gosec)
+		_ = os.WriteFile(filePath, []byte(content), 0644)
+		    ^
+src\backend\adapters\pdf\generator.go:24:6: G301: Expect directory permissions to be 0750 or less (gosec)
+	_ = os.MkdirAll(outputDir, 0755)
+	    ^
+src\backend\adapters\pdf\generator.go:198:6: G301: Expect directory permissions to be 0750 or less (gosec)
+	_ = os.MkdirAll(filepath.Dir(fullPath), 0755)
+	    ^
+src\backend\adapters\pdf\generator.go:199:12: G306: Expect WriteFile permissions to be 0600 or less (gosec)
+	if err := os.WriteFile(fullPath, data, 0644); err != nil {
+	          ^
+src\backend\adapters\pdf\generator.go:245:6: G301: Expect directory permissions to be 0750 or less (gosec)
+	_ = os.MkdirAll(filepath.Dir(fullPath), 0755)
+	    ^
+src\backend\adapters\pdf\generator.go:246:12: G306: Expect WriteFile permissions to be 0600 or less (gosec)
+	if err := os.WriteFile(fullPath, data, 0644); err != nil {
+	          ^
+src\backend\core\services\appointment_service.go:94:2: G118: Goroutine uses context.Background/TODO while request-scoped context is available (gosec)
+	go func(appCopy domain.Appointment) {
+	^
+src\backend\core\services\appointment_service.go:139:7: G404: Use of weak random number generator (math/rand or math/rand/v2 instead of crypto/rand) (gosec)
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	     ^
+src\backend\pkg\config\config.go:76:16: G304: Potential file inclusion via variable (gosec)
+		data, err := os.ReadFile(p)
+		             ^
+src\backend\adapters\http\handlers\clinical_record_handler.go:291:2: ineffectual assignment to layer (ineffassign)
+	layer := domain.LayerOrgan
+	^
+src\backend\adapters\storage\mysql\seeder.go:71:20: (*database/sql.DB).QueryRow must not be called. use (*database/sql.DB).QueryRowContext (noctx)
+	err := db.QueryRow(`
+	                  ^
+src\backend\adapters\storage\mysql\seeder.go:80:22: (*database/sql.DB).Exec must not be called. use (*database/sql.DB).ExecContext (noctx)
+	if _, err := db.Exec(fmt.Sprintf("ALTER TABLE clinical_records ADD UNIQUE KEY %s (patient_id, previous_hash)", chainIndexName)); err != nil {
+	                    ^
+src\backend\adapters\storage\mysql\seeder.go:126:21: (*database/sql.DB).QueryRow must not be called. use (*database/sql.DB).QueryRowContext (noctx)
+		err := db.QueryRow(`
+		                  ^
+src\backend\adapters\storage\mysql\seeder.go:135:23: (*database/sql.DB).Exec must not be called. use (*database/sql.DB).ExecContext (noctx)
+		if _, err := db.Exec(trg.stmt); err != nil {
+		                    ^
+src\backend\adapters\storage\mysql\seeder.go:145:20: (*database/sql.DB).Exec must not be called. use (*database/sql.DB).ExecContext (noctx)
+		_, err := db.Exec(`
+		                 ^
+src\backend\adapters\storage\mysql\seeder.go:162:17: (*database/sql.DB).QueryRow must not be called. use (*database/sql.DB).QueryRowContext (noctx)
+	_ = db.QueryRow(`SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'patients' AND COLUMN_NAME = 'affiliation_type'`).Scan(&exists)
+	               ^
+src\backend\adapters\email\smtp.go:75:2: QF1012: Use fmt.Fprintf(...) instead of WriteString(fmt.Sprintf(...)) (staticcheck)
+	msg.WriteString(fmt.Sprintf("From: %s\r\n", s.cfg.From))
+	^
+src\backend\adapters\email\smtp.go:76:2: QF1012: Use fmt.Fprintf(...) instead of WriteString(fmt.Sprintf(...)) (staticcheck)
+	msg.WriteString(fmt.Sprintf("To: %s\r\n", to))
+	^
+src\backend\adapters\email\smtp.go:77:2: QF1012: Use fmt.Fprintf(...) instead of WriteString(fmt.Sprintf(...)) (staticcheck)
+	msg.WriteString(fmt.Sprintf("Subject: %s\r\n", subject))
+	^
+src\backend\adapters\http\middlewares\audit_middleware.go:74:4: QF1002: could use tagged switch on method (staticcheck)
+			switch {
+			^
+21 issues:
+* errcheck: 1
+* gosec: 9
+* ineffassign: 1
+* noctx: 6
+* staticcheck: 4
+exit=1

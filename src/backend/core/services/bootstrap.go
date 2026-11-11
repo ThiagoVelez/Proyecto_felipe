@@ -19,7 +19,11 @@ const MinBootstrapPasswordLength = 12
 var (
 	ErrBootstrapCredentialsMissing = errors.New("no existe administrador y faltan ADMIN_INITIAL_EMAIL / ADMIN_INITIAL_PASSWORD para crearlo")
 	ErrBootstrapPasswordWeak       = errors.New("ADMIN_INITIAL_PASSWORD debe tener al menos 12 caracteres")
+	ErrBootstrapPasswordPublished  = errors.New("ADMIN_INITIAL_PASSWORD coincide con el valor de ejemplo publicado en .env.example")
 )
+
+// publishedBootstrapPasswords reune los marcadores de las plantillas publicadas (DEF-63).
+var publishedBootstrapPasswords = []string{"defina_una_clave_privada_larga"}
 
 // BootstrapAdmin crea el administrador inicial unicamente cuando el sistema no tiene ninguno y el operador definio
 // sus credenciales por entorno. No existe ninguna credencial por defecto: sin variables no se crea cuenta alguna.
@@ -39,6 +43,11 @@ func BootstrapAdmin(ctx context.Context, userRepo ports.UserRepository, email, p
 	}
 	if utf8.RuneCountInString(password) < MinBootstrapPasswordLength {
 		return false, ErrBootstrapPasswordWeak
+	}
+	for _, published := range publishedBootstrapPasswords {
+		if strings.EqualFold(password, published) {
+			return false, ErrBootstrapPasswordPublished
+		}
 	}
 
 	hash, err := crypto.HashPassword(password)

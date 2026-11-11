@@ -1,0 +1,7 @@
+### .
+$ staticcheck ./...
+adapters\storage\postgres\user_repo.go:133:3: this value of argIdx is never used (SA4006)
+exit=1
+### ../../tests/backend
+$ staticcheck ./...
+exit=0

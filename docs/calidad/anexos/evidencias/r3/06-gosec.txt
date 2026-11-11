@@ -1,0 +1,207 @@
+$ (cd src/backend && gosec -exclude=G505,G115 -fmt text ./...)
+# fecha: 2026-11-10T22:58:06Z
+[gosec] 2026/11/10 17:58:06 Including rules: default
+[gosec] 2026/11/10 17:58:06 Excluding rules: G505,G115
+[gosec] 2026/11/10 17:58:06 Including analyzers: default
+[gosec] 2026/11/10 17:58:06 Excluding analyzers: G505,G115
+[gosec] 2026/11/10 17:58:06 Import directory: C:\Users\juan\Documents\Proyecto_felipe\src\backend\core\ports
+[gosec] 2026/11/10 17:58:06 Import directory: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\http\middlewares
+[gosec] 2026/11/10 17:58:06 Import directory: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\interoperability
+[gosec] 2026/11/10 17:58:06 Import directory: C:\Users\juan\Documents\Proyecto_felipe\src\backend\pkg\config
+[gosec] 2026/11/10 17:58:06 Import directory: C:\Users\juan\Documents\Proyecto_felipe\src\backend\pkg\logger
+[gosec] 2026/11/10 17:58:06 Import directory: C:\Users\juan\Documents\Proyecto_felipe\src\backend\cmd\api
+[gosec] 2026/11/10 17:58:06 Import directory: C:\Users\juan\Documents\Proyecto_felipe\src\backend\pkg\crypto
+[gosec] 2026/11/10 17:58:06 Import directory: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql
+[gosec] 2026/11/10 17:58:12 Checking package: ports
+[gosec] 2026/11/10 17:58:12 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\core\ports\repositories.go
+[gosec] 2026/11/10 17:58:12 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\core\ports\services.go
+[gosec] 2026/11/10 17:58:12 Checking package: config
+[gosec] 2026/11/10 17:58:12 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\pkg\config\config.go
+[gosec] 2026/11/10 17:58:12 Import directory: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\email
+[gosec] 2026/11/10 17:58:12 Checking package: logger
+[gosec] 2026/11/10 17:58:12 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\pkg\logger\logger.go
+[gosec] 2026/11/10 17:58:12 Checking package: interoperability
+[gosec] 2026/11/10 17:58:12 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\interoperability\fhir_mapper.go
+[gosec] 2026/11/10 17:58:12 Checking package: crypto
+[gosec] 2026/11/10 17:58:12 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\pkg\crypto\crypto.go
+[gosec] 2026/11/10 17:58:13 Import directory: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\storage\memory
+[gosec] 2026/11/10 17:58:13 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\interoperability\rips_generator.go
+[gosec] 2026/11/10 17:58:13 Import directory: C:\Users\juan\Documents\Proyecto_felipe\src\backend\core\domain
+[gosec] 2026/11/10 17:58:13 Import directory: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\http\handlers
+[gosec] 2026/11/10 17:58:13 Import directory: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\storage
+[gosec] 2026/11/10 17:58:13 Checking package: mysql
+[gosec] 2026/11/10 17:58:13 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\appointment_repo.go
+[gosec] 2026/11/10 17:58:13 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\audit_repo.go
+[gosec] 2026/11/10 17:58:13 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\clinical_record_repo.go
+[gosec] 2026/11/10 17:58:13 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\connection.go
+[gosec] 2026/11/10 17:58:13 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\health_education_repo.go
+[gosec] 2026/11/10 17:58:13 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\inventory_repo.go
+[gosec] 2026/11/10 17:58:13 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\patient_repo.go
+[gosec] 2026/11/10 17:58:13 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\prescription_repo.go
+[gosec] 2026/11/10 17:58:13 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\prescription_v2_repo.go
+[gosec] 2026/11/10 17:58:13 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\seeder.go
+[gosec] 2026/11/10 17:58:13 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\triage_repo.go
+[gosec] 2026/11/10 17:58:13 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\storage\mysql\user_repo.go
+[gosec] 2026/11/10 17:58:13 Checking package: middlewares
+[gosec] 2026/11/10 17:58:13 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\http\middlewares\audit_middleware.go
+[gosec] 2026/11/10 17:58:13 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\http\middlewares\auth_middleware.go
+[gosec] 2026/11/10 17:58:13 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\http\middlewares\ratelimit_middleware.go
+[gosec] 2026/11/10 17:58:13 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\http\middlewares\rbac_middleware.go
+[gosec] 2026/11/10 17:58:13 Import directory: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres
+[gosec] 2026/11/10 17:58:13 Import directory: C:\Users\juan\Documents\Proyecto_felipe\src\backend\core\services
+[gosec] 2026/11/10 17:58:13 Checking package: main
+[gosec] 2026/11/10 17:58:13 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\cmd\api\main.go
+[gosec] 2026/11/10 17:58:13 Import directory: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\http
+[gosec] 2026/11/10 17:58:18 Checking package: email
+[gosec] 2026/11/10 17:58:18 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\email\smtp.go
+[gosec] 2026/11/10 17:58:18 Import directory: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\pdf
+[gosec] 2026/11/10 17:58:19 Checking package: memory
+[gosec] 2026/11/10 17:58:19 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\storage\memory\memory_repos.go
+[gosec] 2026/11/10 17:58:19 Checking package: domain
+[gosec] 2026/11/10 17:58:19 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\core\domain\allergy.go
+[gosec] 2026/11/10 17:58:19 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\core\domain\appointment.go
+[gosec] 2026/11/10 17:58:19 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\core\domain\audit.go
+[gosec] 2026/11/10 17:58:19 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\core\domain\clinical_record.go
+[gosec] 2026/11/10 17:58:19 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\core\domain\health_education.go
+[gosec] 2026/11/10 17:58:19 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\core\domain\inventory.go
+[gosec] 2026/11/10 17:58:19 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\core\domain\patient.go
+[gosec] 2026/11/10 17:58:19 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\core\domain\prescription.go
+[gosec] 2026/11/10 17:58:19 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\core\domain\prescription_v2.go
+[gosec] 2026/11/10 17:58:19 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\core\domain\triage.go
+[gosec] 2026/11/10 17:58:19 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\core\domain\user.go
+[gosec] 2026/11/10 17:58:19 Import directory: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\storage\catalog
+[gosec] 2026/11/10 17:58:20 Checking package: storage
+[gosec] 2026/11/10 17:58:20 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\storage\factory.go
+[gosec] 2026/11/10 17:58:21 Checking package: postgres
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\audit_repo.go
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\clinical_record_repo.go
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\connection.go
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\health_education_repo.go
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\migrate.go
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\patient_repo.go
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\prescription_repo.go
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\triage_repo.go
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\storage\postgres\user_repo.go
+[gosec] 2026/11/10 17:58:21 Checking package: services
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\core\services\admin_service.go
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\core\services\appointment_service.go
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\core\services\attempt_tracker.go
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\core\services\auth_service.go
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\core\services\bootstrap.go
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\core\services\chain_lock.go
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\core\services\clinical_record_service.go
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\core\services\health_education_service.go
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\core\services\patient_service.go
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\core\services\pharmacy_service.go
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\core\services\prescription_service.go
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\core\services\refresh_token_tracker.go
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\core\services\sync_service.go
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\core\services\treatment_service.go
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\core\services\triage_service.go
+[gosec] 2026/11/10 17:58:21 Checking package: handlers
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\http\handlers\admin_handler.go
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\http\handlers\appointment_handler.go
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\http\handlers\auth_handler.go
+[gosec] 2026/11/10 17:58:21 Checking package: http
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\http\router.go
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\http\server.go
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\http\handlers\clinical_record_handler.go
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\http\handlers\health_education_handler.go
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\http\handlers\patient_handler.go
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\http\handlers\pharmacy_handler.go
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\http\handlers\prescription_handler.go
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\http\handlers\sync_handler.go
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\http\handlers\treatment_handler.go
+[gosec] 2026/11/10 17:58:21 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\http\handlers\triage_handler.go
+[gosec] 2026/11/10 17:58:22 Checking package: pdf
+[gosec] 2026/11/10 17:58:22 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\pdf\generator.go
+[gosec] 2026/11/10 17:58:22 Checking package: catalog
+[gosec] 2026/11/10 17:58:22 Checking file: C:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\storage\catalog\demo_medications.go
+Results:
+
+
+[[97;41mC:\Users\juan\Documents\Proyecto_felipe\src\backend\core\services\appointment_service.go:139[0m] - G404 (CWE-338): Use of weak random number generator (math/rand or math/rand/v2 instead of crypto/rand) (Confidence: MEDIUM, Severity: HIGH)
+    138: func GenerateRandomRXCode() string {
+  > 139: 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+    140: 	return fmt.Sprintf("RX-%d-%05d", time.Now().Year(), r.Intn(90000)+10000)
+
+Autofix: 
+
+[[97;41mC:\Users\juan\Documents\Proyecto_felipe\src\backend\core\services\appointment_service.go:94[0m] - G118 (CWE-400): Goroutine uses context.Background/TODO while request-scoped context is available (Confidence: MEDIUM, Severity: HIGH)
+    93: 	// 6. Worker en segundo plano (Goroutine desacoplada): genera PDF y envia confirmacion por correo SMTP
+  > 94: 	go func(appCopy domain.Appointment) {
+    95: 		bgCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+
+Autofix: 
+
+[[30;43mC:\Users\juan\Documents\Proyecto_felipe\src\backend\pkg\config\config.go:76[0m] - G304 (CWE-22): Potential file inclusion via variable (Confidence: HIGH, Severity: MEDIUM)
+    75: 	for _, p := range paths {
+  > 76: 		data, err := os.ReadFile(p)
+    77: 		if err == nil {
+
+Autofix: 
+
+[[30;43mC:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\pdf\generator.go:245[0m] - G301 (CWE-276): Expect directory permissions to be 0750 or less (Confidence: HIGH, Severity: MEDIUM)
+    244: 
+  > 245: 	_ = os.MkdirAll(filepath.Dir(fullPath), 0755)
+    246: 	if err := os.WriteFile(fullPath, data, 0644); err != nil {
+
+Autofix: 
+
+[[30;43mC:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\pdf\generator.go:198[0m] - G301 (CWE-276): Expect directory permissions to be 0750 or less (Confidence: HIGH, Severity: MEDIUM)
+    197: 
+  > 198: 	_ = os.MkdirAll(filepath.Dir(fullPath), 0755)
+    199: 	if err := os.WriteFile(fullPath, data, 0644); err != nil {
+
+Autofix: 
+
+[[30;43mC:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\pdf\generator.go:24[0m] - G301 (CWE-276): Expect directory permissions to be 0750 or less (Confidence: HIGH, Severity: MEDIUM)
+    23: 	}
+  > 24: 	_ = os.MkdirAll(outputDir, 0755)
+    25: 	return &Generator{outputDir: outputDir}
+
+Autofix: 
+
+[[30;43mC:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\email\smtp.go:35[0m] - G301 (CWE-276): Expect directory permissions to be 0750 or less (Confidence: HIGH, Severity: MEDIUM)
+    34: 	outbox := "storage/outbox"
+  > 35: 	_ = os.MkdirAll(outbox, 0755)
+    36: 	if cfg.From == "" {
+
+Autofix: 
+
+[[30;43mC:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\pdf\generator.go:246[0m] - G306 (CWE-276): Expect WriteFile permissions to be 0600 or less (Confidence: HIGH, Severity: MEDIUM)
+    245: 	_ = os.MkdirAll(filepath.Dir(fullPath), 0755)
+  > 246: 	if err := os.WriteFile(fullPath, data, 0644); err != nil {
+    247: 		return "", nil, err
+
+Autofix: 
+
+[[30;43mC:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\pdf\generator.go:199[0m] - G306 (CWE-276): Expect WriteFile permissions to be 0600 or less (Confidence: HIGH, Severity: MEDIUM)
+    198: 	_ = os.MkdirAll(filepath.Dir(fullPath), 0755)
+  > 199: 	if err := os.WriteFile(fullPath, data, 0644); err != nil {
+    200: 		return "", nil, err
+
+Autofix: 
+
+[[30;43mC:\Users\juan\Documents\Proyecto_felipe\src\backend\adapters\email\smtp.go:60[0m] - G306 (CWE-276): Expect WriteFile permissions to be 0600 or less (Confidence: HIGH, Severity: MEDIUM)
+    59: 
+  > 60: 		_ = os.WriteFile(filePath, []byte(content), 0644)
+    61: 		s.log.Info("Correo electronico despachado y registrado en outbox local", map[string]interface{}{
+
+Autofix: 
+
+[[37;40mC:\Users\juan\Documents\Proyecto_felipe\src\backend\pkg\config\config.go:89[0m] - G104 (CWE-703): Errors unhandled (Confidence: HIGH, Severity: LOW)
+    88: 					if os.Getenv(key) == "" {
+  > 89: 						os.Setenv(key, val)
+    90: 					}
+
+Autofix: 
+
+[1;36mSummary:[0m
+  Gosec  : dev
+  Files  : 77
+  Lines  : 13130
+  Nosec  : 0
+  Issues : [1;31m11[0m
+
+# codigo de salida: 1

@@ -1,0 +1,106 @@
+$ (cd src/frontend && npx --no-install vitest run --coverage --coverage.reporter=text-summary)
+# fecha: 2026-11-10T23:00:47Z
+
+[1m[7m[36m RUN [39m[27m[22m [36mv2.1.9 [39m[90mC:/Users/juan/Documents/Proyecto_felipe/src/frontend[39m
+      [2mCoverage enabled with [22m[33mv8[39m
+
+ [32m✓[39m ../../tests/frontend/DoctorLayout.test.jsx [2m([22m[2m6 tests[22m[2m)[22m[33m 1574[2mms[22m[39m
+   [33m[2m✓[22m[39m Doctor Clinical Layout & Sidebar[2m > [22mrenderiza el Sidebar asistencial con sus accesos clinicos directos sin duplicidad de perfil [33m409[2mms[22m[39m
+   [33m[2m✓[22m[39m Doctor Clinical Layout & Sidebar[2m > [22mrenderiza ProfileScreen en pantalla completa con los 5 banners medicos [33m460[2mms[22m[39m
+ [32m✓[39m ../../tests/frontend/MedicalKit.test.jsx [2m([22m[2m7 tests[22m[2m)[22m[33m 2185[2mms[22m[39m
+   [33m[2m✓[22m[39m Kit Informático Médico: Muro de Salud & Escala EVA (ISO/IEC 25010 & Res. 1995)[2m > [22m2. Muro Clínico de Salud y Concientización (MedicalKitScreen)[2m > [22mrenderiza las categorías y publicaciones educativas en el muro [33m670[2mms[22m[39m
+   [33m[2m✓[22m[39m Kit Informático Médico: Muro de Salud & Escala EVA (ISO/IEC 25010 & Res. 1995)[2m > [22m2. Muro Clínico de Salud y Concientización (MedicalKitScreen)[2m > [22mpermite al médico ver el botón de Nueva Publicación y abrir el modal [33m646[2mms[22m[39m
+ [32m✓[39m ../../tests/frontend/AdminOrgChartAndBranches.test.jsx [2m([22m[2m6 tests[22m[2m)[22m[33m 4031[2mms[22m[39m
+   [33m[2m✓[22m[39m AdminSidebar - Menú Lateral Administrativo[2m > [22mrenderiza todos los accesos administrativos y permite alternar vistas [33m309[2mms[22m[39m
+   [33m[2m✓[22m[39m StaffRegisterModal - Creación Dinámica de Sedes[2m > [22mpermite registrar una nueva sede cuando no está en el listado [33m1337[2mms[22m[39m
+   [33m[2m✓[22m[39m AdminOrgChartView - Árbol Jerárquico Didáctico e Interactivo[2m > [22mrenderiza la Gerencia General en la cúspide y los departamentos ramificados [33m644[2mms[22m[39m
+   [33m[2m✓[22m[39m AdminOrgChartView - Árbol Jerárquico Didáctico e Interactivo[2m > [22mabre el modal de detalles con información completa al hacer clic en un perfil [33m946[2mms[22m[39m
+   [33m[2m✓[22m[39m AdminOrgChartView - Árbol Jerárquico Didáctico e Interactivo[2m > [22mdispone de controles didácticos de zoom y reset [33m727[2mms[22m[39m
+ [32m✓[39m ../../tests/frontend/PatientFlow.test.jsx [2m([22m[2m10 tests[22m[2m)[22m[33m 7335[2mms[22m[39m
+   [33m[2m✓[22m[39m PatientPicker - seleccion de paciente por API[2m > [22mlista los pacientes del servidor y entrega el detalle con alergias al seleccionar [33m1454[2mms[22m[39m
+   [33m[2m✓[22m[39m PatientPicker - seleccion de paciente por API[2m > [22mbusca por documento y avisa cuando el paciente no existe (404) [33m402[2mms[22m[39m
+   [33m[2m✓[22m[39m PatientRegisterModal - alta de paciente y alergias[2m > [22mvalida los campos del contrato antes de llamar al servidor [33m631[2mms[22m[39m
+   [33m[2m✓[22m[39m PatientRegisterModal - alta de paciente y alergias[2m > [22mcrea el paciente y registra sus alergias con las llamadas del contrato [33m2121[2mms[22m[39m
+   [33m[2m✓[22m[39m PatientRegisterModal - alta de paciente y alergias[2m > [22mmuestra el 409 de documento duplicado y no cierra el formulario [33m1292[2mms[22m[39m
+   [33m[2m✓[22m[39m DashboardScreen - cola de triaje real[2m > [22mmuestra la cola y los nombres desde la API, sin pacientes inventados [33m435[2mms[22m[39m
+   [33m[2m✓[22m[39m DashboardScreen - cola de triaje real[2m > [22mLlamar HCE marca el triaje en atencion, carga el paciente y navega [33m395[2mms[22m[39m
+[90mstderr[2m | ../../tests/frontend/AuthMfa.test.jsx[2m > [22m[2mCliente HTTP - Manejo central de sesión[2m > [22m[2mabre el modal de registro de administrador y procesa el registro institucional
+[22m[39m[API] /auth/mfa-seed?email=usuario%40saludconecta.ips.gov.co: Body is unusable: Body has already been read
+
+ [32m✓[39m ../../tests/frontend/AuthMfa.test.jsx [2m([22m[2m14 tests[22m[2m)[22m[33m 12778[2mms[22m[39m
+   [33m[2m✓[22m[39m Login - El segundo factor lo valida siempre el servidor[2m > [22msolicita el código TOTP cuando el servidor responde mfa_required y lo envía sin validarlo localmente [33m1493[2mms[22m[39m
+   [33m[2m✓[22m[39m Login - El segundo factor lo valida siempre el servidor[2m > [22mmuestra el mensaje del servidor cuando el código TOTP es rechazado y limpia las casillas [33m1257[2mms[22m[39m
+   [33m[2m✓[22m[39m Login - El segundo factor lo valida siempre el servidor[2m > [22mpropaga el mensaje del servidor ante el bloqueo temporal por demasiados intentos (429) [33m871[2mms[22m[39m
+   [33m[2m✓[22m[39m Seguridad MFA - Configuración con secreto emitido por el servidor[2m > [22mconfigura MFA con setup y enable del servidor sin calcular códigos localmente [33m1902[2mms[22m[39m
+   [33m[2m✓[22m[39m Seguridad MFA - Configuración con secreto emitido por el servidor[2m > [22mexige el código vigente antes de reconfigurar cuando la cuenta ya tiene MFA [33m899[2mms[22m[39m
+   [33m[2m✓[22m[39m Seguridad MFA - Configuración con secreto emitido por el servidor[2m > [22mmuestra el rechazo del servidor y no declara MFA habilitado cuando el código es incorrecto [33m895[2mms[22m[39m
+   [33m[2m✓[22m[39m Cliente HTTP - Manejo central de sesión[2m > [22mno muestra el botón de alto contraste y muestra el botón de registro de administrador [33m588[2mms[22m[39m
+   [33m[2m✓[22m[39m Cliente HTTP - Manejo central de sesión[2m > [22mabre el modal de registro de administrador y procesa el registro institucional [33m4612[2mms[22m[39m
+ [32m✓[39m ../../tests/frontend/AdminGovernance.test.jsx [2m([22m[2m23 tests[22m[2m)[22m[33m 13205[2mms[22m[39m
+   [33m[2m✓[22m[39m StaffRegisterModal - Registro y Gobernanza ReTHUS[2m > [22mrenderiza todos los campos obligatorios del registro asistencial [33m1119[2mms[22m[39m
+   [33m[2m✓[22m[39m StaffRegisterModal - Registro y Gobernanza ReTHUS[2m > [22mexige la tarjeta profesional ReTHUS para roles médicos y asistenciales [33m409[2mms[22m[39m
+   [33m[2m✓[22m[39m Registro de personal - Acceso exclusivo desde el perfil del administrador[2m > [22mel perfil del administrador abre el formulario de registro [33m667[2mms[22m[39m
+   [33m[2m✓[22m[39m Registro de personal - Acceso exclusivo desde el perfil del administrador[2m > [22mmuestra el rechazo del servidor en lugar de simular un registro exitoso [33m525[2mms[22m[39m
+   [33m[2m✓[22m[39m Registro de personal - Acceso exclusivo desde el perfil del administrador[2m > [22mel perfil de un médico no ofrece el registro de personal [33m363[2mms[22m[39m
+   [33m[2m✓[22m[39m Registro de personal - Acceso exclusivo desde el perfil del administrador[2m > [22mel login no ofrece el registro de personal [33m1066[2mms[22m[39m
+   [33m[2m✓[22m[39m AuthScreen - El acceso depende de la respuesta del servidor[2m > [22mdespliega en acordeón las sedes registradas y permite elegir una [33m855[2mms[22m[39m
+   [33m[2m✓[22m[39m AuthScreen - El acceso depende de la respuesta del servidor[2m > [22mno abre sesión cuando el servidor rechaza las credenciales [33m548[2mms[22m[39m
+   [33m[2m✓[22m[39m AuthScreen - El acceso depende de la respuesta del servidor[2m > [22mno abre sesión cuando el servidor no está disponible [33m589[2mms[22m[39m
+   [33m[2m✓[22m[39m AuthScreen - El acceso depende de la respuesta del servidor[2m > [22mabre sesión con el token emitido por el servidor [33m326[2mms[22m[39m
+   [33m[2m✓[22m[39m AdminDashboardScreen - Panel de Control y Separación RBAC[2m > [22mmuestra las métricas y el personal que devuelve el servidor [33m320[2mms[22m[39m
+   [33m[2m✓[22m[39m AdminDashboardScreen - Panel de Control y Separación RBAC[2m > [22mmuestra el error real y permite reintentar cuando el listado de personal falla [33m449[2mms[22m[39m
+   [33m[2m✓[22m[39m AdminDashboardScreen - Panel de Control y Separación RBAC[2m > [22mno muestra éxito ni altera el estado cuando el servidor rechaza el cambio de estado [33m878[2mms[22m[39m
+   [33m[2m✓[22m[39m AdminDashboardScreen - Panel de Control y Separación RBAC[2m > [22mrefleja el cambio de estado solo después de la confirmación del servidor [33m449[2mms[22m[39m
+   [33m[2m✓[22m[39m AdminDashboardScreen - Panel de Control y Separación RBAC[2m > [22mpresenta la bitácora real del servidor usando el campo timestamp [33m644[2mms[22m[39m
+   [33m[2m✓[22m[39m AdminDashboardScreen - Panel de Control y Separación RBAC[2m > [22mmuestra el error del servidor en la bitácora y un estado vacío explícito [33m457[2mms[22m[39m
+   [33m[2m✓[22m[39m AdminDashboardScreen - Panel de Control y Separación RBAC[2m > [22mla pestaña de sedes no inventa cifras de ocupación ni conectividad [33m690[2mms[22m[39m
+   [33m[2m✓[22m[39m AdminDashboardScreen - Panel de Control y Separación RBAC[2m > [22mya no ofrece el catálogo farmacológico simulado [33m330[2mms[22m[39m
+   [33m[2m✓[22m[39m UserProfileModal - Perfil Asistencial Tipo Red Social con 5 Banners[2m > [22mrenderiza la información del perfil del Dr. Santiago Vélez y los 5 banners [33m458[2mms[22m[39m
+   [33m[2m✓[22m[39m UserProfileModal - Perfil Asistencial Tipo Red Social con 5 Banners[2m > [22mpermite alternar entre los banners de áreas médicas como pediatría y farmacia [33m474[2mms[22m[39m
+   [33m[2m✓[22m[39m ProfileScreen - Pantalla Completa Desacoplada sin Ventana Flotante[2m > [22mrenderiza la pantalla completa de perfil con botón de retorno y portadas médicas [33m628[2mms[22m[39m
+   [33m[2m✓[22m[39m ProfileScreen - Pantalla Completa Desacoplada sin Ventana Flotante[2m > [22mpermite navegar a la pestaña de banners y ver los 5 diseños en pantalla completa [33m744[2mms[22m[39m
+ [32m✓[39m ../../tests/frontend/ResilienceQuality.test.jsx [2m([22m[2m2 tests[22m[2m)[22m[33m 2618[2mms[22m[39m
+   [33m[2m✓[22m[39m Resiliencia y Calidad de Interfaz (ISO/IEC 25010 & Res. 1995/1999)[2m > [22mgestiona caidas 500 del servidor mostrando alerta accesible y boton de reintento sin pantalla blanca [33m1782[2mms[22m[39m
+   [33m[2m✓[22m[39m Resiliencia y Calidad de Interfaz (ISO/IEC 25010 & Res. 1995/1999)[2m > [22mbloquea estrictamente la edicion de folios cerrados con atributos disabled y readonly segun Res. 1995/1999 [33m825[2mms[22m[39m
+ [32m✓[39m ../../tests/frontend/ClinicalScreens.test.jsx [2m([22m[2m11 tests[22m[2m)[22m[33m 14892[2mms[22m[39m
+   [33m[2m✓[22m[39m HceScreen - folios reales desde la API[2m > [22mcarga los folios del paciente y muestra el hash SHA-256 devuelto por el servidor [33m1636[2mms[22m[39m
+   [33m[2m✓[22m[39m HceScreen - folios reales desde la API[2m > [22minforma el fallo de carga cuando el servidor no esta disponible [33m501[2mms[22m[39m
+   [33m[2m✓[22m[39m HceScreen - folios reales desde la API[2m > [22mmuestra el error 403 del servidor al cerrar y firmar sin simular exito [33m1609[2mms[22m[39m
+   [33m[2m✓[22m[39m HceScreen - folios reales desde la API[2m > [22mmuestra el error 409 del servidor al cerrar y firmar sin simular exito [33m1224[2mms[22m[39m
+   [33m[2m✓[22m[39m HceScreen - folios reales desde la API[2m > [22mexige completar los campos del folio antes de enviarlo al servidor [33m590[2mms[22m[39m
+   [33m[2m✓[22m[39m PrescriptionScreen - validacion de alergias por el servidor[2m > [22mabre el modal de alergia con los datos del 422 del servidor [33m1899[2mms[22m[39m
+   [33m[2m✓[22m[39m PrescriptionScreen - validacion de alergias por el servidor[2m > [22mno agrega items con datos invalidos y no consulta el endpoint de prescripcion [33m424[2mms[22m[39m
+   [33m[2m✓[22m[39m TriageScreen - nivel Manchester determinado por el servidor[2m > [22menvia los signos vitales sin manchester_level y muestra el nivel que responde el servidor [33m1674[2mms[22m[39m
+   [33m[2m✓[22m[39m TriageScreen - nivel Manchester determinado por el servidor[2m > [22msolo envia manchester_level cuando el clinico escala manualmente [33m1795[2mms[22m[39m
+   [33m[2m✓[22m[39m TriageScreen - nivel Manchester determinado por el servidor[2m > [22mrechaza Glasgow fuera de rango sin llamar al servidor [33m1704[2mms[22m[39m
+   [33m[2m✓[22m[39m TriageScreen - nivel Manchester determinado por el servidor[2m > [22mmuestra el 422 del servidor y no simula el guardado [33m1818[2mms[22m[39m
+ [32m✓[39m ../../tests/frontend/NurseModules.test.jsx [2m([22m[2m2 tests[22m[2m)[22m[33m 2587[2mms[22m[39m
+   [33m[2m✓[22m[39m Módulo Asistencial de Enfermería - Resumen Clínico & Lista de Chequeo[2m > [22mrenderiza NurseSummaryView con datos del paciente, diagnóstico y fármacos activos [33m847[2mms[22m[39m
+   [33m[2m✓[22m[39m Módulo Asistencial de Enfermería - Resumen Clínico & Lista de Chequeo[2m > [22mrenderiza NurseChecklistView con tareas marcables, estadísticas y notas de evolución [33m1732[2mms[22m[39m
+ [32m✓[39m ../../tests/frontend/PharmacyDashboard.test.jsx [2m([22m[2m2 tests[22m[2m)[22m[33m 1830[2mms[22m[39m
+   [33m[2m✓[22m[39m PharmacyDashboard - Buzón, Inventario y Lector PDF417[2m > [22mrenderiza la vista de buzón con escáner PDF417 y sin botón redundante de inventario [33m596[2mms[22m[39m
+   [33m[2m✓[22m[39m PharmacyDashboard - Buzón, Inventario y Lector PDF417[2m > [22mrenderiza la vista de inventario con botón de registrar medicamento, acciones de ajustar y eliminar [33m1226[2mms[22m[39m
+ [32m✓[39m ../../tests/frontend/totp.test.js [2m([22m[2m18 tests[22m[2m)[22m[33m 601[2mms[22m[39m
+   [33m[2m✓[22m[39m TOTP RFC 6238 & QR Generator[2m > [22mdebe generar una imagen QR en formato data URL base64 [33m473[2mms[22m[39m
+ [32m✓[39m ../../tests/frontend/AllergyAlertModal.test.jsx [2m([22m[2m2 tests[22m[2m)[22m[33m 448[2mms[22m[39m
+   [33m[2m✓[22m[39m AllergyAlertModal - Intercepcion Visual de Seguridad Farmacologica[2m > [22mdebe renderizarse con borde y estilo de alerta roja ante severidad SEVERA [33m435[2mms[22m[39m
+ [32m✓[39m ../../tests/frontend/totp.regression.test.js [2m([22m[2m3 tests[22m[2m)[22m[90m 30[2mms[22m[39m
+ [32m✓[39m ../../tests/frontend/TreatmentFollowUpView.test.jsx [2m([22m[2m1 test[22m[2m)[22m[33m 459[2mms[22m[39m
+   [33m[2m✓[22m[39m TreatmentFollowUpView - Prescripción Tripartita[2m > [22mrenderiza la vista de seguimiento, afiliación EPS y selector por concentración [33m453[2mms[22m[39m
+ [32m✓[39m ../../tests/frontend/DoctorAppointmentsView.test.jsx [2m([22m[2m1 test[22m[2m)[22m[33m 371[2mms[22m[39m
+   [33m[2m✓[22m[39m DoctorAppointmentsView - Agendamiento y Calendario[2m > [22mrenderiza el calendario mensual y el formulario de agendamiento [33m366[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m15 passed[39m[22m[90m (15)[39m
+[2m      Tests [22m [1m[32m108 passed[39m[22m[90m (108)[39m
+[2m   Start at [22m 18:00:50
+[2m   Duration [22m 35.25s[2m (transform 6.88s, setup 17.61s, collect 19.69s, tests 64.94s, environment 63.88s, prepare 13.84s)[22m
+
+[34m % [39m[2mCoverage report from [22m[33mv8[39m
+
+=============================== Coverage summary ===============================
+Statements   : 72.85% ( 10093/13854 )
+Branches     : 65.46% ( 1143/1746 )
+Functions    : 37.62% ( 187/497 )
+Lines        : 72.85% ( 10093/13854 )
+================================================================================
+# codigo de salida: 0
