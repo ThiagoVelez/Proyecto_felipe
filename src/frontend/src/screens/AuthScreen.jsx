@@ -11,13 +11,11 @@ import {
   QrCode,
   Timer,
   RefreshCw,
-  UserPlus,
   Info,
   X,
 } from 'lucide-react';
 import BranchAccordion from '../components/BranchAccordion';
 import MfaQrModal from '../components/MfaQrModal';
-import AdminRegisterModal from '../components/AdminRegisterModal';
 import ClinicalBiometricVisualizer from '../components/ClinicalBiometricVisualizer';
 import BrandLogo from '../components/BrandLogo';
 import { loadBranches } from '../services/branches';
@@ -43,7 +41,6 @@ export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
   const [qrDataUrl, setQrDataUrl] = useState('');
   const [mfaTimer, setMfaTimer] = useState(getRemainingSeconds());
   const [showQrModal, setShowQrModal] = useState(false);
-  const [showAdminModal, setShowAdminModal] = useState(false);
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [isError, setIsError] = useState(false);
@@ -454,15 +451,7 @@ export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
 
           {/* Footer y Cumplimiento Normativo Asistencial */}
           <footer className="pt-2 sm:pt-2.5 mt-1 sm:mt-1.5 border-t border-slate-100 flex flex-col gap-1.5">
-            <div className="flex items-center justify-between text-xs">
-              <button
-                type="button"
-                onClick={() => setShowAdminModal(true)}
-                className="flex items-center gap-1 text-teal-800 hover:text-teal-950 font-semibold hover:underline cursor-pointer text-[11px]"
-              >
-                <UserPlus className="w-3.5 h-3.5 text-teal-600" />
-                <span>Registrar Administrador de Centro de Salud</span>
-              </button>
+            <div className="flex items-center justify-end text-xs">
               <span className="text-[10px] font-mono text-slate-400">Build 2026.02-prod</span>
             </div>
 
@@ -490,18 +479,6 @@ export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
           identifier || 'usuario@saludconecta.ips.gov.co',
           'SaludConecta IPS'
         )}
-      />
-
-      {/* Modal de Registro de Administrador de Centro de Salud */}
-      <AdminRegisterModal
-        isOpen={showAdminModal}
-        onClose={() => setShowAdminModal(false)}
-        onRegisterSuccess={(data) => {
-          if (data?.user?.email) {
-            setIdentifier(data.user.email);
-            showStatus('Administrador registrado con éxito. Ingrese su contraseña para acceder.');
-          }
-        }}
       />
 
       {/* Modal Informativo: Restablecimiento de Credenciales ReTHUS */}

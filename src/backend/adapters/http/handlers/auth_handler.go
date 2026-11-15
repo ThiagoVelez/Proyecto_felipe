@@ -274,7 +274,8 @@ type RegisterAdminRequest struct {
 	ProfessionalCard string `json:"professional_card"`
 }
 
-// RegisterAdmin permite a cualquier centro de salud registrar su propio Administrador (role_id = 1)
+// RegisterAdmin permite a un Administrador autenticado registrar otro Administrador (role_id = 1).
+// La ruta exige sesion valida y rol ADMIN; el primer administrador se crea con BootstrapAdmin al arrancar.
 func (h *AuthHandler) RegisterAdmin(c *fiber.Ctx) error {
 	var req RegisterAdminRequest
 	if err := c.BodyParser(&req); err != nil {
