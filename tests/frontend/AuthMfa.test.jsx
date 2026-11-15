@@ -3,8 +3,8 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import AuthScreen from '../../src/frontend/src/screens/AuthScreen';
 import SecurityMfaScreen from '../../src/frontend/src/screens/SecurityMfaScreen';
-import AdminDashboardScreen from '../../src/frontend/src/screens/admin/AdminDashboardScreen';
 import { apiClient, SESSION_EXPIRED_EVENT } from '../../src/frontend/src/services/api';
+import { mockLoginServer } from './helpers/mockApi';
 
 const jsonResponse = (body, status = 200) => new Response(JSON.stringify(body), { status });
 
@@ -26,10 +26,10 @@ const fillLogin = () => {
 describe('Login - El segundo factor lo valida siempre el servidor', () => {
   it('solicita el código TOTP cuando el servidor responde mfa_required y lo envía sin validarlo localmente', async () => {
     const user = { id: 'u1', role: 'MEDICO', role_id: 2, full_name: 'Dr. Prueba', mfa_enabled: true };
-    const fetchSpy = vi
-      .spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(jsonResponse({ error: 'MFA requerido', mfa_required: true }, 401))
-      .mockResolvedValueOnce(jsonResponse({ token: 'jwt-real', user }));
+    const { calls } = mockLoginServer([
+      { status: 401, body: { error: 'MFA requerido', mfa_required: true } },
+      { body: { token: 'jwt-real', user } },
+    ]);
     const onLoginSuccess = vi.fn();
     const { container } = render(<AuthScreen onLoginSuccess={onLoginSuccess} />);
 
@@ -39,7 +39,7 @@ describe('Login - El segundo factor lo valida siempre el servidor', () => {
     fireEvent.submit(container.querySelector('form'));
 
     expect(await screen.findByLabelText(/Digito 1 del codigo TOTP/i)).toBeInTheDocument();
-    expect(JSON.parse(fetchSpy.mock.calls[0][1].body)).toEqual({
+    expect(calls[0].body).toEqual({
       email: 'medico@example.com',
       password: 'ClaveSegura2026*',
     });
@@ -50,7 +50,7 @@ describe('Login - El segundo factor lo valida siempre el servidor', () => {
     fireEvent.submit(container.querySelector('form'));
 
     await waitFor(() => expect(onLoginSuccess).toHaveBeenCalledWith({ token: 'jwt-real', user }));
-    expect(JSON.parse(fetchSpy.mock.calls[1][1].body)).toEqual({
+    expect(calls[1].body).toEqual({
       email: 'medico@example.com',
       password: 'ClaveSegura2026*',
       totp_code: '123456',
@@ -58,11 +58,10 @@ describe('Login - El segundo factor lo valida siempre el servidor', () => {
   });
 
   it('muestra el mensaje del servidor cuando el código TOTP es rechazado y limpia las casillas', async () => {
-    vi.spyOn(globalThis, 'fetch')
-      .mockResolvedValueOnce(jsonResponse({ error: 'MFA requerido', mfa_required: true }, 401))
-      .mockResolvedValueOnce(
-        jsonResponse({ error: 'Codigo de segundo factor (TOTP) invalido o expirado' }, 401)
-      );
+    mockLoginServer([
+      { status: 401, body: { error: 'MFA requerido', mfa_required: true } },
+      { status: 401, body: { error: 'Codigo de segundo factor (TOTP) invalido o expirado' } },
+    ]);
     const onLoginSuccess = vi.fn();
     const { container } = render(<AuthScreen onLoginSuccess={onLoginSuccess} />);
 
@@ -79,9 +78,7 @@ describe('Login - El segundo factor lo valida siempre el servidor', () => {
   });
 
   it('propaga el mensaje del servidor ante el bloqueo temporal por demasiados intentos (429)', async () => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      jsonResponse({ error: 'Demasiados intentos. Intente en 15 minutos.' }, 429)
-    );
+    mockLoginServer([{ status: 429, body: { error: 'Demasiados intentos. Intente en 15 minutos.' } }]);
     const { container } = render(<AuthScreen onLoginSuccess={vi.fn()} />);
 
     fillLogin();
@@ -199,74 +196,11 @@ describe('Cliente HTTP - Manejo central de sesión', () => {
     await expect(apiClient.adminUpdateUserStatus('u1', false)).rejects.toThrow('Demasiadas solicitudes');
   });
 
-  it('no muestra el botón de alto contraste ni el registro de administradores en el login', () => {
+  it('no muestra el botón de alto contraste', () => {
     render(<AuthScreen />);
-
     expect(screen.queryByText(/Alto Contraste/i)).not.toBeInTheDocument();
-    // Registrar administradores exige sesión ADMIN: el login no debe ofrecerlo a visitantes
-    expect(screen.queryByText(/Registrar Administrador/i)).not.toBeInTheDocument();
   });
 
-  it('abre el registro de administrador desde Gobernanza de Personal y lo envía al servidor', async () => {
-    const registerResponse = () =>
-      jsonResponse(
-        {
-          message: 'Administrador registrado',
-          user: {
-            id: 'adm-new',
-            email: 'admin.nuevo@saludconecta.ips.gov.co',
-            full_name: 'Admin Nuevo',
-            role: 'ADMIN',
-            role_id: 1,
-            branch: 'Sede Cartago - Hospital Central',
-          },
-          mfa_secret: 'TESTSECRETBASE32',
-          otpauth_uri: 'otpauth://totp/SaludConecta:admin.nuevo@saludconecta.ips.gov.co?secret=TESTSECRETBASE32',
-        },
-        201
-      );
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
-      if (url.includes('/auth/register-admin')) return registerResponse();
-      if (url.startsWith('/api/v1/admin/audit-logs')) return jsonResponse({ audit_logs: [], count: 0 });
-      if (url.startsWith('/api/v1/admin/users')) return jsonResponse({ users: [], count: 0 });
-      return jsonResponse({});
-    });
-
-    render(<AdminDashboardScreen />);
-
-    fireEvent.click(screen.getByRole('button', { name: /Nuevo Administrador/i }));
-
-    expect(await screen.findByText(/Registro de Administrador de Centro de Salud/i)).toBeInTheDocument();
-
-    fireEvent.change(screen.getByLabelText(/Nombre Completo del Administrador/i), {
-      target: { value: 'Admin Nuevo' },
-    });
-    fireEvent.change(screen.getByLabelText(/Número de Documento/i), {
-      target: { value: '11223344' },
-    });
-    fireEvent.change(screen.getByLabelText(/Correo Institucional \*/i), {
-      target: { value: 'admin.nuevo@saludconecta.ips.gov.co' },
-    });
-    fireEvent.change(screen.getByLabelText(/Contraseña Maestra/i), {
-      target: { value: 'AdminClave2026*' },
-    });
-    fireEvent.change(screen.getByLabelText(/Confirmar Contraseña/i), {
-      target: { value: 'AdminClave2026*' },
-    });
-
-    const submitBtn = screen.getByRole('button', { name: /Confirmar registro de administrador/i });
-    fireEvent.click(submitBtn);
-
-    await waitFor(() => {
-      expect(fetchSpy).toHaveBeenCalledWith(
-        expect.stringContaining('/auth/register-admin'),
-        expect.objectContaining({
-          method: 'POST',
-        })
-      );
-    });
-    expect(await screen.findByText(/Administrador Admin Nuevo registrado/i)).toBeInTheDocument();
-  });
   it('renueva transparentemente el token de acceso cuando recibe un 401 y reintenta la peticion con exito', async () => {
     apiClient.setAuth('access-viejo', { id: 'u1' }, 'refresh-valido');
 

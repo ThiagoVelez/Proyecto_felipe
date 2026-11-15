@@ -20,6 +20,7 @@ type RouterConfig struct {
 	TreatmentHandler      *handlers.TreatmentHandler
 	PharmacyHandler       *handlers.PharmacyHandler
 	HealthEducationHandler *handlers.HealthEducationHandler
+	TIHandler              *handlers.TIHandler
 	// Sessions valida en cada solicitud que la cuenta del token siga activa
 	Sessions  middlewares.SessionValidator
 	JWTSecret string
@@ -50,9 +51,18 @@ func SetupRoutes(app *fiber.App, cfg RouterConfig) {
 	auth.Post("/refresh", refreshLimit, cfg.AuthHandler.RefreshToken)
 	auth.Post("/logout", cfg.AuthHandler.Logout)
 
+	// Registro inicial desde el login: el servicio solo acepta el Encargado de TI si no existe ninguno
+	// y un administrador por sede si la sede aun no tiene. El limite por IP frena los intentos automatizados.
+	setupStatusLimit := middlewares.RateLimitMiddleware(60, 1*time.Minute)
+	publicRegLimit := middlewares.AuthRateLimitMiddleware(10, 1*time.Minute)
+	auth.Get("/setup-status", setupStatusLimit, cfg.AuthHandler.SetupStatus)
+	auth.Post("/register-ti", publicRegLimit, cfg.AuthHandler.RegisterTI)
+	auth.Post("/register-branch-admin", publicRegLimit, cfg.AuthHandler.RegisterBranchAdmin)
+
 	authProtected := auth.Use(authMW)
 	authProtected.Get("/me", cfg.AuthHandler.Me)
-	authProtected.Post("/register-admin", adminRegLimit, middlewares.RequireRoles("ADMIN"), cfg.AuthHandler.RegisterAdmin)
+	// Los administradores adicionales los registra el Encargado de TI
+	authProtected.Post("/register-admin", adminRegLimit, middlewares.RequireRoles("TI"), cfg.AuthHandler.RegisterAdmin)
 	authProtected.Get("/mfa-seed", seedLimit, cfg.AuthHandler.GetMFASeed)
 	authProtected.Post("/mfa/setup", loginLimit, cfg.AuthHandler.SetupMFA)
 	authProtected.Post("/mfa/enable", loginLimit, cfg.AuthHandler.EnableMFA)
@@ -67,6 +77,15 @@ func SetupRoutes(app *fiber.App, cfg RouterConfig) {
 		admin.Post("/users", cfg.AuthHandler.RegisterStaff) // Registro de personal por el administrador (entra inactivo)
 		admin.Patch("/users/:id/status", cfg.AdminHandler.UpdateUserStatus)
 		admin.Get("/audit-logs", cfg.AdminHandler.GetAuditLogs)
+	}
+
+	// 3.1 Panel del Encargado de TI (monitoreo y administradores; sin acceso a datos clinicos)
+	if cfg.TIHandler != nil {
+		ti := protected.Group("/ti", middlewares.RequireRoles("TI"))
+		ti.Get("/overview", cfg.TIHandler.Overview)
+		ti.Get("/users", cfg.TIHandler.ListUsers)
+		ti.Patch("/admins/:id/status", cfg.TIHandler.SetAdminStatus)
+		ti.Get("/audit-logs", cfg.TIHandler.GetAuditLogs)
 	}
 
 	// 4. Modulo Admision de Pacientes y Antecedentes Alergicos (ADMISION, ENFERMERO, MEDICO)

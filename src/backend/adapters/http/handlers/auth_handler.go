@@ -274,86 +274,136 @@ type RegisterAdminRequest struct {
 	ProfessionalCard string `json:"professional_card"`
 }
 
-// RegisterAdmin permite a un Administrador autenticado registrar otro Administrador (role_id = 1).
-// La ruta exige sesion valida y rol ADMIN; el primer administrador se crea con BootstrapAdmin al arrancar.
-func (h *AuthHandler) RegisterAdmin(c *fiber.Ctx) error {
-	var req RegisterAdminRequest
-	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Cuerpo de solicitud invalido",
-		})
-	}
-
+// buildPrivilegedUser valida el formulario comun de registro (TI y administradores) y arma la cuenta.
+// Retorna el usuario, la contrasena y un mensaje de error de validacion (vacio si es valido).
+func buildPrivilegedUser(req RegisterAdminRequest, defaultCardPrefix, specialty string) (*domain.User, string, string) {
 	fullName := strings.TrimSpace(req.FullName)
 	email := strings.ToLower(strings.TrimSpace(req.Email))
 	password := req.Password
 
 	if fullName == "" || email == "" || password == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Los campos full_name, email y password son obligatorios",
-		})
+		return nil, "", "Los campos full_name, email y password son obligatorios"
 	}
-
 	if len(password) < 8 {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "La contraseña debe tener al menos 8 caracteres",
-		})
+		return nil, "", "La contraseña debe tener al menos 8 caracteres"
 	}
 
 	docType := req.DocumentType
 	if docType == "" {
 		docType = "CC"
 	}
-
 	branch := strings.TrimSpace(req.Branch)
 	if branch == "" {
 		branch = "Sede Cartago - Hospital Central"
 	}
-
 	card := strings.TrimSpace(req.ProfessionalCard)
 	if card == "" {
-		card = "TI-ADMIN-" + uuid.New().String()[:8]
+		card = defaultCardPrefix + uuid.New().String()[:8]
 	}
 
-	user := &domain.User{
+	return &domain.User{
 		ID:               uuid.New().String(),
-		RoleID:           1,
-		RoleName:         "ADMIN",
 		FullName:         fullName,
 		DocumentType:     docType,
 		DocumentNumber:   strings.TrimSpace(req.DocumentNumber),
 		Email:            email,
 		Phone:            strings.TrimSpace(req.Phone),
 		ProfessionalCard: card,
-		Specialty:        "Seguridad y Gobernanza Hospitalaria",
+		Specialty:        specialty,
 		Branch:           branch,
-		IsActive:         true,
-		MFAEnabled:       true,
-	}
+	}, password, ""
+}
 
-	if err := h.authService.RegisterAdmin(c.Context(), user, password); err != nil {
-		if errors.Is(err, domain.ErrEmailAlreadyRegistered) {
-			return c.Status(fiber.StatusConflict).JSON(fiber.Map{
-				"error": "El correo institucional ya se encuentra registrado",
-			})
-		}
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "No fue posible registrar al administrador institucional",
-		})
-	}
-
+// privilegedCreated responde el alta de una cuenta con su semilla TOTP para vincular el autenticador.
+func privilegedCreated(c *fiber.Ctx, user *domain.User, message string) error {
 	secret := ""
 	if user.MFASecret != nil {
 		secret = *user.MFASecret
 	}
-	otpauthURI := crypto.BuildOTPAuthURI(secret, user.Email, "SaludConecta IPS")
-
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"message":     "Administrador del centro de salud registrado exitosamente.",
+		"message":     message,
 		"user":        userView(user),
 		"mfa_secret":  secret,
-		"otpauth_uri": otpauthURI,
+		"otpauth_uri": crypto.BuildOTPAuthURI(secret, user.Email, "SaludConecta IPS"),
 	})
+}
+
+// registrationError traduce los errores de registro a respuestas HTTP.
+func registrationError(c *fiber.Ctx, err error, fallback string) error {
+	switch {
+	case errors.Is(err, domain.ErrEmailAlreadyRegistered):
+		return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": "El correo institucional ya se encuentra registrado"})
+	case errors.Is(err, domain.ErrTIAlreadyRegistered):
+		return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": "Ya existe un Encargado de TI registrado"})
+	case errors.Is(err, domain.ErrBranchHasAdmin):
+		return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": "La sede ya tiene un administrador. Solicite al Encargado de TI el registro de administradores adicionales"})
+	case errors.Is(err, domain.ErrUnknownBranch):
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "La sede indicada no pertenece al catálogo institucional"})
+	default:
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": fallback})
+	}
+}
+
+// RegisterAdmin permite al Encargado de TI registrar administradores adicionales (role_id = 1).
+// La ruta exige sesion valida y rol TI; el primer administrador de cada sede se registra desde el login
+// (RegisterBranchAdmin) o con BootstrapAdmin al arrancar.
+func (h *AuthHandler) RegisterAdmin(c *fiber.Ctx) error {
+	var req RegisterAdminRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Cuerpo de solicitud invalido"})
+	}
+	user, password, msg := buildPrivilegedUser(req, "TI-ADMIN-", "Seguridad y Gobernanza Hospitalaria")
+	if msg != "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": msg})
+	}
+	if err := h.authService.RegisterAdmin(c.Context(), user, password); err != nil {
+		return registrationError(c, err, "No fue posible registrar al administrador institucional")
+	}
+	return privilegedCreated(c, user, "Administrador del centro de salud registrado exitosamente.")
+}
+
+// SetupStatus informa al login si puede ofrecer el registro del Encargado de TI y que sedes no tienen administrador.
+func (h *AuthHandler) SetupStatus(c *fiber.Ctx) error {
+	status, err := h.authService.SetupStatus(c.Context())
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "No fue posible consultar el estado de configuracion"})
+	}
+	return c.JSON(status)
+}
+
+// RegisterTI registra al Encargado de TI desde el login. Solo funciona mientras no exista ninguno.
+func (h *AuthHandler) RegisterTI(c *fiber.Ctx) error {
+	var req RegisterAdminRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Cuerpo de solicitud invalido"})
+	}
+	user, password, msg := buildPrivilegedUser(req, "TI-", "Tecnologías de la Información")
+	if msg != "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": msg})
+	}
+	if err := h.authService.RegisterTI(c.Context(), user, password); err != nil {
+		return registrationError(c, err, "No fue posible registrar al Encargado de TI")
+	}
+	return privilegedCreated(c, user, "Encargado de TI registrado exitosamente.")
+}
+
+// RegisterBranchAdmin registra desde el login el primer administrador de una sede que aun no tiene uno.
+func (h *AuthHandler) RegisterBranchAdmin(c *fiber.Ctx) error {
+	var req RegisterAdminRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Cuerpo de solicitud invalido"})
+	}
+	if strings.TrimSpace(req.Branch) == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Debe indicar la sede del administrador"})
+	}
+	user, password, msg := buildPrivilegedUser(req, "TI-ADMIN-", "Seguridad y Gobernanza Hospitalaria")
+	if msg != "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": msg})
+	}
+	if err := h.authService.RegisterBranchAdmin(c.Context(), user, password); err != nil {
+		return registrationError(c, err, "No fue posible registrar al administrador de la sede")
+	}
+	return privilegedCreated(c, user, "Administrador de la sede registrado exitosamente.")
 }
 
 // GetMFASeed retorna el secreto TOTP único y la URI otpauth exigiendo autenticacion previa

@@ -13,11 +13,14 @@ import {
   RefreshCw,
   Info,
   X,
+  UserPlus,
+  ServerCog,
 } from 'lucide-react';
 import BranchAccordion from '../components/BranchAccordion';
 import MfaQrModal from '../components/MfaQrModal';
 import ClinicalBiometricVisualizer from '../components/ClinicalBiometricVisualizer';
 import BrandLogo from '../components/BrandLogo';
+import AdminRegisterModal from '../components/AdminRegisterModal';
 import { loadBranches } from '../services/branches';
 import { apiClient } from '../services/api';
 import {
@@ -46,6 +49,22 @@ export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
   const [isError, setIsError] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const digitRefs = useRef([]);
+  // Registro inicial: el servidor indica si falta el Encargado de TI y que sedes no tienen administrador
+  const [setupStatus, setSetupStatus] = useState(null);
+  const [registerMode, setRegisterMode] = useState(null); // null | 'ti' | 'branch-admin'
+
+  const refreshSetupStatus = () =>
+    apiClient
+      .getSetupStatus()
+      .then((status) => setSetupStatus(status))
+      .catch(() => setSetupStatus(null)); // Sin respuesta del servidor no se ofrece ningun registro
+
+  useEffect(() => {
+    refreshSetupStatus();
+  }, []);
+
+  const branchesWithoutAdmin = (setupStatus?.branches || []).filter((b) => !b.has_admin).map((b) => b.name);
+  const canRegisterTI = setupStatus ? !setupStatus.ti_registered : false;
 
   const showStatus = (message, error = false) => {
     setStatusMessage(message);
@@ -451,8 +470,30 @@ export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
 
           {/* Footer y Cumplimiento Normativo Asistencial */}
           <footer className="pt-2 sm:pt-2.5 mt-1 sm:mt-1.5 border-t border-slate-100 flex flex-col gap-1.5">
-            <div className="flex items-center justify-end text-xs">
-              <span className="text-[10px] font-mono text-slate-400">Build 2026.02-prod</span>
+            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 text-xs">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                {canRegisterTI && (
+                  <button
+                    type="button"
+                    onClick={() => setRegisterMode('ti')}
+                    className="flex items-center gap-1 text-indigo-800 hover:text-indigo-950 font-semibold hover:underline cursor-pointer text-[11px]"
+                  >
+                    <ServerCog className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>Registrar Encargado de TI</span>
+                  </button>
+                )}
+                {branchesWithoutAdmin.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setRegisterMode('branch-admin')}
+                    className="flex items-center gap-1 text-teal-800 hover:text-teal-950 font-semibold hover:underline cursor-pointer text-[11px]"
+                  >
+                    <UserPlus className="w-3.5 h-3.5 text-teal-600" />
+                    <span>Registrar Administrador de Sede</span>
+                  </button>
+                )}
+              </div>
+              <span className="text-[10px] font-mono text-slate-400 ml-auto">Build 2026.02-prod</span>
             </div>
 
             <div className="flex items-center justify-between text-[10px] text-slate-400">
@@ -480,6 +521,26 @@ export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
           'SaludConecta IPS'
         )}
       />
+
+      {/* Registro inicial: Encargado de TI o primer administrador de una sede */}
+      {registerMode && (
+        <AdminRegisterModal
+          isOpen
+          mode={registerMode}
+          branchOptions={registerMode === 'branch-admin' ? branchesWithoutAdmin : undefined}
+          onClose={() => {
+            setRegisterMode(null);
+            refreshSetupStatus();
+          }}
+          onRegisterSuccess={(data) => {
+            refreshSetupStatus();
+            if (data?.user?.email) {
+              setIdentifier(data.user.email);
+              showStatus('Cuenta registrada. Vincule el código QR en su autenticador e inicie sesión con su contraseña y el código.');
+            }
+          }}
+        />
+      )}
 
       {/* Modal Informativo: Restablecimiento de Credenciales ReTHUS */}
       {showForgotModal && (

@@ -6,6 +6,7 @@ import AdminDashboardScreen from '../../src/frontend/src/screens/admin/AdminDash
 import UserProfileModal, { MEDICAL_BANNERS } from '../../src/frontend/src/components/UserProfileModal';
 import ProfileScreen from '../../src/frontend/src/screens/ProfileScreen';
 import AuthScreen from '../../src/frontend/src/screens/AuthScreen';
+import { mockLoginServer } from './helpers/mockApi';
 
 describe('StaffRegisterModal - Registro y Gobernanza ReTHUS', () => {
   it('renderiza todos los campos obligatorios del registro asistencial', () => {
@@ -123,9 +124,7 @@ describe('AuthScreen - El acceso depende de la respuesta del servidor', () => {
   });
 
   it('no abre sesión cuando el servidor rechaza las credenciales', async () => {
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify({ error: 'Credenciales invalidas' }), { status: 401 })
-    );
+    const { spy: fetchSpy } = mockLoginServer([{ status: 401, body: { error: 'Credenciales invalidas' } }]);
     const onLoginSuccess = vi.fn();
     const { container } = render(<AuthScreen onLoginSuccess={onLoginSuccess} />);
 
@@ -152,9 +151,7 @@ describe('AuthScreen - El acceso depende de la respuesta del servidor', () => {
 
   it('abre sesión con el token emitido por el servidor', async () => {
     const user = { id: 'u1', role: 'ADMIN', role_id: 1, full_name: 'Administrador' };
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify({ token: 'token-real', user }), { status: 200 })
-    );
+    const { spy: fetchSpy } = mockLoginServer([{ body: { token: 'token-real', user } }]);
     const onLoginSuccess = vi.fn();
     const { container } = render(<AuthScreen onLoginSuccess={onLoginSuccess} />);
 

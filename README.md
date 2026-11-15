@@ -40,7 +40,7 @@
 
 ### Persona de Pruebas Clínicas
 
-Los casos de prueba clínicos se modelan con el **Dr. Santiago Vélez** (Medicina de Urgencias, Cartago - Hospital Central, Tarjeta Profesional ReTHUS de ejemplo `RM-94821-VALLE`). Por seguridad el sistema **no siembra cuentas con credenciales conocidas**: el Administrador inicial se define con `ADMIN_INITIAL_EMAIL` y `ADMIN_INITIAL_PASSWORD` y es quien registra al facultativo desde el panel administrativo (la cuenta nace inactiva hasta la verificación ReTHUS).
+Los casos de prueba clínicos se modelan con el **Dr. Santiago Vélez** (Medicina de Urgencias, Cartago - Hospital Central, Tarjeta Profesional ReTHUS de ejemplo `RM-94821-VALLE`). Por seguridad el sistema **no siembra cuentas con credenciales conocidas**: el Encargado de TI y el primer administrador de cada sede se registran desde la pantalla de inicio de sesión mientras esos puestos estén vacíos (o, opcionalmente, el administrador inicial con `ADMIN_INITIAL_EMAIL` y `ADMIN_INITIAL_PASSWORD`). El administrador registra al facultativo desde el panel administrativo (la cuenta nace inactiva hasta la verificación ReTHUS). Ver la sección 1.16 de la Entrega Final.
 
 ---
 
@@ -1553,7 +1553,8 @@ proyecto-final/
 │           │   ├── PatientBanner.jsx / AllergyBanner.jsx # Cabecera del paciente y alergias reales
 │           │   ├── SignFolioModal.jsx # Confirmación de firma y cierre de folio
 │           │   ├── MfaQrModal.jsx # Modal con QR escaneable en Google Authenticator/Authy
-│           │   ├── AdminRegisterModal.jsx # Registro de Administradores de Centros de Salud (Rol ADMIN, activación y QR exclusivo)
+│           │   ├── AdminRegisterModal.jsx # Registro de Encargado de TI, administrador de sede y administradores adicionales (QR exclusivo)
+│           │   ├── PanelSidebar.jsx # Menú lateral compartido de los paneles de Administrador y Encargado de TI
 │           │   └── StaffRegisterModal.jsx # Modal de registro de personal (perfil admin) con validación ReTHUS
 │           ├── screens/           # Pantallas asistenciales (Stitch Design System)
 │           │   ├── AuthScreen.jsx # Acceso, sede, fondo animado con pulso ECG y QR directo
@@ -1568,6 +1569,7 @@ proyecto-final/
 │           │   ├── PharmacyDashboard.jsx # Dispensación, lector PDF417 y alertas de desabastecimiento
 │           │   ├── NurseSummaryView.jsx / NurseChecklistView.jsx # Módulos asistenciales de enfermería
 │           │   ├── MedicalKitScreen.jsx # Kit informático médico (Rol Médico)
+│           │   ├── ti/            # Entorno del Encargado de TI: TiLayout, Monitoreo, Administradores, Cuentas y Bitácora
 │           │   └── admin/         # Entorno administrativo desacoplado
 │           │       ├── AdminLayout.jsx # Layout exclusivo de administración y aislamiento RBAC
 │           │       ├── AdminDashboardScreen.jsx # Gobernanza ReTHUS, bitácora real y sedes
@@ -1618,7 +1620,7 @@ Para que cualquier miembro del equipo de desarrollo o evaluación pueda ejecutar
    - Tener instalado [Docker Desktop](https://www.docker.com/products/docker-desktop/) en ejecución.
 
 2. **Definir las variables privadas:**
-   Copia `.env.example` como `.env` en la raíz y completa `DB_ROOT_PASSWORD`, `DB_PASSWORD`, `JWT_SECRET` (mínimo 32 caracteres aleatorios), `ADMIN_INITIAL_EMAIL` y `ADMIN_INITIAL_PASSWORD`. Sin estas variables `docker compose` se detiene a propósito y el repositorio no incluye credenciales por defecto.
+   Copia `.env.example` como `.env` en la raíz y completa `DB_ROOT_PASSWORD`, `DB_PASSWORD`, `JWT_SECRET` (mínimo 32 caracteres aleatorios) y, de forma opcional, `ADMIN_INITIAL_EMAIL` y `ADMIN_INITIAL_PASSWORD`. Sin las variables obligatorias `docker compose` se detiene a propósito y el repositorio no incluye credenciales por defecto.
 
 3. **Iniciar la Plataforma Completa:**
    Desde la raíz del repositorio, ejecuta:
@@ -1634,7 +1636,7 @@ Para que cualquier miembro del equipo de desarrollo o evaluación pueda ejecutar
 
 4. **Acceso al Sistema:**
    - Abre tu navegador web en: **[http://localhost:5173](http://localhost:5173)** (o alternativamente en `http://localhost`).
-   - Inicia sesión con el Administrador definido en `ADMIN_INITIAL_EMAIL` / `ADMIN_INITIAL_PASSWORD` y registra desde el panel al resto del personal.
+   - En el inicio de sesión, registra al **Encargado de TI** y al **administrador de cada sede** con los botones que aparecen mientras esos puestos están vacíos (o inicia sesión con el administrador definido en `ADMIN_INITIAL_EMAIL` / `ADMIN_INITIAL_PASSWORD`). Luego el administrador registra desde el panel al resto del personal.
    - La API del backend queda disponible solo en el equipo local: `http://localhost:8080/api/v1/health`.
 
 5. **Detener el Entorno:**
@@ -1669,7 +1671,7 @@ Al iniciar el servidor en Go, el sistema ejecuta automáticamente la función `M
 - Instala, si faltan, los disparadores de inmutabilidad de folios cerrados y de notas aclaratorias (en PostgreSQL el esquema equivalente se aplica desde `adapters/storage/postgres/schema.sql`).
 - Carga el catálogo farmacológico inicial de demostración (códigos `CUM-DEMO-xxx`, que deben sustituirse por la carga oficial del INVIMA).
 
-**No se siembran cuentas con credenciales conocidas.** El Administrador inicial se crea solo si no existe ninguno y únicamente cuando el operador define `ADMIN_INITIAL_EMAIL` y `ADMIN_INITIAL_PASSWORD` (mínimo 12 caracteres) en su `.env`. El resto del personal lo registra ese Administrador desde el panel (la cuenta nace inactiva hasta la verificación ReTHUS).
+**No se siembran cuentas con credenciales conocidas.** Las cuentas iniciales se crean de dos formas: desde el inicio de sesión (Encargado de TI y primer administrador de cada sede, solo mientras el puesto esté vacío) o, opcionalmente, con `ADMIN_INITIAL_EMAIL` y `ADMIN_INITIAL_PASSWORD` (mínimo 12 caracteres) en el `.env`, que crean un administrador solo si no existe ninguno. El resto del personal lo registra ese Administrador desde el panel (la cuenta nace inactiva hasta la verificación ReTHUS).
 
 **`JWT_SECRET` es obligatorio** (mínimo 32 caracteres aleatorios, sin valores publicados): sin él el servicio no arranca. Si el motor de base de datos configurado no responde, el servicio termina con error y **no** conmuta a memoria, para no perder registros clínicos.
 
@@ -1684,7 +1686,7 @@ go run cmd/api/main.go
 
 _El servicio HTTP de GoFiber iniciará escuchando en el puerto configurado (por defecto `http://localhost:8080`)._
 
-> **Nota para pruebas en memoria:** Para ejecutar el backend sin MySQL, defina `DB_DRIVER=memory` de forma explícita (por ejemplo `$env:DB_DRIVER="memory"; go run cmd/api/main.go`). Es un modo no persistente exclusivo de desarrollo: no precarga cuentas, por lo que debe definir `ADMIN_INITIAL_EMAIL` y `ADMIN_INITIAL_PASSWORD` para crear el Administrador.
+> **Nota para pruebas en memoria:** Para ejecutar el backend sin MySQL, defina `DB_DRIVER=memory` de forma explícita (por ejemplo `$env:DB_DRIVER="memory"; go run cmd/api/main.go`). Es un modo no persistente exclusivo de desarrollo: no precarga cuentas, por lo que debe registrar al Encargado de TI y a los administradores desde el inicio de sesión, o definir `ADMIN_INITIAL_EMAIL` y `ADMIN_INITIAL_PASSWORD`.
 
 #### 8.2.4. Puesta en Marcha del Frontend (React)
 
@@ -1715,7 +1717,7 @@ Siguiendo la política de protección de infraestructura sensible (Regla 27), to
 | `JWT_ACCESS_TTL_MINUTES` | Vigencia del Access Token de corta duración (por defecto 15 minutos)                                  | `15`                                                    |
 | `JWT_REFRESH_TTL_HOURS`  | Vigencia del Refresh Token rotado de larga duración (por defecto 7 días)                              | `168`                                                   |
 | `CORS_ALLOWED_ORIGINS`   | Orígenes web autorizados para consumo de la API                                                       | `http://localhost:5173,http://localhost:5174`           |
-| `ADMIN_INITIAL_EMAIL`    | Correo del administrador inicial (se crea solo si no hay ninguno)                                     | `admin@su-institucion.example`                          |
+| `ADMIN_INITIAL_EMAIL`    | Opcional. Correo del administrador inicial (se crea solo si no hay ninguno)                           | `admin@su-institucion.example`                          |
 | `ADMIN_INITIAL_PASSWORD` | Clave inicial para inicialización automática                                                          | `defina_una_clave_privada_larga`                        |
 | `IPS_NIT`                | NIT de la institución prestadora de salud                                                             | `900123456`                                             |
 | `TRUSTED_PROXIES`        | IPs/CIDR del proxy inverso cuya cabecera `X-Real-IP` se acepta como IP del cliente                    | `127.0.0.1,::1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16` |
@@ -2485,6 +2487,8 @@ Todas las soluciones fueron implementadas bajo arquitectura limpia hexagonal, de
 
 ### 1.12. Registro de Administradores Exclusivo del Panel Administrativo
 
+> **Actualizado en la sección 1.16:** el registro del primer administrador de cada sede volvió al inicio de sesión (solo mientras la sede no tenga administrador) y los administradores adicionales ahora los registra el Encargado de TI, no el administrador.
+
 - **Diagnóstico:** La pantalla de inicio de sesión mostraba el botón **"Registrar Administrador de Centro de Salud"**. La ruta `POST /api/v1/auth/register-admin` ya exigía sesión con rol `ADMIN` (corrección `DEF-49`), por lo que no permitía crear administradores de forma anónima. Sin embargo, el botón siempre fallaba para un visitante sin sesión y le revelaba la existencia de la función.
 - **Remediación:**
   - Se retiró el botón de `AuthScreen.jsx`.
@@ -2522,6 +2526,43 @@ Todas las soluciones fueron implementadas bajo arquitectura limpia hexagonal, de
 | Backend (`tests/backend`) | `go test ./...` | Todas pasan |
 | Frontend (`tests/frontend`) | `npx vitest run` | **105 de 105** pruebas en 14 archivos |
 | Compilación frontend | `npx vite build` | Sin errores |
+
+### 1.16. Rol Encargado de TI y Registro Inicial desde el Inicio de Sesión
+
+- **Motivación:** No todas las sedes cuentan con personal capacitado para editar el archivo `.env` del servidor. El alta de las primeras cuentas debe poder hacerse desde la pantalla de inicio de sesión.
+- **Nuevo rol `TI` (Rol ID 8, Encargado de TI):**
+  - Registrado en `RoleNameByID` (`core/domain/user.go`), en el sembrado de MySQL (`seeder.go`) y en el esquema de PostgreSQL.
+  - **Solo puede existir uno.** Es el único autorizado para registrar administradores adicionales (`POST /api/v1/auth/register-admin` exige ahora rol `TI`).
+  - No tiene acceso a historias clínicas: igual que el administrador, su entorno está aislado de los módulos asistenciales.
+  - Un administrador no puede suspender ni habilitar la cuenta del Encargado de TI (`ErrProtectedAccount`, HTTP 403).
+- **Registro inicial desde el login (`AuthScreen.jsx`):**
+  - Al abrirse, el login consulta `GET /api/v1/auth/setup-status`, que indica si ya existe Encargado de TI y qué sedes tienen administrador.
+  - **"Registrar Encargado de TI"** aparece solo mientras no exista ninguno (`POST /api/v1/auth/register-ti`).
+  - **"Registrar Administrador de Sede"** aparece mientras alguna sede no tenga administrador. El formulario solo ofrece esas sedes (`POST /api/v1/auth/register-branch-admin`).
+  - Ambos botones desaparecen cuando el puesto queda ocupado. Si el servidor no responde, no se ofrece ningún registro.
+- **El servidor es quien decide, no la pantalla:**
+  - Rechaza con HTTP 409 un segundo Encargado de TI o un segundo administrador para la misma sede, aunque alguien llame la dirección directamente. Rechaza con HTTP 400 las sedes fuera del catálogo.
+  - Los registros públicos se serializan con un candado (`setupMu`) para que dos solicitudes simultáneas no ocupen el mismo puesto. Verificado con 8 solicitudes concurrentes y el detector de carreras de Go.
+  - Límite de 10 intentos por minuto por IP en ambos registros.
+- **Catálogo de sedes en el servidor (`core/domain/branch.go`):** Las cuatro sedes del login (Cartago, La Unión, Tuluá y Brigada Rural) pasan a estar en el servidor para poder saber cuáles tienen administrador. Las sedes creadas después desde el panel del administrador siguen guardándose solo en el navegador y no aparecen en el registro desde el login.
+- **Riesgo aceptado:** Mientras un puesto esté vacío, cualquier persona que abra la página puede registrarse en él. Se recomienda registrar al Encargado de TI y a los administradores **inmediatamente después de la instalación**. El Encargado de TI puede suspender a un administrador registrado indebidamente desde su panel. El uso de `ADMIN_INITIAL_EMAIL` / `ADMIN_INITIAL_PASSWORD` sigue disponible como alternativa sin este riesgo.
+- **Panel del Encargado de TI (`screens/ti/`):** Entorno propio (`TiLayout.jsx`) con menú lateral por apartados, adaptado a celular:
+
+| Apartado | Contenido | API |
+|---|---|---|
+| **Monitoreo del Sistema** | Estado del servidor (en línea, tiempo activo, latencia, memoria, versión y motor de base de datos), cuentas por rol y estado, sedes con y sin administrador, y actividad reciente de la bitácora. Se actualiza cada 30 segundos. | `GET /api/v1/ti/overview` |
+| **Administradores por Sede** | Administradores de cada sede, botón **"Nuevo Administrador"** para registrar adicionales, y suspender o habilitar sus cuentas. | `POST /api/v1/auth/register-admin`, `PATCH /api/v1/ti/admins/:id/status` |
+| **Cuentas del Sistema** | Consulta de todas las cuentas con búsqueda y filtros por rol y estado (solo lectura). | `GET /api/v1/ti/users` |
+| **Bitácora de Auditoría** | Últimos 200 eventos forenses con búsqueda. | `GET /api/v1/ti/audit-logs` |
+| **Seguridad & MFA** | Configuración del segundo factor del Encargado de TI. | Endpoints MFA existentes |
+
+- **Panel del administrador:** Se retiró "Nuevo Administrador" de *Gobernanza de Personal*; el administrador conserva "Nuevo Personal".
+- **Menú lateral compartido (`components/PanelSidebar.jsx`):** El menú del administrador y el de TI usan el mismo componente (colapsable en computador y deslizable en celular).
+- **Pruebas:**
+  - Backend (`tests/backend/ti_setup_test.go`, 8 pruebas): estado inicial, TI único, registro concurrente, un administrador por sede, sedes fuera del catálogo, administradores adicionales solo por TI, panel restringido al rol TI, TI gestiona solo cuentas de administrador y el administrador no puede suspender al Encargado de TI.
+  - Frontend (`tests/frontend/TiSetup.test.jsx`, 9 pruebas): botones del login según el servidor, registro del Encargado de TI y del administrador de sede, tablero de monitoreo, alta y suspensión de administradores desde TI, y ausencia de "Nuevo Administrador" en el panel del administrador.
+  - Resultados: backend completo en verde y frontend **113 de 113** pruebas en 15 archivos.
+  - Recorrido con Playwright sobre una instalación nueva (celular y computador): registro del Encargado de TI desde el login, desaparición del botón, registro de administradores de sede, rechazo de duplicados (409), inicio de sesión de TI con segundo factor y navegación por los cinco apartados sin desbordes en celular.
 
 ---
 

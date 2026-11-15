@@ -19,8 +19,55 @@ import { apiClient } from '../services/api';
 import { loadBranches } from '../services/branches';
 import { generateQrDataUrl } from '../utils/totp';
 
-export const AdminRegisterModal = ({ isOpen, onClose, onRegisterSuccess }) => {
-  const branches = loadBranches();
+// Textos y comportamiento de cada modo de registro:
+// - 'admin': administrador adicional, desde el panel del Encargado de TI
+// - 'branch-admin': primer administrador de una sede, desde el login
+// - 'ti': Encargado de TI, desde el login (solo mientras no exista uno)
+const MODES = {
+  admin: {
+    title: 'Registro de Administrador de Centro de Salud',
+    subtitle: 'Registro autorizado por el Encargado de TI • Rol ADMIN',
+    person: 'Administrador',
+    roleBadge: 'ADMIN (Rol ID 1)',
+    submit: 'Registrar Administrador de Centro de Salud',
+    submitAria: 'Confirmar registro de administrador',
+    done: 'Cerrar',
+    allowNewBranch: true,
+    branchLabel: 'Centro de Salud / Sede Operativa *',
+  },
+  'branch-admin': {
+    title: 'Registro del Administrador de la Sede',
+    subtitle: 'Disponible solo para sedes que aún no tienen administrador',
+    person: 'Administrador',
+    roleBadge: 'ADMIN (Rol ID 1)',
+    submit: 'Registrar Administrador de la Sede',
+    submitAria: 'Confirmar registro de administrador',
+    done: 'Ir al Inicio de Sesión',
+    allowNewBranch: false,
+    branchLabel: 'Sede sin administrador *',
+  },
+  ti: {
+    title: 'Registro del Encargado de TI',
+    subtitle: 'Se registra una sola vez • Autoriza administradores y monitorea el sistema',
+    person: 'Encargado de TI',
+    roleBadge: 'TI (Rol ID 8)',
+    submit: 'Registrar Encargado de TI',
+    submitAria: 'Confirmar registro del Encargado de TI',
+    done: 'Ir al Inicio de Sesión',
+    allowNewBranch: false,
+    branchLabel: 'Sede donde labora *',
+  },
+};
+
+const submitByMode = {
+  admin: (payload) => apiClient.registerAdmin(payload),
+  'branch-admin': (payload) => apiClient.registerBranchAdmin(payload),
+  ti: (payload) => apiClient.registerTI(payload),
+};
+
+export const AdminRegisterModal = ({ isOpen, onClose, onRegisterSuccess, mode = 'admin', branchOptions }) => {
+  const cfg = MODES[mode] || MODES.admin;
+  const branches = branchOptions ? branchOptions.map((name) => ({ name })) : loadBranches();
   const [formData, setFormData] = useState({
     full_name: '',
     document_type: 'CC',
@@ -98,13 +145,15 @@ export const AdminRegisterModal = ({ isOpen, onClose, onRegisterSuccess }) => {
       email: formData.email.trim().toLowerCase(),
       phone: formData.phone.trim(),
       branch: effectiveBranch,
-      professional_card: formData.professional_card.trim() || `TI-ADMIN-${Date.now().toString().slice(-6)}`,
+      professional_card:
+        formData.professional_card.trim() ||
+        `${mode === 'ti' ? 'TI' : 'TI-ADMIN'}-${Date.now().toString().slice(-6)}`,
       password: formData.password,
     };
 
     setLoading(true);
     try {
-      const res = await apiClient.registerAdmin(payload);
+      const res = await submitByMode[mode](payload);
       if (res && res.user) {
         setSuccessData(res);
         if (res.otpauth_uri) {
@@ -119,7 +168,7 @@ export const AdminRegisterModal = ({ isOpen, onClose, onRegisterSuccess }) => {
           onRegisterSuccess(res);
         }
       } else {
-        setErrorMsg('No fue posible procesar el registro del administrador.');
+        setErrorMsg(`No fue posible procesar el registro del ${cfg.person.toLowerCase()}.`);
       }
     } catch (err) {
       setErrorMsg(err.message || 'Error de comunicación con el servicio de gobernanza institucional.');
@@ -145,10 +194,8 @@ export const AdminRegisterModal = ({ isOpen, onClose, onRegisterSuccess }) => {
               <UserPlus className="w-4 h-4 text-secondary-fixed" />
             </div>
             <div>
-              <h2 className="text-sm font-bold leading-tight">Registro de Administrador de Centro de Salud</h2>
-              <p className="text-[11px] text-white/80">
-                Gobernanza Institucional TI • Perfil Exclusivo Administrador (Rol ADMIN)
-              </p>
+              <h2 className="text-sm font-bold leading-tight">{cfg.title}</h2>
+              <p className="text-[11px] text-white/80">{cfg.subtitle}</p>
             </div>
           </div>
           <button
@@ -171,17 +218,19 @@ export const AdminRegisterModal = ({ isOpen, onClose, onRegisterSuccess }) => {
               </div>
               <div>
                 <h3 className="text-base font-bold text-on-surface">
-                  Administrador Registrado y Habilitado con Éxito
+                  {cfg.person} Registrado y Habilitado con Éxito
                 </h3>
                 <p className="text-xs text-on-surface-variant mt-1">
-                  La cuenta administrativa ha sido aprovisionada con permisos de gobernanza sobre la sede.
+                  {mode === 'ti'
+                    ? 'La cuenta de TI quedó activa. Vincule ahora el segundo factor: lo necesitará para iniciar sesión.'
+                    : 'La cuenta administrativa ha sido aprovisionada con permisos de gobernanza sobre la sede.'}
                 </p>
               </div>
 
               {/* Tarjeta de Resumen */}
               <div className="bg-surface-container-low p-4 rounded-xl text-left border border-outline-variant/30 text-xs space-y-1.5 font-mono">
                 <div>
-                  <span className="text-outline">Administrador:</span>{' '}
+                  <span className="text-outline">{cfg.person}:</span>{' '}
                   <strong className="text-on-surface">{successData.user?.full_name}</strong>
                 </div>
                 <div>
@@ -195,7 +244,7 @@ export const AdminRegisterModal = ({ isOpen, onClose, onRegisterSuccess }) => {
                 <div>
                   <span className="text-outline">Rol en Plataforma:</span>{' '}
                   <span className="px-2 py-0.5 rounded bg-primary/10 text-primary font-bold text-[10px]">
-                    ADMIN (Rol ID 1)
+                    {cfg.roleBadge}
                   </span>
                 </div>
               </div>
@@ -241,7 +290,7 @@ export const AdminRegisterModal = ({ isOpen, onClose, onRegisterSuccess }) => {
                   onClick={resetAndClose}
                   className="w-full h-10 bg-primary hover:bg-primary-container text-white font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer"
                 >
-                  Proceder al Inicio de Sesión
+                  {cfg.done}
                 </button>
               </div>
             </div>
@@ -251,12 +300,29 @@ export const AdminRegisterModal = ({ isOpen, onClose, onRegisterSuccess }) => {
               <div className="p-3 bg-primary/5 rounded-xl border border-primary/15 flex items-start gap-2.5">
                 <ShieldCheck className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                 <div className="text-xs text-on-surface space-y-0.5">
-                  <p className="font-bold text-primary">Aislamiento y Autonomía de Centro de Salud (Rol ADMIN):</p>
-                  <p className="text-on-surface-variant text-[11px] leading-relaxed">
-                    Este formulario permite habilitar al Administrador Oficial de un centro de salud o sede hospitalaria.
-                    El usuario tendrá acceso exclusivo a gobernanza de personal, auditoría forense ISO 25010 y sedes,
-                    con total aislamiento de registros clínicos protegidos (Ley 1581 de 2012).
-                  </p>
+                  {mode === 'ti' ? (
+                    <>
+                      <p className="font-bold text-primary">Encargado de TI (Rol TI):</p>
+                      <p className="text-on-surface-variant text-[11px] leading-relaxed">
+                        Solo puede existir un Encargado de TI. Monitorea el sistema y es quien autoriza y registra
+                        administradores adicionales. No tiene acceso a historias clínicas (Ley 1581 de 2012).
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-bold text-primary">Aislamiento y Autonomía de Centro de Salud (Rol ADMIN):</p>
+                      <p className="text-on-surface-variant text-[11px] leading-relaxed">
+                        Este formulario permite habilitar al Administrador Oficial de un centro de salud o sede hospitalaria.
+                        El usuario tendrá acceso exclusivo a gobernanza de personal, auditoría forense ISO 25010 y sedes,
+                        con total aislamiento de registros clínicos protegidos (Ley 1581 de 2012).
+                      </p>
+                      {mode === 'branch-admin' && (
+                        <p className="text-on-surface-variant text-[11px] leading-relaxed">
+                          Si la sede ya tiene administrador, los adicionales los registra el Encargado de TI.
+                        </p>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -274,7 +340,7 @@ export const AdminRegisterModal = ({ isOpen, onClose, onRegisterSuccess }) => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="sm:col-span-2">
                   <label htmlFor="admin-full-name" className="block text-[11px] font-semibold text-on-surface mb-1">
-                    Nombre Completo del Administrador *
+                    Nombre Completo del {cfg.person} *
                   </label>
                   <input
                     id="admin-full-name"
@@ -364,7 +430,7 @@ export const AdminRegisterModal = ({ isOpen, onClose, onRegisterSuccess }) => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label htmlFor="admin-branch" className="block text-[11px] font-semibold text-on-surface mb-1">
-                      Centro de Salud / Sede Operativa *
+                      {cfg.branchLabel}
                     </label>
                     <div className="relative">
                       <select
@@ -379,7 +445,7 @@ export const AdminRegisterModal = ({ isOpen, onClose, onRegisterSuccess }) => {
                             {b.name}
                           </option>
                         ))}
-                        <option value="OTRA">Registrar nuevo centro de salud...</option>
+                        {cfg.allowNewBranch && <option value="OTRA">Registrar nuevo centro de salud...</option>}
                       </select>
                       <Building2 className="w-3.5 h-3.5 text-outline absolute left-2.5 top-2.5 pointer-events-none" />
                     </div>
@@ -471,11 +537,11 @@ export const AdminRegisterModal = ({ isOpen, onClose, onRegisterSuccess }) => {
                 <button
                   type="submit"
                   disabled={loading}
-                  aria-label="Confirmar registro de administrador"
+                  aria-label={cfg.submitAria}
                   className="w-full h-10 bg-primary hover:bg-primary-container text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   <FileCheck2 className="w-4 h-4" />
-                  <span>{loading ? 'Procesando Registro Institucional...' : 'Registrar Administrador de Centro de Salud'}</span>
+                  <span>{loading ? 'Procesando Registro Institucional...' : cfg.submit}</span>
                 </button>
               </div>
             </form>

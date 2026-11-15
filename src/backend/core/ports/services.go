@@ -15,12 +15,27 @@ type AuthService interface {
 	Register(ctx context.Context, user *domain.User, plainPassword string) error
 	RegisterStaff(ctx context.Context, user *domain.User, plainPassword string) error
 	RegisterAdmin(ctx context.Context, user *domain.User, plainPassword string) error
+	// SetupStatus informa si ya existe Encargado de TI y que sedes del catalogo tienen administrador.
+	SetupStatus(ctx context.Context) (*domain.SetupStatus, error)
+	// RegisterTI crea el Encargado de TI solo si todavia no existe ninguno.
+	RegisterTI(ctx context.Context, user *domain.User, plainPassword string) error
+	// RegisterBranchAdmin crea el primer administrador de una sede del catalogo; falla si la sede ya tiene uno.
+	RegisterBranchAdmin(ctx context.Context, user *domain.User, plainPassword string) error
 	GetMFASeed(ctx context.Context, email string) (secret string, uri string, err error)
 	// ValidateSession verifica que la cuenta del token siga existiendo y activa, y retorna su estado vigente.
 	ValidateSession(ctx context.Context, userID string) (*domain.User, error)
 	// SetupMFA genera un nuevo secreto TOTP; si el usuario ya tiene MFA habilitado exige el codigo vigente.
 	SetupMFA(ctx context.Context, userID, currentCode string) (secret string, err error)
 	EnableMFA(ctx context.Context, userID, totpCode string) error
+}
+
+// TIService define los casos de uso del Encargado de TI: monitoreo del sistema y gestion de administradores.
+type TIService interface {
+	Overview(ctx context.Context) (*domain.SystemOverview, error)
+	ListUsers(ctx context.Context) ([]*domain.User, error)
+	// SetAdminStatus activa o suspende una cuenta de administrador de sede (solo rol ADMIN).
+	SetAdminStatus(ctx context.Context, userID string, active bool) error
+	GetAuditLogs(ctx context.Context, limit int) ([]*domain.AuditLog, error)
 }
 
 // AdminService define los casos de uso administrativos y de gobernanza ReTHUS.
