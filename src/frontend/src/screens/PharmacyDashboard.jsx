@@ -465,18 +465,18 @@ export const PharmacyDashboard = ({ user, initialTab = 'inbox' }) => {
   return (
     <div className="space-y-6">
       {/* HEADER DE FARMACIA ADAPTATIVO */}
-      <div className="bg-white rounded-2xl p-6 border border-surface-container-high shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white rounded-2xl p-4 sm:p-6 border border-surface-container-high shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-1">
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 whitespace-nowrap">
               {activeTab === 'inbox' ? 'Dispensación Farmacéutica' : activeTab === 'inventory' ? 'Gestión de Inventario' : 'Copia de Reportes'}
             </span>
             <span className="text-xs text-on-surface-variant font-mono">
               Operador: {formatDoctorName(user?.full_name, user?.role || user?.role_name)} • Sede Cartago
             </span>
           </div>
-          <h1 className="text-2xl font-bold text-on-surface flex items-center gap-2">
-            <Package className="w-6 h-6 text-primary" />
+          <h1 className="text-xl sm:text-2xl font-bold text-on-surface flex items-center gap-2">
+            <Package className="w-6 h-6 text-primary shrink-0" />
             Gestión Farmacéutica y Control de Stock
           </h1>
           <p className="text-sm text-on-surface-variant mt-0.5">
@@ -544,11 +544,11 @@ export const PharmacyDashboard = ({ user, initialTab = 'inbox' }) => {
       )}
 
       {/* SELECTOR DE PESTAÑAS DE FARMACIA */}
-      <div className="flex items-center gap-2 p-1 bg-surface-container-low rounded-xl border border-outline-variant/30 text-xs font-semibold w-fit">
+      <div className="flex items-center gap-2 p-1 bg-surface-container-low rounded-xl border border-outline-variant/30 text-xs font-semibold w-fit max-w-full overflow-x-auto">
         <button
           type="button"
           onClick={() => setActiveTab('inbox')}
-          className={`h-8 px-3 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer ${
+          className={`h-8 px-3 rounded-lg shrink-0 whitespace-nowrap flex items-center gap-1.5 transition-colors cursor-pointer ${
             activeTab === 'inbox' ? 'bg-white text-primary font-bold shadow-xs' : 'text-outline hover:text-on-surface'
           }`}
         >
@@ -558,7 +558,7 @@ export const PharmacyDashboard = ({ user, initialTab = 'inbox' }) => {
         <button
           type="button"
           onClick={() => setActiveTab('inventory')}
-          className={`h-8 px-3 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer ${
+          className={`h-8 px-3 rounded-lg shrink-0 whitespace-nowrap flex items-center gap-1.5 transition-colors cursor-pointer ${
             activeTab === 'inventory' ? 'bg-white text-primary font-bold shadow-xs' : 'text-outline hover:text-on-surface'
           }`}
         >
@@ -568,7 +568,7 @@ export const PharmacyDashboard = ({ user, initialTab = 'inbox' }) => {
         <button
           type="button"
           onClick={() => setActiveTab('reports_copy')}
-          className={`h-8 px-3 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer ${
+          className={`h-8 px-3 rounded-lg shrink-0 whitespace-nowrap flex items-center gap-1.5 transition-colors cursor-pointer ${
             activeTab === 'reports_copy' ? 'bg-white text-rose-700 font-bold shadow-xs' : 'text-outline hover:text-on-surface'
           }`}
         >
