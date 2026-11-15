@@ -24,7 +24,16 @@ export const Sidebar = ({
   isCollapsed = false,
   onToggleCollapse,
   user,
+  isMobileOpen = false,
+  onMobileClose,
 }) => {
+  // En celular el menu se muestra completo (sin colapsar) como panel deslizable
+  const collapsedView = isCollapsed && !isMobileOpen;
+  const handleToggle = isMobileOpen && onMobileClose ? onMobileClose : onToggleCollapse;
+  const handleSelect = (id) => {
+    setCurrentView(id);
+    if (onMobileClose) onMobileClose();
+  };
   const isPharmacist =
     user?.role === 'FARMACIA' ||
     user?.role_id === 6 ||
@@ -198,18 +207,27 @@ export const Sidebar = ({
   const menuItems = isPharmacist ? pharmacyMenuItems : isNurse ? nurseMenuItems : isLab ? labMenuItems : doctorMenuItems;
 
   return (
+    <>
+    {isMobileOpen && (
+      <div
+        className="fixed inset-0 top-20 z-30 bg-black/40 md:hidden"
+        onClick={onMobileClose}
+        aria-hidden="true"
+      />
+    )}
     <aside
-      className={`fixed left-0 top-20 bottom-0 bg-white z-40 flex flex-col justify-between py-5 border-r border-surface-container-high shadow-xs transition-all duration-300 ease-in-out ${
-        isCollapsed ? 'w-20' : 'w-64'
-      }`}
+      aria-label="Menú de navegación"
+      className={`fixed left-0 top-20 bottom-0 bg-white z-40 flex flex-col justify-between py-5 border-r border-surface-container-high shadow-xs transition-all duration-300 ease-in-out overflow-y-auto ${
+        collapsedView ? 'w-20' : 'w-64'
+      } ${isMobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'} md:translate-x-0 md:shadow-xs`}
     >
-      <div className={`flex flex-col gap-4 ${isCollapsed ? 'px-2' : 'px-4'}`}>
+      <div className={`flex flex-col gap-4 ${collapsedView ? 'px-2' : 'px-4'}`}>
         {/* ENCABEZADO DE NAVEGACION Y BOTON COLAPSAR / EXPANDIR */}
-        {isCollapsed ? (
+        {collapsedView ? (
           <div className="flex flex-col items-center gap-2">
             <button
               type="button"
-              onClick={onToggleCollapse}
+              onClick={handleToggle}
               title="Expandir menú lateral asistencial"
               className="p-2 rounded-xl bg-surface-container-low hover:bg-surface-container text-primary transition-colors cursor-pointer shadow-2xs"
             >
@@ -237,7 +255,7 @@ export const Sidebar = ({
             </div>
             <button
               type="button"
-              onClick={onToggleCollapse}
+              onClick={handleToggle}
               title="Ocultar menú lateral asistencial"
               className="p-1.5 rounded-lg hover:bg-surface-container text-outline hover:text-on-surface transition-colors cursor-pointer"
             >
@@ -255,12 +273,12 @@ export const Sidebar = ({
               (item.id === 'pharmacy' && (currentView === 'pharmacy' || currentView === 'prescription')) ||
               (item.id === 'prescription' && (currentView === 'prescription' || currentView === 'pharmacy'));
 
-            if (isCollapsed) {
+            if (collapsedView) {
               return (
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => setCurrentView(item.id)}
+                  onClick={() => handleSelect(item.id)}
                   title={item.label}
                   className={`w-full flex items-center justify-center p-3 rounded-xl transition-all cursor-pointer relative ${
                     isActive
@@ -277,7 +295,7 @@ export const Sidebar = ({
               <button
                 key={item.id}
                 type="button"
-                onClick={() => setCurrentView(item.id)}
+                onClick={() => handleSelect(item.id)}
                 className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl transition-all cursor-pointer text-left ${
                   isActive
                     ? 'bg-primary-container text-white font-semibold shadow-sm'
@@ -295,8 +313,8 @@ export const Sidebar = ({
       </div>
 
       {/* PIE DE SIDEBAR CON GOBERNANZA HOSPITALARIA */}
-      <div className={`pt-4 border-t border-surface-container ${isCollapsed ? 'px-2' : 'px-4'}`}>
-        {isCollapsed ? (
+      <div className={`pt-4 border-t border-surface-container ${collapsedView ? 'px-2' : 'px-4'}`}>
+        {collapsedView ? (
           <div className="flex flex-col items-center gap-2 text-outline">
             <span className="w-2 h-2 rounded-full bg-emerald-500" title="Sistema Conectado" />
             <Lock className="w-4 h-4 opacity-70" title="Inmutabilidad Res. 1995" />
@@ -319,6 +337,7 @@ export const Sidebar = ({
         )}
       </div>
     </aside>
+    </>
   );
 };
 

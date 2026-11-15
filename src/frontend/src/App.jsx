@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
+import { useMobileNav } from './hooks/useMobileNav';
 import Sidebar from './components/Sidebar';
 import AuthScreen from './screens/AuthScreen';
 import DashboardScreen from './screens/DashboardScreen';
@@ -161,6 +162,8 @@ export function App() {
       return false;
     }
   });
+
+  const [isMobileNavOpen, setIsMobileNavOpen] = useMobileNav();
 
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [selectedTriage, setSelectedTriage] = useState(null);
@@ -422,6 +425,7 @@ export function App() {
         onNavigate={handleNavigate}
         isSidebarCollapsed={isSidebarCollapsed}
         onToggleSidebar={handleToggleSidebar}
+        onOpenMobileNav={() => setIsMobileNavOpen(true)}
       />
 
       <div className="flex flex-1 pt-20">
@@ -432,13 +436,15 @@ export function App() {
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={handleToggleSidebar}
           user={currentUser}
+          isMobileOpen={isMobileNavOpen}
+          onMobileClose={() => setIsMobileNavOpen(false)}
         />
 
         {/* CONTENEDOR PRINCIPAL */}
         <main
           className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarCollapsed ? 'ml-20' : 'ml-64'
-          } p-4 lg:p-8 min-w-0 overflow-y-auto`}
+            isSidebarCollapsed ? 'md:ml-20' : 'md:ml-64'
+          } p-3 sm:p-4 lg:p-8 min-w-0 overflow-x-hidden overflow-y-auto`}
         >
           {currentView === 'dashboard' && (
             <DashboardScreen

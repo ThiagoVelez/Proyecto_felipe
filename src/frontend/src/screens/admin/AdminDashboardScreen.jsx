@@ -19,10 +19,12 @@ import {
   Network,
   Pill,
   FileWarning,
+  UserPlus,
 } from 'lucide-react';
 import { apiClient } from '../../services/api';
 import { loadBranches, saveBranches } from '../../services/branches';
 import StaffRegisterModal from '../../components/StaffRegisterModal';
+import AdminRegisterModal from '../../components/AdminRegisterModal';
 import AdminOrgChartView from './AdminOrgChartView';
 import AdminPharmacyDashboardView from './AdminPharmacyDashboardView';
 import PharmacyStockReportsView from '../../components/PharmacyStockReportsView';
@@ -107,6 +109,7 @@ export const AdminDashboardScreen = ({ initialTab = 'governance', onTabChange, h
   const [branches, setBranches] = useState(loadBranches);
 
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+  const [isAdminRegisterOpen, setIsAdminRegisterOpen] = useState(false);
   const [isCreateBranchOpen, setIsCreateBranchOpen] = useState(false);
   const [editingBranch, setEditingBranch] = useState(null);
   const [deletingBranch, setDeletingBranch] = useState(null);
@@ -204,6 +207,16 @@ export const AdminDashboardScreen = ({ initialTab = 'governance', onTabChange, h
     setFeedback({
       type: 'success',
       text: 'La solicitud de registro fue aceptada por el servidor. La cuenta queda pendiente de aprobación.',
+    });
+    fetchUsers();
+    fetchLogs();
+    window.dispatchEvent(new CustomEvent('saludconecta_users_updated'));
+  };
+
+  const handleAdminRegisterSuccess = (data) => {
+    setFeedback({
+      type: 'success',
+      text: `Administrador ${data?.user?.full_name || data?.user?.email || 'nuevo'} registrado. Entréguele sus credenciales y el código QR de doble factor por un canal seguro.`,
     });
     fetchUsers();
     fetchLogs();
@@ -482,6 +495,16 @@ export const AdminDashboardScreen = ({ initialTab = 'governance', onTabChange, h
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Nuevo Personal</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsAdminRegisterOpen(true)}
+                title="Registrar otro Administrador de Centro de Salud"
+                className="h-8 px-3 rounded-lg border border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 font-bold text-xs flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                <span>Nuevo Administrador</span>
               </button>
             </div>
           </div>
@@ -789,6 +812,12 @@ export const AdminDashboardScreen = ({ initialTab = 'governance', onTabChange, h
           )}
         </div>
       )}
+
+      <AdminRegisterModal
+        isOpen={isAdminRegisterOpen}
+        onClose={() => setIsAdminRegisterOpen(false)}
+        onRegisterSuccess={handleAdminRegisterSuccess}
+      />
 
       <StaffRegisterModal
         isOpen={isRegisterOpen}

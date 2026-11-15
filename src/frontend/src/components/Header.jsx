@@ -11,6 +11,8 @@ import {
   RefreshCw,
   User,
   Loader2,
+  Menu,
+  X,
 } from 'lucide-react';
 import { DOCUMENT_TYPES, getErrorMessage, formatDoctorName } from '../utils/clinical';
 import BrandLogo from './BrandLogo';
@@ -26,7 +28,9 @@ export const Header = ({
   onNavigate,
   isSidebarCollapsed,
   onToggleSidebar,
+  onOpenMobileNav,
 }) => {
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [docType, setDocType] = useState('CC');
   const [searchQuery, setSearchQuery] = useState('');
   const [sessionSeconds, setSessionSeconds] = useState(14 * 60 + 32);
@@ -92,6 +96,7 @@ export const Header = ({
     try {
       await onSearch(docType, query);
       setSearchQuery('');
+      setIsMobileSearchOpen(false);
     } catch (err) {
       setSearchError(
         err?.status === 404
@@ -105,20 +110,30 @@ export const Header = ({
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md shadow-xs border-b border-surface-container-high">
-      <div className="h-20 w-full px-6 lg:px-8 flex items-center justify-between gap-4">
+      <div className="h-20 w-full px-3 sm:px-6 lg:px-8 flex items-center justify-between gap-2 sm:gap-4">
         {/* LOGO & TITULO INSTITUCIONAL */}
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          {onOpenMobileNav && (
+            <button
+              type="button"
+              onClick={onOpenMobileNav}
+              aria-label="Abrir menú de navegación"
+              className="md:hidden p-2 -ml-1 rounded-xl text-on-surface hover:bg-surface-container-low cursor-pointer shrink-0"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+          )}
           <BrandLogo size="md" />
-          <div className="flex flex-col">
+          <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-2">
-              <span className="font-bold text-lg text-primary tracking-tight leading-none">
+              <span className="font-bold text-base sm:text-lg text-primary tracking-tight leading-none truncate">
                 SaludConecta IPS
               </span>
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-primary-fixed text-on-primary-fixed-variant">
+              <span className="hidden sm:inline px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-primary-fixed text-on-primary-fixed-variant">
                 v2.4 PWA
               </span>
             </div>
-            <span className="text-xs text-on-surface-variant font-medium">
+            <span className="hidden sm:inline text-xs text-on-surface-variant font-medium">
               Red Norte del Valle • Modulo Asistencial
             </span>
           </div>
@@ -127,7 +142,9 @@ export const Header = ({
         {/* BUSCADOR DE PACIENTES GLOBAL */}
         <form
           onSubmit={handleSearchSubmit}
-          className="relative flex-1 max-w-xl mx-4 hidden md:flex items-center h-11 rounded-xl bg-surface-container-low px-3 shadow-xs border border-outline-variant/40 focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-all"
+          className={`${
+            isMobileSearchOpen ? 'flex absolute top-full left-3 right-3 mt-2 bg-white shadow-lg' : 'hidden'
+          } md:relative md:flex md:top-auto md:left-auto md:right-auto md:mt-0 md:mx-4 md:bg-surface-container-low md:shadow-xs flex-1 max-w-xl items-center h-11 rounded-xl px-3 border border-outline-variant/40 focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-all`}
         >
           {isSearching ? (
             <Loader2 className="w-5 h-5 text-primary mr-2 shrink-0 animate-spin" />
@@ -171,7 +188,18 @@ export const Header = ({
         </form>
 
         {/* ACCIONES Y PERFIL CLINICO */}
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-1 sm:gap-3 shrink-0">
+          {/* Buscador de pacientes en celular */}
+          <button
+            type="button"
+            onClick={() => setIsMobileSearchOpen((prev) => !prev)}
+            aria-label={isMobileSearchOpen ? 'Cerrar buscador de pacientes' : 'Buscar paciente por documento'}
+            aria-expanded={isMobileSearchOpen}
+            className="md:hidden p-2 rounded-xl text-on-surface hover:bg-surface-container-low cursor-pointer"
+          >
+            {isMobileSearchOpen ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
+          </button>
+
           {/* Toggle de Conectividad (Online / Offline Rural) - Oculto visualmente pero operativo */}
           <button
             type="button"

@@ -270,10 +270,10 @@ Notas de Gestión: ${report.notes || 'Ninguna'}
   return (
     <div className="space-y-6">
       {/* ENCABEZADO */}
-      <div className="p-6 rounded-2xl bg-white border border-surface-container-high shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3.5">
+      <div className="p-4 sm:p-6 rounded-2xl bg-white border border-surface-container-high shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-start sm:items-center gap-3 sm:gap-3.5 min-w-0">
           <div
-            className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border ${
+            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shrink-0 border ${
               isCopyMode
                 ? 'bg-teal-100 border-teal-200 text-teal-800'
                 : 'bg-rose-100 border-rose-200 text-rose-800'
@@ -281,9 +281,9 @@ Notas de Gestión: ${report.notes || 'Ninguna'}
           >
             <FileWarning className="w-6 h-6" />
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl font-bold text-on-surface">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <h1 className="text-lg sm:text-xl font-bold text-on-surface">
                 {isCopyMode
                   ? 'Copia de Reportes de Farmacia (Alertas de Stock)'
                   : 'Centro de Reportes y Alertas de Desabastecimiento'}

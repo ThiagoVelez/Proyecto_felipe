@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { LogOut, ShieldCheck, ChevronRight, ChevronLeft } from 'lucide-react';
+import { LogOut, ShieldCheck, ChevronRight, ChevronLeft, Menu } from 'lucide-react';
+import { useMobileNav } from '../../hooks/useMobileNav';
 import BrandLogo from '../../components/BrandLogo';
 import AdminDashboardScreen from './AdminDashboardScreen';
 import AdminSidebar from './AdminSidebar';
@@ -8,6 +9,7 @@ import ProfileScreen from '../ProfileScreen';
 export const AdminLayout = ({ user, onLogout, onUpdateUser }) => {
   const [adminView, setAdminView] = useState('governance'); // 'governance' | 'org_chart' | 'audit' | 'branches' | 'profile'
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useMobileNav();
   const currentUser = user || {};
   const displayName = currentUser.full_name || currentUser.name || 'Administrador';
   const initials = displayName.slice(0, 2).toUpperCase();
@@ -45,25 +47,34 @@ export const AdminLayout = ({ user, onLogout, onUpdateUser }) => {
   return (
     <div className="min-h-screen bg-surface flex flex-col font-sans">
       {/* HEADER EXCLUSIVO ADMINISTRATIVO */}
-      <header className="h-16 border-b border-surface-container-high bg-white fixed top-0 left-0 right-0 z-50 px-4 sm:px-6 flex items-center justify-between shadow-xs">
+      <header className="h-16 border-b border-surface-container-high bg-white fixed top-0 left-0 right-0 z-50 px-3 sm:px-6 flex items-center justify-between gap-2 shadow-xs">
         {/* Identidad Institucional */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <button
+            type="button"
+            onClick={() => setIsMobileNavOpen((prev) => !prev)}
+            aria-label="Abrir menú de navegación"
+            aria-expanded={isMobileNavOpen}
+            className="md:hidden p-2 -ml-1 rounded-xl text-on-surface hover:bg-surface-container-low cursor-pointer shrink-0"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
           <BrandLogo size="md" />
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="font-bold text-sm text-on-surface">SaludConecta IPS</span>
-              <span className="px-2 py-0.2 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold border border-amber-300">
+              <span className="font-bold text-sm text-on-surface truncate">SaludConecta IPS</span>
+              <span className="hidden sm:inline px-2 py-0.2 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold border border-amber-300">
                 Gobernanza TI & ReTHUS
               </span>
             </div>
-            <p className="text-[11px] text-outline">
+            <p className="hidden sm:block text-[11px] text-outline">
               Panel de Control Administrativo • ISO/IEC 25010 & Ley 1581 de 2012
             </p>
           </div>
         </div>
 
         {/* Acciones y Perfil del Administrador */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {/* Perfil del Administrador (Navega a la Pantalla Completa de Perfil) */}
           <button
             type="button"
@@ -119,13 +130,15 @@ export const AdminLayout = ({ user, onLogout, onUpdateUser }) => {
           setCurrentView={handleAdminNavigate}
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
+          isMobileOpen={isMobileNavOpen}
+          onMobileClose={() => setIsMobileNavOpen(false)}
         />
 
         {/* CONTENEDOR CENTRAL */}
         <main
           className={`flex-1 transition-all duration-300 ease-in-out ${
-            isSidebarCollapsed ? 'ml-20' : 'ml-64'
-          } p-4 sm:p-6 lg:p-8 min-w-0 overflow-y-auto space-y-5`}
+            isSidebarCollapsed ? 'md:ml-20' : 'md:ml-64'
+          } p-3 sm:p-6 lg:p-8 min-w-0 overflow-x-hidden overflow-y-auto space-y-5`}
         >
           {adminView === 'profile' ? (
             <ProfileScreen
@@ -136,7 +149,7 @@ export const AdminLayout = ({ user, onLogout, onUpdateUser }) => {
           ) : (
             <>
               {/* Banner de Cumplimiento Legal y Separación de Capas */}
-              <div className="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200/80 flex items-start justify-between gap-3 text-amber-950">
+              <div className="hidden sm:flex p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200/80 items-start justify-between gap-3 text-amber-950">
                 <div className="flex items-start gap-2.5">
                   <ShieldCheck className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
                   <div className="space-y-0.5 text-xs">
@@ -162,7 +175,7 @@ export const AdminLayout = ({ user, onLogout, onUpdateUser }) => {
       </div>
 
       {/* FOOTER */}
-      <footer className={`border-t border-surface-container-high py-3 px-6 text-center text-[11px] text-outline font-mono transition-all duration-300 ${isSidebarCollapsed ? 'ml-20' : 'ml-64'}`}>
+      <footer className={`border-t border-surface-container-high py-3 px-6 text-center text-[11px] text-outline font-mono transition-all duration-300 ${isSidebarCollapsed ? 'md:ml-20' : 'md:ml-64'}`}>
         SaludConecta IPS v2.4 • Red de Salud Norte del Valle • Sistema Certificado bajo Normas ISO/IEC 25010 y MinSalud
       </footer>
     </div>
