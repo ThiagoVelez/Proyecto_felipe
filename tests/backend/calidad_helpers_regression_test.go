@@ -31,6 +31,12 @@ type calidadEnv struct {
 
 func newCalidadEnv(t *testing.T) calidadEnv {
 	t.Helper()
+	return newCalidadEnvConCodigo(t, calidadSetupCode)
+}
+
+// newCalidadEnvConCodigo arma el entorno con un TI_SETUP_CODE concreto (vacio deshabilita el registro de TI).
+func newCalidadEnvConCodigo(t *testing.T, setupCode string) calidadEnv {
+	t.Helper()
 	ds := memory.NewDataStore()
 	userRepo := memory.NewUserMemoryRepo(ds)
 	patientRepo := memory.NewPatientMemoryRepo(ds)
@@ -48,7 +54,7 @@ func newCalidadEnv(t *testing.T) calidadEnv {
 	log := logger.New()
 	pdfGen := pdf.NewGenerator(t.TempDir())
 	emailSvc := email.NewService(email.Config{}, log)
-	authService := services.NewAuthService(userRepo, calidadJWTSecret, time.Hour)
+	authService := services.NewAuthServiceWithSetup(userRepo, calidadJWTSecret, time.Hour, 7*24*time.Hour, setupCode)
 	recordService := services.NewClinicalRecordService(recordRepo, patientRepo, userRepo)
 
 	app := fiber.New()

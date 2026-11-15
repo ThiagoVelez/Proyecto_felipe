@@ -58,7 +58,7 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 		}
 		if errors.Is(err, domain.ErrUserInactive) {
 			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
-				"error": "Cuenta inactiva o pendiente de validacion ReTHUS por parte del Administrador",
+				"error": "Cuenta inactiva o pendiente de aprobacion (el personal asistencial lo aprueba el Administrador de la sede; los administradores, el Encargado de TI)",
 			})
 		}
 		if errors.Is(err, domain.ErrMFARequired) {
@@ -272,6 +272,8 @@ type RegisterAdminRequest struct {
 	Phone            string `json:"phone"`
 	Branch           string `json:"branch"`
 	ProfessionalCard string `json:"professional_card"`
+	// SetupCode es el codigo de instalacion (TI_SETUP_CODE) que exige el registro del Encargado de TI
+	SetupCode string `json:"setup_code"`
 }
 
 // buildPrivilegedUser valida el formulario comun de registro (TI y administradores) y arma la cuenta.
@@ -337,6 +339,10 @@ func registrationError(c *fiber.Ctx, err error, fallback string) error {
 		return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": "Ya existe un Encargado de TI registrado"})
 	case errors.Is(err, domain.ErrBranchHasAdmin):
 		return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": "La sede ya tiene un administrador. Solicite al Encargado de TI el registro de administradores adicionales"})
+	case errors.Is(err, domain.ErrTISetupDisabled):
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "El registro del Encargado de TI desde el inicio de sesión no está habilitado en este servidor. Solicite a quien instaló el sistema que configure el código de instalación"})
+	case errors.Is(err, domain.ErrInvalidSetupCode):
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "El código de instalación no es válido"})
 	case errors.Is(err, domain.ErrUnknownBranch):
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "La sede indicada no pertenece al catálogo institucional"})
 	default:
@@ -381,13 +387,14 @@ func (h *AuthHandler) RegisterTI(c *fiber.Ctx) error {
 	if msg != "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": msg})
 	}
-	if err := h.authService.RegisterTI(c.Context(), user, password); err != nil {
+	if err := h.authService.RegisterTI(c.Context(), user, password, req.SetupCode); err != nil {
 		return registrationError(c, err, "No fue posible registrar al Encargado de TI")
 	}
 	return privilegedCreated(c, user, "Encargado de TI registrado exitosamente.")
 }
 
-// RegisterBranchAdmin registra desde el login el primer administrador de una sede que aun no tiene uno.
+// RegisterBranchAdmin registra desde el login una solicitud de administrador para una sede sin administrador
+// aprobado. La cuenta queda pendiente hasta que el Encargado de TI la apruebe.
 func (h *AuthHandler) RegisterBranchAdmin(c *fiber.Ctx) error {
 	var req RegisterAdminRequest
 	if err := c.BodyParser(&req); err != nil {
@@ -403,7 +410,7 @@ func (h *AuthHandler) RegisterBranchAdmin(c *fiber.Ctx) error {
 	if err := h.authService.RegisterBranchAdmin(c.Context(), user, password); err != nil {
 		return registrationError(c, err, "No fue posible registrar al administrador de la sede")
 	}
-	return privilegedCreated(c, user, "Administrador de la sede registrado exitosamente.")
+	return privilegedCreated(c, user, "Solicitud registrada. La cuenta quedará habilitada cuando el Encargado de TI la apruebe.")
 }
 
 // GetMFASeed retorna el secreto TOTP único y la URI otpauth exigiendo autenticacion previa

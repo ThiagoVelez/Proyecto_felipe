@@ -64,7 +64,7 @@ export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
   }, []);
 
   const branchesWithoutAdmin = (setupStatus?.branches || []).filter((b) => !b.has_admin).map((b) => b.name);
-  const canRegisterTI = setupStatus ? !setupStatus.ti_registered : false;
+  const canRegisterTI = setupStatus ? setupStatus.ti_setup_enabled && !setupStatus.ti_registered : false;
 
   const showStatus = (message, error = false) => {
     setStatusMessage(message);
@@ -534,10 +534,13 @@ export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
           }}
           onRegisterSuccess={(data) => {
             refreshSetupStatus();
-            if (data?.user?.email) {
-              setIdentifier(data.user.email);
-              showStatus('Cuenta registrada. Vincule el código QR en su autenticador e inicie sesión con su contraseña y el código.');
-            }
+            if (!data?.user?.email) return;
+            setIdentifier(data.user.email);
+            showStatus(
+              data.user.is_active
+                ? 'Cuenta registrada. Vincule el código QR en su autenticador e inicie sesión con su contraseña y el código.'
+                : 'Solicitud registrada. Podrá iniciar sesión cuando el Encargado de TI apruebe su cuenta.'
+            );
           }}
         />
       )}

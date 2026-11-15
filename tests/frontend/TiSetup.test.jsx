@@ -19,8 +19,9 @@ const SEDES = [
   'Brigada Rural Desconectada',
 ];
 
-const status = (tiRegistered, sedesConAdmin) => ({
+const status = (tiRegistered, sedesConAdmin, tiSetupEnabled = true) => ({
   ti_registered: tiRegistered,
+  ti_setup_enabled: tiSetupEnabled,
   branches: SEDES.map((name) => ({ name, has_admin: sedesConAdmin.includes(name) })),
 });
 
@@ -59,6 +60,15 @@ describe('Login - Registro inicial controlado por el servidor', () => {
     expect(screen.queryByRole('button', { name: /Registrar Administrador de Sede/i })).not.toBeInTheDocument();
   });
 
+  it('no ofrece registrar al Encargado de TI si el servidor no tiene código de instalación', async () => {
+    const { calls } = mockApi({ 'GET /auth/setup-status': { body: status(false, [], false) } });
+    render(<AuthScreen />);
+
+    await waitFor(() => expect(calls.some((c) => c.path === '/auth/setup-status')).toBe(true));
+    expect(await screen.findByRole('button', { name: /Registrar Administrador de Sede/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Registrar Encargado de TI/i })).not.toBeInTheDocument();
+  });
+
   it('no ofrece ningún registro si el servidor no responde', async () => {
     const spy = vi.spyOn(globalThis, 'fetch').mockRejectedValue(new TypeError('Failed to fetch'));
     render(<AuthScreen />);
@@ -82,12 +92,24 @@ describe('Login - Registro inicial controlado por el servidor', () => {
     fireEvent.click(await screen.findByRole('button', { name: /Registrar Encargado de TI/i }));
     expect(screen.getByText('Registro del Encargado de TI')).toBeInTheDocument();
     fillRegistration(/Nombre Completo del Encargado de TI/i);
+
+    // Sin código de instalación el formulario no se envía (campo obligatorio)
+    expect(screen.getByLabelText(/Código de Instalación/i)).toBeRequired();
+    fireEvent.click(screen.getByRole('button', { name: /Confirmar registro del Encargado de TI/i }));
+    await new Promise((r) => setTimeout(r, 50));
+    expect(calls.some((c) => c.path === '/auth/register-ti')).toBe(false);
+
+    fireEvent.change(screen.getByLabelText(/Código de Instalación/i), { target: { value: 'codigo-de-la-sede-2026' } });
     fireEvent.click(screen.getByRole('button', { name: /Confirmar registro del Encargado de TI/i }));
 
     expect(await screen.findByText(/Encargado de TI Registrado y Habilitado/i)).toBeInTheDocument();
     const registro = calls.find((c) => c.path === '/auth/register-ti');
     expect(registro.method).toBe('POST');
-    expect(registro.body).toMatchObject({ full_name: 'Cuenta Nueva', email: 'nuevo@ips.example' });
+    expect(registro.body).toMatchObject({
+      full_name: 'Cuenta Nueva',
+      email: 'nuevo@ips.example',
+      setup_code: 'codigo-de-la-sede-2026',
+    });
 
     fireEvent.click(screen.getByRole('button', { name: /Ir al Inicio de Sesión/i }));
     await waitFor(() =>
@@ -99,7 +121,7 @@ describe('Login - Registro inicial controlado por el servidor', () => {
   it('el registro de administrador de sede solo ofrece las sedes sin administrador', async () => {
     const { calls } = mockApi({
       'GET /auth/setup-status': { body: status(true, [SEDES[0], SEDES[1]]) },
-      'POST /auth/register-branch-admin': createdUser({ role: 'ADMIN', role_id: 1, branch: SEDES[2] }),
+      'POST /auth/register-branch-admin': createdUser({ role: 'ADMIN', role_id: 1, branch: SEDES[2], is_active: false }),
     });
     render(<AuthScreen />);
 
@@ -112,7 +134,13 @@ describe('Login - Registro inicial controlado por el servidor', () => {
     fireEvent.click(screen.getByRole('button', { name: /Confirmar registro de administrador/i }));
 
     await waitFor(() => expect(calls.some((c) => c.path === '/auth/register-branch-admin')).toBe(true));
-    expect(calls.find((c) => c.path === '/auth/register-branch-admin').body.branch).toBe(SEDES[2]);
+    const solicitud = calls.find((c) => c.path === '/auth/register-branch-admin').body;
+    expect(solicitud.branch).toBe(SEDES[2]);
+    expect(solicitud.setup_code).toBeUndefined();
+    expect(await screen.findByText(/Pendiente de Aprobación/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Ir al Inicio de Sesión/i }));
+    expect(await screen.findByText(/cuando el Encargado de TI apruebe su cuenta/i)).toBeInTheDocument();
   });
 });
 
@@ -183,6 +211,25 @@ describe('Encargado de TI - Panel', () => {
     await waitFor(() => expect(calls.some((c) => c.method === 'PATCH')).toBe(true));
     expect(calls.find((c) => c.method === 'PATCH').body).toEqual({ is_active: false });
     expect(await screen.findByText(/Admin Cartago quedó suspendido/i)).toBeInTheDocument();
+  });
+
+  it('muestra las solicitudes pendientes y permite aprobarlas', async () => {
+    const pendiente = { ...admin, id: 'adm-2', full_name: 'Solicitud Tuluá', email: 'tulua@ips.example', is_active: false, branch: SEDES[2] };
+    const conPendiente = {
+      ...overview,
+      branches: SEDES.map((name, i) => ({ name, admins: i === 0 ? [admin] : i === 2 ? [pendiente] : [] })),
+    };
+    const { calls } = mockApi({
+      'GET /ti/overview': { body: conPendiente },
+      'PATCH /ti/admins/adm-2/status': { body: { is_active: true } },
+    });
+    render(<TiAdminsView />);
+
+    expect(await screen.findByText(/1 cuenta de administrador pendiente o suspendida/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Aprobar \/ Habilitar/i }));
+
+    await waitFor(() => expect(calls.some((c) => c.method === 'PATCH')).toBe(true));
+    expect(calls.find((c) => c.method === 'PATCH').body).toEqual({ is_active: true });
   });
 
   it('el panel del administrador ya no registra administradores', async () => {

@@ -24,7 +24,7 @@ const AdminRow = ({ admin, pending, onToggle }) => (
           : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200'
       }`}
     >
-      {pending ? 'Guardando...' : admin.is_active ? 'Suspender' : 'Habilitar'}
+      {pending ? 'Guardando...' : admin.is_active ? 'Suspender' : 'Aprobar / Habilitar'}
     </button>
   </li>
 );
@@ -72,6 +72,11 @@ export const TiAdminsView = () => {
     }
   };
 
+  const pendingAdmins = [
+    ...(data?.branches || []).flatMap((b) => b.admins),
+    ...(data?.admins_without_branch || []),
+  ].filter((a) => !a.is_active);
+
   const groups = [
     ...(data?.branches || []),
     ...(data?.admins_without_branch?.length
@@ -114,6 +119,21 @@ export const TiAdminsView = () => {
       )}
       {error && <ErrorBox message={error} onRetry={load} />}
 
+      {pendingAdmins.length > 0 && (
+        <div role="status" className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-2.5">
+          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+          <p>
+            <strong>
+              {pendingAdmins.length === 1
+                ? '1 cuenta de administrador pendiente o suspendida.'
+                : `${pendingAdmins.length} cuentas de administrador pendientes o suspendidas.`}
+            </strong>{' '}
+            Las solicitudes enviadas desde el inicio de sesión no pueden entrar hasta que usted las apruebe. Apruebe solo a
+            personas que conozca; deje sin aprobar cualquier solicitud que no reconozca.
+          </p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         {groups.map((group) => (
           <section
@@ -125,7 +145,7 @@ export const TiAdminsView = () => {
                 <Building2 className="w-4 h-4 text-indigo-600 shrink-0" />
                 <span>{group.name}</span>
               </h2>
-              {group.admins.length > 0 ? (
+              {group.admins.some((a) => a.is_active) ? (
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
               ) : (
                 <span className="flex items-center gap-1 text-[11px] font-semibold text-amber-700 whitespace-nowrap">
