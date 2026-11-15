@@ -3,7 +3,6 @@ package mysql
 import (
 	"context"
 	"database/sql"
-	"time"
 
 	"saludconecta-backend/core/domain"
 	"saludconecta-backend/core/ports"
@@ -32,18 +31,17 @@ func (r *inventoryRepository) GetAll(ctx context.Context) ([]domain.InventoryIte
 	}
 	defer rows.Close()
 
+	// expiry_date se lee directo como time.Time: con parseTime=true el driver no entrega la fecha como texto "AAAA-MM-DD"
 	var items []domain.InventoryItem
 	for rows.Next() {
 		var it domain.InventoryItem
-		var expiryRaw string
 		if err := rows.Scan(
 			&it.ID, &it.CodeCUM, &it.GenericName, &it.BrandName, &it.Dosage, &it.Presentation,
-			&it.UnitPrice, &it.StockQuantity, &it.MinStock, &it.BatchNumber, &expiryRaw,
+			&it.UnitPrice, &it.StockQuantity, &it.MinStock, &it.BatchNumber, &it.ExpiryDate,
 			&it.IsActive, &it.CreatedAt, &it.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
-		it.ExpiryDate, _ = time.Parse("2006-01-02", expiryRaw)
 		items = append(items, it)
 	}
 	return items, rows.Err()
@@ -57,10 +55,9 @@ func (r *inventoryRepository) GetByID(ctx context.Context, id string) (*domain.I
 		WHERE id = ?
 	`
 	var it domain.InventoryItem
-	var expiryRaw string
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&it.ID, &it.CodeCUM, &it.GenericName, &it.BrandName, &it.Dosage, &it.Presentation,
-		&it.UnitPrice, &it.StockQuantity, &it.MinStock, &it.BatchNumber, &expiryRaw,
+		&it.UnitPrice, &it.StockQuantity, &it.MinStock, &it.BatchNumber, &it.ExpiryDate,
 		&it.IsActive, &it.CreatedAt, &it.UpdatedAt,
 	)
 	if err == sql.ErrNoRows {
@@ -69,7 +66,6 @@ func (r *inventoryRepository) GetByID(ctx context.Context, id string) (*domain.I
 	if err != nil {
 		return nil, err
 	}
-	it.ExpiryDate, _ = time.Parse("2006-01-02", expiryRaw)
 	return &it, nil
 }
 
