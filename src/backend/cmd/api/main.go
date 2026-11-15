@@ -102,6 +102,7 @@ func main() {
 	// 8. Instanciacion de Controladores HTTP (Adaptadores Primarios)
 	authHandler := handlers.NewAuthHandler(authService)
 	adminHandler := handlers.NewAdminHandler(adminService)
+	tiHandler := handlers.NewTIHandler(services.NewTIService(repos.User, repos.Audit, cfg.DBDriver, "v2.4", time.Now().UTC()))
 	patientHandler := handlers.NewPatientHandler(patientService)
 	triageHandler := handlers.NewTriageHandler(triageService)
 	recordHandler := handlers.NewClinicalRecordHandler(recordService, repos.Patient, repos.Prescription, ripsGen, fhirMap)
@@ -134,6 +135,7 @@ func main() {
 			TreatmentHandler:       treatmentHandler,
 			PharmacyHandler:        pharmacyHandler,
 			HealthEducationHandler: healthEducationHandler,
+			TIHandler:              tiHandler,
 			Sessions:               authService,
 			JWTSecret:              cfg.JWTSecret,
 		},

@@ -10,6 +10,7 @@ import PrescriptionScreen from './screens/PrescriptionScreen';
 import SecurityMfaScreen from './screens/SecurityMfaScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import AdminLayout from './screens/admin/AdminLayout';
+import TiLayout from './screens/ti/TiLayout';
 import DoctorAppointmentsView from './screens/DoctorAppointmentsView';
 import TreatmentFollowUpView from './screens/TreatmentFollowUpView';
 import PharmacyDashboard from './screens/PharmacyDashboard';
@@ -44,7 +45,7 @@ const getDefaultBannerForUser = (u) => {
   if (spec.includes('pediatr')) {
     return 'pediatria';
   }
-  if (role === 'ADMIN' || roleId === 1) {
+  if (role === 'ADMIN' || roleId === 1 || role === 'TI' || roleId === 8) {
     return 'cardiologia';
   }
   return 'urgencias';
@@ -398,6 +399,11 @@ export function App() {
   // Si no esta autenticado, mostrar pantalla de Login / AuthScreen
   if (!isAuthenticated) {
     return <AuthScreen onLoginSuccess={handleLoginSuccess} sessionNotice={sessionNotice} />;
+  }
+
+  // El Encargado de TI dispone de su propio entorno de monitoreo, sin acceso a datos clinicos
+  if (currentUser && (currentUser.role === 'TI' || Number(currentUser.role_id) === 8)) {
+    return <TiLayout user={currentUser} onLogout={handleLogout} onUpdateUser={handleUpdateUser} />;
   }
 
   // REGLA RBAC ESTRICTA: El usuario con rol ADMIN dispone de su propio entorno

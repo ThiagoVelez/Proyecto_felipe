@@ -54,6 +54,7 @@ func ensureRoles(db *sql.DB) error {
 		{5, "AUDITOR", "Auditoría Médica y Forense"},
 		{6, "FARMACIA", "Personal de Farmacia, Inventario y Dispensación"},
 		{7, "LABORATORIO", "Bacteriólogo / Laboratorio Clínico y Pruebas Diagnósticas"},
+		{8, "TI", "Encargado de TI: registro de administradores y monitoreo del sistema"},
 	}
 
 	for _, r := range roles {

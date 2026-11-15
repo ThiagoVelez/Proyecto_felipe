@@ -64,6 +64,7 @@ func newCalidadEnv(t *testing.T) calidadEnv {
 		TreatmentHandler:       handlers.NewTreatmentHandler(services.NewTreatmentService(prescV2Repo, patientRepo, userRepo, pdfGen, emailSvc, log)),
 		PharmacyHandler:        handlers.NewPharmacyHandler(services.NewPharmacyService(inventoryRepo, prescV2Repo, memory.NewPharmacyReportMemoryRepo(ds), log)),
 		HealthEducationHandler: handlers.NewHealthEducationHandler(services.NewHealthEducationService(healthRepo)),
+		TIHandler:              handlers.NewTIHandler(services.NewTIService(userRepo, auditRepo, "memory", "test", time.Now().UTC())),
 		Sessions:               authService,
 		JWTSecret:              calidadJWTSecret,
 	})

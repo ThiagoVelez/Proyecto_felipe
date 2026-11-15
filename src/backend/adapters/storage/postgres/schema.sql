@@ -18,7 +18,8 @@ INSERT INTO roles (id, name, description) VALUES
     (4, 'ADMISION', 'Admisiones y Facturacion'),
     (5, 'AUDITOR', 'Auditoria Medica y Forense'),
     (6, 'FARMACIA', 'Personal de Farmacia, Inventario y Dispensación'),
-    (7, 'LABORATORIO', 'Bacteriólogo / Laboratorio Clínico y Pruebas Diagnósticas')
+    (7, 'LABORATORIO', 'Bacteriólogo / Laboratorio Clínico y Pruebas Diagnósticas'),
+    (8, 'TI', 'Encargado de TI: registro de administradores y monitoreo del sistema')
 ON CONFLICT (id) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS users (

@@ -18,7 +18,15 @@ var (
 	ErrCurrentCodeRequired     = errors.New("se requiere el codigo TOTP vigente para reemplazar el segundo factor")
 	ErrInvalidRefreshToken     = errors.New("token de renovacion invalido o expirado")
 	ErrSessionCompromised      = errors.New("posible compromiso de sesion por reutilizacion de token")
+	ErrTIAlreadyRegistered     = errors.New("ya existe un Encargado de TI registrado; los administradores adicionales los registra el Encargado de TI")
+	ErrBranchHasAdmin          = errors.New("la sede ya tiene un administrador registrado")
+	ErrUnknownBranch           = errors.New("la sede indicada no pertenece al catalogo institucional")
+	ErrNotAdminAccount         = errors.New("la cuenta indicada no es de un administrador de sede")
+	ErrProtectedAccount        = errors.New("la cuenta del Encargado de TI no puede gestionarse desde el panel administrativo")
 )
+
+// RoleIDTI identifica al Encargado de TI: registra administradores adicionales y monitorea el sistema
+const RoleIDTI = 8
 
 // TokenPair encapsula la dupla de acceso de corta duracion y renovacion de larga duracion.
 type TokenPair struct {
@@ -84,6 +92,8 @@ func RoleNameByID(id int) string {
 		return "FARMACIA"
 	case 7:
 		return "LABORATORIO"
+	case 8:
+		return "TI"
 	default:
 		return ""
 	}

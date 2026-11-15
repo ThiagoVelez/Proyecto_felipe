@@ -81,6 +81,11 @@ func (h *AdminHandler) UpdateUserStatus(c *fiber.Ctx) error {
 				"error": "Usuario no encontrado",
 			})
 		}
+		if errors.Is(err, domain.ErrProtectedAccount) {
+			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+				"error": "La cuenta del Encargado de TI no puede gestionarse desde el panel administrativo",
+			})
+		}
 		if errors.Is(err, domain.ErrMissingProfessionalCard) {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"error": "No es posible habilitar al usuario: no cuenta con tarjeta profesional ReTHUS registrada",

@@ -215,6 +215,52 @@ export const apiClient = {
     });
   },
 
+  // Estado del registro inicial que ofrece el login (publico): Encargado de TI y sedes sin administrador
+  async getSetupStatus() {
+    return this.request('/auth/setup-status', { strict: true, method: 'GET' });
+  },
+
+  // Registro publico del Encargado de TI: el servidor lo rechaza si ya existe uno
+  async registerTI(data) {
+    return this.request('/auth/register-ti', {
+      strict: true,
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  // Registro publico del primer administrador de una sede: el servidor lo rechaza si la sede ya tiene uno
+  async registerBranchAdmin(data) {
+    return this.request('/auth/register-branch-admin', {
+      strict: true,
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  // Panel del Encargado de TI
+  async tiGetOverview() {
+    return this.request('/ti/overview', { strict: true });
+  },
+
+  async tiGetUsers() {
+    const res = await this.request('/ti/users', { strict: true });
+    return res?.users ?? [];
+  },
+
+  async tiSetAdminStatus(userId, isActive) {
+    return this.request(`/ti/admins/${encodeURIComponent(userId)}/status`, {
+      strict: true,
+      method: 'PATCH',
+      body: JSON.stringify({ is_active: isActive }),
+    });
+  },
+
+  async tiGetAuditLogs(limit = 100) {
+    const res = await this.request(`/ti/audit-logs?limit=${limit}`, { strict: true });
+    return res?.audit_logs ?? [];
+  },
+
   async registerStaff(staffData) {
     return this.request('/admin/users', {
       strict: true,

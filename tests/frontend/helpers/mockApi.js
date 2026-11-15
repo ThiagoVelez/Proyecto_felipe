@@ -66,3 +66,29 @@ export const buildRecord = (overrides = {}) => ({
   clarifications: [],
   ...overrides,
 });
+
+/**
+ * Simula el servidor para la pantalla de inicio de sesión. El login consulta /auth/setup-status al
+ * abrirse; esa consulta se responde aparte con `setupStatus` y no consume las respuestas de `responses`,
+ * que se entregan en orden al resto de peticiones (la ultima se repite). Cada respuesta es { status, body }.
+ * Devuelve el espia y las peticiones que no son setup-status (con el cuerpo ya interpretado).
+ */
+export const DEFAULT_SETUP_STATUS = {
+  ti_registered: true,
+  branches: [{ name: 'Sede Cartago - Hospital Central', has_admin: true }],
+};
+
+export const mockLoginServer = (responses, setupStatus = DEFAULT_SETUP_STATUS) => {
+  const calls = [];
+  const queue = [...responses];
+  const spy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (url, init = {}) => {
+    if (String(url).includes('/auth/setup-status')) {
+      return new Response(JSON.stringify(setupStatus), { status: 200 });
+    }
+    calls.push({ url: String(url), method: (init.method || 'GET').toUpperCase(), body: init.body ? JSON.parse(init.body) : undefined });
+    const next = queue.length > 1 ? queue.shift() : queue[0];
+    if (next instanceof Error) throw next;
+    return new Response(JSON.stringify(next.body ?? {}), { status: next.status ?? 200 });
+  });
+  return { spy, calls };
+};

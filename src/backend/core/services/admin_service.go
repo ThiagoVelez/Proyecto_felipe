@@ -30,6 +30,10 @@ func (s *adminService) ActivateUser(ctx context.Context, userID string) error {
 		return err
 	}
 
+	if user.RoleID == domain.RoleIDTI {
+		return domain.ErrProtectedAccount
+	}
+
 	// Validacion no-repudio: Si es rol asistencial (MEDICO o ENFERMERO), debe tener tarjeta profesional
 	if (user.RoleID == 2 || user.RoleID == 3) && user.ProfessionalCard == "" {
 		return domain.ErrMissingProfessionalCard
@@ -39,6 +43,14 @@ func (s *adminService) ActivateUser(ctx context.Context, userID string) error {
 }
 
 func (s *adminService) DeactivateUser(ctx context.Context, userID string) error {
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		return err
+	}
+	// El Encargado de TI esta por encima del rol ADMIN: un administrador no puede suspenderlo
+	if user.RoleID == domain.RoleIDTI {
+		return domain.ErrProtectedAccount
+	}
 	return s.userRepo.UpdateStatus(ctx, userID, false)
 }
 

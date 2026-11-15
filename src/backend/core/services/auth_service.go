@@ -20,6 +20,9 @@ type authService struct {
 	refreshTTL time.Duration
 	tokens     *refreshTokenTracker
 	attempts  *attemptTracker
+	// setupMu serializa los registros publicos (TI y administrador por sede) para que dos solicitudes
+	// simultaneas no ocupen el mismo puesto
+	setupMu sync.Mutex
 }
 
 var (
@@ -241,6 +244,96 @@ func (s *authService) RegisterAdmin(ctx context.Context, user *domain.User, plai
 	}
 
 	return s.Register(ctx, user, plainPassword)
+}
+
+// adminBranchSet devuelve las sedes del catalogo que ya tienen al menos un administrador registrado.
+func (s *authService) adminBranchSet(ctx context.Context) (map[string]bool, error) {
+	adminRole := 1
+	admins, err := s.userRepo.List(ctx, &adminRole, nil)
+	if err != nil {
+		return nil, err
+	}
+	set := make(map[string]bool)
+	for _, a := range admins {
+		if name, ok := domain.CanonicalBranch(a.Branch); ok {
+			set[name] = true
+		}
+	}
+	return set, nil
+}
+
+func (s *authService) tiRegistered(ctx context.Context) (bool, error) {
+	tiRole := domain.RoleIDTI
+	list, err := s.userRepo.List(ctx, &tiRole, nil)
+	if err != nil {
+		return false, err
+	}
+	return len(list) > 0, nil
+}
+
+// SetupStatus informa al login que registros iniciales siguen disponibles.
+func (s *authService) SetupStatus(ctx context.Context) (*domain.SetupStatus, error) {
+	ti, err := s.tiRegistered(ctx)
+	if err != nil {
+		return nil, err
+	}
+	withAdmin, err := s.adminBranchSet(ctx)
+	if err != nil {
+		return nil, err
+	}
+	status := &domain.SetupStatus{TIRegistered: ti}
+	for _, b := range domain.BranchCatalog {
+		status.Branches = append(status.Branches, domain.BranchAdminStatus{Name: b, HasAdmin: withAdmin[b]})
+	}
+	return status, nil
+}
+
+// RegisterTI crea el unico Encargado de TI del sistema. La cuenta nace activa con semilla TOTP propia.
+func (s *authService) RegisterTI(ctx context.Context, user *domain.User, plainPassword string) error {
+	s.setupMu.Lock()
+	defer s.setupMu.Unlock()
+
+	exists, err := s.tiRegistered(ctx)
+	if err != nil {
+		return err
+	}
+	if exists {
+		return domain.ErrTIAlreadyRegistered
+	}
+
+	user.RoleID = domain.RoleIDTI
+	user.RoleName = "TI"
+	user.IsActive = true
+	user.MFAEnabled = true
+	if user.MFASecret == nil || *user.MFASecret == "" {
+		sec, err := crypto.GenerateMFASecret()
+		if err != nil {
+			return err
+		}
+		user.MFASecret = &sec
+	}
+	return s.Register(ctx, user, plainPassword)
+}
+
+// RegisterBranchAdmin crea el primer administrador de una sede del catalogo. Los siguientes los registra el Encargado de TI.
+func (s *authService) RegisterBranchAdmin(ctx context.Context, user *domain.User, plainPassword string) error {
+	branch, ok := domain.CanonicalBranch(user.Branch)
+	if !ok {
+		return domain.ErrUnknownBranch
+	}
+
+	s.setupMu.Lock()
+	defer s.setupMu.Unlock()
+
+	withAdmin, err := s.adminBranchSet(ctx)
+	if err != nil {
+		return err
+	}
+	if withAdmin[branch] {
+		return domain.ErrBranchHasAdmin
+	}
+	user.Branch = branch
+	return s.RegisterAdmin(ctx, user, plainPassword)
 }
 
 // GetMFASeed consulta o aprovisiona el secreto TOTP único y la URI otpauth asociada a un correo institucional.
