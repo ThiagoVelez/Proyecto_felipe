@@ -328,6 +328,7 @@ A continuación se detalla el catálogo de suites desarrolladas y automatizadas,
 - Despliegue reactivo del input de 6 dígitos cuando el servidor retorna `{ mfa_required: true, status: 401 }`.
 - Validación de que el cliente no evalúe el código TOTP localmente, sino que lo transporte íntegro al endpoint del servidor.
 - Limpieza de casillas y presentación de mensaje de error legible ante rechazo por código inválido o caducado.
+- Verificación de que el login **no** ofrece el registro de administradores y de que "Nuevo Administrador" en Gobernanza de Personal envía la solicitud a `/auth/register-admin`.
 
 ##### 5. Pantallas Clínicas y Consumo de API Real (`tests/frontend/ClinicalScreens.test.jsx`)
 
@@ -1535,7 +1536,7 @@ proyecto-final/
 │       ├── index.html             # Plantilla HTML5 accesible
 │       ├── package.json           # Dependencias y scripts de ejecución/pruebas
 │       ├── postcss.config.js      # Configuración de PostCSS
-│       ├── tailwind.config.js     # Tokens clínicos y extensiones de diseño
+│       ├── tailwind.config.js     # Tokens clínicos, extensiones de diseño y medios pasos de espaciado (4.5 / 9.5)
 │       ├── vite.config.js         # Configuración de Vite y enrutamiento de tests
 │       ├── README.md              # Documentación detallada del cliente web
 │       └── src/
@@ -1544,8 +1545,8 @@ proyecto-final/
 │           ├── index.css          # Estilos globales y capas de Tailwind
 │           ├── setupTests.js      # Extensiones jest-dom para pruebas Vitest
 │           ├── components/        # Componentes reutilizables
-│           │   ├── Header.jsx     # Barra superior, búsqueda de pacientes, toggle menú y perfil
-│           │   ├── Sidebar.jsx    # Menú asistencial colapsable (`w-20` / `w-64`) y widget SHA-256
+│           │   ├── Header.jsx     # Barra superior, búsqueda de pacientes (lupa en celular), botón ☰ y perfil
+│           │   ├── Sidebar.jsx    # Menú asistencial colapsable (`w-20` / `w-64`); panel deslizable en celular
 │           │   ├── AllergyAlertModal.jsx # Modal crítico ante contraindicaciones (datos del servidor)
 │           │   ├── PatientPicker.jsx # Selector de paciente por documento o listado
 │           │   ├── PatientRegisterModal.jsx # Admisión de pacientes y registro de alergias
@@ -1572,6 +1573,8 @@ proyecto-final/
 │           │       ├── AdminDashboardScreen.jsx # Gobernanza ReTHUS, bitácora real y sedes
 │           │       ├── AdminPharmacyDashboardView.jsx # Dashboard de farmacia para dirección
 │           │       └── PharmacyStockReportsView.jsx # Monitor y gestión de reportes de stock bajo
+│           ├── hooks/
+│           │   └── useMobileNav.js # Estado del menú deslizable en celular (cierre con Escape y al ensanchar)
 │           ├── services/
 │           │   └── api.js         # Cliente API estricto: los errores del servidor llegan a la interfaz, sin simulaciones
 │           └── utils/
@@ -2466,6 +2469,60 @@ Todas las soluciones fueron implementadas bajo arquitectura limpia hexagonal, de
 - **Diagnóstico del Bug:** Los banners y avatares se almacenaban bajo claves globales sin prefijo (`saludconecta_profile_custom` y `saludconecta_avatar`), lo que provocaba que al cambiar el banner o foto del Administrador, la mutación se propagara indebidamente a las sesiones de los médicos, enfermeros y farmacéuticos.
 - **Aislamiento por `userKey`:** Se implementó una clave canónica de almacenamiento por usuario (`saludconecta_profile_${userKey}`, `saludconecta_avatar_${userKey}` y `saludconecta_banner_${userKey}`). Se eliminó el uso de claves globales compartidas y se asignó un banner corporativo inteligente por defecto según el rol y especialidad médica de cada usuario.
 
+### 1.11. Diseño Adaptable a Celulares (Responsive Mobile-First)
+
+- **Diagnóstico:** Al inspeccionar la plataforma con la vista de celular del navegador, el menú lateral ocupaba 256 px fijos y el contenido reservaba siempre ese margen (`ml-64`). En un celular de ~390 px casi no quedaba espacio útil y el buscador de pacientes desaparecía.
+- **Menú lateral deslizable (`Sidebar.jsx`, `AdminSidebar.jsx`):** En pantallas menores a 768 px (breakpoint `md`) el menú queda oculto y se abre como panel deslizable desde el botón **☰** del encabezado, con fondo oscurecido. Se cierra al elegir una opción, al tocar el fondo o con la tecla `Escape`. En tablet y computador conserva su comportamiento colapsable (`w-20` / `w-64`).
+- **Contenido a todo el ancho (`App.jsx`, `AdminLayout.jsx`):** El margen izquierdo del contenido solo se aplica desde `md` (`md:ml-20` / `md:ml-64`).
+- **Encabezados compactos (`Header.jsx`, `AdminLayout.jsx`):** En celular se ocultan subtítulos y etiquetas secundarias, y el buscador de pacientes por documento se abre con un botón de **lupa**.
+- **Hook reutilizable `useMobileNav.js`:** Centraliza el estado del menú en celular y lo cierra automáticamente al pulsar `Escape` o al ensanchar la ventana.
+- **Farmacia (`PharmacyDashboard.jsx`, `PharmacyStockReportsView.jsx`):**
+  - La barra de pestañas (Buzón / Inventario / Copia de Reporte) se desliza horizontalmente en lugar de comprimir el texto en tres líneas.
+  - En los encabezados, la etiqueta de sección baja a otra línea para que el título no quede aplastado.
+  - **Inventario en tarjetas:** En celular, cada medicamento se muestra como una tarjeta (nombre, marca, existencias con alerta de "Bajo Mínimo", dosis, precio, CUM, lote, vencimiento y botones `Ajustar` / `Eliminar`). En tablet y computador se conserva la tabla de 9 columnas.
+- **Laboratorio (`LaboratoryScreen.jsx`):** Encabezado y título de la bandeja sin aplastarse, datos de cada orden en líneas separadas y botón de acción a todo el ancho en celular.
+- **Verificación:** Recorrido automatizado con Playwright en la medida de un iPhone 13 (390 × 844) de las **29 pantallas** del menú de los 5 roles (6 de Administrador, 10 de Médico, 6 de Enfermería, 5 de Farmacia y 2 de Laboratorio): en ninguna el contenido se sale del ancho de la pantalla. En computador (1366 px) el diseño se mantiene igual.
+
+### 1.12. Registro de Administradores Exclusivo del Panel Administrativo
+
+- **Diagnóstico:** La pantalla de inicio de sesión mostraba el botón **"Registrar Administrador de Centro de Salud"**. La ruta `POST /api/v1/auth/register-admin` ya exigía sesión con rol `ADMIN` (corrección `DEF-49`), por lo que no permitía crear administradores de forma anónima. Sin embargo, el botón siempre fallaba para un visitante sin sesión y le revelaba la existencia de la función.
+- **Remediación:**
+  - Se retiró el botón de `AuthScreen.jsx`.
+  - Se agregó el botón **"Nuevo Administrador"** en *Gobernanza de Personal* (`AdminDashboardScreen.jsx`), junto a "Nuevo Personal". Al completarse el registro se muestra el código QR de doble factor del nuevo administrador y se actualizan el listado de personal y la bitácora.
+  - Se corrigió el comentario de `RegisterAdmin` en `auth_handler.go`, que indicaba erróneamente que *cualquier* centro de salud podía registrar su administrador.
+- **Flujo de alta de administradores:**
+  1. **Primer administrador (instalación nueva):** Lo crea automáticamente el servidor al arrancar (`BootstrapAdmin`, `src/backend/core/services/bootstrap.go`) a partir de `ADMIN_INITIAL_EMAIL` y `ADMIN_INITIAL_PASSWORD` (mínimo 12 caracteres) definidos en el `.env`. Solo actúa si no existe ningún administrador, por lo que esas variables no sirven para crear cuentas adicionales.
+  2. **Administradores adicionales:** Un administrador autenticado los registra desde "Nuevo Administrador". El servidor valida sesión y rol `ADMIN` en cada solicitud.
+  3. **Personal asistencial:** Se registra desde "Nuevo Personal" y nace **inactivo** hasta la verificación ReTHUS.
+- **Recomendación operativa:** Tras el primer inicio de sesión, retirar `ADMIN_INITIAL_PASSWORD` del `.env` y cambiar la contraseña desde la plataforma.
+
+### 1.13. Corrección de Espaciados Inexistentes en Tailwind (Botones Encimados en Laboratorio)
+
+- **Diagnóstico de Causa Raíz:** Varias vistas usaban las clases `h-9.5`, `py-4.5`, `p-4.5`, `h-4.5` y `w-4.5`, que **no existen** en la escala por defecto de Tailwind ni estaban declaradas en `tailwind.config.js`. Tailwind no generaba esas clases y el navegador las ignoraba. En la bandeja de laboratorio, los botones `Ingresar Resultados`, `Continuar Análisis` y `Ver Resultados` quedaban sin altura (una franja delgada) y encimados sobre la orden siguiente, **también en computador**.
+- **Remediación:** Se declararon los medios pasos `'4.5': '1.125rem'` y `'9.5': '2.375rem'` en `theme.extend.spacing`. Los botones recuperan su altura de 38 px y cada orden su espacio vertical. La corrección también beneficia a `DoctorLabOrdersView.jsx` y `PharmacyStockReportsView.jsx`.
+
+### 1.14. Fechas de Vencimiento del Inventario Farmacéutico (`0001-01-01`)
+
+- **Diagnóstico de Causa Raíz (MySQL):** `inventory_repo.go` leía la columna `expiry_date` como texto y la convertía con el formato `"2006-01-02"`. La conexión usa `parseTime=true` (`connection.go`), por lo que el driver entrega la fecha completa (`2027-12-31T00:00:00Z`). La conversión fallaba, el error se descartaba (`_`) y **todos los medicamentos mostraban vencimiento `0001-01-01`**.
+- **Diagnóstico (modo memoria):** Los 10 medicamentos de ejemplo del repositorio en memoria no tenían fecha de vencimiento.
+- **Remediación:**
+  - `GetAll` y `GetByID` leen `expiry_date` directamente como `time.Time`.
+  - El repositorio en memoria usa las mismas fechas que el sembrado de MySQL (`seeder.go`).
+  - **Prueba de regresión** `src/backend/adapters/storage/mysql/inventory_repo_test.go`: simula el comportamiento del driver con `parseTime=true`. Falla con el código anterior y pasa con la corrección.
+- **Pendiente de verificación:** Confirmar las fechas contra una instancia MySQL real; el entorno donde se corrigió no disponía de Docker.
+
+### 1.15. Actualización de Pruebas Automatizadas y Resultados
+
+- `tests/frontend/AuthMfa.test.jsx`: las dos pruebas que buscaban el botón de registro de administrador en el login se actualizaron al nuevo comportamiento. Ahora verifican que el login **no** lo ofrece y que "Nuevo Administrador" en Gobernanza de Personal envía la solicitud a `/auth/register-admin` y muestra el mensaje de éxito.
+- **Resultados sobre `main` tras la integración (PR #7 y PR #8):**
+
+| Suite | Comando | Resultado |
+|---|---|---|
+| Backend (`src/backend`) | `go test ./...` | Todas pasan, incluida `TestInventoryRepositoryReadsExpiryDate` |
+| Backend (`tests/backend`) | `go test ./...` | Todas pasan |
+| Frontend (`tests/frontend`) | `npx vitest run` | **105 de 105** pruebas en 14 archivos |
+| Compilación frontend | `npx vite build` | Sin errores |
+
 ---
 
 ## 2. Diagramas Técnicos y Arquitectura Visual de la Entrega Final
@@ -2795,7 +2852,7 @@ Se auditó de forma exhaustiva la totalidad de los controles interactivos y fluj
    - Botones de acción en resultados: `Ver Resultado Sellado`, `Imprimir Físico` y `Enviar Correo` completamente vinculados y funcionales.
    - **Despacho por Correo sin Dummies:** El correo del paciente se autocompleta con su dirección real registrada; si el paciente carece de correo, el campo se presenta en blanco (`""`) sin direcciones ficticias.
 2. **Módulo de Laboratorio Clínico (`LaboratoryScreen.jsx`):**
-   - **Estandarización Dimensional de Botones:** Los botones de acción de la bandeja (`Ingresar Resultados`, `Continuar Análisis` y `Ver Resultados`) cuentan con dimensiones fijas y simétricas (`w-44 h-9.5`, flex centrado), garantizando perfecta alineación visual vertical.
+   - **Estandarización Dimensional de Botones:** Los botones de acción de la bandeja (`Ingresar Resultados`, `Continuar Análisis` y `Ver Resultados`) cuentan con dimensiones fijas y simétricas (`w-44 h-9.5`, flex centrado; a todo el ancho en celular). La clase `h-9.5` solo surte efecto desde la corrección de la sección 1.13, que agregó ese tamaño a `tailwind.config.js`.
    - Botones de filtrado de bandeja (`TODOS`, `PENDIENTE`, `EN_PROCESO`, `COMPLETADO`).
    - Drawers laterales deslizables para toma de muestra, captura analítica y visor oficial de resultados.
    - Botón `Validar & Sellar Resultado`: Transiciona la orden a completada con firma ReTHUS.
