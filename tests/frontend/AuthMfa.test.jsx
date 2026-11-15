@@ -3,6 +3,7 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import AuthScreen from '../../src/frontend/src/screens/AuthScreen';
 import SecurityMfaScreen from '../../src/frontend/src/screens/SecurityMfaScreen';
+import AdminDashboardScreen from '../../src/frontend/src/screens/admin/AdminDashboardScreen';
 import { apiClient, SESSION_EXPIRED_EVENT } from '../../src/frontend/src/services/api';
 
 const jsonResponse = (body, status = 200) => new Response(JSON.stringify(body), { status });
@@ -198,17 +199,16 @@ describe('Cliente HTTP - Manejo central de sesión', () => {
     await expect(apiClient.adminUpdateUserStatus('u1', false)).rejects.toThrow('Demasiadas solicitudes');
   });
 
-  it('no muestra el botón de alto contraste y muestra el botón de registro de administrador', () => {
+  it('no muestra el botón de alto contraste ni el registro de administradores en el login', () => {
     render(<AuthScreen />);
 
     expect(screen.queryByText(/Alto Contraste/i)).not.toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: /Registrar Administrador de Centro de Salud/i })
-    ).toBeInTheDocument();
+    // Registrar administradores exige sesión ADMIN: el login no debe ofrecerlo a visitantes
+    expect(screen.queryByText(/Registrar Administrador/i)).not.toBeInTheDocument();
   });
 
-  it('abre el modal de registro de administrador y procesa el registro institucional', async () => {
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+  it('abre el registro de administrador desde Gobernanza de Personal y lo envía al servidor', async () => {
+    const registerResponse = () =>
       jsonResponse(
         {
           message: 'Administrador registrado',
@@ -224,12 +224,17 @@ describe('Cliente HTTP - Manejo central de sesión', () => {
           otpauth_uri: 'otpauth://totp/SaludConecta:admin.nuevo@saludconecta.ips.gov.co?secret=TESTSECRETBASE32',
         },
         201
-      )
-    );
+      );
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) => {
+      if (url.includes('/auth/register-admin')) return registerResponse();
+      if (url.startsWith('/api/v1/admin/audit-logs')) return jsonResponse({ audit_logs: [], count: 0 });
+      if (url.startsWith('/api/v1/admin/users')) return jsonResponse({ users: [], count: 0 });
+      return jsonResponse({});
+    });
 
-    render(<AuthScreen />);
+    render(<AdminDashboardScreen />);
 
-    fireEvent.click(screen.getByRole('button', { name: /Registrar Administrador de Centro de Salud/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Nuevo Administrador/i }));
 
     expect(await screen.findByText(/Registro de Administrador de Centro de Salud/i)).toBeInTheDocument();
 
@@ -260,6 +265,7 @@ describe('Cliente HTTP - Manejo central de sesión', () => {
         })
       );
     });
+    expect(await screen.findByText(/Administrador Admin Nuevo registrado/i)).toBeInTheDocument();
   });
   it('renueva transparentemente el token de acceso cuando recibe un 401 y reintenta la peticion con exito', async () => {
     apiClient.setAuth('access-viejo', { id: 'u1' }, 'refresh-valido');

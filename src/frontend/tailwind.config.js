@@ -75,6 +75,9 @@ export default {
         'label-mono-forensic': ['Geist', 'monospace'],
       },
       spacing: {
+        // Medios pasos usados en las vistas (h-4.5, py-4.5, h-9.5); Tailwind no los trae por defecto
+        '4.5': '1.125rem',
+        '9.5': '2.375rem',
         'space-xs': '0.25rem',
         'space-sm': '0.5rem',
         'space-md': '1rem',
