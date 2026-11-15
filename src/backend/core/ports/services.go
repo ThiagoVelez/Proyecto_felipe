@@ -17,9 +17,10 @@ type AuthService interface {
 	RegisterAdmin(ctx context.Context, user *domain.User, plainPassword string) error
 	// SetupStatus informa si ya existe Encargado de TI y que sedes del catalogo tienen administrador.
 	SetupStatus(ctx context.Context) (*domain.SetupStatus, error)
-	// RegisterTI crea el Encargado de TI solo si todavia no existe ninguno.
-	RegisterTI(ctx context.Context, user *domain.User, plainPassword string) error
-	// RegisterBranchAdmin crea el primer administrador de una sede del catalogo; falla si la sede ya tiene uno.
+	// RegisterTI crea el Encargado de TI solo si todavia no existe ninguno y el codigo de instalacion coincide.
+	RegisterTI(ctx context.Context, user *domain.User, plainPassword, setupCode string) error
+	// RegisterBranchAdmin registra una solicitud de administrador para una sede sin administrador aprobado.
+	// La cuenta queda pendiente hasta que el Encargado de TI la apruebe.
 	RegisterBranchAdmin(ctx context.Context, user *domain.User, plainPassword string) error
 	GetMFASeed(ctx context.Context, email string) (secret string, uri string, err error)
 	// ValidateSession verifica que la cuenta del token siga existiendo y activa, y retorna su estado vigente.

@@ -2,7 +2,10 @@ package services
 
 import (
 	"context"
+	"crypto/subtle"
+	"errors"
 	"strings"
+	"unicode/utf8"
 	"sync"
 	"time"
 
@@ -20,6 +23,8 @@ type authService struct {
 	refreshTTL time.Duration
 	tokens     *refreshTokenTracker
 	attempts  *attemptTracker
+	// setupCode es el codigo de instalacion (TI_SETUP_CODE) que exige el registro del Encargado de TI desde el login
+	setupCode string
 	// setupMu serializa los registros publicos (TI y administrador por sede) para que dos solicitudes
 	// simultaneas no ocupen el mismo puesto
 	setupMu sync.Mutex
@@ -35,8 +40,37 @@ func NewAuthService(userRepo ports.UserRepository, jwtSecret string, jwtTTL time
 	return NewAuthServiceWithTTL(userRepo, jwtSecret, jwtTTL, 7*24*time.Hour)
 }
 
+// MinSetupCodeLength es la longitud minima del codigo de instalacion (TI_SETUP_CODE).
+const MinSetupCodeLength = 12
+
+// ValidateSetupCode comprueba que el codigo de instalacion sea utilizable. Vacio significa "registro de TI deshabilitado".
+func ValidateSetupCode(code string) error {
+	code = strings.TrimSpace(code)
+	if code == "" {
+		return nil
+	}
+	if strings.EqualFold(code, "defina_un_codigo_de_instalacion") {
+		return errors.New("TI_SETUP_CODE coincide con el ejemplo de la plantilla; defina un codigo propio")
+	}
+	if utf8.RuneCountInString(code) < MinSetupCodeLength {
+		return errors.New("TI_SETUP_CODE debe tener al menos 12 caracteres")
+	}
+	return nil
+}
+
 // NewAuthServiceWithTTL construye la instancia del servicio con vigencias configurables para token de acceso y de renovacion.
+// El registro del Encargado de TI desde el login queda deshabilitado (sin codigo de instalacion).
 func NewAuthServiceWithTTL(userRepo ports.UserRepository, jwtSecret string, accessTTL, refreshTTL time.Duration) ports.AuthService {
+	return NewAuthServiceWithSetup(userRepo, jwtSecret, accessTTL, refreshTTL, "")
+}
+
+// NewAuthServiceWithSetup construye el servicio con el codigo de instalacion que habilita el registro del Encargado de TI.
+// Un codigo vacio o invalido (ver ValidateSetupCode) deja ese registro deshabilitado.
+func NewAuthServiceWithSetup(userRepo ports.UserRepository, jwtSecret string, accessTTL, refreshTTL time.Duration, setupCode string) ports.AuthService {
+	setupCode = strings.TrimSpace(setupCode)
+	if ValidateSetupCode(setupCode) != nil {
+		setupCode = ""
+	}
 	if accessTTL <= 0 {
 		accessTTL = 15 * time.Minute
 	}
@@ -51,6 +85,7 @@ func NewAuthServiceWithTTL(userRepo ports.UserRepository, jwtSecret string, acce
 		refreshTTL: refreshTTL,
 		attempts:   newDefaultAttemptTracker(),
 		tokens:     newRefreshTokenTracker(),
+		setupCode:  setupCode,
 	}
 }
 
@@ -230,9 +265,14 @@ func (s *authService) RegisterStaff(ctx context.Context, user *domain.User, plai
 // RegisterAdmin implementa el registro de un nuevo Administrador de Centro de Salud (rol fijo ADMIN, role_id = 1).
 // La cuenta nace activa con su semilla criptográfica TOTP propia y exclusiva generada en el servidor.
 func (s *authService) RegisterAdmin(ctx context.Context, user *domain.User, plainPassword string) error {
+	return s.registerAdminAccount(ctx, user, plainPassword, true)
+}
+
+// registerAdminAccount crea una cuenta ADMIN con semilla TOTP propia; active indica si nace habilitada.
+func (s *authService) registerAdminAccount(ctx context.Context, user *domain.User, plainPassword string, active bool) error {
 	user.RoleID = 1
 	user.RoleName = "ADMIN"
-	user.IsActive = true
+	user.IsActive = active
 	user.MFAEnabled = true
 
 	if user.MFASecret == nil || *user.MFASecret == "" {
@@ -246,7 +286,8 @@ func (s *authService) RegisterAdmin(ctx context.Context, user *domain.User, plai
 	return s.Register(ctx, user, plainPassword)
 }
 
-// adminBranchSet devuelve las sedes del catalogo que ya tienen al menos un administrador registrado.
+// adminBranchSet devuelve las sedes del catalogo que ya tienen al menos un administrador aprobado (activo).
+// Las solicitudes pendientes no ocupan la sede: asi una solicitud ajena no bloquea la del administrador real.
 func (s *authService) adminBranchSet(ctx context.Context) (map[string]bool, error) {
 	adminRole := 1
 	admins, err := s.userRepo.List(ctx, &adminRole, nil)
@@ -255,6 +296,9 @@ func (s *authService) adminBranchSet(ctx context.Context) (map[string]bool, erro
 	}
 	set := make(map[string]bool)
 	for _, a := range admins {
+		if !a.IsActive {
+			continue
+		}
 		if name, ok := domain.CanonicalBranch(a.Branch); ok {
 			set[name] = true
 		}
@@ -281,15 +325,23 @@ func (s *authService) SetupStatus(ctx context.Context) (*domain.SetupStatus, err
 	if err != nil {
 		return nil, err
 	}
-	status := &domain.SetupStatus{TIRegistered: ti}
+	status := &domain.SetupStatus{TIRegistered: ti, TISetupEnabled: s.setupCode != ""}
 	for _, b := range domain.BranchCatalog {
 		status.Branches = append(status.Branches, domain.BranchAdminStatus{Name: b, HasAdmin: withAdmin[b]})
 	}
 	return status, nil
 }
 
-// RegisterTI crea el unico Encargado de TI del sistema. La cuenta nace activa con semilla TOTP propia.
-func (s *authService) RegisterTI(ctx context.Context, user *domain.User, plainPassword string) error {
+// RegisterTI crea el unico Encargado de TI del sistema. Exige el codigo de instalacion que el operador definio
+// en TI_SETUP_CODE y lo compara en tiempo constante. La cuenta nace activa con semilla TOTP propia.
+func (s *authService) RegisterTI(ctx context.Context, user *domain.User, plainPassword, setupCode string) error {
+	if s.setupCode == "" {
+		return domain.ErrTISetupDisabled
+	}
+	if subtle.ConstantTimeCompare([]byte(strings.TrimSpace(setupCode)), []byte(s.setupCode)) != 1 {
+		return domain.ErrInvalidSetupCode
+	}
+
 	s.setupMu.Lock()
 	defer s.setupMu.Unlock()
 
@@ -315,7 +367,8 @@ func (s *authService) RegisterTI(ctx context.Context, user *domain.User, plainPa
 	return s.Register(ctx, user, plainPassword)
 }
 
-// RegisterBranchAdmin crea el primer administrador de una sede del catalogo. Los siguientes los registra el Encargado de TI.
+// RegisterBranchAdmin registra desde el login una solicitud de administrador para una sede del catalogo que aun no
+// tiene administrador aprobado. La cuenta nace PENDIENTE: solo puede iniciar sesion cuando el Encargado de TI la aprueba.
 func (s *authService) RegisterBranchAdmin(ctx context.Context, user *domain.User, plainPassword string) error {
 	branch, ok := domain.CanonicalBranch(user.Branch)
 	if !ok {
@@ -333,7 +386,7 @@ func (s *authService) RegisterBranchAdmin(ctx context.Context, user *domain.User
 		return domain.ErrBranchHasAdmin
 	}
 	user.Branch = branch
-	return s.RegisterAdmin(ctx, user, plainPassword)
+	return s.registerAdminAccount(ctx, user, plainPassword, false)
 }
 
 // GetMFASeed consulta o aprovisiona el secreto TOTP único y la URI otpauth asociada a un correo institucional.

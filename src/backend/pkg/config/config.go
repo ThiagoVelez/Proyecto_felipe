@@ -43,6 +43,8 @@ type Config struct {
 	TrustedProxies []string
 	AdminEmail     string
 	AdminPassword  string
+	// SetupCode (TI_SETUP_CODE) habilita el registro del Encargado de TI desde el inicio de sesion
+	SetupCode      string
 	DBConnectTries int
 }
 
@@ -121,6 +123,7 @@ func LoadFrom(lookup func(string) string) (*Config, error) {
 		AdminEmail:   strings.TrimSpace(lookup("ADMIN_INITIAL_EMAIL")),
 
 		AdminPassword:  lookup("ADMIN_INITIAL_PASSWORD"),
+		SetupCode:      strings.TrimSpace(lookup("TI_SETUP_CODE")),
 		DBConnectTries: 10,
 	}
 

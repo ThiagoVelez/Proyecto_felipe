@@ -32,6 +32,8 @@ const MODES = {
     submit: 'Registrar Administrador de Centro de Salud',
     submitAria: 'Confirmar registro de administrador',
     done: 'Cerrar',
+    successTitle: 'Administrador Registrado y Habilitado con Éxito',
+    successText: 'La cuenta administrativa ha sido aprovisionada con permisos de gobernanza sobre la sede.',
     allowNewBranch: true,
     branchLabel: 'Centro de Salud / Sede Operativa *',
   },
@@ -40,9 +42,13 @@ const MODES = {
     subtitle: 'Disponible solo para sedes que aún no tienen administrador',
     person: 'Administrador',
     roleBadge: 'ADMIN (Rol ID 1)',
-    submit: 'Registrar Administrador de la Sede',
+    submit: 'Enviar Solicitud de Administrador',
     submitAria: 'Confirmar registro de administrador',
     done: 'Ir al Inicio de Sesión',
+    successTitle: 'Solicitud Registrada: Pendiente de Aprobación',
+    successText:
+      'Su cuenta quedará habilitada cuando el Encargado de TI la apruebe. Mientras tanto vincule el código QR en su autenticador: lo necesitará para iniciar sesión.',
+    roleBadgeNote: ' • Pendiente',
     allowNewBranch: false,
     branchLabel: 'Sede sin administrador *',
   },
@@ -54,6 +60,9 @@ const MODES = {
     submit: 'Registrar Encargado de TI',
     submitAria: 'Confirmar registro del Encargado de TI',
     done: 'Ir al Inicio de Sesión',
+    successTitle: 'Encargado de TI Registrado y Habilitado con Éxito',
+    successText: 'La cuenta de TI quedó activa. Vincule ahora el segundo factor: lo necesitará para iniciar sesión.',
+    needsSetupCode: true,
     allowNewBranch: false,
     branchLabel: 'Sede donde labora *',
   },
@@ -76,6 +85,7 @@ export const AdminRegisterModal = ({ isOpen, onClose, onRegisterSuccess, mode = 
     phone: '',
     branch: branches[0]?.name || 'Sede Cartago - Hospital Central',
     custom_branch: '',
+    setup_code: '',
     professional_card: '',
     password: '',
     confirm_password: '',
@@ -123,6 +133,11 @@ export const AdminRegisterModal = ({ isOpen, onClose, onRegisterSuccess, mode = 
       return;
     }
 
+    if (cfg.needsSetupCode && !formData.setup_code.trim()) {
+      setErrorMsg('Ingrese el código de instalación que le entregó quien instaló el sistema.');
+      return;
+    }
+
     if (formData.password.length < 8) {
       setErrorMsg('La contraseña maestra debe contener al menos 8 caracteres seguros.');
       return;
@@ -149,6 +164,7 @@ export const AdminRegisterModal = ({ isOpen, onClose, onRegisterSuccess, mode = 
         formData.professional_card.trim() ||
         `${mode === 'ti' ? 'TI' : 'TI-ADMIN'}-${Date.now().toString().slice(-6)}`,
       password: formData.password,
+      ...(cfg.needsSetupCode ? { setup_code: formData.setup_code.trim() } : {}),
     };
 
     setLoading(true);
@@ -156,6 +172,10 @@ export const AdminRegisterModal = ({ isOpen, onClose, onRegisterSuccess, mode = 
       const res = await submitByMode[mode](payload);
       if (res && res.user) {
         setSuccessData(res);
+        // Se avisa primero: la pantalla que abrio el formulario no debe esperar a que se dibuje el QR
+        if (onRegisterSuccess) {
+          onRegisterSuccess(res);
+        }
         if (res.otpauth_uri) {
           try {
             const url = await generateQrDataUrl(res.otpauth_uri, 180);
@@ -163,9 +183,6 @@ export const AdminRegisterModal = ({ isOpen, onClose, onRegisterSuccess, mode = 
           } catch {
             // El QR se omite si falla la generacion grafica
           }
-        }
-        if (onRegisterSuccess) {
-          onRegisterSuccess(res);
         }
       } else {
         setErrorMsg(`No fue posible procesar el registro del ${cfg.person.toLowerCase()}.`);
@@ -218,13 +235,9 @@ export const AdminRegisterModal = ({ isOpen, onClose, onRegisterSuccess, mode = 
               </div>
               <div>
                 <h3 className="text-base font-bold text-on-surface">
-                  {cfg.person} Registrado y Habilitado con Éxito
+                  {cfg.successTitle}
                 </h3>
-                <p className="text-xs text-on-surface-variant mt-1">
-                  {mode === 'ti'
-                    ? 'La cuenta de TI quedó activa. Vincule ahora el segundo factor: lo necesitará para iniciar sesión.'
-                    : 'La cuenta administrativa ha sido aprovisionada con permisos de gobernanza sobre la sede.'}
-                </p>
+                <p className="text-xs text-on-surface-variant mt-1">{cfg.successText}</p>
               </div>
 
               {/* Tarjeta de Resumen */}
@@ -245,6 +258,7 @@ export const AdminRegisterModal = ({ isOpen, onClose, onRegisterSuccess, mode = 
                   <span className="text-outline">Rol en Plataforma:</span>{' '}
                   <span className="px-2 py-0.5 rounded bg-primary/10 text-primary font-bold text-[10px]">
                     {cfg.roleBadge}
+                    {cfg.roleBadgeNote || ''}
                   </span>
                 </div>
               </div>
@@ -304,8 +318,9 @@ export const AdminRegisterModal = ({ isOpen, onClose, onRegisterSuccess, mode = 
                     <>
                       <p className="font-bold text-primary">Encargado de TI (Rol TI):</p>
                       <p className="text-on-surface-variant text-[11px] leading-relaxed">
-                        Solo puede existir un Encargado de TI. Monitorea el sistema y es quien autoriza y registra
-                        administradores adicionales. No tiene acceso a historias clínicas (Ley 1581 de 2012).
+                        Solo puede existir un Encargado de TI. Monitorea el sistema, aprueba las solicitudes de
+                        administrador y registra administradores adicionales. No tiene acceso a historias clínicas
+                        (Ley 1581 de 2012). Necesita el código de instalación que le entregó quien instaló el sistema.
                       </p>
                     </>
                   ) : (
@@ -318,7 +333,8 @@ export const AdminRegisterModal = ({ isOpen, onClose, onRegisterSuccess, mode = 
                       </p>
                       {mode === 'branch-admin' && (
                         <p className="text-on-surface-variant text-[11px] leading-relaxed">
-                          Si la sede ya tiene administrador, los adicionales los registra el Encargado de TI.
+                          La cuenta queda pendiente hasta que el Encargado de TI la apruebe. Si la sede ya tiene
+                          administrador, los adicionales los registra el Encargado de TI.
                         </p>
                       )}
                     </>
@@ -333,6 +349,28 @@ export const AdminRegisterModal = ({ isOpen, onClose, onRegisterSuccess, mode = 
                 >
                   <AlertTriangle className="w-4 h-4 shrink-0 text-red-600" />
                   <span>{errorMsg}</span>
+                </div>
+              )}
+
+              {cfg.needsSetupCode && (
+                <div>
+                  <label htmlFor="admin-setup-code" className="block text-[11px] font-semibold text-on-surface mb-1">
+                    Código de Instalación *
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="admin-setup-code"
+                      name="setup_code"
+                      type="password"
+                      autoComplete="off"
+                      required
+                      value={formData.setup_code}
+                      onChange={handleChange}
+                      placeholder="Código entregado por quien instaló el sistema"
+                      className="w-full h-8 pl-8 pr-3 text-xs bg-surface-container-low border border-outline-variant rounded-lg focus:outline-none focus:border-primary text-on-surface"
+                    />
+                    <KeyRound className="w-3.5 h-3.5 text-outline absolute left-2.5 top-2.5" />
+                  </div>
                 </div>
               )}
 

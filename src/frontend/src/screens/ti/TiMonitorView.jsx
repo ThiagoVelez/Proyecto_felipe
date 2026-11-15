@@ -55,7 +55,9 @@ export const TiMonitorView = ({ onNavigate }) => {
   }, [load]);
 
   const branches = data?.branches || [];
-  const withAdmin = branches.filter((b) => b.admins.length > 0).length;
+  const activeAdmins = (b) => b.admins.filter((a) => a.is_active).length;
+  const withAdmin = branches.filter((b) => activeAdmins(b) > 0).length;
+  const pendingRequests = branches.reduce((n, b) => n + b.admins.filter((a) => !a.is_active).length, 0);
   const users = data?.users;
   const server = data?.server;
 
@@ -94,8 +96,14 @@ export const TiMonitorView = ({ onNavigate }) => {
               icon={Building2}
               label="Sedes con administrador"
               value={`${withAdmin} de ${branches.length}`}
-              detail={withAdmin < branches.length ? 'Hay sedes sin administrador' : 'Todas las sedes cubiertas'}
-              tone={withAdmin < branches.length ? 'amber' : 'emerald'}
+              detail={
+                pendingRequests > 0
+                  ? `${pendingRequests} solicitud(es) por aprobar`
+                  : withAdmin < branches.length
+                  ? 'Hay sedes sin administrador'
+                  : 'Todas las sedes cubiertas'
+              }
+              tone={withAdmin < branches.length || pendingRequests > 0 ? 'amber' : 'emerald'}
             />
             <KpiCard
               icon={Cpu}
@@ -140,10 +148,15 @@ export const TiMonitorView = ({ onNavigate }) => {
                 {branches.map((b) => (
                   <li key={b.name} className="py-2.5 flex items-center justify-between gap-3 text-xs">
                     <span className="font-semibold text-on-surface min-w-0">{b.name}</span>
-                    {b.admins.length > 0 ? (
+                    {activeAdmins(b) > 0 ? (
                       <span className="flex items-center gap-1 text-emerald-700 font-semibold whitespace-nowrap">
                         <CheckCircle2 className="w-3.5 h-3.5" />
-                        {b.admins.length} admin.
+                        {activeAdmins(b)} admin.
+                      </span>
+                    ) : b.admins.length > 0 ? (
+                      <span className="flex items-center gap-1 text-amber-700 font-semibold whitespace-nowrap">
+                        <AlertTriangle className="w-3.5 h-3.5" />
+                        Por aprobar
                       </span>
                     ) : (
                       <span className="flex items-center gap-1 text-amber-700 font-semibold whitespace-nowrap">

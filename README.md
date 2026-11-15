@@ -1620,7 +1620,7 @@ Para que cualquier miembro del equipo de desarrollo o evaluación pueda ejecutar
    - Tener instalado [Docker Desktop](https://www.docker.com/products/docker-desktop/) en ejecución.
 
 2. **Definir las variables privadas:**
-   Copia `.env.example` como `.env` en la raíz y completa `DB_ROOT_PASSWORD`, `DB_PASSWORD`, `JWT_SECRET` (mínimo 32 caracteres aleatorios) y, de forma opcional, `ADMIN_INITIAL_EMAIL` y `ADMIN_INITIAL_PASSWORD`. Sin las variables obligatorias `docker compose` se detiene a propósito y el repositorio no incluye credenciales por defecto.
+   Copia `.env.example` como `.env` en la raíz y completa `DB_ROOT_PASSWORD`, `DB_PASSWORD`, `JWT_SECRET` (mínimo 32 caracteres aleatorios), `TI_SETUP_CODE` (código de instalación que se entrega en persona al Encargado de TI) y, de forma opcional, `ADMIN_INITIAL_EMAIL` y `ADMIN_INITIAL_PASSWORD`. Sin las variables obligatorias `docker compose` se detiene a propósito y el repositorio no incluye credenciales por defecto.
 
 3. **Iniciar la Plataforma Completa:**
    Desde la raíz del repositorio, ejecuta:
@@ -1636,7 +1636,7 @@ Para que cualquier miembro del equipo de desarrollo o evaluación pueda ejecutar
 
 4. **Acceso al Sistema:**
    - Abre tu navegador web en: **[http://localhost:5173](http://localhost:5173)** (o alternativamente en `http://localhost`).
-   - En el inicio de sesión, registra al **Encargado de TI** y al **administrador de cada sede** con los botones que aparecen mientras esos puestos están vacíos (o inicia sesión con el administrador definido en `ADMIN_INITIAL_EMAIL` / `ADMIN_INITIAL_PASSWORD`). Luego el administrador registra desde el panel al resto del personal.
+   - En el inicio de sesión, el **Encargado de TI** se registra con el código de instalación (`TI_SETUP_CODE`) y el **administrador de cada sede** envía su solicitud, que el Encargado de TI aprueba desde su panel. Los botones aparecen mientras esos puestos están vacíos (o inicia sesión con el administrador definido en `ADMIN_INITIAL_EMAIL` / `ADMIN_INITIAL_PASSWORD`). Luego el administrador registra desde el panel al resto del personal.
    - La API del backend queda disponible solo en el equipo local: `http://localhost:8080/api/v1/health`.
 
 5. **Detener el Entorno:**
@@ -1719,6 +1719,7 @@ Siguiendo la política de protección de infraestructura sensible (Regla 27), to
 | `CORS_ALLOWED_ORIGINS`   | Orígenes web autorizados para consumo de la API                                                       | `http://localhost:5173,http://localhost:5174`           |
 | `ADMIN_INITIAL_EMAIL`    | Opcional. Correo del administrador inicial (se crea solo si no hay ninguno)                           | `admin@su-institucion.example`                          |
 | `ADMIN_INITIAL_PASSWORD` | Clave inicial para inicialización automática                                                          | `defina_una_clave_privada_larga`                        |
+| `TI_SETUP_CODE`          | Código de instalación (mínimo 12 caracteres) que exige el registro del Encargado de TI desde el login. Sin él, ese registro queda deshabilitado | `defina_un_codigo_de_instalacion`                       |
 | `IPS_NIT`                | NIT de la institución prestadora de salud                                                             | `900123456`                                             |
 | `TRUSTED_PROXIES`        | IPs/CIDR del proxy inverso cuya cabecera `X-Real-IP` se acepta como IP del cliente                    | `127.0.0.1,::1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16` |
 | `DB_ROOT_PASSWORD`       | Solo `docker compose`: clave root de MySQL                                                            | `defina_una_clave_privada`                              |
@@ -2537,21 +2538,23 @@ Todas las soluciones fueron implementadas bajo arquitectura limpia hexagonal, de
   - Un administrador no puede suspender ni habilitar la cuenta del Encargado de TI (`ErrProtectedAccount`, HTTP 403).
 - **Registro inicial desde el login (`AuthScreen.jsx`):**
   - Al abrirse, el login consulta `GET /api/v1/auth/setup-status`, que indica si ya existe Encargado de TI y qué sedes tienen administrador.
-  - **"Registrar Encargado de TI"** aparece solo mientras no exista ninguno (`POST /api/v1/auth/register-ti`).
-  - **"Registrar Administrador de Sede"** aparece mientras alguna sede no tenga administrador. El formulario solo ofrece esas sedes (`POST /api/v1/auth/register-branch-admin`).
+  - **"Registrar Encargado de TI"** aparece solo mientras no exista ninguno y el servidor tenga configurado `TI_SETUP_CODE` (`POST /api/v1/auth/register-ti`). El formulario exige el **código de instalación**.
+  - **"Registrar Administrador de Sede"** aparece mientras alguna sede no tenga un administrador aprobado. El formulario solo ofrece esas sedes (`POST /api/v1/auth/register-branch-admin`) y la cuenta queda **pendiente hasta que el Encargado de TI la apruebe**.
   - Ambos botones desaparecen cuando el puesto queda ocupado. Si el servidor no responde, no se ofrece ningún registro.
 - **El servidor es quien decide, no la pantalla:**
-  - Rechaza con HTTP 409 un segundo Encargado de TI o un segundo administrador para la misma sede, aunque alguien llame la dirección directamente. Rechaza con HTTP 400 las sedes fuera del catálogo.
+  - Rechaza con HTTP 403 el registro del Encargado de TI sin código de instalación o con uno incorrecto (comparación en tiempo constante, `crypto/subtle`). Si el servidor no tiene `TI_SETUP_CODE`, el registro queda deshabilitado.
+  - Rechaza con HTTP 409 un segundo Encargado de TI o una solicitud para una sede que ya tiene un administrador aprobado, aunque alguien llame la dirección directamente. Rechaza con HTTP 400 las sedes fuera del catálogo.
+  - Una cuenta pendiente no puede iniciar sesión. Las solicitudes pendientes no ocupan la sede: una solicitud ajena no bloquea la del administrador real.
   - Los registros públicos se serializan con un candado (`setupMu`) para que dos solicitudes simultáneas no ocupen el mismo puesto. Verificado con 8 solicitudes concurrentes y el detector de carreras de Go.
   - Límite de 10 intentos por minuto por IP en ambos registros.
 - **Catálogo de sedes en el servidor (`core/domain/branch.go`):** Las cuatro sedes del login (Cartago, La Unión, Tuluá y Brigada Rural) pasan a estar en el servidor para poder saber cuáles tienen administrador. Las sedes creadas después desde el panel del administrador siguen guardándose solo en el navegador y no aparecen en el registro desde el login.
-- **Riesgo aceptado:** Mientras un puesto esté vacío, cualquier persona que abra la página puede registrarse en él. Se recomienda registrar al Encargado de TI y a los administradores **inmediatamente después de la instalación**. El Encargado de TI puede suspender a un administrador registrado indebidamente desde su panel. El uso de `ADMIN_INITIAL_EMAIL` / `ADMIN_INITIAL_PASSWORD` sigue disponible como alternativa sin este riesgo.
+- **Protección contra registros indebidos:** Quien instala el sistema ya edita el `.env` (`JWT_SECRET` y claves de la base de datos son obligatorias), así que define también `TI_SETUP_CODE` y entrega ese código en persona al Encargado de TI. Sin el código nadie puede registrarse como Encargado de TI. Las solicitudes de administrador hechas desde el login no dan acceso hasta que el Encargado de TI las aprueba; las que no reconozca simplemente no se aprueban. El personal de las sedes no necesita tocar ningún archivo.
 - **Panel del Encargado de TI (`screens/ti/`):** Entorno propio (`TiLayout.jsx`) con menú lateral por apartados, adaptado a celular:
 
 | Apartado | Contenido | API |
 |---|---|---|
 | **Monitoreo del Sistema** | Estado del servidor (en línea, tiempo activo, latencia, memoria, versión y motor de base de datos), cuentas por rol y estado, sedes con y sin administrador, y actividad reciente de la bitácora. Se actualiza cada 30 segundos. | `GET /api/v1/ti/overview` |
-| **Administradores por Sede** | Administradores de cada sede, botón **"Nuevo Administrador"** para registrar adicionales, y suspender o habilitar sus cuentas. | `POST /api/v1/auth/register-admin`, `PATCH /api/v1/ti/admins/:id/status` |
+| **Administradores por Sede** | Administradores de cada sede, aviso de **solicitudes pendientes** con botón **"Aprobar / Habilitar"**, botón **"Nuevo Administrador"** para registrar adicionales (nacen aprobados) y suspensión de cuentas. | `POST /api/v1/auth/register-admin`, `PATCH /api/v1/ti/admins/:id/status` |
 | **Cuentas del Sistema** | Consulta de todas las cuentas con búsqueda y filtros por rol y estado (solo lectura). | `GET /api/v1/ti/users` |
 | **Bitácora de Auditoría** | Últimos 200 eventos forenses con búsqueda. | `GET /api/v1/ti/audit-logs` |
 | **Seguridad & MFA** | Configuración del segundo factor del Encargado de TI. | Endpoints MFA existentes |
@@ -2559,10 +2562,10 @@ Todas las soluciones fueron implementadas bajo arquitectura limpia hexagonal, de
 - **Panel del administrador:** Se retiró "Nuevo Administrador" de *Gobernanza de Personal*; el administrador conserva "Nuevo Personal".
 - **Menú lateral compartido (`components/PanelSidebar.jsx`):** El menú del administrador y el de TI usan el mismo componente (colapsable en computador y deslizable en celular).
 - **Pruebas:**
-  - Backend (`tests/backend/ti_setup_test.go`, 8 pruebas): estado inicial, TI único, registro concurrente, un administrador por sede, sedes fuera del catálogo, administradores adicionales solo por TI, panel restringido al rol TI, TI gestiona solo cuentas de administrador y el administrador no puede suspender al Encargado de TI.
-  - Frontend (`tests/frontend/TiSetup.test.jsx`, 9 pruebas): botones del login según el servidor, registro del Encargado de TI y del administrador de sede, tablero de monitoreo, alta y suspensión de administradores desde TI, y ausencia de "Nuevo Administrador" en el panel del administrador.
-  - Resultados: backend completo en verde y frontend **113 de 113** pruebas en 15 archivos.
-  - Recorrido con Playwright sobre una instalación nueva (celular y computador): registro del Encargado de TI desde el login, desaparición del botón, registro de administradores de sede, rechazo de duplicados (409), inicio de sesión de TI con segundo factor y navegación por los cinco apartados sin desbordes en celular.
+  - Backend (`tests/backend/ti_setup_test.go`, 10 pruebas): estado inicial, código de instalación obligatorio y correcto, registro deshabilitado sin `TI_SETUP_CODE`, TI único, registro concurrente, solicitudes de administrador pendientes (no ocupan la sede, no inician sesión, la aprobación ocupa la sede), sedes fuera del catálogo, administradores adicionales solo por TI, panel restringido al rol TI, aprobación y suspensión desde TI, y el administrador no puede suspender al Encargado de TI.
+  - Frontend (`tests/frontend/TiSetup.test.jsx`, 11 pruebas): botones del login según el servidor (incluido el registro de TI deshabilitado sin código), código de instalación obligatorio, solicitud de administrador pendiente, tablero de monitoreo, aprobación de solicitudes, alta y suspensión de administradores desde TI, y ausencia de "Nuevo Administrador" en el panel del administrador.
+  - Resultados: backend completo en verde y frontend **115 de 115** pruebas en 15 archivos.
+  - Recorrido con Playwright sobre una instalación nueva (celular y computador): registro del Encargado de TI con código equivocado (rechazado) y correcto, desaparición del botón, solicitud de administrador pendiente que no puede iniciar sesión, aprobación por TI, inicio de sesión del administrador aprobado, rechazo de duplicados (409) y navegación por los cinco apartados sin desbordes en celular.
 
 ---
 

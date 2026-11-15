@@ -82,7 +82,14 @@ func main() {
 	}, log)
 
 	// 6. Instanciacion de Servicios de Dominio (Casos de Uso Puros)
-	authService := services.NewAuthServiceWithTTL(repos.User, cfg.JWTSecret, cfg.JWTAccessTTL, cfg.JWTRefreshTTL)
+	// Codigo de instalacion: sin el (o si es invalido) el Encargado de TI no puede registrarse desde el login
+	switch err := services.ValidateSetupCode(cfg.SetupCode); {
+	case err != nil:
+		log.Warn("Registro del Encargado de TI deshabilitado", map[string]interface{}{"motivo": err.Error()})
+	case cfg.SetupCode == "":
+		log.Warn("Registro del Encargado de TI deshabilitado: defina TI_SETUP_CODE para habilitarlo")
+	}
+	authService := services.NewAuthServiceWithSetup(repos.User, cfg.JWTSecret, cfg.JWTAccessTTL, cfg.JWTRefreshTTL, cfg.SetupCode)
 	adminService := services.NewAdminService(repos.User, repos.Audit)
 	patientService := services.NewPatientService(repos.Patient)
 	triageService := services.NewTriageService(repos.Triage, repos.Patient)

@@ -23,6 +23,8 @@ var (
 	ErrUnknownBranch           = errors.New("la sede indicada no pertenece al catalogo institucional")
 	ErrNotAdminAccount         = errors.New("la cuenta indicada no es de un administrador de sede")
 	ErrProtectedAccount        = errors.New("la cuenta del Encargado de TI no puede gestionarse desde el panel administrativo")
+	ErrTISetupDisabled         = errors.New("el registro del Encargado de TI desde el inicio de sesion no esta habilitado en este servidor (falta TI_SETUP_CODE)")
+	ErrInvalidSetupCode        = errors.New("el codigo de instalacion no es valido")
 )
 
 // RoleIDTI identifica al Encargado de TI: registra administradores adicionales y monitorea el sistema
