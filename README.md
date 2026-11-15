@@ -2567,6 +2567,39 @@ Todas las soluciones fueron implementadas bajo arquitectura limpia hexagonal, de
   - Resultados: backend completo en verde y frontend **115 de 115** pruebas en 15 archivos.
   - Recorrido con Playwright sobre una instalación nueva (celular y computador): registro del Encargado de TI con código equivocado (rechazado) y correcto, desaparición del botón, solicitud de administrador pendiente que no puede iniciar sesión, aprobación por TI, inicio de sesión del administrador aprobado, rechazo de duplicados (409) y navegación por los cinco apartados sin desbordes en celular.
 
+### 1.17. Guía de Inicio de Sesión por Rol
+
+La pantalla de inicio de sesión es la misma para todos los roles: **correo institucional, sede de turno, contraseña** y, si la cuenta tiene doble factor, el **código de 6 dígitos** de la aplicación autenticadora (Google Authenticator, Microsoft Authenticator o Authy). Cada rol entra a su propio entorno: el Encargado de TI a su panel de monitoreo, el administrador a Gobernanza de Personal y el personal asistencial a su módulo.
+
+**Paso a paso:**
+
+1. Escribir el correo institucional.
+2. Elegir la sede de turno.
+3. Escribir la contraseña.
+4. Pulsar **"Iniciar Sesión y Firmar"**.
+5. Si la cuenta tiene doble factor, aparece el aviso *"Su cuenta requiere segundo factor"*. Escribir el código de 6 dígitos que muestra la aplicación autenticadora en ese momento (cambia cada 30 segundos) y pulsar de nuevo el botón.
+
+**Primer ingreso según el rol:**
+
+| Rol | Cómo obtiene su cuenta | Doble factor |
+|---|---|---|
+| **Encargado de TI** (uno solo) | En el login, **"Registrar Encargado de TI"** con el **código de instalación** (`TI_SETUP_CODE`) que le entrega en persona quien instaló el sistema. Queda activo de inmediato. | Obligatorio: escanear el QR que aparece al registrarse. |
+| **Administrador de sede** | En el login, **"Registrar Administrador de Sede"**. La cuenta queda **pendiente** hasta que el Encargado de TI la apruebe en *Administradores por Sede*. Los administradores adicionales los registra TI desde su panel y quedan aprobados de una vez. | Obligatorio: escanear el QR que aparece al registrarse. |
+| **Personal asistencial** (medicina, enfermería, farmacia, laboratorio) | El administrador de la sede lo registra con **"Nuevo Personal"** y lo habilita tras verificar el ReTHUS. | Opcional: se activa después desde *Seguridad & MFA*. |
+| **Administrador inicial por `.env`** (opcional) | Lo crea el servidor al arrancar con `ADMIN_INITIAL_EMAIL` y `ADMIN_INITIAL_PASSWORD`, solo si no existe ningún administrador. | Opcional: se activa desde *Seguridad & MFA*. |
+
+**Mensajes frecuentes:**
+
+| Mensaje | Significado |
+|---|---|
+| "Credenciales de acceso inválidas" | Correo o contraseña incorrectos. |
+| "Su cuenta requiere segundo factor" | Falta el código de 6 dígitos. |
+| "Código de segundo factor inválido o expirado" | El código venció o no corresponde; usar el que muestra ahora la aplicación. |
+| "Cuenta inactiva o pendiente de aprobación" | La cuenta aún no fue aprobada o fue suspendida. El personal asistencial lo aprueba el administrador de la sede; los administradores, el Encargado de TI. |
+| Bloqueo por demasiados intentos | Tras 5 intentos fallidos hay que esperar unos minutos. |
+
+**Recuperación de acceso:** No existe recuperación por correo electrónico (Resolución 1995 de 1999 y Ley 1581 de 2012). Ante una contraseña olvidada o la pérdida del celular con la aplicación autenticadora, el personal asistencial acude al administrador de su sede y los administradores al Encargado de TI.
+
 ---
 
 ## 2. Diagramas Técnicos y Arquitectura Visual de la Entrega Final
