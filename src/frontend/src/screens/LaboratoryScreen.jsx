@@ -455,14 +455,14 @@ export const LaboratoryScreen = ({ user }) => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12 animate-fadeIn">
       {/* HEADER DE LABORATORIO */}
-      <div className="p-6 rounded-3xl bg-white border border-surface-container-high shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-2xl bg-purple-100 border border-purple-200 flex items-center justify-center text-purple-700 shrink-0 shadow-2xs">
+      <div className="p-4 sm:p-6 rounded-3xl bg-white border border-surface-container-high shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-start sm:items-center gap-3 sm:gap-3.5 min-w-0">
+          <div className="hidden sm:flex w-12 h-12 rounded-2xl bg-purple-100 border border-purple-200 flex items-center justify-center text-purple-700 shrink-0 shadow-2xs">
             <FlaskConical className="w-6 h-6" />
           </div>
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200 font-mono">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-1">
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800 border border-purple-200 font-mono whitespace-nowrap">
                 Rol: LABORATORIO
               </span>
               <span className="text-xs text-outline font-mono">
@@ -592,8 +592,8 @@ export const LaboratoryScreen = ({ user }) => {
       </div>
 
       {/* BANDEJA DE MUESTRAS Y ÓRDENES */}
-      <div className="p-6 rounded-3xl bg-white border border-surface-container-high shadow-xs space-y-4">
-        <div className="flex items-center justify-between border-b border-surface-container-high pb-3">
+      <div className="p-4 sm:p-6 rounded-3xl bg-white border border-surface-container-high shadow-xs space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-surface-container-high pb-3">
           <h2 className="font-bold text-sm text-on-surface flex items-center gap-2">
             <FlaskConical className="w-4 h-4 text-purple-700" />
             <span>Bandeja de Órdenes y Muestras de Laboratorio ({filteredOrders.length})</span>
@@ -617,9 +617,9 @@ export const LaboratoryScreen = ({ user }) => {
               return (
                 <div
                   key={order.id}
-                  className="py-4.5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-surface-container-low/50 px-3.5 rounded-2xl transition-colors"
+                  className="py-4.5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-surface-container-low/50 px-1 sm:px-3.5 rounded-2xl transition-colors"
                 >
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-mono text-xs font-bold text-purple-900 bg-purple-100 px-2 py-0.5 rounded-md border border-purple-200">
                         {order.id}
@@ -660,15 +660,15 @@ export const LaboratoryScreen = ({ user }) => {
 
                     <h3 className="font-bold text-sm text-on-surface">{order.test_type}</h3>
 
-                    <div className="flex flex-wrap items-center gap-3 text-xs text-outline font-medium">
+                    <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-1 sm:gap-3 text-xs text-outline font-medium">
                       <span>
                         Paciente: <strong className="text-on-surface">{order.patient_name}</strong> (CC {order.patient_document})
                       </span>
-                      <span>•</span>
+                      <span className="hidden sm:inline">•</span>
                       <span>EPS: {order.patient_eps}</span>
-                      <span>•</span>
+                      <span className="hidden sm:inline">•</span>
                       <span>Tubo / Muestra: {order.sample_type}</span>
-                      <span>•</span>
+                      <span className="hidden sm:inline">•</span>
                       <span>Ordena: {order.ordering_doctor}</span>
                     </div>
 
@@ -679,12 +679,12 @@ export const LaboratoryScreen = ({ user }) => {
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-2 sm:shrink-0">
                     {isCompleted ? (
                       <button
                         type="button"
                         onClick={() => handleOpenResultDrawer(order)}
-                        className="w-44 h-9.5 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-2xs"
+                        className="w-full sm:w-44 h-9.5 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-2xs"
                       >
                         <Eye className="w-4 h-4 text-emerald-700 shrink-0" />
                         <span>Ver Resultados</span>
@@ -693,7 +693,7 @@ export const LaboratoryScreen = ({ user }) => {
                       <button
                         type="button"
                         onClick={() => handleOpenResultDrawer(order)}
-                        className="w-44 h-9.5 rounded-xl bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-xs transition-colors"
+                        className="w-full sm:w-44 h-9.5 rounded-xl bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-xs transition-colors"
                       >
                         <FileCheck2 className="w-4 h-4 shrink-0" />
                         <span>
