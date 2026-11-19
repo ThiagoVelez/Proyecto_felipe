@@ -21,6 +21,7 @@ type RouterConfig struct {
 	PharmacyHandler       *handlers.PharmacyHandler
 	HealthEducationHandler *handlers.HealthEducationHandler
 	TIHandler              *handlers.TIHandler
+	AppointmentRequestHandler *handlers.AppointmentRequestHandler
 	// Sessions valida en cada solicitud que la cuenta del token siga activa
 	Sessions  middlewares.SessionValidator
 	JWTSecret string
@@ -58,6 +59,13 @@ func SetupRoutes(app *fiber.App, cfg RouterConfig) {
 	auth.Get("/setup-status", setupStatusLimit, cfg.AuthHandler.SetupStatus)
 	auth.Post("/register-ti", publicRegLimit, cfg.AuthHandler.RegisterTI)
 	auth.Post("/register-branch-admin", publicRegLimit, cfg.AuthHandler.RegisterBranchAdmin)
+
+	// Portal publico del paciente: sedes con ubicacion y solicitud de primera cita (sin sesion)
+	if cfg.AppointmentRequestHandler != nil {
+		public := api.Group("/public")
+		public.Get("/branches", middlewares.RateLimitMiddleware(60, 1*time.Minute), cfg.AppointmentRequestHandler.PublicBranches)
+		public.Post("/appointment-requests", middlewares.AuthRateLimitMiddleware(5, 1*time.Minute), cfg.AppointmentRequestHandler.Submit)
+	}
 
 	authProtected := auth.Use(authMW)
 	authProtected.Get("/me", cfg.AuthHandler.Me)
@@ -176,6 +184,15 @@ func SetupRoutes(app *fiber.App, cfg RouterConfig) {
 		triageV2.Get("/", middlewares.RequireRoles("ENFERMERO", "MEDICO"), cfg.TriageHandler.GetQueue)
 		triageV2.Get("/:id", middlewares.RequireRoles("ENFERMERO", "MEDICO"), cfg.TriageHandler.GetByID)
 		triageV2.Patch("/:id/status", middlewares.RequireRoles("ENFERMERO", "MEDICO"), cfg.TriageHandler.UpdateStatus)
+	}
+
+	// 8.1 Bandeja de solicitudes de primera cita del medico (portal del paciente)
+	if cfg.AppointmentRequestHandler != nil {
+		reqGroup := apiV2.Group("/appointment-requests", middlewares.RequireRoles("MEDICO"))
+		reqGroup.Get("/", cfg.AppointmentRequestHandler.List)
+		reqGroup.Get("/pending-count", cfg.AppointmentRequestHandler.PendingCount)
+		reqGroup.Post("/:id/schedule", cfg.AppointmentRequestHandler.Schedule)
+		reqGroup.Post("/:id/reject", cfg.AppointmentRequestHandler.Reject)
 	}
 
 	// 9. Modulo de Agendamiento y Calendario Medico (/api/v2/appointments)

@@ -40,3 +40,17 @@ type Appointment struct {
 	CreatedAt       time.Time         `json:"created_at"`
 }
 
+
+// ColombiaLocation es la zona horaria de las sedes. Colombia no tiene horario de verano, por eso si el servidor no
+// trae la base de zonas horarias (imagenes minimas de Docker) se usa un desfase fijo de -5 horas.
+func ColombiaLocation() *time.Location {
+	if loc, err := time.LoadLocation("America/Bogota"); err == nil {
+		return loc
+	}
+	return time.FixedZone("COT", -5*3600)
+}
+
+// FormatColombia muestra una fecha guardada en UTC con la hora local de Colombia (dd/mm/aaaa hh:mm).
+func FormatColombia(t time.Time) string {
+	return t.In(ColombiaLocation()).Format("02/01/2006 15:04")
+}

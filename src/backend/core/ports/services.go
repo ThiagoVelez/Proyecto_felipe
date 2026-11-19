@@ -2,6 +2,7 @@ package ports
 
 import (
 	"context"
+	"time"
 
 	"saludconecta-backend/core/domain"
 )
@@ -114,6 +115,16 @@ type AppointmentService interface {
 	ScheduleAppointment(ctx context.Context, app *domain.Appointment) (*domain.Appointment, error)
 	GetDoctorAppointments(ctx context.Context, doctorID string) ([]domain.Appointment, error)
 	GetDoctorAppointmentsByRange(ctx context.Context, doctorID string, start, end string) ([]domain.Appointment, error)
+}
+
+// AppointmentRequestService gestiona las solicitudes de primera cita del portal del paciente: las asigna al medico
+// con mayor disponibilidad de la sede y permite al medico agendarlas (enviando la cita por correo) o rechazarlas.
+type AppointmentRequestService interface {
+	Submit(ctx context.Context, req *domain.AppointmentRequest, consent bool) (*domain.AppointmentRequest, error)
+	ListForDoctor(ctx context.Context, doctorID string, status domain.AppointmentRequestStatus) ([]domain.AppointmentRequest, error)
+	PendingCount(ctx context.Context, doctorID string) (int, error)
+	Schedule(ctx context.Context, doctorID, requestID string, date time.Time, note string) (*domain.AppointmentRequest, *domain.Appointment, error)
+	Reject(ctx context.Context, doctorID, requestID, note string) (*domain.AppointmentRequest, error)
 }
 
 // TreatmentService define el seguimiento del tratamiento, generacion de codigo unico y emision tripartita.

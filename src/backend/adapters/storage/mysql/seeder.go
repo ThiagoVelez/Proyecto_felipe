@@ -332,6 +332,40 @@ func ensureV2TablesAndColumns(db *sql.DB) error {
 		return err
 	}
 
+	// 8. Solicitudes de primera cita del portal del paciente (no son pacientes hasta que el medico agenda)
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS appointment_requests (
+			id VARCHAR(36) PRIMARY KEY,
+			code VARCHAR(20) NOT NULL UNIQUE,
+			branch VARCHAR(120) NOT NULL,
+			doctor_id VARCHAR(36) NOT NULL,
+			document_type VARCHAR(5) NOT NULL,
+			document_number VARCHAR(25) NOT NULL,
+			first_name VARCHAR(80) NOT NULL,
+			last_name VARCHAR(80) NOT NULL,
+			birth_date DATE NOT NULL,
+			gender VARCHAR(5) NOT NULL,
+			blood_type VARCHAR(4) NOT NULL,
+			eps_name VARCHAR(100) NOT NULL,
+			phone VARCHAR(20) NOT NULL,
+			email VARCHAR(100) NOT NULL,
+			address VARCHAR(200) NOT NULL DEFAULT '',
+			observations TEXT NOT NULL,
+			consent_at DATETIME NOT NULL,
+			status VARCHAR(12) NOT NULL DEFAULT 'PENDIENTE',
+			response_note TEXT NULL,
+			appointment_id VARCHAR(36) NULL,
+			patient_id VARCHAR(36) NULL,
+			created_at DATETIME NOT NULL,
+			updated_at DATETIME NOT NULL,
+			INDEX idx_requests_doctor_status (doctor_id, status, created_at),
+			FOREIGN KEY (doctor_id) REFERENCES users(id) ON DELETE RESTRICT
+		) ENGINE=InnoDB;
+	`)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

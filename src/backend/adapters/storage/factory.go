@@ -25,6 +25,7 @@ type RepositoryBundle struct {
 	PrescriptionV2 ports.PrescriptionV2Repository
 	HealthEducation ports.HealthEducationRepository
 	PharmacyReport ports.PharmacyReportRepository
+	AppointmentRequest ports.AppointmentRequestRepository
 	Close          func() error
 }
 
@@ -66,6 +67,7 @@ func NewRepositoryBundle(cfg Config, log *logger.Logger) (*RepositoryBundle, err
 			PrescriptionV2: memory.NewPrescriptionV2MemoryRepo(ds),
 			HealthEducation: memory.NewHealthEducationMemoryRepo(ds),
 			PharmacyReport: memory.NewPharmacyReportMemoryRepo(ds),
+			AppointmentRequest: memory.NewAppointmentRequestMemoryRepo(ds),
 			Close: func() error {
 				return nil
 			},
@@ -117,6 +119,7 @@ func NewRepositoryBundle(cfg Config, log *logger.Logger) (*RepositoryBundle, err
 			PrescriptionV2: mysql.NewPrescriptionV2Repository(db),
 			HealthEducation: mysql.NewHealthEducationRepository(db),
 			PharmacyReport: mysql.NewPharmacyReportRepository(db),
+			AppointmentRequest: mysql.NewAppointmentRequestRepository(db),
 			Close: func() error {
 				return db.Close()
 			},
@@ -165,6 +168,7 @@ func NewRepositoryBundle(cfg Config, log *logger.Logger) (*RepositoryBundle, err
 			PrescriptionV2: memory.NewPrescriptionV2MemoryRepo(ds),
 			HealthEducation: memory.NewHealthEducationMemoryRepo(ds),
 			PharmacyReport: memory.NewPharmacyReportMemoryRepo(ds),
+			AppointmentRequest: memory.NewAppointmentRequestMemoryRepo(ds),
 			Close: func() error {
 				return db.Close()
 			},

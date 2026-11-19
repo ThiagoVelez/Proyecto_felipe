@@ -193,7 +193,7 @@ func (g *Generator) GenerateAppointmentPDF(app *domain.Appointment) (string, []b
 
 	lines := []string{
 		"### INFORMACION DE LA CITA PROGRAMADA",
-		fmt.Sprintf("Fecha y Hora: %s", app.AppointmentDate.Format("02/01/2006 15:04")),
+		fmt.Sprintf("Fecha y Hora: %s", domain.FormatColombia(app.AppointmentDate)),
 		fmt.Sprintf("Estado de la Cita: %s", app.Status),
 		"",
 		"### DATOS DEL PACIENTE",
@@ -211,7 +211,7 @@ func (g *Generator) GenerateAppointmentPDF(app *domain.Appointment) (string, []b
 		app.Observations,
 	}
 
-	barcode := fmt.Sprintf("CITA-%s-%s", safeDoc, app.AppointmentDate.Format("20060102"))
+	barcode := fmt.Sprintf("CITA-%s-%s", safeDoc, app.AppointmentDate.In(domain.ColombiaLocation()).Format("20060102"))
 	data := buildMinimalPDF("COMPROBANTE DE ASIGNACION DE CITA MEDICA", lines, barcode)
 
 	_ = os.MkdirAll(filepath.Dir(fullPath), 0700)

@@ -107,9 +107,11 @@ func (s *appointmentService) ScheduleAppointment(ctx context.Context, app *domai
 			return
 		}
 
-		subject := fmt.Sprintf("Confirmación de Cita Médica - SaludConecta IPS [%s]", appCopy.AppointmentDate.Format("02/01/2006"))
+		// La cita se guarda en UTC; al paciente se le muestra en la hora local de Colombia
+		local := appCopy.AppointmentDate.In(domain.ColombiaLocation())
+		subject := fmt.Sprintf("Confirmación de Cita Médica - SaludConecta IPS [%s]", local.Format("02/01/2006"))
 		body := fmt.Sprintf("Estimado(a) %s,\n\nSu cita médica ha sido programada con éxito para el %s.\n\nMédico Tratante: %s (%s)\nObservaciones: %s\n\nAdjunto encontrará su comprobante oficial en formato PDF.",
-			appCopy.PatientName, appCopy.AppointmentDate.Format("02/01/2006 15:04"), appCopy.DoctorName, appCopy.DoctorSpecialty, appCopy.Observations)
+			appCopy.PatientName, domain.FormatColombia(appCopy.AppointmentDate), appCopy.DoctorName, appCopy.DoctorSpecialty, appCopy.Observations)
 
 		filename := fmt.Sprintf("CitaMedica_%s.pdf", appCopy.PatientDocument)
 		sendErr := s.emailSvc.SendWithPDFAttachment(appCopy.PatientEmail, subject, body, filename, pdfBytes)

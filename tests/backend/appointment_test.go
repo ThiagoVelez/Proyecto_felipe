@@ -21,7 +21,7 @@ func TestAppointment_RejectsPastDates(t *testing.T) {
 	userRepo := memory.NewUserMemoryRepo(ds)
 	log := logger.New()
 
-	pdfGen := pdf.NewGenerator(t.TempDir())
+	pdfGen := pdf.NewGenerator(dirPDFConMargen(t))
 	emailSvc := email.NewService(email.Config{}, log)
 
 	_ = userRepo.Create(context.Background(), newDoctorFixture("doc-01", "RM-01"))
@@ -54,7 +54,7 @@ func TestAppointment_RejectsScheduleOverlap(t *testing.T) {
 	userRepo := memory.NewUserMemoryRepo(ds)
 	log := logger.New()
 
-	pdfGen := pdf.NewGenerator(t.TempDir())
+	pdfGen := pdf.NewGenerator(dirPDFConMargen(t))
 	emailSvc := email.NewService(email.Config{}, log)
 
 	_ = userRepo.Create(context.Background(), newDoctorFixture("doc-01", "RM-01"))
@@ -111,7 +111,7 @@ func TestAppointment_ScheduleSuccessAndRetrieve(t *testing.T) {
 	doc := newDoctorFixture("doc-ok", "RM-99412")
 	_ = userRepo.Create(context.Background(), doc)
 
-	pdfGen := pdf.NewGenerator(t.TempDir())
+	pdfGen := pdf.NewGenerator(dirPDFConMargen(t))
 	emailSvc := email.NewService(email.Config{}, log)
 
 	_ = userRepo.Create(context.Background(), newDoctorFixture("doc-01", "RM-01"))

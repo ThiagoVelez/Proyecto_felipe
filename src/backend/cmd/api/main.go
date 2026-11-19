@@ -117,6 +117,8 @@ func main() {
 	syncHandler := handlers.NewSyncHandler(syncService)
 
 	appointmentHandler := handlers.NewAppointmentHandler(appointmentService)
+	appointmentRequestHandler := handlers.NewAppointmentRequestHandler(services.NewAppointmentRequestService(
+		repos.AppointmentRequest, repos.User, repos.Appointment, patientService, appointmentService, emailSvc, log))
 	treatmentHandler := handlers.NewTreatmentHandler(treatmentService)
 	pharmacyHandler := handlers.NewPharmacyHandler(pharmacyService)
 	healthEducationHandler := handlers.NewHealthEducationHandler(healthEducationService)
@@ -143,6 +145,7 @@ func main() {
 			PharmacyHandler:        pharmacyHandler,
 			HealthEducationHandler: healthEducationHandler,
 			TIHandler:              tiHandler,
+			AppointmentRequestHandler: appointmentRequestHandler,
 			Sessions:               authService,
 			JWTSecret:              cfg.JWTSecret,
 		},

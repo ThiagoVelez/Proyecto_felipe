@@ -2,14 +2,14 @@ import { vi } from 'vitest';
 
 /**
  * Simula el backend interceptando fetch. Cada ruta se declara como "METODO /ruta"
- * (sin query) y puede ser un objeto { status, body } o una funcion (peticion) => objeto.
+ * (sin el prefijo /api/v1 o /api/v2 ni query) y puede ser un objeto { status, body } o una funcion (peticion) => objeto.
  * Devuelve el espia y la lista de llamadas registradas para poder verificar los cuerpos enviados.
  */
 export const mockApi = (routes) => {
   const calls = [];
   const spy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (url, init = {}) => {
     const method = (init.method || 'GET').toUpperCase();
-    const path = String(url).replace('/api/v1', '').split('?')[0];
+    const path = String(url).replace(/^\/api\/v[12]/, '').split('?')[0];
     const request = { method, path, body: init.body ? JSON.parse(init.body) : undefined, url: String(url) };
     calls.push(request);
 

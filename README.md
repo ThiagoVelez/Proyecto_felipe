@@ -1540,7 +1540,7 @@ proyecto-final/
 │       ├── vite.config.js         # Configuración de Vite y enrutamiento de tests
 │       ├── README.md              # Documentación detallada del cliente web
 │       └── src/
-│           ├── main.jsx           # Montaje raíz en el DOM
+│           ├── main.jsx           # Montaje raíz en el DOM; /solicitar-cita abre el portal público del paciente
 │           ├── App.jsx            # Enrutador asistencial/administrativo, persistencia F5 y sidebar
 │           ├── index.css          # Estilos globales y capas de Tailwind
 │           ├── setupTests.js      # Extensiones jest-dom para pruebas Vitest
@@ -1565,6 +1565,8 @@ proyecto-final/
 │           │   ├── ProfileScreen.jsx   # Perfil asistencial, aislamiento por userKey
 │           │   ├── SecurityMfaScreen.jsx  # Configuración MFA contra la API (setup y enable)
 │           │   ├── DoctorLabOrdersView.jsx # Recetario paraclínico médico, ID único LAB-YYYY e impresión
+│           │   ├── PatientPortal.jsx # Portal público: sede más cercana y solicitud de primera cita
+│           │   ├── DoctorRequestsInbox.jsx # Bandeja de solicitudes del médico: agendar (envío por correo) o rechazar
 │           │   ├── LaboratoryScreen.jsx # Bandeja de laboratorio, análisis y sellado ReTHUS
 │           │   ├── PharmacyDashboard.jsx # Dispensación, lector PDF417 y alertas de desabastecimiento
 │           │   ├── NurseSummaryView.jsx / NurseChecklistView.jsx # Módulos asistenciales de enfermería
@@ -2599,6 +2601,61 @@ La pantalla de inicio de sesión es la misma para todos los roles: **correo inst
 | Bloqueo por demasiados intentos | Tras 5 intentos fallidos hay que esperar unos minutos. |
 
 **Recuperación de acceso:** No existe recuperación por correo electrónico (Resolución 1995 de 1999 y Ley 1581 de 2012). Ante una contraseña olvidada o la pérdida del celular con la aplicación autenticadora, el personal asistencial acude al administrador de su sede y los administradores al Encargado de TI.
+
+### 1.18. Portal del Paciente y Bandeja de Solicitudes de Primera Cita
+
+**Objetivo:** que un paciente nuevo pida su primera cita desde la web, sin cuenta, y que el médico con más disponibilidad de la sede elegida la agende con el sistema de citas existente, que le envía el comprobante por correo.
+
+**Flujo completo:**
+
+1. **El paciente entra a `/solicitar-cita`**, desde el enlace "¿Es paciente? Solicite su primera cita" del login. No necesita iniciar sesión.
+2. **Elige la sede más cercana.** Con su permiso, el navegador obtiene su ubicación y el portal ordena las sedes por distancia (fórmula del semiverseno), marca la "Más cercana" y la selecciona. Sin permiso, elige la sede de la lista. Las sedes con ubicación son Cartago, La Unión y Tuluá; la Brigada Rural no se ofrece porque no tiene ubicación fija.
+3. **Llena sus datos:** documento, nombres, apellidos, fecha de nacimiento, sexo, grupo sanguíneo, EPS, teléfono, correo y dirección. Agrega la **observación** con el motivo de la consulta (5 a 1.000 caracteres) y acepta el **tratamiento de datos (Ley 1581 de 2012)**, que es obligatorio.
+4. **El servidor asigna la solicitud al médico con mayor disponibilidad de la sede:** el médico activo con menos carga, sumando sus citas de los próximos 14 días y las solicitudes que ya tiene pendientes. Ante empate gana el de menos pendientes y luego el orden alfabético. El paciente recibe un **código de solicitud** (por ejemplo `SOL-8F4HMZ`); no se le revela el médico asignado ni si su documento ya estaba registrado.
+5. **El médico la ve en "Bandeja de Solicitudes"**, en su menú lateral, con el número de pendientes. Revisa los datos, el motivo y **su agenda del día elegido**: las horas ocupadas aparecen deshabilitadas y hay un enlace al calendario completo.
+6. **Agenda la cita** con fecha, hora en bloques de 20 minutos e indicaciones opcionales. El sistema:
+   - asocia la cita al paciente con el mismo documento o, si no existe, lo **registra en ese momento** con los datos de la solicitud. Si ya existía sin correo, se completa con el de la solicitud sin modificar sus datos clínicos;
+   - usa el **agendamiento existente** (`ScheduleAppointment`), que valida fechas pasadas y choques de horario, genera el **PDF** y lo **envía por correo** al paciente.
+7. **O la rechaza** indicando un motivo obligatorio, que se envía al correo del paciente.
+
+**Por qué es una solicitud y no un paciente:** el formulario público no escribe en la tabla de pacientes. Solo cuando el médico agenda, la solicitud se convierte en paciente y cita. Así, las solicitudes falsas no llegan a las historias clínicas.
+
+**API:**
+
+| Método y ruta | Acceso | Uso |
+|---|---|---|
+| `GET /api/v1/public/branches` | Público (60/min por IP) | Sedes con coordenadas |
+| `POST /api/v1/public/appointment-requests` | Público (5/min por IP) | Enviar la solicitud |
+| `GET /api/v2/appointment-requests?status=` | `MEDICO` | Bandeja del médico (`PENDIENTE`, `AGENDADA`, `RECHAZADA`) |
+| `GET /api/v2/appointment-requests/pending-count` | `MEDICO` | Contador del menú |
+| `POST /api/v2/appointment-requests/:id/schedule` | `MEDICO` (solo su solicitud) | Agendar y enviar por correo |
+| `POST /api/v2/appointment-requests/:id/reject` | `MEDICO` (solo su solicitud) | Rechazar con motivo |
+
+**Persistencia:** tabla `appointment_requests` en MySQL, creada por la migración idempotente (`seeder.go`), y repositorio en memoria para desarrollo. Archivos principales: `core/domain/appointment_request.go`, `core/services/appointment_request_service.go`, `adapters/http/handlers/appointment_request_handler.go` y `adapters/storage/mysql/appointment_request_repo.go`.
+
+**Corrección incluida: hora del correo y del PDF.** Las citas se guardan en UTC y el correo y el PDF mostraban esa hora: una cita a las 10:20 de Colombia llegaba como 15:20. Ahora se muestran en la hora de Colombia (`domain.FormatColombia`, con desfase fijo de -5 si el servidor no tiene la base de zonas horarias). Esto aplica a todas las citas, no solo a las del portal.
+
+**Pruebas:**
+
+- Backend (`tests/backend/appointment_request_test.go`, 9 pruebas):
+  - sedes públicas con ubicación;
+  - asignación al médico con mayor disponibilidad, contando las pendientes como carga;
+  - validaciones y consentimiento;
+  - límite de envíos por IP;
+  - bandeja restringida a `MEDICO`;
+  - agendar (crea paciente y cita, impide agendar dos veces y en fechas pasadas, y otro médico no puede agendar);
+  - asociación a un paciente existente sin duplicarlo;
+  - rechazo con motivo obligatorio;
+  - hora de Colombia en el correo y el PDF.
+- Se corrigió una falla intermitente que ya existía en las pruebas de citas: el PDF se generaba en segundo plano mientras la prueba borraba su carpeta temporal.
+- Frontend (`tests/frontend/PatientRequests.test.jsx`, 11 pruebas): distancias, sede más cercana con y sin permiso de ubicación, consentimiento obligatorio, envío del formulario, mensajes del servidor, agendamiento con hora e indicaciones, horas ocupadas, rechazo con motivo y contador del menú solo para médicos.
+- **Resultados:** backend completo en verde y frontend **126 de 126** pruebas en 16 archivos.
+- **Recorrido con Playwright:**
+  - un paciente en Tuluá, desde el celular, recibe la sede de Tuluá como la más cercana y envía su solicitud;
+  - la solicitud llega a la médica más libre y no al médico con citas;
+  - la médica la agenda desde el computador y el contador queda en 0;
+  - el correo sale con el PDF adjunto y la hora de Colombia;
+  - el portal y la bandeja funcionan en celular sin desbordes.
 
 ---
 

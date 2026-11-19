@@ -86,6 +86,15 @@ type AppointmentRepository interface {
 	UpdatePDFAndEmailStatus(ctx context.Context, id, pdfPath string, emailSent bool) error
 }
 
+// AppointmentRequestRepository define el contrato de persistencia de las solicitudes de primera cita.
+type AppointmentRequestRepository interface {
+	Create(ctx context.Context, req *domain.AppointmentRequest) error
+	GetByID(ctx context.Context, id string) (*domain.AppointmentRequest, error)
+	ListByDoctor(ctx context.Context, doctorID string, status domain.AppointmentRequestStatus) ([]domain.AppointmentRequest, error)
+	CountPendingByDoctor(ctx context.Context, doctorID string) (int, error)
+	Update(ctx context.Context, req *domain.AppointmentRequest) error
+}
+
 // InventoryRepository define el contrato de persistencia para el inventario de farmacia diferenciado por dosis.
 type InventoryRepository interface {
 	GetAll(ctx context.Context) ([]domain.InventoryItem, error)

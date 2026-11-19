@@ -510,6 +510,48 @@ export const apiClient = {
     return this.requestV2(`/appointments?${params.toString()}`, { strict: true });
   },
 
+  // Portal publico del paciente (sin sesion)
+  async getPublicBranches() {
+    const res = await this.request('/public/branches', { strict: true, method: 'GET' });
+    return res?.branches ?? [];
+  },
+
+  async submitAppointmentRequest(data) {
+    return this.request('/public/appointment-requests', {
+      strict: true,
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  // Bandeja de solicitudes de primera cita del medico
+  async getAppointmentRequests(status = '') {
+    const qs = status ? `?status=${encodeURIComponent(status)}` : '';
+    const res = await this.requestV2(`/appointment-requests${qs}`, { strict: true });
+    return res?.requests ?? [];
+  },
+
+  async getAppointmentRequestsPendingCount() {
+    const res = await this.requestV2('/appointment-requests/pending-count', { strict: true });
+    return res?.pending ?? 0;
+  },
+
+  async scheduleAppointmentRequest(id, appointmentDate, note = '') {
+    return this.requestV2(`/appointment-requests/${encodeURIComponent(id)}/schedule`, {
+      strict: true,
+      method: 'POST',
+      body: JSON.stringify({ appointment_date: appointmentDate, note }),
+    });
+  },
+
+  async rejectAppointmentRequest(id, note) {
+    return this.requestV2(`/appointment-requests/${encodeURIComponent(id)}/reject`, {
+      strict: true,
+      method: 'POST',
+      body: JSON.stringify({ note }),
+    });
+  },
+
   async dispatchTreatment(data) {
     return this.requestV2('/treatments/dispatch', {
       strict: true,

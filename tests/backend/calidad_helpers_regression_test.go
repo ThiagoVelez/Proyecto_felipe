@@ -9,10 +9,10 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
+	"saludconecta-backend/adapters/email"
 	httpadapter "saludconecta-backend/adapters/http"
 	"saludconecta-backend/adapters/http/handlers"
 	"saludconecta-backend/adapters/interoperability"
-	"saludconecta-backend/adapters/email"
 	"saludconecta-backend/adapters/pdf"
 	"saludconecta-backend/adapters/storage/memory"
 	"saludconecta-backend/core/ports"
@@ -52,7 +52,7 @@ func newCalidadEnvConCodigo(t *testing.T, setupCode string) calidadEnv {
 
 	// El cableado replica cmd/api/main.go (v2), incluido el validador de sesion activa.
 	log := logger.New()
-	pdfGen := pdf.NewGenerator(t.TempDir())
+	pdfGen := pdf.NewGenerator(dirPDFConMargen(t))
 	emailSvc := email.NewService(email.Config{}, log)
 	authService := services.NewAuthServiceWithSetup(userRepo, calidadJWTSecret, time.Hour, 7*24*time.Hour, setupCode)
 	recordService := services.NewClinicalRecordService(recordRepo, patientRepo, userRepo)
@@ -71,8 +71,11 @@ func newCalidadEnvConCodigo(t *testing.T, setupCode string) calidadEnv {
 		PharmacyHandler:        handlers.NewPharmacyHandler(services.NewPharmacyService(inventoryRepo, prescV2Repo, memory.NewPharmacyReportMemoryRepo(ds), log)),
 		HealthEducationHandler: handlers.NewHealthEducationHandler(services.NewHealthEducationService(healthRepo)),
 		TIHandler:              handlers.NewTIHandler(services.NewTIService(userRepo, auditRepo, "memory", "test", time.Now().UTC())),
-		Sessions:               authService,
-		JWTSecret:              calidadJWTSecret,
+		AppointmentRequestHandler: handlers.NewAppointmentRequestHandler(services.NewAppointmentRequestService(
+			memory.NewAppointmentRequestMemoryRepo(ds), userRepo, appointmentRepo, services.NewPatientService(patientRepo),
+			services.NewAppointmentService(appointmentRepo, patientRepo, userRepo, pdfGen, emailSvc, log), emailSvc, log)),
+		Sessions:  authService,
+		JWTSecret: calidadJWTSecret,
 	})
 	return calidadEnv{app: app, ds: ds}
 }
@@ -116,4 +119,17 @@ func requireDefectoAbierto(t *testing.T, id string) {
 	if os.Getenv("CALIDAD_DEFECTOS_ABIERTOS") != "1" {
 		t.Skipf("%s abierto: ejecute con CALIDAD_DEFECTOS_ABIERTOS=1 para reproducirlo", id)
 	}
+}
+
+// dirPDFConMargen crea el directorio de comprobantes PDF de una prueba. El PDF de las citas se genera en una
+// goroutine que puede terminar despues de la prueba; t.TempDir fallaria al borrar un directorio en uso, por eso
+// el borrado se hace con un margen.
+func dirPDFConMargen(t *testing.T) string {
+	t.Helper()
+	dir, err := os.MkdirTemp("", "pdf-prueba-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { time.Sleep(300 * time.Millisecond); _ = os.RemoveAll(dir) })
+	return dir
 }

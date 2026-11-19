@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   LayoutDashboard,
   HeartPulse,
@@ -16,7 +16,10 @@ import {
   FileWarning,
   FlaskConical,
   Printer,
+  Inbox,
 } from 'lucide-react';
+import { apiClient } from '../services/api';
+import { REQUESTS_UPDATED_EVENT } from '../screens/DoctorRequestsInbox';
 
 export const Sidebar = ({
   currentView,
@@ -34,6 +37,27 @@ export const Sidebar = ({
     setCurrentView(id);
     if (onMobileClose) onMobileClose();
   };
+
+  // Solo el medico recibe solicitudes de primera cita del portal del paciente
+  const isMedico = String(user?.role || user?.role_name || '').toUpperCase() === 'MEDICO' || Number(user?.role_id) === 2;
+  const [pendingRequests, setPendingRequests] = useState(0);
+  useEffect(() => {
+    if (!isMedico) return undefined;
+    let active = true;
+    const refresh = () =>
+      apiClient
+        .getAppointmentRequestsPendingCount()
+        .then((n) => active && setPendingRequests(n))
+        .catch(() => {});
+    refresh();
+    const id = setInterval(refresh, 60000);
+    window.addEventListener(REQUESTS_UPDATED_EVENT, refresh);
+    return () => {
+      active = false;
+      clearInterval(id);
+      window.removeEventListener(REQUESTS_UPDATED_EVENT, refresh);
+    };
+  }, [isMedico]);
   const isPharmacist =
     user?.role === 'FARMACIA' ||
     user?.role_id === 6 ||
@@ -126,6 +150,17 @@ export const Sidebar = ({
       icon: LayoutDashboard,
       badge: null,
     },
+    ...(isMedico
+      ? [
+          {
+            id: 'appointment_requests',
+            label: 'Bandeja de Solicitudes',
+            icon: Inbox,
+            badge: null,
+            count: pendingRequests,
+          },
+        ]
+      : []),
     {
       id: 'appointments',
       label: 'Agenda & Citas Médicas',
@@ -287,6 +322,11 @@ export const Sidebar = ({
                   }`}
                 >
                   <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-white' : 'text-outline'}`} />
+                  {item.count > 0 && (
+                    <span className="absolute top-1.5 right-1.5 min-w-4 h-4 px-1 rounded-full bg-rose-600 text-white text-[10px] font-bold flex items-center justify-center">
+                      {item.count}
+                    </span>
+                  )}
                 </button>
               );
             }
@@ -306,6 +346,16 @@ export const Sidebar = ({
                   <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-white' : 'text-outline'}`} />
                   <span className="text-sm truncate font-medium">{item.label}</span>
                 </div>
+                {item.count > 0 && (
+                  <span
+                    aria-label={`${item.count} solicitudes pendientes`}
+                    className={`ml-2 min-w-5 h-5 px-1.5 rounded-full text-[11px] font-bold flex items-center justify-center shrink-0 ${
+                      isActive ? 'bg-white text-primary' : 'bg-rose-600 text-white'
+                    }`}
+                  >
+                    {item.count}
+                  </span>
+                )}
               </button>
             );
           })}

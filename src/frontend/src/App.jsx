@@ -11,6 +11,7 @@ import SecurityMfaScreen from './screens/SecurityMfaScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import AdminLayout from './screens/admin/AdminLayout';
 import TiLayout from './screens/ti/TiLayout';
+import DoctorRequestsInbox from './screens/DoctorRequestsInbox';
 import DoctorAppointmentsView from './screens/DoctorAppointmentsView';
 import TreatmentFollowUpView from './screens/TreatmentFollowUpView';
 import PharmacyDashboard from './screens/PharmacyDashboard';
@@ -457,6 +458,10 @@ export function App() {
               onSelectPatient={handleSelectPatient}
               onNavigate={handleNavigate}
             />
+          )}
+
+          {currentView === 'appointment_requests' && (
+            <DoctorRequestsInbox user={currentUser} onNavigate={handleNavigate} />
           )}
 
           {currentView === 'appointments' && (

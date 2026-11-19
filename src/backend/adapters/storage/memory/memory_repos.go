@@ -40,6 +40,7 @@ type DataStore struct {
 	anatomicalNotes map[string]*domain.ClinicalAnatomicalNote
 	healthPosts     map[string]*domain.HealthEducationPost
 	pharmacyReports map[string]*domain.PharmacyStockReport
+	apptRequests    map[string]*domain.AppointmentRequest
 }
 
 // NewDataStore crea el almacen en memoria. No siembra cuentas: el administrador inicial se crea con las
@@ -65,6 +66,7 @@ func NewDataStore() *DataStore {
 		anatomicalNotes: make(map[string]*domain.ClinicalAnatomicalNote),
 		healthPosts:     make(map[string]*domain.HealthEducationPost),
 		pharmacyReports: make(map[string]*domain.PharmacyStockReport),
+		apptRequests:    make(map[string]*domain.AppointmentRequest),
 	}
 
 	// Semilla de inventario diferenciado por concentracion
@@ -1320,4 +1322,68 @@ func (r *PharmacyReportMemoryRepo) GetMetrics(_ context.Context) (map[string]int
 	metrics["active_reports_count"] = pendingReports + managingReports
 
 	return metrics, nil
+}
+
+// AppointmentRequestMemoryRepo guarda en memoria las solicitudes de primera cita del portal del paciente.
+type AppointmentRequestMemoryRepo struct {
+	ds *DataStore
+}
+
+func NewAppointmentRequestMemoryRepo(ds *DataStore) ports.AppointmentRequestRepository {
+	return &AppointmentRequestMemoryRepo{ds: ds}
+}
+
+func (r *AppointmentRequestMemoryRepo) Create(_ context.Context, req *domain.AppointmentRequest) error {
+	r.ds.mu.Lock()
+	defer r.ds.mu.Unlock()
+	stored := *req
+	r.ds.apptRequests[stored.ID] = &stored
+	return nil
+}
+
+func (r *AppointmentRequestMemoryRepo) GetByID(_ context.Context, id string) (*domain.AppointmentRequest, error) {
+	r.ds.mu.RLock()
+	defer r.ds.mu.RUnlock()
+	req, ok := r.ds.apptRequests[id]
+	if !ok {
+		return nil, domain.ErrAppointmentRequestNotFound
+	}
+	out := *req
+	return &out, nil
+}
+
+func (r *AppointmentRequestMemoryRepo) ListByDoctor(_ context.Context, doctorID string, status domain.AppointmentRequestStatus) ([]domain.AppointmentRequest, error) {
+	r.ds.mu.RLock()
+	defer r.ds.mu.RUnlock()
+	list := []domain.AppointmentRequest{}
+	for _, req := range r.ds.apptRequests {
+		if req.DoctorID == doctorID && (status == "" || req.Status == status) {
+			list = append(list, *req)
+		}
+	}
+	sort.Slice(list, func(i, j int) bool { return list[i].CreatedAt.After(list[j].CreatedAt) })
+	return list, nil
+}
+
+func (r *AppointmentRequestMemoryRepo) CountPendingByDoctor(_ context.Context, doctorID string) (int, error) {
+	r.ds.mu.RLock()
+	defer r.ds.mu.RUnlock()
+	n := 0
+	for _, req := range r.ds.apptRequests {
+		if req.DoctorID == doctorID && req.Status == domain.RequestPending {
+			n++
+		}
+	}
+	return n, nil
+}
+
+func (r *AppointmentRequestMemoryRepo) Update(_ context.Context, req *domain.AppointmentRequest) error {
+	r.ds.mu.Lock()
+	defer r.ds.mu.Unlock()
+	if _, ok := r.ds.apptRequests[req.ID]; !ok {
+		return domain.ErrAppointmentRequestNotFound
+	}
+	stored := *req
+	r.ds.apptRequests[req.ID] = &stored
+	return nil
 }
