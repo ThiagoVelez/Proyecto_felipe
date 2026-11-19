@@ -421,5 +421,8 @@ func Migrate(db *sql.DB) (warnings []string, err error) {
 	if err := ensureV2TablesAndColumns(db); err != nil {
 		return warnings, fmt.Errorf("fallo preparando tablas v2: %w", err)
 	}
+	if err := ensureLabNursingBranchTables(db); err != nil {
+		return warnings, fmt.Errorf("fallo preparando laboratorio, enfermeria y sedes: %w", err)
+	}
 	return warnings, nil
 }

@@ -31,6 +31,7 @@ type requestMailer interface {
 
 type appointmentRequestService struct {
 	requests     ports.AppointmentRequestRepository
+	branches     ports.BranchRepository
 	users        ports.UserRepository
 	appointments ports.AppointmentRepository
 	patients     ports.PatientService
@@ -42,10 +43,10 @@ type appointmentRequestService struct {
 }
 
 // NewAppointmentRequestService construye el servicio de solicitudes de primera cita del portal del paciente.
-func NewAppointmentRequestService(requests ports.AppointmentRequestRepository, users ports.UserRepository,
+func NewAppointmentRequestService(requests ports.AppointmentRequestRepository, branches ports.BranchRepository, users ports.UserRepository,
 	appointments ports.AppointmentRepository, patients ports.PatientService, scheduler ports.AppointmentService,
 	mailer requestMailer, log *logger.Logger) ports.AppointmentRequestService {
-	return &appointmentRequestService{requests: requests, users: users, appointments: appointments,
+	return &appointmentRequestService{requests: requests, branches: branches, users: users, appointments: appointments,
 		patients: patients, scheduler: scheduler, mailer: mailer, log: log}
 }
 
@@ -53,8 +54,23 @@ var phonePattern = regexp.MustCompile(`^[0-9+\s()-]{7,20}$`)
 
 func runeLen(s string) int { return utf8.RuneCountInString(s) }
 
+// PublicBranches devuelve las sedes con ubicacion fija: las unicas que el portal del paciente ofrece.
+func (s *appointmentRequestService) PublicBranches(ctx context.Context) ([]domain.Branch, error) {
+	all, err := loadBranches(ctx, s.branches)
+	if err != nil {
+		return nil, err
+	}
+	out := []domain.Branch{}
+	for _, b := range all {
+		if b.HasLocation() {
+			out = append(out, b)
+		}
+	}
+	return out, nil
+}
+
 // validateRequest normaliza y valida los datos que el paciente escribe en el portal.
-func validateRequest(req *domain.AppointmentRequest, consent bool) error {
+func validateRequest(req *domain.AppointmentRequest, consent bool, public []domain.Branch) error {
 	req.DocumentNumber = strings.TrimSpace(req.DocumentNumber)
 	req.FirstName = strings.TrimSpace(req.FirstName)
 	req.LastName = strings.TrimSpace(req.LastName)
@@ -67,7 +83,7 @@ func validateRequest(req *domain.AppointmentRequest, consent bool) error {
 	if !consent {
 		return domain.ErrConsentRequired
 	}
-	if _, ok := domain.PublicBranchByName(req.Branch); !ok {
+	if _, ok := domain.BranchNamed(public, req.Branch); !ok {
 		return domain.ErrUnknownBranch
 	}
 	now := time.Now().UTC()
@@ -157,10 +173,14 @@ func (s *appointmentRequestService) pickDoctor(ctx context.Context, branch strin
 }
 
 func (s *appointmentRequestService) Submit(ctx context.Context, req *domain.AppointmentRequest, consent bool) (*domain.AppointmentRequest, error) {
-	if err := validateRequest(req, consent); err != nil {
+	public, err := s.PublicBranches(ctx)
+	if err != nil {
 		return nil, err
 	}
-	branch, _ := domain.PublicBranchByName(req.Branch)
+	if err := validateRequest(req, consent, public); err != nil {
+		return nil, err
+	}
+	branch, _ := domain.BranchNamed(public, req.Branch)
 	req.Branch = branch.Name
 
 	s.mu.Lock()

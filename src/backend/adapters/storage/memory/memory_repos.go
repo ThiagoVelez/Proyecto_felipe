@@ -1,6 +1,7 @@
 package memory
 
 import (
+	"strconv"
 	"context"
 	"fmt"
 	"sort"
@@ -41,6 +42,9 @@ type DataStore struct {
 	healthPosts     map[string]*domain.HealthEducationPost
 	pharmacyReports map[string]*domain.PharmacyStockReport
 	apptRequests    map[string]*domain.AppointmentRequest
+	labOrders       map[string]*domain.LabOrder
+	nursing         map[string]*domain.NursingCare
+	branches        map[string]*domain.Branch
 }
 
 // NewDataStore crea el almacen en memoria. No siembra cuentas: el administrador inicial se crea con las
@@ -67,6 +71,9 @@ func NewDataStore() *DataStore {
 		healthPosts:     make(map[string]*domain.HealthEducationPost),
 		pharmacyReports: make(map[string]*domain.PharmacyStockReport),
 		apptRequests:    make(map[string]*domain.AppointmentRequest),
+		labOrders:       make(map[string]*domain.LabOrder),
+		nursing:         make(map[string]*domain.NursingCare),
+		branches:        make(map[string]*domain.Branch),
 	}
 
 	// Semilla de inventario diferenciado por concentracion
@@ -93,6 +100,12 @@ func NewDataStore() *DataStore {
 		ds.medications[medCopy.ID] = &medCopy
 	}
 
+	now := time.Now().UTC()
+	for _, b := range domain.InitialBranches() {
+		branch := b
+		branch.CreatedAt, branch.UpdatedAt = now, now
+		ds.branches[branch.ID] = &branch
+	}
 	return ds
 }
 
@@ -1386,5 +1399,181 @@ func (r *AppointmentRequestMemoryRepo) Update(_ context.Context, req *domain.App
 	}
 	stored := *req
 	r.ds.apptRequests[req.ID] = &stored
+	return nil
+}
+
+// ---------------------------------------------------------------------------------------------
+// Ordenes de laboratorio
+// ---------------------------------------------------------------------------------------------
+
+type LabOrderMemoryRepo struct{ ds *DataStore }
+
+func NewLabOrderMemoryRepo(ds *DataStore) ports.LabOrderRepository { return &LabOrderMemoryRepo{ds: ds} }
+
+func (r *LabOrderMemoryRepo) CreateWithNextID(_ context.Context, order *domain.LabOrder) error {
+	r.ds.mu.Lock()
+	defer r.ds.mu.Unlock()
+	prefix := fmt.Sprintf("LAB-%d-", order.CreatedAt.Year())
+	maxSeq := 0
+	for id := range r.ds.labOrders {
+		if strings.HasPrefix(id, prefix) {
+			if n, err := strconv.Atoi(strings.TrimPrefix(id, prefix)); err == nil && n > maxSeq {
+				maxSeq = n
+			}
+		}
+	}
+	order.ID = fmt.Sprintf("%s%03d", prefix, maxSeq+1)
+	stored := *order
+	r.ds.labOrders[order.ID] = &stored
+	return nil
+}
+
+func (r *LabOrderMemoryRepo) GetByID(_ context.Context, id string) (*domain.LabOrder, error) {
+	r.ds.mu.RLock()
+	defer r.ds.mu.RUnlock()
+	o, ok := r.ds.labOrders[id]
+	if !ok {
+		return nil, domain.ErrLabOrderNotFound
+	}
+	out := *o
+	return &out, nil
+}
+
+func (r *LabOrderMemoryRepo) List(_ context.Context, doctorID string, status domain.LabOrderStatus) ([]domain.LabOrder, error) {
+	r.ds.mu.RLock()
+	defer r.ds.mu.RUnlock()
+	list := []domain.LabOrder{}
+	for _, o := range r.ds.labOrders {
+		if (doctorID == "" || o.OrderingDoctorID == doctorID) && (status == "" || o.Status == status) {
+			list = append(list, *o)
+		}
+	}
+	sort.Slice(list, func(i, j int) bool { return list[i].CreatedAt.After(list[j].CreatedAt) })
+	return list, nil
+}
+
+func (r *LabOrderMemoryRepo) Update(_ context.Context, order *domain.LabOrder) error {
+	r.ds.mu.Lock()
+	defer r.ds.mu.Unlock()
+	if _, ok := r.ds.labOrders[order.ID]; !ok {
+		return domain.ErrLabOrderNotFound
+	}
+	stored := *order
+	r.ds.labOrders[order.ID] = &stored
+	return nil
+}
+
+// ---------------------------------------------------------------------------------------------
+// Registro de enfermeria
+// ---------------------------------------------------------------------------------------------
+
+type NursingMemoryRepo struct{ ds *DataStore }
+
+func NewNursingMemoryRepo(ds *DataStore) ports.NursingRepository { return &NursingMemoryRepo{ds: ds} }
+
+func copyCare(c *domain.NursingCare) domain.NursingCare {
+	out := *c
+	out.Duties = append([]domain.NursingDuty{}, c.Duties...)
+	out.Notes = append([]domain.NursingNote{}, c.Notes...)
+	out.Order = append([]byte(nil), c.Order...)
+	return out
+}
+
+func (r *NursingMemoryRepo) Get(_ context.Context, patientID string) (*domain.NursingCare, error) {
+	r.ds.mu.RLock()
+	defer r.ds.mu.RUnlock()
+	c, ok := r.ds.nursing[patientID]
+	if !ok {
+		return nil, domain.ErrNursingCareNotFound
+	}
+	out := copyCare(c)
+	return &out, nil
+}
+
+func (r *NursingMemoryRepo) List(_ context.Context) ([]domain.NursingCare, error) {
+	r.ds.mu.RLock()
+	defer r.ds.mu.RUnlock()
+	list := []domain.NursingCare{}
+	for _, c := range r.ds.nursing {
+		list = append(list, copyCare(c))
+	}
+	sort.Slice(list, func(i, j int) bool { return list[i].UpdatedAt.After(list[j].UpdatedAt) })
+	return list, nil
+}
+
+func (r *NursingMemoryRepo) Save(_ context.Context, care *domain.NursingCare) error {
+	r.ds.mu.Lock()
+	defer r.ds.mu.Unlock()
+	stored := copyCare(care)
+	r.ds.nursing[care.PatientID] = &stored
+	return nil
+}
+
+// ---------------------------------------------------------------------------------------------
+// Sedes
+// ---------------------------------------------------------------------------------------------
+
+type BranchMemoryRepo struct{ ds *DataStore }
+
+func NewBranchMemoryRepo(ds *DataStore) ports.BranchRepository { return &BranchMemoryRepo{ds: ds} }
+
+func (r *BranchMemoryRepo) List(_ context.Context) ([]domain.Branch, error) {
+	r.ds.mu.RLock()
+	defer r.ds.mu.RUnlock()
+	list := []domain.Branch{}
+	for _, b := range r.ds.branches {
+		list = append(list, *b)
+	}
+	sort.Slice(list, func(i, j int) bool { return list[i].ID < list[j].ID })
+	return list, nil
+}
+
+func (r *BranchMemoryRepo) GetByID(_ context.Context, id string) (*domain.Branch, error) {
+	r.ds.mu.RLock()
+	defer r.ds.mu.RUnlock()
+	b, ok := r.ds.branches[id]
+	if !ok {
+		return nil, domain.ErrBranchNotFound
+	}
+	out := *b
+	return &out, nil
+}
+
+func (r *BranchMemoryRepo) Create(_ context.Context, b *domain.Branch) error {
+	r.ds.mu.Lock()
+	defer r.ds.mu.Unlock()
+	for _, existing := range r.ds.branches {
+		if strings.EqualFold(existing.Name, b.Name) {
+			return domain.ErrBranchNameTaken
+		}
+	}
+	stored := *b
+	r.ds.branches[b.ID] = &stored
+	return nil
+}
+
+func (r *BranchMemoryRepo) Update(_ context.Context, b *domain.Branch) error {
+	r.ds.mu.Lock()
+	defer r.ds.mu.Unlock()
+	if _, ok := r.ds.branches[b.ID]; !ok {
+		return domain.ErrBranchNotFound
+	}
+	for id, existing := range r.ds.branches {
+		if id != b.ID && strings.EqualFold(existing.Name, b.Name) {
+			return domain.ErrBranchNameTaken
+		}
+	}
+	stored := *b
+	r.ds.branches[b.ID] = &stored
+	return nil
+}
+
+func (r *BranchMemoryRepo) Delete(_ context.Context, id string) error {
+	r.ds.mu.Lock()
+	defer r.ds.mu.Unlock()
+	if _, ok := r.ds.branches[id]; !ok {
+		return domain.ErrBranchNotFound
+	}
+	delete(r.ds.branches, id)
 	return nil
 }

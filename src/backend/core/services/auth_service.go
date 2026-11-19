@@ -25,6 +25,8 @@ type authService struct {
 	attempts  *attemptTracker
 	// setupCode es el codigo de instalacion (TI_SETUP_CODE) que exige el registro del Encargado de TI desde el login
 	setupCode string
+	// branches es el catalogo de sedes (nil = sedes iniciales)
+	branches ports.BranchRepository
 	// setupMu serializa los registros publicos (TI y administrador por sede) para que dos solicitudes
 	// simultaneas no ocupen el mismo puesto
 	setupMu sync.Mutex
@@ -67,6 +69,11 @@ func NewAuthServiceWithTTL(userRepo ports.UserRepository, jwtSecret string, acce
 // NewAuthServiceWithSetup construye el servicio con el codigo de instalacion que habilita el registro del Encargado de TI.
 // Un codigo vacio o invalido (ver ValidateSetupCode) deja ese registro deshabilitado.
 func NewAuthServiceWithSetup(userRepo ports.UserRepository, jwtSecret string, accessTTL, refreshTTL time.Duration, setupCode string) ports.AuthService {
+	return NewAuthServiceFull(userRepo, nil, jwtSecret, accessTTL, refreshTTL, setupCode)
+}
+
+// NewAuthServiceFull construye el servicio con el catalogo de sedes del servidor y el codigo de instalacion.
+func NewAuthServiceFull(userRepo ports.UserRepository, branches ports.BranchRepository, jwtSecret string, accessTTL, refreshTTL time.Duration, setupCode string) ports.AuthService {
 	setupCode = strings.TrimSpace(setupCode)
 	if ValidateSetupCode(setupCode) != nil {
 		setupCode = ""
@@ -86,6 +93,7 @@ func NewAuthServiceWithSetup(userRepo ports.UserRepository, jwtSecret string, ac
 		attempts:   newDefaultAttemptTracker(),
 		tokens:     newRefreshTokenTracker(),
 		setupCode:  setupCode,
+		branches:   branches,
 	}
 }
 
@@ -288,7 +296,7 @@ func (s *authService) registerAdminAccount(ctx context.Context, user *domain.Use
 
 // adminBranchSet devuelve las sedes del catalogo que ya tienen al menos un administrador aprobado (activo).
 // Las solicitudes pendientes no ocupan la sede: asi una solicitud ajena no bloquea la del administrador real.
-func (s *authService) adminBranchSet(ctx context.Context) (map[string]bool, error) {
+func (s *authService) adminBranchSet(ctx context.Context, catalog []domain.Branch) (map[string]bool, error) {
 	adminRole := 1
 	admins, err := s.userRepo.List(ctx, &adminRole, nil)
 	if err != nil {
@@ -299,7 +307,7 @@ func (s *authService) adminBranchSet(ctx context.Context) (map[string]bool, erro
 		if !a.IsActive {
 			continue
 		}
-		if name, ok := domain.CanonicalBranch(a.Branch); ok {
+		if name, ok := domain.CanonicalBranchIn(catalog, a.Branch); ok {
 			set[name] = true
 		}
 	}
@@ -321,13 +329,17 @@ func (s *authService) SetupStatus(ctx context.Context) (*domain.SetupStatus, err
 	if err != nil {
 		return nil, err
 	}
-	withAdmin, err := s.adminBranchSet(ctx)
+	catalog, err := loadBranches(ctx, s.branches)
+	if err != nil {
+		return nil, err
+	}
+	withAdmin, err := s.adminBranchSet(ctx, catalog)
 	if err != nil {
 		return nil, err
 	}
 	status := &domain.SetupStatus{TIRegistered: ti, TISetupEnabled: s.setupCode != ""}
-	for _, b := range domain.BranchCatalog {
-		status.Branches = append(status.Branches, domain.BranchAdminStatus{Name: b, HasAdmin: withAdmin[b]})
+	for _, b := range catalog {
+		status.Branches = append(status.Branches, domain.BranchAdminStatus{Name: b.Name, HasAdmin: withAdmin[b.Name]})
 	}
 	return status, nil
 }
@@ -370,7 +382,11 @@ func (s *authService) RegisterTI(ctx context.Context, user *domain.User, plainPa
 // RegisterBranchAdmin registra desde el login una solicitud de administrador para una sede del catalogo que aun no
 // tiene administrador aprobado. La cuenta nace PENDIENTE: solo puede iniciar sesion cuando el Encargado de TI la aprueba.
 func (s *authService) RegisterBranchAdmin(ctx context.Context, user *domain.User, plainPassword string) error {
-	branch, ok := domain.CanonicalBranch(user.Branch)
+	catalog, err := loadBranches(ctx, s.branches)
+	if err != nil {
+		return err
+	}
+	branch, ok := domain.CanonicalBranchIn(catalog, user.Branch)
 	if !ok {
 		return domain.ErrUnknownBranch
 	}
@@ -378,7 +394,7 @@ func (s *authService) RegisterBranchAdmin(ctx context.Context, user *domain.User
 	s.setupMu.Lock()
 	defer s.setupMu.Unlock()
 
-	withAdmin, err := s.adminBranchSet(ctx)
+	withAdmin, err := s.adminBranchSet(ctx, catalog)
 	if err != nil {
 		return err
 	}

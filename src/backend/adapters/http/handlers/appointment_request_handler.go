@@ -22,7 +22,11 @@ func NewAppointmentRequestHandler(svc ports.AppointmentRequestService) *Appointm
 
 // PublicBranches lista las sedes con ubicacion que reciben solicitudes de primera cita.
 func (h *AppointmentRequestHandler) PublicBranches(c *fiber.Ctx) error {
-	return c.JSON(fiber.Map{"branches": domain.PublicBranches})
+	branches, err := h.svc.PublicBranches(c.Context())
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "No fue posible consultar las sedes"})
+	}
+	return c.JSON(fiber.Map{"branches": branches})
 }
 
 type submitRequestDTO struct {

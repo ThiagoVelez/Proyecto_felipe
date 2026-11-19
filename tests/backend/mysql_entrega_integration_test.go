@@ -115,3 +115,93 @@ func TestMySQLSolicitudesDeCitaPersisten(t *testing.T) {
 		t.Fatalf("no deben quedar pendientes: %d", len(pendientes))
 	}
 }
+
+func TestMySQLLaboratorioEnfermeriaYSedes(t *testing.T) {
+	db := conexionMySQLPrueba(t)
+	ctx := context.Background()
+
+	// Sedes sembradas por la migracion, con coordenadas opcionales
+	branches := mysql.NewBranchRepository(db)
+	lista, err := branches.List(ctx)
+	if err != nil || len(lista) < 4 {
+		t.Fatalf("sedes sembradas: %d (%v)", len(lista), err)
+	}
+	var conUbicacion, sinUbicacion int
+	for _, b := range lista {
+		if b.HasLocation() {
+			conUbicacion++
+		} else {
+			sinUbicacion++
+		}
+	}
+	if conUbicacion < 3 || sinUbicacion < 1 {
+		t.Fatalf("coordenadas: %d con ubicacion y %d sin ubicacion", conUbicacion, sinUbicacion)
+	}
+	lat, lng := 4.41, -76.15
+	nueva := &domain.Branch{ID: "br-int-" + uuid.New().String()[:6], Name: "Sede Integración " + uuid.New().String()[:6], Status: "Operativo",
+		Latitude: &lat, Longitude: &lng, CreatedAt: time.Now().UTC(), UpdatedAt: time.Now().UTC()}
+	if err := branches.Create(ctx, nueva); err != nil {
+		t.Fatalf("crear sede: %v", err)
+	}
+	if err := branches.Create(ctx, &domain.Branch{ID: "br-dup-" + uuid.New().String()[:6], Name: nueva.Name, CreatedAt: time.Now(), UpdatedAt: time.Now()}); err != domain.ErrBranchNameTaken {
+		t.Fatalf("nombre duplicado: %v", err)
+	}
+	nueva.Status = "En Espera"
+	if err := branches.Update(ctx, nueva); err != nil {
+		t.Fatalf("actualizar sede: %v", err)
+	}
+	if err := branches.Delete(ctx, nueva.ID); err != nil {
+		t.Fatalf("eliminar sede: %v", err)
+	}
+
+	// Ordenes de laboratorio con identificador consecutivo
+	labs := mysql.NewLabOrderRepository(db)
+	ahora := time.Now().UTC().Truncate(time.Second)
+	nuevaOrden := func() *domain.LabOrder {
+		return &domain.LabOrder{PatientName: "Pedro Paz", PatientDocument: "55001", PatientDocumentType: "CC", TestType: "Hemograma",
+			SampleType: "EDTA", Priority: "URGENTE", Status: domain.LabPending, Observations: "x", OrderingDoctor: "Dr. Externo",
+			CreatedAt: ahora, UpdatedAt: ahora}
+	}
+	o1, o2 := nuevaOrden(), nuevaOrden()
+	if err := labs.CreateWithNextID(ctx, o1); err != nil {
+		t.Fatalf("crear orden: %v", err)
+	}
+	if err := labs.CreateWithNextID(ctx, o2); err != nil {
+		t.Fatalf("crear segunda orden: %v", err)
+	}
+	if o1.ID == o2.ID {
+		t.Fatalf("ids repetidos: %s", o1.ID)
+	}
+	validada := time.Now().UTC().Truncate(time.Second)
+	o1.Status, o1.Results, o1.ValidatedAt, o1.ValidatedBy = domain.LabCompleted, "HB: 14 g/dL", &validada, "Bact. Ana"
+	if err := labs.Update(ctx, o1); err != nil {
+		t.Fatalf("sellar: %v", err)
+	}
+	leida, err := labs.GetByID(ctx, o1.ID)
+	if err != nil || leida.Status != domain.LabCompleted || leida.ValidatedAt == nil || !leida.ValidatedAt.Equal(validada) {
+		t.Fatalf("orden sellada: %+v (%v)", leida, err)
+	}
+	if completas, _ := labs.List(ctx, "", domain.LabCompleted); len(completas) == 0 {
+		t.Fatal("listar por estado")
+	}
+
+	// Registro de enfermeria con JSON
+	care := mysql.NewNursingRepository(db)
+	paciente := "p-int-" + uuid.New().String()[:8]
+	hora, quien := "10:30", "Enf. Luisa"
+	registro := &domain.NursingCare{PatientID: paciente, Order: []byte(`{"unique_code":"RX-1"}`),
+		Duties:    []domain.NursingDuty{{ID: "id-verify", Category: "SEGURIDAD", Label: "Verificar", Completed: true, CompletedAt: &hora, CompletedBy: &quien}},
+		Notes:     []domain.NursingNote{{ID: "n1", Content: "Paciente estable", Author: quien, CreatedAt: ahora}},
+		UpdatedAt: ahora, UpdatedBy: quien}
+	if err := care.Save(ctx, registro); err != nil {
+		t.Fatalf("guardar enfermeria: %v", err)
+	}
+	registro.Notes = append([]domain.NursingNote{{ID: "n2", Content: "Segunda nota", CreatedAt: ahora}}, registro.Notes...)
+	if err := care.Save(ctx, registro); err != nil {
+		t.Fatalf("actualizar enfermeria: %v", err)
+	}
+	leido, err := care.Get(ctx, paciente)
+	if err != nil || len(leido.Notes) != 2 || *leido.Duties[0].CompletedBy != "Enf. Luisa" || string(leido.Order) != `{"unique_code":"RX-1"}` {
+		t.Fatalf("registro de enfermeria: %+v (%v)", leido, err)
+	}
+}

@@ -2,6 +2,7 @@ package ports
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	"saludconecta-backend/core/domain"
@@ -117,9 +118,50 @@ type AppointmentService interface {
 	GetDoctorAppointmentsByRange(ctx context.Context, doctorID string, start, end string) ([]domain.Appointment, error)
 }
 
+// LabOrderInput son los datos de una nueva orden de laboratorio.
+type LabOrderInput struct {
+	PatientID       string `json:"patient_id"`
+	PatientName     string `json:"patient_name"`
+	PatientDocument string `json:"patient_document"`
+	PatientEPS      string `json:"patient_eps"`
+	PatientEmail    string `json:"patient_email"`
+	TestType        string `json:"test_type"`
+	SampleType      string `json:"sample_type"`
+	Priority        string `json:"priority"`
+	Observations    string `json:"observations"`
+	OrderingDoctor  string `json:"ordering_doctor"`
+}
+
+// LabOrderService gestiona las ordenes de laboratorio de punta a punta.
+type LabOrderService interface {
+	Create(ctx context.Context, actorID string, in LabOrderInput) (*domain.LabOrder, error)
+	List(ctx context.Context, actorID, role string, status domain.LabOrderStatus) ([]domain.LabOrder, error)
+	SaveProgress(ctx context.Context, actorID, id, results, methodNotes string) (*domain.LabOrder, error)
+	Seal(ctx context.Context, actorID, id, results, methodNotes string) (*domain.LabOrder, error)
+	Dispatch(ctx context.Context, actorID, id, email string, copyDoctor bool) (*domain.LabOrder, error)
+}
+
+// NursingService gestiona el registro de enfermeria por paciente.
+type NursingService interface {
+	Get(ctx context.Context, patientID string) (*domain.NursingCare, error)
+	List(ctx context.Context) ([]domain.NursingCare, error)
+	AssignOrder(ctx context.Context, actorID, patientID string, order json.RawMessage, meds []domain.NursingDuty) (*domain.NursingCare, error)
+	SaveDuties(ctx context.Context, actorID, patientID string, duties []domain.NursingDuty) (*domain.NursingCare, error)
+	AddNote(ctx context.Context, actorID, patientID, content string) (*domain.NursingCare, error)
+}
+
+// BranchService gestiona las sedes de la red asistencial (administrador).
+type BranchService interface {
+	List(ctx context.Context) ([]domain.Branch, error)
+	Create(ctx context.Context, b *domain.Branch) (*domain.Branch, error)
+	Update(ctx context.Context, b *domain.Branch) (*domain.Branch, error)
+	Delete(ctx context.Context, id string) error
+}
+
 // AppointmentRequestService gestiona las solicitudes de primera cita del portal del paciente: las asigna al medico
 // con mayor disponibilidad de la sede y permite al medico agendarlas (enviando la cita por correo) o rechazarlas.
 type AppointmentRequestService interface {
+	PublicBranches(ctx context.Context) ([]domain.Branch, error)
 	Submit(ctx context.Context, req *domain.AppointmentRequest, consent bool) (*domain.AppointmentRequest, error)
 	ListForDoctor(ctx context.Context, doctorID string, status domain.AppointmentRequestStatus) ([]domain.AppointmentRequest, error)
 	PendingCount(ctx context.Context, doctorID string) (int, error)

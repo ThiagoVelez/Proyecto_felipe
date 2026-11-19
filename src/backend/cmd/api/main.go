@@ -89,7 +89,7 @@ func main() {
 	case cfg.SetupCode == "":
 		log.Warn("Registro del Encargado de TI deshabilitado: defina TI_SETUP_CODE para habilitarlo")
 	}
-	authService := services.NewAuthServiceWithSetup(repos.User, cfg.JWTSecret, cfg.JWTAccessTTL, cfg.JWTRefreshTTL, cfg.SetupCode)
+	authService := services.NewAuthServiceFull(repos.User, repos.Branch, cfg.JWTSecret, cfg.JWTAccessTTL, cfg.JWTRefreshTTL, cfg.SetupCode)
 	adminService := services.NewAdminService(repos.User, repos.Audit)
 	patientService := services.NewPatientService(repos.Patient)
 	triageService := services.NewTriageService(repos.Triage, repos.Patient)
@@ -109,7 +109,7 @@ func main() {
 	// 8. Instanciacion de Controladores HTTP (Adaptadores Primarios)
 	authHandler := handlers.NewAuthHandler(authService)
 	adminHandler := handlers.NewAdminHandler(adminService)
-	tiHandler := handlers.NewTIHandler(services.NewTIService(repos.User, repos.Audit, cfg.DBDriver, "v2.4", time.Now().UTC()))
+	tiHandler := handlers.NewTIHandler(services.NewTIService(repos.User, repos.Audit, repos.Branch, cfg.DBDriver, "v2.4", time.Now().UTC()))
 	patientHandler := handlers.NewPatientHandler(patientService)
 	triageHandler := handlers.NewTriageHandler(triageService)
 	recordHandler := handlers.NewClinicalRecordHandler(recordService, repos.Patient, repos.Prescription, ripsGen, fhirMap)
@@ -118,7 +118,7 @@ func main() {
 
 	appointmentHandler := handlers.NewAppointmentHandler(appointmentService)
 	appointmentRequestHandler := handlers.NewAppointmentRequestHandler(services.NewAppointmentRequestService(
-		repos.AppointmentRequest, repos.User, repos.Appointment, patientService, appointmentService, emailSvc, log))
+		repos.AppointmentRequest, repos.Branch, repos.User, repos.Appointment, patientService, appointmentService, emailSvc, log))
 	treatmentHandler := handlers.NewTreatmentHandler(treatmentService)
 	pharmacyHandler := handlers.NewPharmacyHandler(pharmacyService)
 	healthEducationHandler := handlers.NewHealthEducationHandler(healthEducationService)
@@ -146,6 +146,9 @@ func main() {
 			HealthEducationHandler: healthEducationHandler,
 			TIHandler:              tiHandler,
 			AppointmentRequestHandler: appointmentRequestHandler,
+			LabOrderHandler:           handlers.NewLabOrderHandler(services.NewLabOrderService(repos.LabOrder, repos.User, repos.Patient, emailSvc, log)),
+			NursingHandler:            handlers.NewNursingHandler(services.NewNursingService(repos.Nursing, repos.User, repos.Patient)),
+			BranchHandler:             handlers.NewBranchHandler(services.NewBranchService(repos.Branch, repos.User)),
 			Sessions:               authService,
 			JWTSecret:              cfg.JWTSecret,
 		},

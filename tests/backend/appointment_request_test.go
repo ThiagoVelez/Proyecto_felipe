@@ -90,8 +90,8 @@ func TestPortalListaSedesConUbicacionSinSesion(t *testing.T) {
 		t.Fatalf("estado %d", estado)
 	}
 	sedes, _ := out["branches"].([]interface{})
-	if len(sedes) != len(domain.PublicBranches) {
-		t.Fatalf("se esperaban %d sedes, se obtuvieron %d", len(domain.PublicBranches), len(sedes))
+	if len(sedes) != 3 {
+		t.Fatalf("se esperaban %d sedes, se obtuvieron %d", 3, len(sedes))
 	}
 	for _, s := range sedes {
 		m := s.(map[string]interface{})
