@@ -68,8 +68,8 @@ export const buildRecord = (overrides = {}) => ({
 });
 
 /**
- * Simula el servidor para la pantalla de inicio de sesión. El login consulta /auth/setup-status al
- * abrirse; esa consulta se responde aparte con `setupStatus` y no consume las respuestas de `responses`,
+ * Simula el servidor para la pantalla de inicio de sesión. El login consulta /auth/setup-status y /branches al
+ * abrirse; esas consultas se responden aparte con `setupStatus` y no consume las respuestas de `responses`,
  * que se entregan en orden al resto de peticiones (la ultima se repite). Cada respuesta es { status, body }.
  * Devuelve el espia y las peticiones que no son setup-status (con el cuerpo ya interpretado).
  */
@@ -78,12 +78,21 @@ export const DEFAULT_SETUP_STATUS = {
   branches: [{ name: 'Sede Cartago - Hospital Central', has_admin: true }],
 };
 
-export const mockLoginServer = (responses, setupStatus = DEFAULT_SETUP_STATUS) => {
+export const DEFAULT_BRANCHES = [
+  { id: 'br-01', name: 'Sede Cartago - Hospital Central', municipality: 'Cartago', status: 'Operativo' },
+  { id: 'br-02', name: 'Sede La Unión - Urgencias', municipality: 'La Unión', status: 'Operativo' },
+];
+
+export const mockLoginServer = (responses, setupStatus = DEFAULT_SETUP_STATUS, branches = DEFAULT_BRANCHES) => {
   const calls = [];
   const queue = [...responses];
   const spy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (url, init = {}) => {
+    // Consultas que hace el login al abrirse: no consumen las respuestas de la prueba
     if (String(url).includes('/auth/setup-status')) {
       return new Response(JSON.stringify(setupStatus), { status: 200 });
+    }
+    if (String(url).replace(/\?.*$/, '').endsWith('/api/v1/branches')) {
+      return new Response(JSON.stringify({ branches, count: branches.length }), { status: 200 });
     }
     calls.push({ url: String(url), method: (init.method || 'GET').toUpperCase(), body: init.body ? JSON.parse(init.body) : undefined });
     const next = queue.length > 1 ? queue.shift() : queue[0];

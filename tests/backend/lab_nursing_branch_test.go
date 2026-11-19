@@ -133,6 +133,14 @@ func TestLaboratorioGuardaAvanceSellaYEnviaPorCorreo(t *testing.T) {
 	if estado != http.StatusOK || enviada["dispatched_to"] != "paciente@correo.example" || enviada["email_dispatched_at"] == nil {
 		t.Fatalf("despacho: estado %d %v", estado, enviada)
 	}
+	// El medico solicitante puede reenviar el resultado; otro medico no
+	if estado, _ := peticionJSON(t, env, http.MethodPost, "/api/v2/lab-orders/"+id+"/dispatch", `{"email":"paciente@correo.example"}`, medico); estado != http.StatusOK {
+		t.Fatalf("reenvio del medico solicitante: estado %d", estado)
+	}
+	otro := crearUsuarioRol(t, env, "med-otro", 2, "Dr. Otro", sedeCartago)
+	if estado, _ := peticionJSON(t, env, http.MethodPost, "/api/v2/lab-orders/"+id+"/dispatch", `{"email":"x@correo.example"}`, otro); estado != http.StatusNotFound {
+		t.Fatalf("reenvio de un medico ajeno: estado esperado 404, obtenido %d", estado)
+	}
 	// El medico ve el resultado sellado en su lista
 	ordenes := ordenesLab(t, env, medico)
 	if len(ordenes) != 1 || ordenes[0].Status != domain.LabCompleted || ordenes[0].Results != "GLUCOSA: 95 mg/dL" {
@@ -270,5 +278,22 @@ func TestSedesEnElServidorConCRUDDelAdministrador(t *testing.T) {
 	}
 	if estado, _ := peticionJSON(t, env, http.MethodDelete, "/api/v1/admin/branches/"+id, "", admin); estado != http.StatusNoContent {
 		t.Fatalf("eliminar sede sin personal: estado %d", estado)
+	}
+}
+
+// El registro de pacientes ignoraba el correo y la direccion: las citas y los resultados no llegaban al paciente.
+func TestRegistroDePacienteGuardaCorreoYDireccion(t *testing.T) {
+	env := newCalidadEnv(t)
+	medico := calidadToken(t, medicoSemillaID, "MEDICO")
+	cuerpo := `{"document_type":"CC","document_number":"1094777000","first_name":"Lucía","last_name":"Prado","birth_date":"1990-05-14",
+		"gender":"F","blood_type":"O+","eps_name":"Nueva EPS","email":"Lucia@Correo.example","address":"Calle 10 # 5-20"}`
+	estado, out := peticionJSON(t, env, http.MethodPost, "/api/v1/patients", cuerpo, medico)
+	if estado != http.StatusCreated || out["email"] != "lucia@correo.example" || out["address"] != "Calle 10 # 5-20" {
+		t.Fatalf("registro con correo: estado %d %v", estado, out)
+	}
+	invalido := `{"document_type":"CC","document_number":"1094777001","first_name":"A","last_name":"B","birth_date":"1990-05-14",
+		"gender":"F","blood_type":"O+","eps_name":"Nueva EPS","email":"no-es-correo"}`
+	if estado, _ := peticionJSON(t, env, http.MethodPost, "/api/v1/patients", invalido, medico); estado != http.StatusBadRequest && estado != http.StatusUnprocessableEntity {
+		t.Fatalf("correo invalido: estado %d", estado)
 	}
 }

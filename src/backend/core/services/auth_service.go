@@ -5,24 +5,24 @@ import (
 	"crypto/subtle"
 	"errors"
 	"strings"
-	"unicode/utf8"
 	"sync"
 	"time"
+	"unicode/utf8"
 
+	"github.com/google/uuid"
 	"saludconecta-backend/core/domain"
 	"saludconecta-backend/core/ports"
-	"github.com/google/uuid"
 	"saludconecta-backend/pkg/crypto"
 )
 
 type authService struct {
-	userRepo  ports.UserRepository
-	jwtSecret string
+	userRepo   ports.UserRepository
+	jwtSecret  string
 	jwtTTL     time.Duration
 	accessTTL  time.Duration
 	refreshTTL time.Duration
 	tokens     *refreshTokenTracker
-	attempts  *attemptTracker
+	attempts   *attemptTracker
 	// setupCode es el codigo de instalacion (TI_SETUP_CODE) que exige el registro del Encargado de TI desde el login
 	setupCode string
 	// branches es el catalogo de sedes (nil = sedes iniciales)

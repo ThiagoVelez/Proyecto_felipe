@@ -74,11 +74,11 @@ func newCalidadEnvConCodigo(t *testing.T, setupCode string) calidadEnv {
 		AppointmentRequestHandler: handlers.NewAppointmentRequestHandler(services.NewAppointmentRequestService(
 			memory.NewAppointmentRequestMemoryRepo(ds), memory.NewBranchMemoryRepo(ds), userRepo, appointmentRepo, services.NewPatientService(patientRepo),
 			services.NewAppointmentService(appointmentRepo, patientRepo, userRepo, pdfGen, emailSvc, log), emailSvc, log)),
-		LabOrderHandler:           handlers.NewLabOrderHandler(services.NewLabOrderService(memory.NewLabOrderMemoryRepo(ds), userRepo, patientRepo, emailSvc, log)),
-		NursingHandler:            handlers.NewNursingHandler(services.NewNursingService(memory.NewNursingMemoryRepo(ds), userRepo, patientRepo)),
-		BranchHandler:             handlers.NewBranchHandler(services.NewBranchService(memory.NewBranchMemoryRepo(ds), userRepo)),
-		Sessions:  authService,
-		JWTSecret: calidadJWTSecret,
+		LabOrderHandler: handlers.NewLabOrderHandler(services.NewLabOrderService(memory.NewLabOrderMemoryRepo(ds), userRepo, patientRepo, emailSvc, log)),
+		NursingHandler:  handlers.NewNursingHandler(services.NewNursingService(memory.NewNursingMemoryRepo(ds), userRepo, patientRepo)),
+		BranchHandler:   handlers.NewBranchHandler(services.NewBranchService(memory.NewBranchMemoryRepo(ds), userRepo)),
+		Sessions:        authService,
+		JWTSecret:       calidadJWTSecret,
 	})
 	return calidadEnv{app: app, ds: ds}
 }

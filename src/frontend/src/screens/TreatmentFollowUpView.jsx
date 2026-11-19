@@ -173,40 +173,21 @@ export const TreatmentFollowUpView = ({ user, patient, onNavigate }) => {
         status: 'ASIGNADO_ENFERMERIA',
       };
 
+      // La orden llega al registro de enfermeria del servidor: la ve cualquier enfermera desde su equipo
+      let nursingWarning = '';
       try {
-        const storedOrders = JSON.parse(localStorage.getItem('saludconecta_nurse_orders') || '[]');
-        // Reemplazar o anteponer la orden más reciente del paciente
-        const updatedOrders = [nurseOrder, ...storedOrders.filter((o) => o.patient_id !== currentPatient.id)];
-        localStorage.setItem('saludconecta_nurse_orders', JSON.stringify(updatedOrders));
-
-        // Actualizar o crear la lista de chequeo para enfermería
-        const checklistKey = `saludconecta_nurse_checklist_${currentPatient.id}`;
-        const existingChecklist = JSON.parse(localStorage.getItem(checklistKey) || 'null');
-        const medDuties = selectedItems.map((med, idx) => ({
-          id: `med-${idx}-${Date.now()}`,
-          category: 'MEDICAMENTOS',
-          label: `Administrar ${med.medication_name} ${med.dosage} (${med.presentation || 'Tableta'})`,
-          instructions: med.instructions,
-          completed: false,
-          completedAt: null,
-          completedBy: null,
-        }));
-
-        if (existingChecklist) {
-          // Filtrar deberes previos de medicamentos y adjuntar los nuevos prescritos
-          const nonMedDuties = existingChecklist.duties.filter((d) => d.category !== 'MEDICAMENTOS');
-          const mergedDuties = [...nonMedDuties, ...medDuties];
-          localStorage.setItem(
-            checklistKey,
-            JSON.stringify({
-              ...existingChecklist,
-              duties: mergedDuties,
-            })
-          );
-        }
+        await apiClient.assignNursingOrder(
+          currentPatient.id,
+          nurseOrder,
+          selectedItems.map((med) => ({
+            label: `Administrar ${med.medication_name} ${med.dosage} (${med.presentation || 'Tableta'})`,
+            instructions: med.instructions,
+          }))
+        );
       } catch (err) {
-        console.error('Error sincronizando orden asistencial de enfermería:', err);
+        nursingWarning = `La fórmula se emitió, pero no se pudo enviar a enfermería: ${err.message}`;
       }
+      if (nursingWarning) setErrorMessage(nursingWarning);
 
       setSuccessResult(res);
       setSelectedItems([]);

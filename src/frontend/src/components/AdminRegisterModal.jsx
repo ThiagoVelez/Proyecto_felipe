@@ -16,7 +16,7 @@ import {
   IdCard,
 } from 'lucide-react';
 import { apiClient } from '../services/api';
-import { loadBranches } from '../services/branches';
+import { useBranches } from '../services/branches';
 import { generateQrDataUrl } from '../utils/totp';
 
 // Textos y comportamiento de cada modo de registro:
@@ -76,7 +76,8 @@ const submitByMode = {
 
 export const AdminRegisterModal = ({ isOpen, onClose, onRegisterSuccess, mode = 'admin', branchOptions }) => {
   const cfg = MODES[mode] || MODES.admin;
-  const branches = branchOptions ? branchOptions.map((name) => ({ name })) : loadBranches();
+  const { branches: serverBranches } = useBranches();
+  const branches = branchOptions ? branchOptions.map((name) => ({ name })) : serverBranches;
   const [formData, setFormData] = useState({
     full_name: '',
     document_type: 'CC',

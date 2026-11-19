@@ -115,4 +115,3 @@ func (s *Service) SendWithPDFAttachment(to string, subject, body, pdfFilename st
 	}
 	return nil
 }
-

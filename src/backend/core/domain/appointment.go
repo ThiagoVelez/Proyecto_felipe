@@ -6,9 +6,9 @@ import (
 )
 
 var (
-	ErrAppointmentInPast    = errors.New("no es posible agendar citas en fechas u horas pasadas")
+	ErrAppointmentInPast     = errors.New("no es posible agendar citas en fechas u horas pasadas")
 	ErrDoctorScheduleOverlap = errors.New("el médico ya cuenta con una cita programada en ese rango horario")
-	ErrAppointmentNotFound  = errors.New("cita médica no encontrada en el sistema")
+	ErrAppointmentNotFound   = errors.New("cita médica no encontrada en el sistema")
 )
 
 // AppointmentStatus define el ciclo de vida de la cita médica
@@ -39,7 +39,6 @@ type Appointment struct {
 	EmailSent       bool              `json:"email_sent"`
 	CreatedAt       time.Time         `json:"created_at"`
 }
-
 
 // ColombiaLocation es la zona horaria de las sedes. Colombia no tiene horario de verano, por eso si el servidor no
 // trae la base de zonas horarias (imagenes minimas de Docker) se usa un desfase fijo de -5 horas.

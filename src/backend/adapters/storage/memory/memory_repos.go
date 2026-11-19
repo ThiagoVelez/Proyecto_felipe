@@ -1,10 +1,10 @@
 package memory
 
 import (
-	"strconv"
 	"context"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -1408,7 +1408,9 @@ func (r *AppointmentRequestMemoryRepo) Update(_ context.Context, req *domain.App
 
 type LabOrderMemoryRepo struct{ ds *DataStore }
 
-func NewLabOrderMemoryRepo(ds *DataStore) ports.LabOrderRepository { return &LabOrderMemoryRepo{ds: ds} }
+func NewLabOrderMemoryRepo(ds *DataStore) ports.LabOrderRepository {
+	return &LabOrderMemoryRepo{ds: ds}
+}
 
 func (r *LabOrderMemoryRepo) CreateWithNextID(_ context.Context, order *domain.LabOrder) error {
 	r.ds.mu.Lock()

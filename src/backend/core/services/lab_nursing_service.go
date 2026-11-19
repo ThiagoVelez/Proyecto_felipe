@@ -245,7 +245,7 @@ func (s *labOrderService) Seal(ctx context.Context, actorID, id, results, method
 	return o, nil
 }
 
-func (s *labOrderService) Dispatch(ctx context.Context, actorID, id, email string, copyDoctor bool) (*domain.LabOrder, error) {
+func (s *labOrderService) Dispatch(ctx context.Context, actorID, role, id, email string, copyDoctor bool) (*domain.LabOrder, error) {
 	email = strings.ToLower(strings.TrimSpace(email))
 	if addr, err := mail.ParseAddress(email); err != nil || addr.Address != email {
 		return nil, domain.ErrInvalidLabOrder
@@ -255,6 +255,9 @@ func (s *labOrderService) Dispatch(ctx context.Context, actorID, id, email strin
 	o, err := s.orders.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
+	}
+	if strings.EqualFold(role, "MEDICO") && o.OrderingDoctorID != actorID {
+		return nil, domain.ErrLabOrderNotFound // un medico solo ve y reenvia sus propias ordenes
 	}
 	if o.Status != domain.LabCompleted || o.ValidatedAt == nil {
 		return nil, domain.ErrLabOrderNotSealed

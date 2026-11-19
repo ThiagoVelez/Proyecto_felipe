@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   FlaskConical,
   Send,
@@ -73,32 +73,9 @@ const COMMON_TESTS = [
   },
 ];
 
-const generateNextLabId = (existingOrders) => {
-  const currentYear = new Date().getFullYear();
-  const currentOrders = existingOrders || [];
-  let maxSeq = 0;
-  currentOrders.forEach((o) => {
-    if (o.id && o.id.startsWith(`LAB-${currentYear}-`)) {
-      const parts = o.id.split('-');
-      const num = parseInt(parts[2], 10);
-      if (!isNaN(num) && num > maxSeq) {
-        maxSeq = num;
-      }
-    }
-  });
-  const nextSeq = String(maxSeq + 1).padStart(3, '0');
-  return `LAB-${currentYear}-${nextSeq}`;
-};
 
 export const DoctorLabOrdersView = ({ user, patient, onSelectPatient, onNavigate }) => {
-  const [orders, setOrders] = useState(() => {
-    try {
-      const saved = localStorage.getItem('saludconecta_lab_orders');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [orders, setOrders] = useState([]);
 
   const [activeTab, setActiveTab] = useState('new_order'); // 'new_order' | 'history'
   const [allPatients, setAllPatients] = useState([]);
@@ -122,21 +99,20 @@ export const DoctorLabOrdersView = ({ user, patient, onSelectPatient, onNavigate
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [emailFeedback, setEmailFeedback] = useState('');
 
-  // Sincronizar órdenes desde localStorage y eventos
-  useEffect(() => {
-    const handleSync = () => {
-      try {
-        const saved = localStorage.getItem('saludconecta_lab_orders');
-        if (saved) setOrders(JSON.parse(saved));
-      } catch { /* almacenamiento local no disponible: se continúa sin él */ }
-    };
-    window.addEventListener('saludconecta_lab_orders_updated', handleSync);
-    window.addEventListener('storage', handleSync);
-    return () => {
-      window.removeEventListener('saludconecta_lab_orders_updated', handleSync);
-      window.removeEventListener('storage', handleSync);
-    };
+  // Ordenes del medico desde el servidor (se actualizan cada 15 segundos para ver los resultados sellados)
+  const loadOrders = useCallback(async () => {
+    try {
+      setOrders(await apiClient.getLabOrders());
+    } catch {
+      // Se conserva la lista anterior; el siguiente intento la actualiza
+    }
   }, []);
+
+  useEffect(() => {
+    loadOrders();
+    const timer = setInterval(loadOrders, 15000);
+    return () => clearInterval(timer);
+  }, [loadOrders]);
 
   // Sincronización global reactiva si el médico o cualquier área actualiza datos de paciente
   useEffect(() => {
@@ -210,10 +186,6 @@ export const DoctorLabOrdersView = ({ user, patient, onSelectPatient, onNavigate
     };
   }, []);
 
-  // Generar ID único automático
-  useEffect(() => {
-    setLabId(generateNextLabId(orders));
-  }, [orders]);
 
   // Si cambia el paciente externo
   useEffect(() => {
@@ -235,7 +207,7 @@ export const DoctorLabOrdersView = ({ user, patient, onSelectPatient, onNavigate
   };
 
   // Enviar orden al buzón del laboratorio
-  const handleSendOrder = (e) => {
+  const handleSendOrder = async (e) => {
     e.preventDefault();
     if (!selectedPatientLocal) {
       setFeedback({ type: 'error', text: 'Debe seleccionar un paciente para emitir la orden médica.' });
@@ -247,35 +219,22 @@ export const DoctorLabOrdersView = ({ user, patient, onSelectPatient, onNavigate
     }
 
     setIsSubmitting(true);
-    const newOrder = {
-      id: labId || generateNextLabId(orders),
-      patient_id: selectedPatientLocal.id || selectedPatientLocal.document_number,
-      patient_name: selectedPatientLocal.name || selectedPatientLocal.full_name || 'Paciente',
-      patient_document: selectedPatientLocal.document_number || '1006238743',
-      patient_document_type: selectedPatientLocal.document_type || 'CC',
-      patient_eps: selectedPatientLocal.eps_name || selectedPatientLocal.eps || 'CaliEps (CONTRIBUTIVO)',
-      patient_age: calculateAge(selectedPatientLocal.birth_date) || selectedPatientLocal.age || 32,
-      patient_gender: selectedPatientLocal.gender === 'F' ? 'Femenino' : 'Masculino',
-      patient_email: selectedPatientLocal.email || '',
-      patient_phone: selectedPatientLocal.phone || '',
-      test_type: testType.trim(),
-      sample_type: sampleType.trim() || 'Muestra biológica estándar',
-      priority,
-      status: 'PENDIENTE',
-      ordering_doctor: doctorName,
-      doctor_license: doctorLicense,
-      doctor_specialty: user?.specialty || 'Medicina General & Especialidades',
-      observations: clinicalNotes.trim() || 'Sin observaciones clínicas adicionales.',
-      created_at: new Date().toISOString(),
-    };
-
-    const updatedOrders = [newOrder, ...orders];
-    setOrders(updatedOrders);
-    localStorage.setItem('saludconecta_lab_orders', JSON.stringify(updatedOrders));
-
-    // Notificar al laboratorio en tiempo real
-    window.dispatchEvent(new CustomEvent('saludconecta_lab_orders_updated', { detail: newOrder }));
-
+    let newOrder;
+    try {
+      // El servidor asigna el numero LAB-AAAA-NNN y toma los datos del paciente y del medico de la sesion
+      newOrder = await apiClient.createLabOrder({
+        patient_id: selectedPatientLocal.id,
+        test_type: testType.trim(),
+        sample_type: sampleType.trim(),
+        priority,
+        observations: clinicalNotes.trim(),
+      });
+    } catch (err) {
+      setIsSubmitting(false);
+      setFeedback({ type: 'error', text: `No se pudo enviar la orden: ${err.message}` });
+      return;
+    }
+    setOrders((list) => [newOrder, ...list]);
     setIsSubmitting(false);
     setFeedback({
       type: 'success',
@@ -287,7 +246,7 @@ export const DoctorLabOrdersView = ({ user, patient, onSelectPatient, onNavigate
     setSampleType('');
     setClinicalNotes('');
     setPriority('RUTINA');
-    setLabId(generateNextLabId(updatedOrders));
+    setLabId(newOrder.id);
   };
 
   // Filtrado de pacientes para búsqueda
@@ -305,20 +264,25 @@ export const DoctorLabOrdersView = ({ user, patient, onSelectPatient, onNavigate
   };
 
   // Enviar resultado por correo al paciente
-  const handleSendEmailResult = () => {
-    if (!emailRecipient.trim()) {
+  const handleSendEmailResult = async () => {
+    if (!emailRecipient.trim() || !viewingResultOrder) {
       setEmailFeedback('Por favor ingrese un correo electrónico válido.');
       return;
     }
     setIsSendingEmail(true);
-    setTimeout(() => {
-      setIsSendingEmail(false);
-      setEmailFeedback(`Resultado oficial despachado con éxito a ${emailRecipient}.`);
+    try {
+      const updated = await apiClient.dispatchLabOrder(viewingResultOrder.id, emailRecipient.trim(), false);
+      setOrders((list) => list.map((o) => (o.id === updated.id ? updated : o)));
+      setEmailFeedback(`Resultado oficial enviado a ${updated.dispatched_to}.`);
       setTimeout(() => {
         setIsEmailModalOpen(false);
         setEmailFeedback('');
       }, 2500);
-    }, 1200);
+    } catch (err) {
+      setEmailFeedback(`No se pudo enviar el correo: ${err.message}`);
+    } finally {
+      setIsSendingEmail(false);
+    }
   };
 
   const completedOrders = orders.filter((o) => o.status === 'COMPLETADO');
@@ -514,7 +478,7 @@ export const DoctorLabOrdersView = ({ user, patient, onSelectPatient, onNavigate
                 </h3>
                 <div className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-purple-100 text-purple-900 font-mono text-xs font-bold border border-purple-200">
                   <Hash className="w-3.5 h-3.5" />
-                  <span>ID Asignado: {labId}</span>
+                  <span>ID: {labId || 'se asigna al enviar'}</span>
                 </div>
               </div>
 
@@ -607,7 +571,7 @@ export const DoctorLabOrdersView = ({ user, patient, onSelectPatient, onNavigate
                 {/* BOTÓN PRINCIPAL DE DESPACHO */}
                 <div className="flex items-center justify-between pt-3 border-t border-surface-container-high">
                   <div className="text-[11px] text-outline font-mono">
-                    ID Destino: <strong className="text-purple-900">{labId}</strong> • Bandeja de Laboratorio Central
+                    ID Destino: <strong className="text-purple-900">{labId || 'se asigna al enviar'}</strong> • Bandeja de Laboratorio Central
                   </div>
                   <button
                     type="submit"

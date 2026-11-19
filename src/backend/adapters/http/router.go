@@ -9,18 +9,18 @@ import (
 )
 
 type RouterConfig struct {
-	AuthHandler           *handlers.AuthHandler
-	AdminHandler          *handlers.AdminHandler
-	PatientHandler        *handlers.PatientHandler
-	TriageHandler         *handlers.TriageHandler
-	ClinicalRecordHandler *handlers.ClinicalRecordHandler
-	PrescriptionHandler   *handlers.PrescriptionHandler
-	SyncHandler           *handlers.SyncHandler
-	AppointmentHandler    *handlers.AppointmentHandler
-	TreatmentHandler      *handlers.TreatmentHandler
-	PharmacyHandler       *handlers.PharmacyHandler
-	HealthEducationHandler *handlers.HealthEducationHandler
-	TIHandler              *handlers.TIHandler
+	AuthHandler               *handlers.AuthHandler
+	AdminHandler              *handlers.AdminHandler
+	PatientHandler            *handlers.PatientHandler
+	TriageHandler             *handlers.TriageHandler
+	ClinicalRecordHandler     *handlers.ClinicalRecordHandler
+	PrescriptionHandler       *handlers.PrescriptionHandler
+	SyncHandler               *handlers.SyncHandler
+	AppointmentHandler        *handlers.AppointmentHandler
+	TreatmentHandler          *handlers.TreatmentHandler
+	PharmacyHandler           *handlers.PharmacyHandler
+	HealthEducationHandler    *handlers.HealthEducationHandler
+	TIHandler                 *handlers.TIHandler
 	AppointmentRequestHandler *handlers.AppointmentRequestHandler
 	LabOrderHandler           *handlers.LabOrderHandler
 	NursingHandler            *handlers.NursingHandler
@@ -215,7 +215,8 @@ func SetupRoutes(app *fiber.App, cfg RouterConfig) {
 		lab.Post("/", middlewares.RequireRoles("MEDICO", "LABORATORIO"), cfg.LabOrderHandler.Create)
 		lab.Put("/:id/progress", middlewares.RequireRoles("LABORATORIO"), cfg.LabOrderHandler.SaveProgress)
 		lab.Post("/:id/seal", middlewares.RequireRoles("LABORATORIO"), cfg.LabOrderHandler.Seal)
-		lab.Post("/:id/dispatch", middlewares.RequireRoles("LABORATORIO"), cfg.LabOrderHandler.Dispatch)
+		// El medico puede reenviar por correo los resultados sellados de sus propias ordenes
+		lab.Post("/:id/dispatch", middlewares.RequireRoles("LABORATORIO", "MEDICO"), cfg.LabOrderHandler.Dispatch)
 	}
 
 	// 8.3 Registro de enfermeria por paciente: el medico envia la orden; enfermeria gestiona deberes y notas

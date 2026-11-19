@@ -148,4 +148,3 @@ func TestAppointment_ScheduleSuccessAndRetrieve(t *testing.T) {
 		t.Errorf("especialidad esperada %s, obtenida %s", doc.Specialty, list[0].DoctorSpecialty)
 	}
 }
-

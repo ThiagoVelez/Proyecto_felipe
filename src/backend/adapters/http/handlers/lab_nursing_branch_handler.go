@@ -27,7 +27,9 @@ func unauthorized(c *fiber.Ctx) error {
 
 type LabOrderHandler struct{ svc ports.LabOrderService }
 
-func NewLabOrderHandler(svc ports.LabOrderService) *LabOrderHandler { return &LabOrderHandler{svc: svc} }
+func NewLabOrderHandler(svc ports.LabOrderService) *LabOrderHandler {
+	return &LabOrderHandler{svc: svc}
+}
 
 func labError(c *fiber.Ctx, err error) error {
 	switch {
@@ -120,7 +122,7 @@ type labDispatchDTO struct {
 }
 
 func (h *LabOrderHandler) Dispatch(c *fiber.Ctx) error {
-	id, _, ok := sessionUser(c)
+	id, role, ok := sessionUser(c)
 	if !ok {
 		return unauthorized(c)
 	}
@@ -128,7 +130,7 @@ func (h *LabOrderHandler) Dispatch(c *fiber.Ctx) error {
 	if err := c.BodyParser(&dto); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Solicitud inválida"})
 	}
-	o, err := h.svc.Dispatch(c.Context(), id, c.Params("id"), dto.Email, dto.CopyDoctor)
+	o, err := h.svc.Dispatch(c.Context(), id, role, c.Params("id"), dto.Email, dto.CopyDoctor)
 	if err != nil {
 		if errors.Is(err, domain.ErrInvalidLabOrder) {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "El correo del paciente no es válido"})

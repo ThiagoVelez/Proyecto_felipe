@@ -138,7 +138,7 @@ type LabOrderService interface {
 	List(ctx context.Context, actorID, role string, status domain.LabOrderStatus) ([]domain.LabOrder, error)
 	SaveProgress(ctx context.Context, actorID, id, results, methodNotes string) (*domain.LabOrder, error)
 	Seal(ctx context.Context, actorID, id, results, methodNotes string) (*domain.LabOrder, error)
-	Dispatch(ctx context.Context, actorID, id, email string, copyDoctor bool) (*domain.LabOrder, error)
+	Dispatch(ctx context.Context, actorID, role, id, email string, copyDoctor bool) (*domain.LabOrder, error)
 }
 
 // NursingService gestiona el registro de enfermeria por paciente.

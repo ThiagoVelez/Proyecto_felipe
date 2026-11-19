@@ -25,6 +25,8 @@ const INITIAL_FORM = {
   eps_name: '',
   affiliation_status: 'ACTIVO',
   phone: '',
+  email: '',
+  address: '',
   is_rural_zone: false,
 };
 
@@ -147,6 +149,9 @@ export const PatientRegisterModal = ({ isOpen, onClose, onCreated }) => {
     if (form.second_name.trim()) payload.second_name = form.second_name.trim();
     if (form.second_last_name.trim()) payload.second_last_name = form.second_last_name.trim();
     if (form.phone.trim()) payload.phone = form.phone.trim();
+    // Sin correo el paciente no recibe la confirmación de sus citas ni sus resultados de laboratorio
+    if (form.email.trim()) payload.email = form.email.trim().toLowerCase();
+    if (form.address.trim()) payload.address = form.address.trim();
     return payload;
   };
 
@@ -444,6 +449,28 @@ export const PatientRegisterModal = ({ isOpen, onClose, onCreated }) => {
                 <Phone className="w-3.5 h-3.5 text-outline absolute left-2.5 top-2.5" />
               </div>
               <FieldError id="pr-phone-error" message={fieldErrors.phone} />
+            </div>
+
+            <div>
+              <label htmlFor="pr-email" className="block font-semibold text-on-surface mb-1">
+                Correo Electrónico (para citas y resultados)
+              </label>
+              <input
+                id="pr-email"
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                placeholder="paciente@correo.com"
+                className={inputClass}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="pr-address" className="block font-semibold text-on-surface mb-1">
+                Dirección de Residencia
+              </label>
+              <input id="pr-address" type="text" name="address" value={form.address} onChange={handleChange} className={inputClass} />
             </div>
 
             <label htmlFor="pr-rural" className="flex items-center gap-2 font-semibold text-on-surface self-end h-9 cursor-pointer">

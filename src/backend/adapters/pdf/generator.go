@@ -39,9 +39,9 @@ func buildMinimalPDF(title string, lines []string, barcodeText string) []byte {
 
 	// Fondo y encabezado decorativo institucional (Verde Clinico SaludConecta IPS)
 	stream.WriteString("q\n")
-	stream.WriteString("0.04 0.38 0.33 rg\n")          // Color #0A6154
-	stream.WriteString("36 720 540 45 re f\n")         // Barra superior
-	stream.WriteString("0.85 0.95 0.92 rg\n")          // Verde suave de fondo
+	stream.WriteString("0.04 0.38 0.33 rg\n")  // Color #0A6154
+	stream.WriteString("36 720 540 45 re f\n") // Barra superior
+	stream.WriteString("0.85 0.95 0.92 rg\n")  // Verde suave de fondo
 	stream.WriteString("36 670 540 38 re f\n")
 	stream.WriteString("Q\n")
 

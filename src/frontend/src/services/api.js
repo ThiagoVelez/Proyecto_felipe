@@ -510,6 +510,102 @@ export const apiClient = {
     return this.requestV2(`/appointments?${params.toString()}`, { strict: true });
   },
 
+  // Laboratorio (ordenes en el servidor)
+  async getLabOrders(status = '') {
+    const qs = status ? `?status=${encodeURIComponent(status)}` : '';
+    const res = await this.requestV2(`/lab-orders${qs}`, { strict: true });
+    return res?.orders ?? [];
+  },
+
+  async createLabOrder(data) {
+    return this.requestV2('/lab-orders', { strict: true, method: 'POST', body: JSON.stringify(data) });
+  },
+
+  async saveLabProgress(id, results, methodNotes) {
+    return this.requestV2(`/lab-orders/${encodeURIComponent(id)}/progress`, {
+      strict: true,
+      method: 'PUT',
+      body: JSON.stringify({ results, method_notes: methodNotes }),
+    });
+  },
+
+  async sealLabOrder(id, results, methodNotes) {
+    return this.requestV2(`/lab-orders/${encodeURIComponent(id)}/seal`, {
+      strict: true,
+      method: 'POST',
+      body: JSON.stringify({ results, method_notes: methodNotes }),
+    });
+  },
+
+  async dispatchLabOrder(id, email, copyDoctor) {
+    return this.requestV2(`/lab-orders/${encodeURIComponent(id)}/dispatch`, {
+      strict: true,
+      method: 'POST',
+      body: JSON.stringify({ email, copy_doctor: copyDoctor }),
+    });
+  },
+
+  // Enfermeria (registro por paciente en el servidor)
+  async getNursingRecords() {
+    const res = await this.requestV2('/nursing', { strict: true });
+    return res?.records ?? [];
+  },
+
+  async getNursingRecord(patientId) {
+    return this.requestV2(`/nursing/${encodeURIComponent(patientId)}`, { strict: true });
+  },
+
+  async assignNursingOrder(patientId, order, medications) {
+    return this.requestV2(`/nursing/${encodeURIComponent(patientId)}/order`, {
+      strict: true,
+      method: 'PUT',
+      body: JSON.stringify({ order, medications }),
+    });
+  },
+
+  async saveNursingDuties(patientId, duties) {
+    return this.requestV2(`/nursing/${encodeURIComponent(patientId)}/duties`, {
+      strict: true,
+      method: 'PUT',
+      body: JSON.stringify({ duties }),
+    });
+  },
+
+  async addNursingNote(patientId, content) {
+    return this.requestV2(`/nursing/${encodeURIComponent(patientId)}/notes`, {
+      strict: true,
+      method: 'POST',
+      body: JSON.stringify({ content }),
+    });
+  },
+
+  // Sedes (catalogo del servidor)
+  async getBranches() {
+    const res = await this.request('/branches', { strict: true, method: 'GET' });
+    return res?.branches ?? [];
+  },
+
+  async adminCreateBranch(data) {
+    return this.request('/admin/branches', { strict: true, method: 'POST', body: JSON.stringify(data) });
+  },
+
+  async adminUpdateBranch(id, data) {
+    return this.request(`/admin/branches/${encodeURIComponent(id)}`, { strict: true, method: 'PUT', body: JSON.stringify(data) });
+  },
+
+  async adminDeleteBranch(id) {
+    const headers = { 'Content-Type': 'application/json' };
+    if (this.token) headers.Authorization = `Bearer ${this.token}`;
+    const res = await fetch(`${API_BASE}/admin/branches/${encodeURIComponent(id)}`, { method: 'DELETE', headers });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      const error = new Error(data.error || `Error HTTP ${res.status}`);
+      error.status = res.status;
+      throw error;
+    }
+    return true;
+  },
+
   // Portal publico del paciente (sin sesion)
   async getPublicBranches() {
     const res = await this.request('/public/branches', { strict: true, method: 'GET' });

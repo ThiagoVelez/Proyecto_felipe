@@ -22,7 +22,7 @@ import MfaQrModal from '../components/MfaQrModal';
 import ClinicalBiometricVisualizer from '../components/ClinicalBiometricVisualizer';
 import BrandLogo from '../components/BrandLogo';
 import AdminRegisterModal from '../components/AdminRegisterModal';
-import { loadBranches } from '../services/branches';
+import { useBranches } from '../services/branches';
 import { apiClient } from '../services/api';
 import {
   calculateTotpCode,
@@ -36,8 +36,15 @@ const EMPTY_CODE = ['', '', '', '', '', ''];
 
 export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
   const [identifier, setIdentifier] = useState('');
-  const [branches] = useState(loadBranches);
+  const { branches } = useBranches();
   const [branch, setBranch] = useState(() => branches[0]?.name || '');
+
+  // Si la sede elegida no existe en el catalogo del servidor, se preselecciona la primera disponible
+  useEffect(() => {
+    if (branches.length > 0 && !branches.some((b) => b.name === branch)) {
+      setBranch(branches[0].name);
+    }
+  }, [branches, branch]);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [totp, setTotp] = useState(EMPTY_CODE);

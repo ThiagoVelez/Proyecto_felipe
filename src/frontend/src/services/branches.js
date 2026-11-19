@@ -1,4 +1,5 @@
-const BRANCHES_STORAGE_KEY = 'saludconecta_admin_branches';
+import { useCallback, useEffect, useState } from 'react';
+import { apiClient } from './api';
 
 // Lista inicial de sedes institucionales
 export const INITIAL_BRANCHES = [
@@ -36,16 +37,39 @@ export const INITIAL_BRANCHES = [
   },
 ];
 
-// Las sedes aun no tienen API: el catalogo del administrador se guarda solo en el almacenamiento de este navegador
-export const loadBranches = () => {
-  try {
-    const saved = JSON.parse(localStorage.getItem(BRANCHES_STORAGE_KEY));
-    return Array.isArray(saved) ? saved : INITIAL_BRANCHES;
-  } catch {
-    return INITIAL_BRANCHES;
-  }
+// Las sedes viven en el servidor (GET /api/v1/branches). INITIAL_BRANCHES solo se muestra mientras llega la
+// respuesta o si el servidor no responde, para que el login siga siendo usable.
+export const BRANCHES_UPDATED_EVENT = 'saludconecta_branches_updated';
+
+export const notifyBranchesChanged = () => {
+  window.dispatchEvent(new CustomEvent(BRANCHES_UPDATED_EVENT));
 };
 
-export const saveBranches = (branches) => {
-  localStorage.setItem(BRANCHES_STORAGE_KEY, JSON.stringify(branches));
+// Compatibilidad: devuelve la lista inicial (la vigente se obtiene con useBranches)
+export const loadBranches = () => INITIAL_BRANCHES;
+
+export const useBranches = () => {
+  const [branches, setBranches] = useState(INITIAL_BRANCHES);
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState('');
+
+  const refresh = useCallback(async () => {
+    try {
+      const list = await apiClient.getBranches();
+      setBranches(list);
+      setError('');
+    } catch (err) {
+      setError(err.message || 'No fue posible consultar las sedes.');
+    } finally {
+      setLoaded(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    refresh();
+    window.addEventListener(BRANCHES_UPDATED_EVENT, refresh);
+    return () => window.removeEventListener(BRANCHES_UPDATED_EVENT, refresh);
+  }, [refresh]);
+
+  return { branches, loaded, error, refresh };
 };

@@ -52,8 +52,10 @@ describe('Registro de personal - Acceso exclusivo desde el perfil del administra
   });
 
   it('muestra el rechazo del servidor en lugar de simular un registro exitoso', async () => {
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(JSON.stringify({ error: 'Acceso denegado' }), { status: 403 })
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockImplementation(async (url) =>
+      String(url).endsWith('/api/v1/branches')
+        ? new Response(JSON.stringify({ branches: [] }), { status: 200 })
+        : new Response(JSON.stringify({ error: 'Acceso denegado' }), { status: 403 })
     );
     const { container } = render(<StaffRegisterModal isOpen={true} onClose={() => {}} />);
 
@@ -66,7 +68,7 @@ describe('Registro de personal - Acceso exclusivo desde el perfil del administra
 
     expect(await screen.findByText('Acceso denegado')).toBeInTheDocument();
     expect(screen.queryByText('Personal Registrado')).not.toBeInTheDocument();
-    expect(fetchSpy.mock.calls[0][0]).toBe('/api/v1/admin/users');
+    expect(fetchSpy.mock.calls.some((c) => c[0] === '/api/v1/admin/users')).toBe(true);
     fetchSpy.mockRestore();
   });
 
@@ -101,15 +103,13 @@ describe('AuthScreen - El acceso depende de la respuesta del servidor', () => {
     expect(screen.getByPlaceholderText(/Ej: MiClave2026/i)).toHaveValue('');
   });
 
-  it('despliega en acordeón las sedes registradas y permite elegir una', () => {
-    localStorage.setItem(
-      'saludconecta_admin_branches',
-      JSON.stringify([
-        { id: 'a', name: 'Sede Registrada Uno', municipality: 'Cartago', status: 'Operativo' },
-        { id: 'b', name: 'Sede Registrada Dos', municipality: 'Buga', status: 'En Espera' },
-      ])
-    );
+  it('despliega en acordeón las sedes del servidor y permite elegir una', async () => {
+    mockLoginServer([{ body: {} }], undefined, [
+      { id: 'a', name: 'Sede Registrada Uno', municipality: 'Cartago', status: 'Operativo' },
+      { id: 'b', name: 'Sede Registrada Dos', municipality: 'Buga', status: 'En Espera' },
+    ]);
     render(<AuthScreen />);
+    await waitFor(() => expect(screen.getByRole('button', { name: /Sede Operativa de Turno/i })).toHaveTextContent('Sede Registrada Uno'));
 
     const trigger = screen.getByRole('button', { name: /Sede Operativa de Turno/i });
     expect(trigger).toHaveAttribute('aria-expanded', 'false');
@@ -120,7 +120,7 @@ describe('AuthScreen - El acceso depende de la respuesta del servidor', () => {
     fireEvent.click(screen.getByRole('button', { name: /Sede Registrada Dos/i }));
     expect(trigger).toHaveAttribute('aria-expanded', 'false');
     expect(trigger).toHaveTextContent('Sede Registrada Dos');
-    localStorage.clear();
+    vi.restoreAllMocks();
   });
 
   it('no abre sesión cuando el servidor rechaza las credenciales', async () => {
