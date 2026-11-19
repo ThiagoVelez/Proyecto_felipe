@@ -66,6 +66,26 @@ func ensureRoles(db *sql.DB) error {
 	return nil
 }
 
+// ensureChainHashWidth amplia previous_hash a 128 caracteres. El hash genesis de la cadena
+// (services.GenesisHash) tiene 69 caracteres y no cabia en VARCHAR(64): con MySQL en modo estricto el cierre del
+// primer folio de cada paciente fallaba con el error 1406 (Data too long).
+func ensureChainHashWidth(db *sql.DB) error {
+	var width sql.NullInt64
+	err := db.QueryRow(`
+		SELECT CHARACTER_MAXIMUM_LENGTH FROM information_schema.COLUMNS
+		WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'clinical_records' AND COLUMN_NAME = 'previous_hash'`).Scan(&width)
+	if err != nil {
+		return err
+	}
+	if width.Valid && width.Int64 >= 128 {
+		return nil
+	}
+	if _, err := db.Exec(`ALTER TABLE clinical_records MODIFY previous_hash VARCHAR(128) NULL`); err != nil {
+		return fmt.Errorf("no fue posible ampliar previous_hash a 128 caracteres: %w", err)
+	}
+	return nil
+}
+
 // ensureChainIndex crea el indice unico que impide bifurcar la cadena SHA-256: un paciente no puede tener dos
 // folios cerrados que consuman el mismo hash previo. Los borradores (previous_hash NULL) no participan.
 func ensureChainIndex(db *sql.DB) error {
@@ -384,6 +404,9 @@ func Migrate(db *sql.DB) (warnings []string, err error) {
 	}
 	if err := ensureUsersColumns(db); err != nil {
 		return nil, fmt.Errorf("fallo verificando columnas de usuarios: %w", err)
+	}
+	if err := ensureChainHashWidth(db); err != nil {
+		return nil, fmt.Errorf("fallo ajustando la columna de la cadena SHA-256: %w", err)
 	}
 	if err := ensureChainIndex(db); err != nil {
 		warnings = append(warnings, err.Error())

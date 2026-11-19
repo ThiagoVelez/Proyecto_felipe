@@ -19,6 +19,10 @@ func Migrate(db *sql.DB) error {
 	if _, err := db.Exec(schemaSQL); err != nil {
 		return fmt.Errorf("fallo aplicando el esquema postgresql: %w", err)
 	}
+	// El hash genesis de la cadena tiene 69 caracteres: las bases creadas con VARCHAR(64) se amplian
+	if _, err := db.Exec(`ALTER TABLE clinical_records ALTER COLUMN previous_hash TYPE VARCHAR(128)`); err != nil {
+		return fmt.Errorf("fallo ampliando previous_hash: %w", err)
+	}
 
 	for _, med := range catalog.DemoMedications() {
 		_, err := db.Exec(`

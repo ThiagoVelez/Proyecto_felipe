@@ -140,7 +140,7 @@ CREATE TABLE IF NOT EXISTS clinical_records (
     anatomical_mapping JSON NULL,       -- Puntos mapeados georreferenciados en el visor
     is_closed BOOLEAN DEFAULT FALSE,    -- Una vez firmado/cerrado no permite edicion
     signature_token VARCHAR(255) NULL,  -- Firma digital o token de sesion
-    previous_hash VARCHAR(64) NULL,     -- Hash SHA-256 del folio anterior (cadena inmutable)
+    previous_hash VARCHAR(128) NULL,    -- Hash SHA-256 del folio anterior o hash genesis de 69 caracteres (cadena inmutable)
     hash_sha256 VARCHAR(64) NULL,       -- Hash SHA-256 propio del registro
     is_offline_sync BOOLEAN DEFAULT FALSE,
     sync_batch_id VARCHAR(36) NULL,
