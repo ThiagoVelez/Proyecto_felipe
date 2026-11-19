@@ -98,11 +98,9 @@ export const PatientPicker = ({ onSelect, title = 'Seleccionar paciente' }) => {
     choosePatient(patient);
   };
 
-  const handleUpdated = (updated) => {
+  // El paciente seleccionado en otras pantallas se actualiza con el evento global saludconecta_patient_updated
+  const handleUpdated = () => {
     loadPatients();
-    if (onSelectPatient && updated) {
-      onSelectPatient(updated);
-    }
   };
 
   const handleDeleteConfirm = async () => {

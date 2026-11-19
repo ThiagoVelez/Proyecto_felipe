@@ -64,7 +64,7 @@ function enrichUserWithCustomProfile(rawUser) {
   try {
     localStorage.removeItem('saludconecta_profile_custom');
     localStorage.removeItem('saludconecta_avatar');
-  } catch {}
+  } catch { /* almacenamiento local no disponible: se continúa sin él */ }
 
   let customProfile = {};
   try {
@@ -76,7 +76,7 @@ function enrichUserWithCustomProfile(rawUser) {
     if (rawCustom) {
       customProfile = JSON.parse(rawCustom);
     }
-  } catch {}
+  } catch { /* almacenamiento local no disponible: se continúa sin él */ }
 
   const savedAvatar =
     rawUser.avatar ||
@@ -101,7 +101,7 @@ function enrichUserWithCustomProfile(rawUser) {
 
   try {
     localStorage.setItem('saludconecta_user', JSON.stringify(merged));
-  } catch {}
+  } catch { /* almacenamiento local no disponible: se continúa sin él */ }
 
   return merged;
 }
@@ -363,7 +363,7 @@ export function App() {
   }, []);
 
   const handleHeaderSearch = async (documentType, documentNumber) => {
-    const cleanDoc = documentNumber.trim().replace(/[\.\s]/g, '');
+    const cleanDoc = documentNumber.trim().replace(/[.\s]/g, '');
     let found = null;
     try {
       found = await apiClient.lookupPatient(documentType, cleanDoc);

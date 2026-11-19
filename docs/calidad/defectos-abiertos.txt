@@ -18,25 +18,7 @@
 # Revision R3 (10 nov 2026): DEF-01 a DEF-48 reverificados (anexos/cifras-r3.json). Se agregan DEF-85, 87, 88 y 89
 # (calidad_revision_r3_regression_test.go). DEF-49 a DEF-72 siguen reproduciendose (evidencias/r3/30-...).
 
-DEF-29 TestDEF29HashSinColisionPorDelimitador marcador
-DEF-30 TestDEF30VerificacionValidaEnlaceConFolioAnterior marcador
-DEF-49 TestDEF49RegistroDeAdministradorRequiereAutenticacion marcador
-DEF-50 TestDEF50SemillaMFANoSeExponeSinAutenticacion marcador
-DEF-51 TestDEF51PrescripcionV2CruzaAlergias marcador
-DEF-52 TestDEF52RecetaV2RechazaCantidadNoPositiva marcador
-DEF-53 TestDEF53DispensacionExigeDocumentoDelPaciente marcador
-DEF-54 TestDEF54NoDispensaMedicamentoVencido marcador
-DEF-55 TestDEF55EliminarPacienteNoPierdeAntecedentesAlergicos marcador
-DEF-57 TestDEF57NotaAnatomicaCoincideConPacienteDelFolio marcador
-DEF-58 TestDEF58RecetaDispensadaNoSeReactiva marcador
-DEF-59 TestDEF59NoDispensaRecetaCancelada marcador
-DEF-60 TestDEF60AlergiaAFarmacoSeExtiendeASuFamilia marcador
-DEF-61 TestDEF61PDFNoSaleDelDirectorioDeDocumentos marcador
-DEF-67 TestDEF67EscalaEVAFueraDeRangoSeRechaza marcador
-DEF-68 TestDEF68ActualizacionParcialConservaContacto marcador
-DEF-70 TestDEF70PublicacionSoloLaEditaSuAutor marcador
-DEF-72 TestDEF72AuditorConsultaNotasAnatomicasDelPaciente marcador
-DEF-85 TestDEF85CitaConservaLaHoraLocalDeColombia marcador
-DEF-87 TestDEF87MuroNoConfiaEnLaDuracionDeclaradaPorElCliente marcador
-DEF-88 TestDEF88CitaExigePacienteExistente marcador
-DEF-89 TestDEF89NotaAnatomicaRechazaEVAFueraDeRango marcador
+# Entrega Final v2 (19 nov 2026): las 22 pruebas de esta lista (DEF-29, 30, 49 a 55, 57 a 61, 67, 68, 70, 72, 85,
+# 87, 88 y 89) pasan sobre main, es decir, los defectos estan corregidos. Se cerraron en 04-bitacora-defectos.md y sus
+# pruebas se ejecutan siempre como regresion permanente (ya no llaman a requireDefectoAbierto). Con la lista vacia,
+# la herramienta controldefectos informa que no quedan defectos abiertos con reproduccion automatizada.

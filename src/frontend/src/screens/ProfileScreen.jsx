@@ -125,13 +125,13 @@ export const ProfileScreen = ({ user, onUpdateUser, onNavigate }) => {
   try {
     localStorage.removeItem('saludconecta_profile_custom');
     localStorage.removeItem('saludconecta_avatar');
-  } catch {}
+  } catch { /* almacenamiento local no disponible: se continúa sin él */ }
 
   const savedProfile = (() => {
     try {
       const userSpecific = localStorage.getItem(`saludconecta_profile_${userKey}`);
       if (userSpecific) return JSON.parse(userSpecific);
-    } catch {}
+    } catch { /* almacenamiento local no disponible: se continúa sin él */ }
     return {};
   })();
 

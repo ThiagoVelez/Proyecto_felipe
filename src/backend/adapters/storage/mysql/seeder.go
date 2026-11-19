@@ -1,6 +1,7 @@
 package mysql
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 
@@ -27,12 +28,12 @@ func ensureUsersColumns(db *sql.DB) error {
 			FROM information_schema.COLUMNS
 			WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = ?
 		`
-		if err := db.QueryRow(checkQuery, col.name).Scan(&exists); err != nil {
+		if err := db.QueryRowContext(context.Background(), checkQuery, col.name).Scan(&exists); err != nil {
 			return err
 		}
 		if exists == 0 {
 			alterQuery := fmt.Sprintf("ALTER TABLE users ADD COLUMN %s %s", col.name, col.dtyp)
-			if _, err := db.Exec(alterQuery); err != nil {
+			if _, err := db.ExecContext(context.Background(), alterQuery); err != nil {
 				return fmt.Errorf("error agregando columna %s a users: %w", col.name, err)
 			}
 		}
@@ -59,7 +60,7 @@ func ensureRoles(db *sql.DB) error {
 
 	for _, r := range roles {
 		query := `INSERT IGNORE INTO roles (id, name, description) VALUES (?, ?, ?)`
-		if _, err := db.Exec(query, r.id, r.name, r.desc); err != nil {
+		if _, err := db.ExecContext(context.Background(), query, r.id, r.name, r.desc); err != nil {
 			return err
 		}
 	}
@@ -71,7 +72,7 @@ func ensureRoles(db *sql.DB) error {
 // primer folio de cada paciente fallaba con el error 1406 (Data too long).
 func ensureChainHashWidth(db *sql.DB) error {
 	var width sql.NullInt64
-	err := db.QueryRow(`
+	err := db.QueryRowContext(context.Background(), `
 		SELECT CHARACTER_MAXIMUM_LENGTH FROM information_schema.COLUMNS
 		WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'clinical_records' AND COLUMN_NAME = 'previous_hash'`).Scan(&width)
 	if err != nil {
@@ -80,7 +81,7 @@ func ensureChainHashWidth(db *sql.DB) error {
 	if width.Valid && width.Int64 >= 128 {
 		return nil
 	}
-	if _, err := db.Exec(`ALTER TABLE clinical_records MODIFY previous_hash VARCHAR(128) NULL`); err != nil {
+	if _, err := db.ExecContext(context.Background(), `ALTER TABLE clinical_records MODIFY previous_hash VARCHAR(128) NULL`); err != nil {
 		return fmt.Errorf("no fue posible ampliar previous_hash a 128 caracteres: %w", err)
 	}
 	return nil
@@ -90,7 +91,7 @@ func ensureChainHashWidth(db *sql.DB) error {
 // folios cerrados que consuman el mismo hash previo. Los borradores (previous_hash NULL) no participan.
 func ensureChainIndex(db *sql.DB) error {
 	var exists int
-	err := db.QueryRow(`
+	err := db.QueryRowContext(context.Background(), `
 		SELECT COUNT(*) FROM information_schema.STATISTICS
 		WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'clinical_records' AND INDEX_NAME = ?`, chainIndexName).Scan(&exists)
 	if err != nil {
@@ -99,7 +100,7 @@ func ensureChainIndex(db *sql.DB) error {
 	if exists > 0 {
 		return nil
 	}
-	if _, err := db.Exec(fmt.Sprintf("ALTER TABLE clinical_records ADD UNIQUE KEY %s (patient_id, previous_hash)", chainIndexName)); err != nil {
+	if _, err := db.ExecContext(context.Background(), fmt.Sprintf("ALTER TABLE clinical_records ADD UNIQUE KEY %s (patient_id, previous_hash)", chainIndexName)); err != nil { // #nosec G201 -- nombre de indice constante
 		return fmt.Errorf("no fue posible crear el indice unico de la cadena SHA-256 (verifique bifurcaciones previas): %w", err)
 	}
 	return nil
@@ -145,7 +146,7 @@ func ensureTriggers(db *sql.DB) error {
 
 	for _, trg := range triggers {
 		var exists int
-		err := db.QueryRow(`
+		err := db.QueryRowContext(context.Background(), `
 			SELECT COUNT(*) FROM information_schema.TRIGGERS
 			WHERE TRIGGER_SCHEMA = DATABASE() AND TRIGGER_NAME = ?`, trg.name).Scan(&exists)
 		if err != nil {
@@ -154,7 +155,7 @@ func ensureTriggers(db *sql.DB) error {
 		if exists > 0 {
 			continue
 		}
-		if _, err := db.Exec(trg.stmt); err != nil {
+		if _, err := db.ExecContext(context.Background(), trg.stmt); err != nil {
 			return fmt.Errorf("error creando el disparador %s: %w", trg.name, err)
 		}
 	}
@@ -164,7 +165,7 @@ func ensureTriggers(db *sql.DB) error {
 // ensureMedicationCatalog carga el catalogo farmacologico inicial de forma idempotente (por codigo CUM).
 func ensureMedicationCatalog(db *sql.DB) error {
 	for _, med := range catalog.DemoMedications() {
-		_, err := db.Exec(`
+		_, err := db.ExecContext(context.Background(), `
 			INSERT IGNORE INTO medications_catalog (cum_code, commercial_name, generic_name, active_ingredient, concentration, pharmaceutical_form, stock_quantity)
 			VALUES (?, ?, ?, ?, ?, ?, ?)`,
 			med.CUMCode, med.CommercialName, med.GenericName, med.ActiveIngredient,
@@ -181,19 +182,19 @@ func ensureMedicationCatalog(db *sql.DB) error {
 func ensureV2TablesAndColumns(db *sql.DB) error {
 	// 1. Columnas en patients
 	var exists int
-	_ = db.QueryRow(`SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'patients' AND COLUMN_NAME = 'affiliation_type'`).Scan(&exists)
+	_ = db.QueryRowContext(context.Background(), `SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'patients' AND COLUMN_NAME = 'affiliation_type'`).Scan(&exists)
 	if exists == 0 {
-		_, _ = db.Exec(`ALTER TABLE patients ADD COLUMN affiliation_type ENUM('CONTRIBUTIVO', 'SUBSIDIADO', 'VINCULADO', 'PARTICULAR') NOT NULL DEFAULT 'CONTRIBUTIVO'`)
+		_, _ = db.ExecContext(context.Background(), `ALTER TABLE patients ADD COLUMN affiliation_type ENUM('CONTRIBUTIVO', 'SUBSIDIADO', 'VINCULADO', 'PARTICULAR') NOT NULL DEFAULT 'CONTRIBUTIVO'`)
 	}
 	var addrEx int
-	_ = db.QueryRow(`SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'patients' AND COLUMN_NAME = 'address'`).Scan(&addrEx)
+	_ = db.QueryRowContext(context.Background(), `SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'patients' AND COLUMN_NAME = 'address'`).Scan(&addrEx)
 	if addrEx == 0 {
-		_, _ = db.Exec(`ALTER TABLE patients ADD COLUMN address VARCHAR(200) DEFAULT ''`)
+		_, _ = db.ExecContext(context.Background(), `ALTER TABLE patients ADD COLUMN address VARCHAR(200) DEFAULT ''`)
 	}
 	var emailEx int
-	_ = db.QueryRow(`SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'patients' AND COLUMN_NAME = 'email'`).Scan(&emailEx)
+	_ = db.QueryRowContext(context.Background(), `SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'patients' AND COLUMN_NAME = 'email'`).Scan(&emailEx)
 	if emailEx == 0 {
-		_, _ = db.Exec(`ALTER TABLE patients ADD COLUMN email VARCHAR(100) DEFAULT ''`)
+		_, _ = db.ExecContext(context.Background(), `ALTER TABLE patients ADD COLUMN email VARCHAR(100) DEFAULT ''`)
 	}
 
 	// 2. Columnas en appointments
@@ -207,14 +208,14 @@ func ensureV2TablesAndColumns(db *sql.DB) error {
 	}
 	for _, col := range appCols {
 		var colEx int
-		_ = db.QueryRow(`SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'appointments' AND COLUMN_NAME = ?`, col.name).Scan(&colEx)
+		_ = db.QueryRowContext(context.Background(), `SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'appointments' AND COLUMN_NAME = ?`, col.name).Scan(&colEx)
 		if colEx == 0 {
-			_, _ = db.Exec(fmt.Sprintf("ALTER TABLE appointments ADD COLUMN %s %s", col.name, col.dtyp))
+			_, _ = db.ExecContext(context.Background(), fmt.Sprintf("ALTER TABLE appointments ADD COLUMN %s %s", col.name, col.dtyp))
 		}
 	}
 
 	// 3. Tabla inventory_items
-	_, err := db.Exec(`
+	_, err := db.ExecContext(context.Background(), `
 		CREATE TABLE IF NOT EXISTS inventory_items (
 			id VARCHAR(36) PRIMARY KEY,
 			code_cum VARCHAR(50) NOT NULL UNIQUE,
@@ -257,7 +258,7 @@ func ensureV2TablesAndColumns(db *sql.DB) error {
 	}
 
 	for _, it := range seedItems {
-		_, _ = db.Exec(`
+		_, _ = db.ExecContext(context.Background(), `
 			INSERT IGNORE INTO inventory_items (id, code_cum, generic_name, brand_name, dosage, presentation, unit_price, stock_quantity, min_stock, batch_number, expiry_date, is_active)
 			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
 		`, it.id, it.code, it.gen, it.brand, it.dosage, it.pres, it.price, it.stock, it.minStock, it.batch, it.expiry)
@@ -274,13 +275,13 @@ func ensureV2TablesAndColumns(db *sql.DB) error {
 	}
 	for _, col := range crCols {
 		var colEx int
-		_ = db.QueryRow(`SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'clinical_records' AND COLUMN_NAME = ?`, col.name).Scan(&colEx)
+		_ = db.QueryRowContext(context.Background(), `SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'clinical_records' AND COLUMN_NAME = ?`, col.name).Scan(&colEx)
 		if colEx == 0 {
-			_, _ = db.Exec(fmt.Sprintf("ALTER TABLE clinical_records ADD COLUMN %s %s", col.name, col.dtyp))
+			_, _ = db.ExecContext(context.Background(), fmt.Sprintf("ALTER TABLE clinical_records ADD COLUMN %s %s", col.name, col.dtyp))
 		}
 	}
 
-	_, err = db.Exec(`
+	_, err = db.ExecContext(context.Background(), `
 		CREATE TABLE IF NOT EXISTS clinical_anatomical_notes (
 			id VARCHAR(36) PRIMARY KEY,
 			clinical_record_id VARCHAR(36) NULL,
@@ -317,17 +318,17 @@ func ensureV2TablesAndColumns(db *sql.DB) error {
 	}
 	for _, col := range triageCols {
 		var colEx int
-		_ = db.QueryRow(`SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'triage_records' AND COLUMN_NAME = ?`, col.name).Scan(&colEx)
+		_ = db.QueryRowContext(context.Background(), `SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'triage_records' AND COLUMN_NAME = ?`, col.name).Scan(&colEx)
 		if colEx == 0 {
-			_, _ = db.Exec(fmt.Sprintf("ALTER TABLE triage_records ADD COLUMN %s %s", col.name, col.dtyp))
+			_, _ = db.ExecContext(context.Background(), fmt.Sprintf("ALTER TABLE triage_records ADD COLUMN %s %s", col.name, col.dtyp))
 		}
 	}
 
 	// 6. Idempotencia de status en citas medicas (appointments) para soportar SCHEDULED / AGENDADA
-	_, _ = db.Exec("ALTER TABLE appointments MODIFY COLUMN status VARCHAR(20) DEFAULT 'SCHEDULED'")
+	_, _ = db.ExecContext(context.Background(), "ALTER TABLE appointments MODIFY COLUMN status VARCHAR(20) DEFAULT 'SCHEDULED'")
 
 	// 7. Tabla del Muro de Salud y Concientización (Kit Informático Médico)
-	_, err = db.Exec(`
+	_, err = db.ExecContext(context.Background(), `
 		CREATE TABLE IF NOT EXISTS health_education_posts (
 			id VARCHAR(36) PRIMARY KEY,
 			doctor_id VARCHAR(36) NOT NULL,
@@ -353,7 +354,7 @@ func ensureV2TablesAndColumns(db *sql.DB) error {
 	}
 
 	// 8. Solicitudes de primera cita del portal del paciente (no son pacientes hasta que el medico agenda)
-	_, err = db.Exec(`
+	_, err = db.ExecContext(context.Background(), `
 		CREATE TABLE IF NOT EXISTS appointment_requests (
 			id VARCHAR(36) PRIMARY KEY,
 			code VARCHAR(20) NOT NULL UNIQUE,

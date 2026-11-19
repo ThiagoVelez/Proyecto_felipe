@@ -86,9 +86,7 @@ func leerLista(r io.Reader) ([]defecto, error) {
 	if err := sc.Err(); err != nil {
 		return nil, err
 	}
-	if len(lista) == 0 {
-		return nil, errors.New("la lista de defectos abiertos esta vacia")
-	}
+	// Una lista sin defectos es valida: significa que no queda ningun defecto abierto con reproduccion automatizada
 	return lista, nil
 }
 
@@ -237,6 +235,10 @@ func evaluar(lista []defecto, ej *ejecucion, conRace bool) []veredicto {
 }
 
 func regexPruebas(lista []defecto) string {
+	if len(lista) == 0 {
+		// No coincide con ninguna prueba: go test -run '^$' no ejecuta nada
+		return "^$"
+	}
 	nombres := make([]string, len(lista))
 	for i, d := range lista {
 		nombres[i] = d.Prueba
@@ -319,6 +321,14 @@ func ejecutar(args []string, entrada io.Reader, salida io.Writer) int {
 	for _, p := range verificarCoherencia(lista, estados, fuente) {
 		fmt.Fprintf(salida, "::error::Lista de defectos abiertos incoherente: %s\n", p)
 		fallo = true
+	}
+
+	if len(lista) == 0 {
+		if fallo {
+			return 1
+		}
+		fmt.Fprintln(salida, "No hay defectos abiertos con reproduccion automatizada: las pruebas de los defectos cerrados se ejecutan como regresion permanente.")
+		return 0
 	}
 
 	veredictos := evaluar(lista, ej, *conRace)

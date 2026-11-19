@@ -114,7 +114,7 @@ export default function PatientEditDrawer({ isOpen, onClose, patient, onUpdated 
           localStorage.setItem('saludconecta_lab_orders', JSON.stringify(updatedOrders));
           window.dispatchEvent(new CustomEvent('saludconecta_lab_orders_updated', { detail: mergedPatient }));
         }
-      } catch {}
+      } catch { /* almacenamiento local no disponible: se continúa sin él */ }
 
       // Emitir evento global reactivo para todos los módulos
       window.dispatchEvent(new CustomEvent('saludconecta_patient_updated', { detail: mergedPatient }));

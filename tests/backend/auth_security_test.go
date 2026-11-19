@@ -275,7 +275,7 @@ func TestRateLimitUsesRealClientIPBehindProxy(t *testing.T) {
 	hit := func(clientIP string) int {
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/health", nil)
 		req.Header.Set("X-Real-IP", clientIP)
-		res, err := server.App().Test(req)
+		res, err := server.App().Test(req, -1)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -305,7 +305,7 @@ func TestDualTokenLoginAndRefreshFlow(t *testing.T) {
 	})
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login", bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
-	res, err := env.app.Test(req)
+	res, err := env.app.Test(req, -1)
 	if err != nil || res.StatusCode != http.StatusOK {
 		t.Fatalf("Fallo login con credenciales validas: %v", err)
 	}
@@ -336,7 +336,7 @@ func TestDualTokenLoginAndRefreshFlow(t *testing.T) {
 	// 3. Un refresh token no debe ser aceptado en rutas protegidas como access token
 	protReq := httptest.NewRequest(http.MethodGet, "/api/v1/auth/me", nil)
 	protReq.Header.Set("Authorization", "Bearer "+refreshToken)
-	protRes, _ := env.app.Test(protReq)
+	protRes, _ := env.app.Test(protReq, -1)
 	if protRes.StatusCode != http.StatusUnauthorized {
 		t.Fatalf("Un refresh token no debe poder acceder a rutas protegidas de API, codigo: %d", protRes.StatusCode)
 	}
@@ -347,7 +347,7 @@ func TestDualTokenLoginAndRefreshFlow(t *testing.T) {
 	})
 	refReq := httptest.NewRequest(http.MethodPost, "/api/v1/auth/refresh", bytes.NewReader(refBody))
 	refReq.Header.Set("Content-Type", "application/json")
-	refRes, err := env.app.Test(refReq)
+	refRes, err := env.app.Test(refReq, -1)
 	if err != nil || refRes.StatusCode != http.StatusOK {
 		t.Fatalf("Fallo en endpoint /auth/refresh: %v", err)
 	}
@@ -367,7 +367,7 @@ func TestDualTokenLoginAndRefreshFlow(t *testing.T) {
 	// 5. Deteccion de reuso (OWASP ASVS): si se intenta usar el token viejo ya rotado, se detecta y anulan las sesiones
 	reuseReq := httptest.NewRequest(http.MethodPost, "/api/v1/auth/refresh", bytes.NewReader(refBody))
 	reuseReq.Header.Set("Content-Type", "application/json")
-	reuseRes, _ := env.app.Test(reuseReq)
+	reuseRes, _ := env.app.Test(reuseReq, -1)
 	if reuseRes.StatusCode != http.StatusUnauthorized {
 		t.Fatalf("El reuso de un refresh token previo debe rechazarse con 401, recibido: %d", reuseRes.StatusCode)
 	}
@@ -384,7 +384,7 @@ func TestRefreshTokenRevocationOnUserDeactivation(t *testing.T) {
 	})
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/auth/login", bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
-	res, _ := env.app.Test(req)
+	res, _ := env.app.Test(req, -1)
 
 	var authRes map[string]interface{}
 	_ = json.NewDecoder(res.Body).Decode(&authRes)
@@ -399,7 +399,7 @@ func TestRefreshTokenRevocationOnUserDeactivation(t *testing.T) {
 	})
 	refReq := httptest.NewRequest(http.MethodPost, "/api/v1/auth/refresh", bytes.NewReader(refBody))
 	refReq.Header.Set("Content-Type", "application/json")
-	refRes, _ := env.app.Test(refReq)
+	refRes, _ := env.app.Test(refReq, -1)
 
 	if refRes.StatusCode != http.StatusForbidden {
 		t.Fatalf("Un usuario suspendido debe recibir 403 Forbidden al intentar renovar, recibido: %d", refRes.StatusCode)

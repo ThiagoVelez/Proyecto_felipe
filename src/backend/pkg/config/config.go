@@ -75,7 +75,7 @@ func ValidateJWTSecret(secret string) error {
 func loadDotEnv() {
 	paths := []string{".env", "../.env", "../../.env"}
 	for _, p := range paths {
-		data, err := os.ReadFile(p)
+		data, err := os.ReadFile(p) // #nosec G304 -- rutas fijas del archivo .env local, no provienen del usuario
 		if err == nil {
 			for _, line := range strings.Split(string(data), "\n") {
 				line = strings.TrimSpace(line)
@@ -88,7 +88,7 @@ func loadDotEnv() {
 					val := strings.TrimSpace(parts[1])
 					val = strings.Trim(val, "\"'`\r")
 					if os.Getenv(key) == "" {
-						os.Setenv(key, val)
+						_ = os.Setenv(key, val)
 					}
 				}
 			}

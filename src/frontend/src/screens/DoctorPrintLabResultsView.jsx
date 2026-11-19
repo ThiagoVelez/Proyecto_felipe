@@ -36,7 +36,7 @@ export const DoctorPrintLabResultsView = ({ user, patient, onNavigate }) => {
       try {
         const saved = localStorage.getItem('saludconecta_lab_orders');
         if (saved) setOrders(JSON.parse(saved));
-      } catch {}
+      } catch { /* almacenamiento local no disponible: se continúa sin él */ }
     };
     window.addEventListener('saludconecta_lab_orders_updated', handleSync);
     window.addEventListener('storage', handleSync);

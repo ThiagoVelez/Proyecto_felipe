@@ -32,7 +32,7 @@ type Service struct {
 // NewService inicializa el servicio de correo asegurando la carpeta de auditoria de salida
 func NewService(cfg Config, log *logger.Logger) *Service {
 	outbox := "storage/outbox"
-	_ = os.MkdirAll(outbox, 0755)
+	_ = os.MkdirAll(outbox, 0750)
 	if cfg.From == "" {
 		cfg.From = "notificaciones@saludconecta.ips.gov.co"
 	}
@@ -57,7 +57,7 @@ func (s *Service) SendWithPDFAttachment(to string, subject, body, pdfFilename st
 		content := fmt.Sprintf("FROM: %s\nTO: %s\nSUBJECT: %s\nDATE: %s\nATTACHMENT: %s (%d bytes)\n\nBODY:\n%s\n",
 			s.cfg.From, to, subject, time.Now().Format(time.RFC3339), pdfFilename, len(pdfData), body)
 
-		_ = os.WriteFile(filePath, []byte(content), 0644)
+		_ = os.WriteFile(filePath, []byte(content), 0600)
 		s.log.Info("Correo electronico despachado y registrado en outbox local", map[string]interface{}{
 			"destinatario": to,
 			"asunto":       subject,

@@ -1308,11 +1308,12 @@ func (r *PharmacyReportMemoryRepo) GetMetrics(_ context.Context) (map[string]int
 
 	var pendingReports, managingReports, resolvedReports int
 	for _, rep := range r.ds.pharmacyReports {
-		if rep.Status == "PENDIENTE" {
+		switch rep.Status {
+		case "PENDIENTE":
 			pendingReports++
-		} else if rep.Status == "EN_GESTION" {
+		case "EN_GESTION":
 			managingReports++
-		} else if rep.Status == "REABASTECIDO" {
+		case "REABASTECIDO":
 			resolvedReports++
 		}
 	}

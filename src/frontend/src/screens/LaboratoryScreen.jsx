@@ -198,7 +198,7 @@ export const LaboratoryScreen = ({ user }) => {
       try {
         const saved = localStorage.getItem('saludconecta_lab_orders');
         if (saved) setOrders(JSON.parse(saved));
-      } catch {}
+      } catch { /* almacenamiento local no disponible: se continúa sin él */ }
     };
     window.addEventListener('saludconecta_lab_orders_updated', handleSync);
     window.addEventListener('storage', handleSync);
@@ -212,7 +212,7 @@ export const LaboratoryScreen = ({ user }) => {
   useEffect(() => {
     try {
       localStorage.setItem('saludconecta_lab_orders', JSON.stringify(orders));
-    } catch {}
+    } catch { /* almacenamiento local no disponible: se continúa sin él */ }
   }, [orders]);
 
   // Sincronización reactiva cuando cualquier departamento o médico actualiza los datos del paciente

@@ -288,7 +288,7 @@ func (h *ClinicalRecordHandler) CreateAnatomicalNote(c *fiber.Ctx) error {
 		})
 	}
 
-	layer := domain.LayerOrgan
+	var layer domain.AnatomicalLayer
 	switch req.Layer {
 	case "BONE":
 		layer = domain.LayerBone

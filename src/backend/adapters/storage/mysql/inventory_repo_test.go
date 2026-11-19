@@ -51,7 +51,7 @@ func TestInventoryRepositoryReadsExpiryDate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 	repo := NewInventoryRepository(db)
 
 	items, err := repo.GetAll(context.Background())

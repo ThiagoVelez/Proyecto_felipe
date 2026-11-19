@@ -66,10 +66,10 @@ func AuditMiddleware(log *logger.Logger, auditRepo ports.AuditRepository) fiber.
 			}
 
 			action := domain.ActionUpdate
-			switch {
-			case method == fiber.MethodGet:
+			switch method {
+			case fiber.MethodGet:
 				action = domain.ActionRead
-			case method == fiber.MethodPost:
+			case fiber.MethodPost:
 				action = domain.ActionCreate
 			}
 			if override, ok := c.Locals("audit_action").(string); ok && override != "" {
