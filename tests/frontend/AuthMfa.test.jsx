@@ -176,7 +176,7 @@ describe('Cliente HTTP - Manejo central de sesión', () => {
     window.removeEventListener(SESSION_EXPIRED_EVENT, listener);
     expect(listener).toHaveBeenCalledTimes(1);
     expect(apiClient.token).toBe('');
-    expect(localStorage.getItem('saludconecta_token')).toBeNull();
+    expect(sessionStorage.getItem('saludconecta_token')).toBeNull();
   });
 
   it('no cierra la sesión cuando el 401 proviene del login', async () => {
@@ -230,8 +230,8 @@ describe('Cliente HTTP - Manejo central de sesión', () => {
     expect(user).toEqual({ id: 'u1', role: 'MEDICO' });
     expect(apiClient.token).toBe('access-nuevo-rotado');
     expect(apiClient.refreshToken).toBe('refresh-nuevo-rotado');
-    expect(localStorage.getItem('saludconecta_token')).toBe('access-nuevo-rotado');
-    expect(localStorage.getItem('saludconecta_refresh_token')).toBe('refresh-nuevo-rotado');
+    expect(sessionStorage.getItem('saludconecta_token')).toBe('access-nuevo-rotado');
+    expect(sessionStorage.getItem('saludconecta_refresh_token')).toBe('refresh-nuevo-rotado');
   });
 
   it('almacena refresh_token en login y lo remueve por completo en logout', async () => {
@@ -251,13 +251,13 @@ describe('Cliente HTTP - Manejo central de sesión', () => {
     });
 
     await apiClient.login({ email: 'dr@ips.gov.co', password: '123' });
-    expect(localStorage.getItem('saludconecta_token')).toBe('acc-1');
-    expect(localStorage.getItem('saludconecta_refresh_token')).toBe('ref-1');
+    expect(sessionStorage.getItem('saludconecta_token')).toBe('acc-1');
+    expect(sessionStorage.getItem('saludconecta_refresh_token')).toBe('ref-1');
 
     await apiClient.logout();
     expect(apiClient.token).toBe('');
     expect(apiClient.refreshToken).toBe('');
-    expect(localStorage.getItem('saludconecta_token')).toBeNull();
-    expect(localStorage.getItem('saludconecta_refresh_token')).toBeNull();
+    expect(sessionStorage.getItem('saludconecta_token')).toBeNull();
+    expect(sessionStorage.getItem('saludconecta_refresh_token')).toBeNull();
   });
 });

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { sessionStore } from '../services/session';
 import {
   X,
   Camera,
@@ -253,7 +254,7 @@ export const UserProfileModal = ({ isOpen, onClose, user, onUpdateUser }) => {
       bannerId,
     };
 
-    localStorage.setItem('saludconecta_user', JSON.stringify(updatedUser));
+    sessionStore.setItem('saludconecta_user', JSON.stringify(updatedUser));
 
     if (onUpdateUser) {
       onUpdateUser(updatedUser);

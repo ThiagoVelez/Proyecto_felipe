@@ -4,22 +4,24 @@
  * Toda la informacion proviene del servidor: no existe respaldo simulado.
  */
 
+import { sessionStore } from './session';
+
 const API_BASE = '/api/v1';
 export const SESSION_EXPIRED_EVENT = 'saludconecta:session-expired';
 const UNAVAILABLE_MESSAGE = 'El servicio no está disponible. Intente nuevamente en unos minutos.';
 
 // Retira sesiones simuladas guardadas por versiones anteriores: el servidor nunca emitio esos tokens
-if (localStorage.getItem('saludconecta_token')?.startsWith('simulated-')) {
-  localStorage.removeItem('saludconecta_token');
-  localStorage.removeItem('saludconecta_user');
-  localStorage.removeItem('saludconecta_session_active');
+if (sessionStore.getItem('saludconecta_token')?.startsWith('simulated-')) {
+  sessionStore.removeItem('saludconecta_token');
+  sessionStore.removeItem('saludconecta_user');
+  sessionStore.removeItem('saludconecta_session_active');
 }
 
 export const apiClient = {
   // Estado de sesion en memoria / local cache
-  token: localStorage.getItem('saludconecta_token') || '',
-  refreshToken: localStorage.getItem('saludconecta_refresh_token') || '',
-  user: JSON.parse(localStorage.getItem('saludconecta_user') || 'null'),
+  token: sessionStore.getItem('saludconecta_token') || '',
+  refreshToken: sessionStore.getItem('saludconecta_refresh_token') || '',
+  user: JSON.parse(sessionStore.getItem('saludconecta_user') || 'null'),
   _refreshPromise: null,
 
   setAuth(token, user, refreshToken) {
@@ -29,18 +31,18 @@ export const apiClient = {
       this.refreshToken = refreshToken || '';
     }
     if (this.token) {
-      localStorage.setItem('saludconecta_token', this.token);
-      localStorage.setItem('saludconecta_user', JSON.stringify(user));
+      sessionStore.setItem('saludconecta_token', this.token);
+      sessionStore.setItem('saludconecta_user', JSON.stringify(user));
       if (this.refreshToken) {
-        localStorage.setItem('saludconecta_refresh_token', this.refreshToken);
+        sessionStore.setItem('saludconecta_refresh_token', this.refreshToken);
       } else {
-        localStorage.removeItem('saludconecta_refresh_token');
+        sessionStore.removeItem('saludconecta_refresh_token');
       }
     } else {
       this.refreshToken = '';
-      localStorage.removeItem('saludconecta_token');
-      localStorage.removeItem('saludconecta_user');
-      localStorage.removeItem('saludconecta_refresh_token');
+      sessionStore.removeItem('saludconecta_token');
+      sessionStore.removeItem('saludconecta_user');
+      sessionStore.removeItem('saludconecta_refresh_token');
     }
   },
 
@@ -145,7 +147,7 @@ export const apiClient = {
 
   expireSession() {
     this.setAuth('', null, '');
-    localStorage.removeItem('saludconecta_session_active');
+    sessionStore.removeItem('saludconecta_session_active');
     window.dispatchEvent(new CustomEvent(SESSION_EXPIRED_EVENT));
   },
 

@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { sessionStore } from '../services/session';
 import {
   Camera,
   Check,
@@ -183,7 +184,7 @@ export const ProfileScreen = ({ user, onUpdateUser, onNavigate }) => {
             ...user,
             avatar: resultUrl,
           };
-          localStorage.setItem('saludconecta_user', JSON.stringify(updatedUser));
+          sessionStore.setItem('saludconecta_user', JSON.stringify(updatedUser));
           if (onUpdateUser) {
             onUpdateUser(updatedUser);
           }
@@ -222,7 +223,7 @@ export const ProfileScreen = ({ user, onUpdateUser, onNavigate }) => {
       bannerId,
     };
 
-    localStorage.setItem('saludconecta_user', JSON.stringify(updatedUser));
+    sessionStore.setItem('saludconecta_user', JSON.stringify(updatedUser));
 
     if (onUpdateUser) {
       onUpdateUser(updatedUser);

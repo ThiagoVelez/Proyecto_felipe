@@ -132,7 +132,7 @@ describe('AuthScreen - El acceso depende de la respuesta del servidor', () => {
 
     expect(await screen.findByText('Credenciales invalidas')).toBeInTheDocument();
     expect(onLoginSuccess).not.toHaveBeenCalled();
-    expect(localStorage.getItem('saludconecta_token')).toBeNull();
+    expect(sessionStorage.getItem('saludconecta_token')).toBeNull();
     fetchSpy.mockRestore();
   });
 
@@ -145,7 +145,7 @@ describe('AuthScreen - El acceso depende de la respuesta del servidor', () => {
 
     expect(await screen.findByText(/El servicio no está disponible/i)).toBeInTheDocument();
     expect(onLoginSuccess).not.toHaveBeenCalled();
-    expect(localStorage.getItem('saludconecta_token')).toBeNull();
+    expect(sessionStorage.getItem('saludconecta_token')).toBeNull();
     fetchSpy.mockRestore();
   });
 
@@ -158,7 +158,7 @@ describe('AuthScreen - El acceso depende de la respuesta del servidor', () => {
     submitLogin(container);
 
     await waitFor(() => expect(onLoginSuccess).toHaveBeenCalledWith({ token: 'token-real', user }));
-    expect(localStorage.getItem('saludconecta_token')).toBe('token-real');
+    expect(sessionStorage.getItem('saludconecta_token')).toBe('token-real');
     localStorage.clear();
     fetchSpy.mockRestore();
   });
