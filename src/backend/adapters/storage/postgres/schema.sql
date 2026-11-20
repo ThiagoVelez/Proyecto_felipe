@@ -104,7 +104,7 @@ CREATE TABLE IF NOT EXISTS clinical_records (
     treatment_plan TEXT NOT NULL,
     is_closed BOOLEAN DEFAULT FALSE,
     signature_token VARCHAR(255) NULL,
-    previous_hash VARCHAR(64) NULL,
+    previous_hash VARCHAR(128) NULL,
     hash_sha256 VARCHAR(64) NULL,
     is_offline_sync BOOLEAN DEFAULT FALSE,
     sync_batch_id VARCHAR(36) NULL,

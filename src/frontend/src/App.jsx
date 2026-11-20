@@ -11,6 +11,7 @@ import SecurityMfaScreen from './screens/SecurityMfaScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import AdminLayout from './screens/admin/AdminLayout';
 import TiLayout from './screens/ti/TiLayout';
+import DoctorRequestsInbox from './screens/DoctorRequestsInbox';
 import DoctorAppointmentsView from './screens/DoctorAppointmentsView';
 import TreatmentFollowUpView from './screens/TreatmentFollowUpView';
 import PharmacyDashboard from './screens/PharmacyDashboard';
@@ -21,6 +22,7 @@ import LaboratoryScreen from './screens/LaboratoryScreen';
 import DoctorLabOrdersView from './screens/DoctorLabOrdersView';
 import DoctorPrintLabResultsView from './screens/DoctorPrintLabResultsView';
 import { apiClient, SESSION_EXPIRED_EVENT } from './services/api';
+import { sessionStore } from './services/session';
 
 const getUserStorageKey = (u) => {
   if (!u) return 'anonymous';
@@ -63,7 +65,7 @@ function enrichUserWithCustomProfile(rawUser) {
   try {
     localStorage.removeItem('saludconecta_profile_custom');
     localStorage.removeItem('saludconecta_avatar');
-  } catch {}
+  } catch { /* almacenamiento local no disponible: se continúa sin él */ }
 
   let customProfile = {};
   try {
@@ -75,7 +77,7 @@ function enrichUserWithCustomProfile(rawUser) {
     if (rawCustom) {
       customProfile = JSON.parse(rawCustom);
     }
-  } catch {}
+  } catch { /* almacenamiento local no disponible: se continúa sin él */ }
 
   const savedAvatar =
     rawUser.avatar ||
@@ -99,8 +101,8 @@ function enrichUserWithCustomProfile(rawUser) {
   };
 
   try {
-    localStorage.setItem('saludconecta_user', JSON.stringify(merged));
-  } catch {}
+    sessionStore.setItem('saludconecta_user', JSON.stringify(merged));
+  } catch { /* almacenamiento local no disponible: se continúa sin él */ }
 
   return merged;
 }
@@ -131,8 +133,8 @@ const isLabUser = (u) => {
 export function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     try {
-      const token = localStorage.getItem('saludconecta_token');
-      const storedUser = localStorage.getItem('saludconecta_user');
+      const token = sessionStore.getItem('saludconecta_token');
+      const storedUser = sessionStore.getItem('saludconecta_user');
       return Boolean(token && storedUser);
     } catch {
       return false;
@@ -141,7 +143,7 @@ export function App() {
 
   const [currentUser, setCurrentUser] = useState(() => {
     try {
-      const stored = localStorage.getItem('saludconecta_user');
+      const stored = sessionStore.getItem('saludconecta_user');
       return stored ? enrichUserWithCustomProfile(JSON.parse(stored)) : null;
     } catch {
       return null;
@@ -150,7 +152,7 @@ export function App() {
 
   const [currentView, setCurrentView] = useState(() => {
     try {
-      return localStorage.getItem('saludconecta_current_view') || 'dashboard';
+      return sessionStore.getItem('saludconecta_current_view') || 'dashboard';
     } catch {
       return 'dashboard';
     }
@@ -183,7 +185,7 @@ export function App() {
   // Cierre de sesion centralizado
   useEffect(() => {
     const handleSessionExpired = () => {
-      localStorage.removeItem('saludconecta_current_view');
+      sessionStore.removeItem('saludconecta_current_view');
       setIsAuthenticated(false);
       setCurrentUser(null);
       setCurrentView('dashboard');
@@ -228,19 +230,19 @@ export function App() {
         ['dashboard', 'appointments', 'triage', 'hce', 'nurse_summary', 'nurse_checklist', 'medical_kit', 'laboratory'].includes(currentView)
       ) {
         setCurrentView('pharmacy');
-        localStorage.setItem('saludconecta_current_view', 'pharmacy');
+        sessionStore.setItem('saludconecta_current_view', 'pharmacy');
       } else if (
         isNurse &&
         ['appointments', 'hce', 'treatment', 'pharmacy', 'inventory', 'prescription', 'laboratory'].includes(currentView)
       ) {
         setCurrentView('nurse_summary');
-        localStorage.setItem('saludconecta_current_view', 'nurse_summary');
+        sessionStore.setItem('saludconecta_current_view', 'nurse_summary');
       } else if (
         isLab &&
         ['dashboard', 'appointments', 'triage', 'hce', 'treatment', 'nurse_summary', 'nurse_checklist', 'pharmacy', 'inventory', 'prescription'].includes(currentView)
       ) {
         setCurrentView('laboratory');
-        localStorage.setItem('saludconecta_current_view', 'laboratory');
+        sessionStore.setItem('saludconecta_current_view', 'laboratory');
       }
     }
   }, [currentUser, currentView]);
@@ -248,7 +250,7 @@ export function App() {
   const handleLoginSuccess = (data) => {
     setSessionNotice('');
     setIsAuthenticated(true);
-    localStorage.setItem('saludconecta_session_active', 'true');
+    sessionStore.setItem('saludconecta_session_active', 'true');
     if (data && data.user) {
       const enriched = enrichUserWithCustomProfile(data.user);
       setCurrentUser(enriched);
@@ -265,27 +267,27 @@ export function App() {
 
       if (isPharm) {
         setCurrentView('pharmacy');
-        localStorage.setItem('saludconecta_current_view', 'pharmacy');
+        sessionStore.setItem('saludconecta_current_view', 'pharmacy');
       } else if (isNurse) {
         setCurrentView('nurse_summary');
-        localStorage.setItem('saludconecta_current_view', 'nurse_summary');
+        sessionStore.setItem('saludconecta_current_view', 'nurse_summary');
       } else if (isLab) {
         setCurrentView('laboratory');
-        localStorage.setItem('saludconecta_current_view', 'laboratory');
+        sessionStore.setItem('saludconecta_current_view', 'laboratory');
       } else {
         setCurrentView('dashboard');
-        localStorage.setItem('saludconecta_current_view', 'dashboard');
+        sessionStore.setItem('saludconecta_current_view', 'dashboard');
       }
     }
   };
 
   const handleLogout = () => {
     apiClient.logout();
-    localStorage.removeItem('saludconecta_session_active');
-    localStorage.removeItem('saludconecta_user');
-    localStorage.removeItem('saludconecta_token');
-    localStorage.removeItem('saludconecta_refresh_token');
-    localStorage.removeItem('saludconecta_current_view');
+    sessionStore.removeItem('saludconecta_session_active');
+    sessionStore.removeItem('saludconecta_user');
+    sessionStore.removeItem('saludconecta_token');
+    sessionStore.removeItem('saludconecta_refresh_token');
+    sessionStore.removeItem('saludconecta_current_view');
     localStorage.removeItem('saludconecta_nurse_orders');
     // Limpieza de claves volátiles de enfermería (DEF-76)
     try {
@@ -320,7 +322,7 @@ export function App() {
 
       if (targetView) {
         setCurrentView(targetView);
-        localStorage.setItem('saludconecta_current_view', targetView);
+        sessionStore.setItem('saludconecta_current_view', targetView);
       }
     };
 
@@ -331,7 +333,7 @@ export function App() {
   const handleNavigate = (view, shouldPush = true) => {
     if (view === currentView) return;
     setCurrentView(view);
-    localStorage.setItem('saludconecta_current_view', view);
+    sessionStore.setItem('saludconecta_current_view', view);
     if (shouldPush && typeof window !== 'undefined') {
       window.history.pushState({ view }, '', `#${view}`);
     }
@@ -362,7 +364,7 @@ export function App() {
   }, []);
 
   const handleHeaderSearch = async (documentType, documentNumber) => {
-    const cleanDoc = documentNumber.trim().replace(/[\.\s]/g, '');
+    const cleanDoc = documentNumber.trim().replace(/[.\s]/g, '');
     let found = null;
     try {
       found = await apiClient.lookupPatient(documentType, cleanDoc);
@@ -457,6 +459,10 @@ export function App() {
               onSelectPatient={handleSelectPatient}
               onNavigate={handleNavigate}
             />
+          )}
+
+          {currentView === 'appointment_requests' && (
+            <DoctorRequestsInbox user={currentUser} onNavigate={handleNavigate} />
           )}
 
           {currentView === 'appointments' && (

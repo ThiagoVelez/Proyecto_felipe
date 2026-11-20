@@ -1,4 +1,5 @@
 import React from 'react';
+import { mockApi } from './helpers/mockApi';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import AdminLayout from '../../src/frontend/src/screens/admin/AdminLayout';
@@ -52,8 +53,12 @@ describe('StaffRegisterModal - Creación Dinámica de Sedes', () => {
     localStorage.clear();
   });
 
-  it('permite registrar una nueva sede cuando no está en el listado', () => {
+  it('registra una sede nueva en el servidor cuando no está en el listado', async () => {
     const handleBranchCreated = vi.fn();
+    const { calls } = mockApi({
+      'GET /branches': { body: { branches: [] } },
+      'POST /admin/branches': ({ body }) => ({ status: 201, body: { id: 'br-nueva', ...body } }),
+    });
 
     render(
       <StaffRegisterModal
@@ -77,9 +82,10 @@ describe('StaffRegisterModal - Creación Dinámica de Sedes', () => {
     fireEvent.change(nameInput, { target: { value: 'Sede Ansermanuevo - Consulta Externa' } });
     fireEvent.click(screen.getByRole('button', { name: /Guardar y Asignar Sede/i }));
 
-    // Se confirma la creación y asignación
+    // Se confirma la creación en el servidor y la asignación
+    expect(await screen.findByText(/Sede "Sede Ansermanuevo - Consulta Externa" registrada y asignada/i)).toBeInTheDocument();
     expect(handleBranchCreated).toHaveBeenCalled();
-    expect(screen.getByText(/Sede "Sede Ansermanuevo - Consulta Externa" registrada y asignada/i)).toBeInTheDocument();
+    expect(calls.find((c) => c.method === 'POST').body.name).toBe('Sede Ansermanuevo - Consulta Externa');
   });
 });
 

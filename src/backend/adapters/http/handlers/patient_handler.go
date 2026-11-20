@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -31,6 +32,9 @@ type CreatePatientRequest struct {
 	EPSName           string  `json:"eps_name"`
 	AffiliationStatus string  `json:"affiliation_status"`
 	Phone             *string `json:"phone"`
+	Email             string  `json:"email"`
+	Address           string  `json:"address"`
+	AffiliationType   string  `json:"affiliation_type"`
 	IsRuralZone       bool    `json:"is_rural_zone"`
 }
 
@@ -74,6 +78,9 @@ func (h *PatientHandler) Create(c *fiber.Ctx) error {
 		EPSName:           req.EPSName,
 		AffiliationStatus: domain.AffiliationStatus(req.AffiliationStatus),
 		Phone:             req.Phone,
+		Email:             strings.ToLower(strings.TrimSpace(req.Email)),
+		Address:           strings.TrimSpace(req.Address),
+		AffiliationType:   strings.TrimSpace(req.AffiliationType),
 		IsRuralZone:       req.IsRuralZone,
 	}
 

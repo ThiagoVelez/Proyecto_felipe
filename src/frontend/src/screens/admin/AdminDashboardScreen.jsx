@@ -21,7 +21,7 @@ import {
   FileWarning,
 } from 'lucide-react';
 import { apiClient } from '../../services/api';
-import { loadBranches, saveBranches } from '../../services/branches';
+import { useBranches, notifyBranchesChanged } from '../../services/branches';
 import StaffRegisterModal from '../../components/StaffRegisterModal';
 import AdminOrgChartView from './AdminOrgChartView';
 import AdminPharmacyDashboardView from './AdminPharmacyDashboardView';
@@ -104,7 +104,7 @@ export const AdminDashboardScreen = ({ initialTab = 'governance', onTabChange, h
   const [pendingUserId, setPendingUserId] = useState(null);
 
   // Las sedes aun no tienen API: este catalogo solo se guarda en este navegador
-  const [branches, setBranches] = useState(loadBranches);
+  const { branches } = useBranches();
 
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const [isCreateBranchOpen, setIsCreateBranchOpen] = useState(false);
@@ -163,10 +163,6 @@ export const AdminDashboardScreen = ({ initialTab = 'governance', onTabChange, h
   }, [fetchUsers, fetchLogs]);
 
   useEffect(() => {
-    saveBranches(branches);
-  }, [branches]);
-
-  useEffect(() => {
     if (feedback?.type !== 'success') return undefined;
     const timer = setTimeout(() => setFeedback(null), 5000);
     return () => clearTimeout(timer);
@@ -210,22 +206,39 @@ export const AdminDashboardScreen = ({ initialTab = 'governance', onTabChange, h
     window.dispatchEvent(new CustomEvent('saludconecta_users_updated'));
   };
 
-  const handleCreateBranch = (newBranch) => {
-    setBranches((prev) => [...prev, { ...newBranch, id: `br-${Date.now()}` }]);
-    setIsCreateBranchOpen(false);
-    setFeedback({ type: 'success', text: `Sede "${newBranch.name}" agregada al catálogo local de sedes.` });
+  // Las sedes se guardan en el servidor: el cambio llega al login, al portal del paciente y a TI
+  const handleCreateBranch = async (newBranch) => {
+    try {
+      await apiClient.adminCreateBranch(newBranch);
+      setIsCreateBranchOpen(false);
+      setFeedback({ type: 'success', text: `Sede "${newBranch.name}" agregada a la red asistencial.` });
+      notifyBranchesChanged();
+    } catch (err) {
+      setFeedback({ type: 'error', text: `No se pudo crear la sede: ${err.message}` });
+    }
   };
 
-  const handleUpdateBranch = (updatedBranch) => {
-    setBranches((prev) => prev.map((b) => (b.id === updatedBranch.id ? updatedBranch : b)));
-    setEditingBranch(null);
-    setFeedback({ type: 'success', text: `Sede "${updatedBranch.name}" actualizada en el catálogo local.` });
+  const handleUpdateBranch = async (updatedBranch) => {
+    try {
+      await apiClient.adminUpdateBranch(updatedBranch.id, updatedBranch);
+      setEditingBranch(null);
+      setFeedback({ type: 'success', text: `Sede "${updatedBranch.name}" actualizada.` });
+      notifyBranchesChanged();
+    } catch (err) {
+      setFeedback({ type: 'error', text: `No se pudo actualizar la sede: ${err.message}` });
+    }
   };
 
-  const handleDeleteBranch = (branchId) => {
-    setBranches((prev) => prev.filter((b) => b.id !== branchId));
-    setDeletingBranch(null);
-    setFeedback({ type: 'success', text: 'Sede retirada del catálogo local.' });
+  const handleDeleteBranch = async (branchId) => {
+    try {
+      await apiClient.adminDeleteBranch(branchId);
+      setDeletingBranch(null);
+      setFeedback({ type: 'success', text: 'Sede retirada de la red asistencial.' });
+      notifyBranchesChanged();
+    } catch (err) {
+      setDeletingBranch(null);
+      setFeedback({ type: 'error', text: `No se pudo retirar la sede: ${err.message}` });
+    }
   };
 
   const filteredUsers = users.filter((u) => {
@@ -794,12 +807,6 @@ export const AdminDashboardScreen = ({ initialTab = 'governance', onTabChange, h
         isOpen={isRegisterOpen}
         onClose={() => setIsRegisterOpen(false)}
         onRegisterSuccess={handleRegisterSuccess}
-        onBranchCreated={(newBranch) => {
-          setBranches((prev) => {
-            const exists = prev.some((b) => b.id === newBranch.id || b.name === newBranch.name);
-            return exists ? prev : [...prev, newBranch];
-          });
-        }}
       />
 
       {isCreateBranchOpen && (
@@ -823,7 +830,7 @@ export const AdminDashboardScreen = ({ initialTab = 'governance', onTabChange, h
         <ConfirmDeleteModal
           isOpen={!!deletingBranch}
           title="Retirar Sede del Catálogo"
-          message={`¿Desea retirar la sede "${deletingBranch.name}" del catálogo local? Esta acción solo afecta a este navegador.`}
+          message={`¿Desea retirar la sede "${deletingBranch.name}" de la red asistencial? Solo es posible si no tiene personal asignado.`}
           onClose={() => setDeletingBranch(null)}
           onConfirm={() => handleDeleteBranch(deletingBranch.id)}
         />
@@ -833,8 +840,34 @@ export const AdminDashboardScreen = ({ initialTab = 'governance', onTabChange, h
 };
 
 // ========================================================
-// MODALES DEL CATALOGO LOCAL DE SEDES
+// MODALES DE SEDES (se guardan en el servidor)
 // ========================================================
+
+// Coordenadas opcionales: con ellas la sede aparece en el portal del paciente (sede mas cercana)
+const coordinatesPayload = (latitude, longitude) => {
+  const lat = String(latitude).trim();
+  const lng = String(longitude).trim();
+  return {
+    latitude: lat === '' ? null : Number(lat),
+    longitude: lng === '' ? null : Number(lng),
+  };
+};
+
+const CoordinateFields = ({ latitude, longitude, onLatitude, onLongitude }) => (
+  <div>
+    <div className="grid grid-cols-2 gap-2">
+      <div>
+        <label htmlFor="branch-lat" className="block text-[11px] font-semibold text-outline mb-1">Latitud (opcional)</label>
+        <input id="branch-lat" type="number" step="any" min="-90" max="90" value={latitude} onChange={(e) => onLatitude(e.target.value)} placeholder="Ej: 4.0847" className="w-full h-8 px-3 rounded-lg bg-surface-container-low border border-outline-variant text-on-surface" />
+      </div>
+      <div>
+        <label htmlFor="branch-lng" className="block text-[11px] font-semibold text-outline mb-1">Longitud (opcional)</label>
+        <input id="branch-lng" type="number" step="any" min="-180" max="180" value={longitude} onChange={(e) => onLongitude(e.target.value)} placeholder="Ej: -76.1954" className="w-full h-8 px-3 rounded-lg bg-surface-container-low border border-outline-variant text-on-surface" />
+      </div>
+    </div>
+    <p className="text-[10px] text-outline mt-1">Con ubicación, la sede aparece en el portal del paciente para calcular la sede más cercana.</p>
+  </div>
+);
 
 // 5. Modal Crear Sede
 const CreateBranchModal = ({ isOpen, onClose, onSave }) => {
@@ -843,6 +876,8 @@ const CreateBranchModal = ({ isOpen, onClose, onSave }) => {
   const [municipality, setMunicipality] = useState('');
   const [status, setStatus] = useState('Operativo');
   const [description, setDescription] = useState('');
+  const [latitude, setLatitude] = useState('');
+  const [longitude, setLongitude] = useState('');
 
   if (!isOpen) return null;
 
@@ -854,6 +889,7 @@ const CreateBranchModal = ({ isOpen, onClose, onSave }) => {
       municipality,
       status,
       description,
+      ...coordinatesPayload(latitude, longitude),
     });
   };
 
@@ -920,6 +956,7 @@ const CreateBranchModal = ({ isOpen, onClose, onSave }) => {
               className="w-full p-2.5 rounded-lg bg-surface-container-low border border-outline-variant text-on-surface"
             />
           </div>
+          <CoordinateFields latitude={latitude} longitude={longitude} onLatitude={setLatitude} onLongitude={setLongitude} />
           <div className="flex items-center justify-end gap-2 pt-3 border-t border-surface-container">
             <button
               type="button"
@@ -947,6 +984,8 @@ const EditBranchModal = ({ isOpen, branch, onClose, onSave }) => {
   const [level, setLevel] = useState(branch.level || '');
   const [status, setStatus] = useState(branch.status || 'Operativo');
   const [description, setDescription] = useState(branch.description || '');
+  const [latitude, setLatitude] = useState(branch.latitude ?? '');
+  const [longitude, setLongitude] = useState(branch.longitude ?? '');
 
   if (!isOpen) return null;
 
@@ -958,6 +997,7 @@ const EditBranchModal = ({ isOpen, branch, onClose, onSave }) => {
       level,
       status,
       description,
+      ...coordinatesPayload(latitude, longitude),
     });
   };
 
@@ -1018,6 +1058,7 @@ const EditBranchModal = ({ isOpen, branch, onClose, onSave }) => {
               className="w-full p-2.5 rounded-lg bg-surface-container-low border border-outline-variant text-on-surface"
             />
           </div>
+          <CoordinateFields latitude={latitude} longitude={longitude} onLatitude={setLatitude} onLongitude={setLongitude} />
           <div className="flex items-center justify-end gap-2 pt-3 border-t border-surface-container">
             <button
               type="button"

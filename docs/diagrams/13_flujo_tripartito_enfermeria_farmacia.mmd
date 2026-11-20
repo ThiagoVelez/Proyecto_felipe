@@ -16,12 +16,15 @@ sequenceDiagram
     API-->>Medico: 201 Created (Comprobante PDF firmado digitalmente con hash SHA-256)
 
     %% Fase 2: Ejecucion de Cuidados por Enfermeria
-    Note over API,Enfermero: 2. Notificación y Lista de Chequeo de Enfermería
-    Enfermero->>API: GET /api/v1/nurse/patients/{id}/summary
-    API-->>Enfermero: 200 OK (Resumen clínico básico, diagnósticos CIE-11 y fármacos activos)
-    Enfermero->>API: POST /api/v1/nurse/checklist { task_id, status: COMPLETED, notes: "Administrado según posología" }
-    API->>DB: UPDATE nurse_checklist_tasks (Trazabilidad y hora de administración)
-    API-->>Enfermero: 200 OK (Progreso asistencial actualizado 100%)
+    Note over API,Enfermero: 2. Orden de Tratamiento y Lista de Chequeo de Enfermería
+    Medico->>API: PUT /api/v2/nursing/{patientId}/order (orden de tratamiento)
+    API->>DB: Guarda la orden en nursing_care (visible para todo el turno)
+    Enfermero->>API: GET /api/v2/nursing/{patientId}
+    API-->>Enfermero: 200 OK (orden vigente, lista de chequeo y notas de turno)
+    Enfermero->>API: PUT /api/v2/nursing/{patientId}/duties (deberes cumplidos)
+    API->>DB: El servidor firma cada deber con la hora de Colombia y el nombre de la sesión
+    Enfermero->>API: POST /api/v2/nursing/{patientId}/notes (nota de evolución, solo anexo)
+    API-->>Enfermero: 200 OK (cualquier equipo del turno ve lo mismo)
 
     %% Fase 3: Dispensacion y Validacion en Farmacia con Lector PDF417
     Note over Paciente,Farmacia: 3. Validación de Identidad y Dispensación en Farmacia

@@ -11,6 +11,15 @@
 > - Afirmaciones publicadas: 48 evaluadas: 7 verificadas, 24 parciales, 2 no verificadas, 15 falsas. RTM: 5 de 21 requisitos se sostienen. Dictamen: **No conforme con ISO/IEC 25010:2023**.
 <!-- /cifras-r3 -->
 
+<!-- v2: actualización del 19 nov 2026 -->
+> **Actualización Entrega Final v2 (19 nov 2026).** Base: `main` con los PR #7 a #11 y la rama `claude/peaceful-pascal-5pqf5l`.
+>
+> - **22 defectos cerrados por prueba automatizada:** DEF-29, 30, 49 a 55, 57 a 61, 67, 68, 70, 72, 85, 87, 88 y 89. Sus pruebas de reproducción pasan sobre `main` (la herramienta `controldefectos` reportaba «DEF-XX parece corregido» en los 22). Se quitaron de `defectos-abiertos.txt` y ahora se ejecutan siempre como regresión permanente.
+> - **DEF-48 cerrado:** las pruebas de `auth_security_test.go` usaban el tiempo límite de 1 s de Fiber; con `app.Test(req, -1)` la suite `tests/backend` pasa completa con `-race`.
+> - **Defectos nuevos encontrados y corregidos:** DEF-93 (crítico, cierre del primer folio en MySQL), DEF-94 (hora UTC en el correo y el PDF de la cita) DEF-95 (prueba intermitente), DEF-96 (el registro de paciente descartaba el correo) y DEF-97 (al recargar una pestaña se abría el último perfil iniciado). Ver la tabla de la sección 2.
+> - **Pipeline:** `.github/workflows/calidad.yml`, `.golangci.yml`, `src/frontend/eslint.config.js` y las plantillas de `.github/` existían solo en la rama `calidad/revision-r3`; se incorporaron a `main`. golangci-lint (hallazgos nuevos desde `6492f07`): 0.
+> - **Pendiente para el equipo de QA:** los defectos abiertos **sin** prueba automatizada no se reverificaron en esta actualización; conservan su estado R3 hasta su verificación manual.
+
 <!-- R3: actualización del 10 nov 2026 -->
 > **Actualización R3 (10 nov 2026).** Base verificada: `origin/main` `9bacb0a` más la rama `calidad/revision-r3`. Se agregan la verificación R3 de DEF-01 a DEF-48, las fichas DEF-49 a DEF-84 (registradas en la revisión 2 y no publicadas hasta ahora) y los defectos nuevos DEF-85 a DEF-92. La historia anterior se conserva sin cambios. Métricas vigentes en la sección 5.
 
@@ -78,8 +87,8 @@ El contenido de las columnas originales se transcribe sin cambios desde `docs/in
 | DEF-26 | Carecer de API de admisión de pacientes y alergias (rol ADMISION sin rutas) | Backend | Alta | P2 | Cerrado (verificado en R3) |
 | DEF-27 | Aceptar frecuencia cardíaca superior a 300 lpm | Backend | Media | P3 | Cerrado (verificado en R3) |
 | DEF-28 | Corromper la bitácora de auditoría por cadenas no copiadas del contexto Fiber | Backend | Media | P2 | Confirmado en main (corregido en la rama de calidad, pendiente de fusión) |
-| DEF-29 | Producir colisiones de hash por separador `\|` sin escapar | Backend | Media | P3 | Confirmado (sigue abierto, R3) |
-| DEF-30 | Verificar la integridad sin validar el enlace con el folio anterior | Backend | Media | P2 | Confirmado (sigue abierto, R3) |
+| DEF-29 | Producir colisiones de hash por separador `\|` sin escapar | Backend | Media | P3 | Cerrado (verificado por prueba automatizada, v2 19 nov 2026) |
+| DEF-30 | Verificar la integridad sin validar el enlace con el folio anterior | Backend | Media | P2 | Cerrado (verificado por prueba automatizada, v2 19 nov 2026) |
 | DEF-31 | Revelar cuentas inactivas antes de validar la contraseña | Backend | Media | P3 | Cerrado (verificado en R3) |
 | DEF-32 | Responder el healthcheck sin verificar la base de datos | Backend / Infra | Media | P3 | Confirmado (sigue abierto, R3) |
 | DEF-33 | Restaurar la sesión desde `localStorage` sin revalidar; cifrado declarado inexistente | Frontend | Media | P3 | Reabierto (corregido parcialmente, R3) |
@@ -97,31 +106,31 @@ El contenido de las columnas originales se transcribe sin cambios desde `docs/in
 | DEF-45 | Mantener vulnerabilidades en dependencias de desarrollo JS | Frontend | Baja | P4 | Confirmado (sigue abierto, R3) |
 | DEF-46 | Exponer el puntero interno del catálogo de medicamentos y provocar una carrera de datos | Backend | Media | P2 | Cerrado (verificado en R3) |
 | DEF-47 | Calcular un TOTP ajeno al secreto cuando Web Crypto no está disponible | Frontend | Alta | P2 | Cerrado (verificado en R3) |
-| DEF-48 | Mantener una prueba con timeout fijo de 1 s que falla bajo `-race` | Pruebas | Baja | P3 | Reabierto (corregido parcialmente, R3) |
-| DEF-49 | Permitir el registro anónimo de administradores activos | Backend | Crítica | P1 | Confirmado (reverificado en R3) |
-| DEF-50 | Exponer sin autenticación la semilla TOTP de cualquier cuenta | Backend / Frontend | Crítica | P1 | Confirmado (reverificado en R3) |
-| DEF-51 | Omitir el cruce de alergias en la prescripción v2, la única que la interfaz permite usar | Backend / Frontend | Crítica | P1 | Confirmado (reverificado en R3) |
-| DEF-52 | Aceptar recetas v2 con cantidades negativas e ítems de inventario no verificados | Backend | Crítica | P1 | Confirmado (reverificado en R3) |
-| DEF-53 | Dispensar sin verificar el documento del paciente | Backend | Crítica | P1 | Confirmado (reverificado en R3) |
-| DEF-54 | Dispensar medicamentos vencidos | Backend | Crítica | P1 | Confirmado (reverificado en R3) |
-| DEF-55 | Eliminar físicamente pacientes y sus antecedentes alérgicos | Backend | Crítica | P1 | Confirmado (reverificado en R3) |
+| DEF-48 | Mantener una prueba con timeout fijo de 1 s que falla bajo `-race` | Pruebas | Baja | P3 | Cerrado (corregido en v2 19 nov 2026: las pruebas usan app.Test(req, -1)) |
+| DEF-49 | Permitir el registro anónimo de administradores activos | Backend | Crítica | P1 | Cerrado (verificado por prueba automatizada, v2 19 nov 2026) |
+| DEF-50 | Exponer sin autenticación la semilla TOTP de cualquier cuenta | Backend / Frontend | Crítica | P1 | Cerrado (verificado por prueba automatizada, v2 19 nov 2026) |
+| DEF-51 | Omitir el cruce de alergias en la prescripción v2, la única que la interfaz permite usar | Backend / Frontend | Crítica | P1 | Cerrado (verificado por prueba automatizada, v2 19 nov 2026) |
+| DEF-52 | Aceptar recetas v2 con cantidades negativas e ítems de inventario no verificados | Backend | Crítica | P1 | Cerrado (verificado por prueba automatizada, v2 19 nov 2026) |
+| DEF-53 | Dispensar sin verificar el documento del paciente | Backend | Crítica | P1 | Cerrado (verificado por prueba automatizada, v2 19 nov 2026) |
+| DEF-54 | Dispensar medicamentos vencidos | Backend | Crítica | P1 | Cerrado (verificado por prueba automatizada, v2 19 nov 2026) |
+| DEF-55 | Eliminar físicamente pacientes y sus antecedentes alérgicos | Backend | Crítica | P1 | Cerrado (verificado por prueba automatizada, v2 19 nov 2026) |
 | DEF-56 | Borrar las tablas de prescripción v1 en la migración v2 | BD | Crítica | P1 | Confirmado (reverificado en R3) |
-| DEF-57 | Asociar notas anatómicas al folio de otro paciente y de otro médico | Backend | Crítica | P1 | Confirmado (reverificado en R3) |
-| DEF-58 | Reactivar una receta ya dispensada al reenviarla con su ID | Backend | Crítica | P1 | Confirmado (reverificado en R3) |
-| DEF-59 | Dispensar recetas canceladas y dejar stock negativo en el adaptador en memoria | Backend | Crítica | P1 | Confirmado (reverificado en R3) |
-| DEF-60 | No extender la alergia a un fármaco concreto a su familia farmacológica | Backend | Crítica | P1 | Confirmado (reverificado en R3) |
-| DEF-61 | Escribir PDF fuera del directorio de documentos (path traversal) | Backend | Alta | P2 | Confirmado (reverificado en R3) |
+| DEF-57 | Asociar notas anatómicas al folio de otro paciente y de otro médico | Backend | Crítica | P1 | Cerrado (verificado por prueba automatizada, v2 19 nov 2026) |
+| DEF-58 | Reactivar una receta ya dispensada al reenviarla con su ID | Backend | Crítica | P1 | Cerrado (verificado por prueba automatizada, v2 19 nov 2026) |
+| DEF-59 | Dispensar recetas canceladas y dejar stock negativo en el adaptador en memoria | Backend | Crítica | P1 | Cerrado (verificado por prueba automatizada, v2 19 nov 2026) |
+| DEF-60 | No extender la alergia a un fármaco concreto a su familia farmacológica | Backend | Crítica | P1 | Cerrado (verificado por prueba automatizada, v2 19 nov 2026) |
+| DEF-61 | Escribir PDF fuera del directorio de documentos (path traversal) | Backend | Alta | P2 | Cerrado (verificado por prueba automatizada, v2 19 nov 2026) |
 | DEF-62 | Guardar datos del paciente en claro en disco y en los registros | Backend / Infra | Alta | P2 | Confirmado (reverificado en R3) |
 | DEF-63 | Aceptar los marcadores de `.env.example` como `JWT_SECRET` y contraseña del administrador | Backend | Alta | P1 | Corregido en la rama de calidad (pendiente de fusión a main) |
 | DEF-64 | Generar códigos de receta con poca entropía y buscarlos de forma ambigua | Backend | Alta | P2 | Confirmado (reverificado en R3) |
 | DEF-65 | Romper el triaje y el contacto de pacientes con `DB_DRIVER=postgres` | BD | Alta | P2 | Confirmado (reverificado en R3) |
 | DEF-66 | Permitir editar notas anatómicas si falla la consulta del folio y dejar el dolor fuera del hash | Backend | Media | P3 | Confirmado (reverificado en R3) |
-| DEF-67 | Convertir en «sin dolor» una EVA fuera de 0 a 10 | Backend | Media | P3 | Confirmado (reverificado en R3) |
-| DEF-68 | Borrar el contacto del paciente en una actualización parcial | Backend | Media | P3 | Confirmado (reverificado en R3) |
+| DEF-67 | Convertir en «sin dolor» una EVA fuera de 0 a 10 | Backend | Media | P3 | Cerrado (verificado por prueba automatizada, v2 19 nov 2026) |
+| DEF-68 | Borrar el contacto del paciente en una actualización parcial | Backend | Media | P3 | Cerrado (verificado por prueba automatizada, v2 19 nov 2026) |
 | DEF-69 | Agendar citas con condición de carrera y médico erróneo | Backend | Media | P3 | Confirmado (reverificado en R3) |
-| DEF-70 | Permitir que un médico edite o borre publicaciones de otro | Backend | Media | P3 | Confirmado (reverificado en R3) |
+| DEF-70 | Permitir que un médico edite o borre publicaciones de otro | Backend | Media | P3 | Cerrado (verificado por prueba automatizada, v2 19 nov 2026) |
 | DEF-71 | Dejar sin auditar las lecturas de datos de pacientes en `/api/v2` | Backend | Media | P3 | Confirmado (reverificado en R3) |
-| DEF-72 | Declarar roles inconsistentes en las rutas nuevas: AUDITOR bloqueado y ADMIN con acceso a recetas | Backend | Media | P3 | Confirmado (reverificado en R3) |
+| DEF-72 | Declarar roles inconsistentes en las rutas nuevas: AUDITOR bloqueado y ADMIN con acceso a recetas | Backend | Media | P3 | Cerrado (verificado por prueba automatizada, v2 19 nov 2026) |
 | DEF-73 | Acumular identificadores de *refresh token* sin poda y perder sesiones al reiniciar | Backend | Baja | P4 | Confirmado (reverificado en R3) |
 | DEF-74 | Fabricar órdenes, diagnósticos, alergias y grupo sanguíneo en las vistas de enfermería | Frontend | Crítica | P1 | Confirmado (reverificado en R3) |
 | DEF-75 | Registrar la administración de medicación solo en el navegador | Frontend | Crítica | P1 | Confirmado (reverificado en R3) |
@@ -134,14 +143,19 @@ El contenido de las columnas originales se transcribe sin cambios desde `docs/in
 | DEF-82 | Silenciar errores en vistas nuevas | Frontend | Baja | P4 | Confirmado (reverificado en R3) |
 | DEF-83 | Usar brotli v1.1.0 con vulnerabilidad alcanzable GO-2026-6888 | Backend | Media | P3 | Confirmado (reverificado en R3) |
 | DEF-84 | Importar adaptadores concretos desde el núcleo del dominio | Backend | Media | P3 | Confirmado (reverificado en R3) |
-| DEF-85 | Interpretar como UTC la hora local de la cita | Backend / Frontend | Crítica | P1 | Confirmado |
+| DEF-85 | Interpretar como UTC la hora local de la cita | Backend / Frontend | Crítica | P1 | Cerrado (verificado por prueba automatizada, v2 19 nov 2026) |
 | DEF-86 | Extraer el documento del PDF417 con una expresión genérica y compararlo sin normalizar | Frontend / Backend | Media | P3 | Confirmado |
-| DEF-87 | Validar la duración del video con el valor que declara el cliente y aceptar contenido que no es video | Backend / Frontend | Media | P3 | Confirmado |
-| DEF-88 | Agendar citas para pacientes inexistentes | Backend | Media | P3 | Confirmado |
-| DEF-89 | Aceptar EVA y coordenadas fuera de rango en notas anatómicas | Backend | Media | P3 | Confirmado |
+| DEF-87 | Validar la duración del video con el valor que declara el cliente y aceptar contenido que no es video | Backend / Frontend | Media | P3 | Cerrado (verificado por prueba automatizada, v2 19 nov 2026) |
+| DEF-88 | Agendar citas para pacientes inexistentes | Backend | Media | P3 | Cerrado (verificado por prueba automatizada, v2 19 nov 2026) |
+| DEF-89 | Aceptar EVA y coordenadas fuera de rango en notas anatómicas | Backend | Media | P3 | Cerrado (verificado por prueba automatizada, v2 19 nov 2026) |
 | DEF-90 | Probar una copia del modal de alergias en lugar del componente real | Pruebas | Media | P2 | Confirmado |
 | DEF-91 | Publicar un dictamen «Aprobado 100 % conforme a ISO/IEC 25010» y una RTM al 100 % sin evidencia que los sostenga | Documentación | Alta | P1 | Confirmado |
 | DEF-92 | Reutilizar los identificadores DEF-01 a DEF-04 y crear identificadores SEC-* paralelos con referencias a archivos inexistentes | Documentación | Media | P3 | Confirmado |
+| DEF-93 | Rechazar el cierre del primer folio de cada paciente en MySQL: el hash génesis (69 caracteres) no cabe en `previous_hash VARCHAR(64)` | Backend / Persistencia | Crítica | P1 | Cerrado (corregido y verificado contra MySQL real, v2 19 nov 2026) |
+| DEF-94 | Mostrar al paciente la hora UTC en el correo y el PDF de la cita (5 horas de diferencia) | Backend | Alta | P1 | Cerrado (corregido y verificado, v2 19 nov 2026) |
+| DEF-95 | Fallar de forma intermitente las pruebas de citas al borrar el directorio temporal mientras se genera el PDF | Pruebas | Baja | P3 | Cerrado (corregido, v2 19 nov 2026) |
+| DEF-96 | Descartar el correo, la dirección y la afiliación al registrar un paciente: los resultados de laboratorio no se podían enviar por correo | Backend / Frontend | Alta | P1 | Cerrado (corregido y verificado contra MySQL real, v2 20 nov 2026) |
+| DEF-97 | Cambiar al último perfil iniciado al recargar (F5) una pestaña cuando hay varias abiertas en el mismo navegador | Frontend / Sesión | Alta | P1 | Cerrado (corregido y verificado con Playwright, v2 20 nov 2026) |
 
 Los defectos DEF-46 a DEF-48 se detectaron en la primera ejecución del pipeline `calidad` sobre el PR (run `41361540450`, `anexos/evidencias/89-ci-run-41361540450.txt`).
 

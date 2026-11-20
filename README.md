@@ -8,7 +8,7 @@
 
 ### Entregable Maestro: Entrega Final (Proyecto Completo Consolidado)
 
-**Rama Oficial de Entrega:** `prueba` | **Tag de Versión:** `entrega-final`  
+**Rama Oficial de Entrega:** `prueba` | **Tag de Versión:** `entrega-final-v2`  
 **Autor Principal:** Santiago Velez | **Docente:** Ing. Felipe Gutiérrez Isaza | **COTECNOVA 2026-2**  
 **Herramientas y Modelos de Inteligencia Artificial (IA):** Google Antigravity con Gemini 3.8 Flash en High y Claude Code con Sonnet 5.5 en High
 
@@ -506,7 +506,7 @@ _Ingeniería de Software II — COTECNOVA 2026-2_
 
 | Código   | Nombre del Requisito                                                             | Descripción Detallada                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Prioridad MoSCoW |
 | :------- | :------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------- |
-| **RF01** | Autenticación, MFA y Esquema Dual de Tokens                                      | Control de acceso por roles (MEDICO, ENFERMERO, ADMISION, AUDITOR, ADMIN) mediante esquema dual de tokens JWT (HS256) con Access Token de 15 minutos y Refresh Token de 7 días con rotación automática y detección de reuso conforme a OWASP ASVS v4. Firma con `JWT_SECRET` obligatorio de al menos 32 caracteres y MFA TOTP (RFC 6238) con QR escaneable. El código TOTP se valida siempre en el servidor. Reemplazar o retirar un segundo factor activo exige el código vigente. Tras 5 intentos fallidos la cuenta se bloquea 15 minutos y las rutas de verificación tienen además un límite por IP real del cliente. En cada solicitud se revalida que la cuenta siga activa: suspender a un usuario revoca sus tokens de inmediato y el rol efectivo es el almacenado, no el declarado en el token. Renovación transparente en segundo plano vía `POST /auth/refresh` sin interrumpir la atención médica.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | **Must Have**    |
+| **RF01** | Autenticación, MFA y Esquema Dual de Tokens                                      | Control de acceso por roles (ADMIN, MEDICO, ENFERMERO, ADMISION, AUDITOR, FARMACIA, LABORATORIO y TI, este último único y registrado con código de instalación) mediante esquema dual de tokens JWT (HS256) con Access Token de 15 minutos y Refresh Token de 7 días con rotación automática y detección de reuso conforme a OWASP ASVS v4. Firma con `JWT_SECRET` obligatorio de al menos 32 caracteres y MFA TOTP (RFC 6238) con QR escaneable. El código TOTP se valida siempre en el servidor. Reemplazar o retirar un segundo factor activo exige el código vigente. Tras 5 intentos fallidos la cuenta se bloquea 15 minutos y las rutas de verificación tienen además un límite por IP real del cliente. En cada solicitud se revalida que la cuenta siga activa: suspender a un usuario revoca sus tokens de inmediato y el rol efectivo es el almacenado, no el declarado en el token. Renovación transparente en segundo plano vía `POST /auth/refresh` sin interrumpir la atención médica.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | **Must Have**    |
 | **RF02** | Triaje Manchester y Guardia Fisiológica                                          | Semaforización automática en 5 niveles calculada **siempre en el servidor** a partir de Glasgow, SpO2, FC, FR, PAS/PAD y temperatura (incluidas hipotermia e hipertermia: 30 °C es NIVEL_II, nunca NIVEL_V). Rangos plausibles: Glasgow 3-15, SpO2 0-100, FC 1-300, FR 1-80, PAS 1-300, PAD 1-200 y temperatura 20-45 °C (HTTP 422 fuera de rango). El cliente solo puede escalar a un nivel más urgente; un nivel fuera del catálogo o menos urgente que el clínico se rechaza.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | **Must Have**    |
 | **RF03** | HCE e Inmutabilidad Absoluta                                                     | Registro de atención clínica con bloqueo de modificación post-cierre: un folio firmado no se reabre ni se reemplaza (tampoco al reenviar un lote de sincronización) y cualquier mutación se rechaza y está protegida por triggers a nivel de base de datos (MySQL y PostgreSQL), incluidas las notas aclaratorias, que son solo de anexo. Solo el médico autor del folio puede firmarlo o anexar notas (HTTP 403 en otro caso) (Resolución 1995 de 1999).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | **Must Have**    |
 | **RF04** | Cadena Criptográfica SHA-256                                                     | Hash SHA-256 encadenado que incorpora el hash del folio previo del paciente. La cabeza de la cadena es el último eslabón no referenciado; un índice único (paciente, hash previo) y un bloqueo por paciente con reintento impiden bifurcaciones cuando se cierran folios simultáneamente. La hora de cierre se sella con precisión de segundos para que lo firmado coincida con lo persistido y la verificación de integridad no falle.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | **Must Have**    |
@@ -544,18 +544,22 @@ Los diagramas técnicos del sistema han sido modelados en sintaxis Mermaid y pre
 
 ### 6.1. Diagrama de Casos de Uso del Sistema (UML)
 
-Representa los límites del sistema «SaludConecta IPS v2.4», los actores involucrados (Médico Tratante, Enfermero, Personal de Admisión, Auditor y Administrador) y los 13 casos de uso esenciales:
+Representa los límites del sistema «SaludConecta IPS v2.4», los nueve actores (Paciente desde el portal público, Médico Tratante, Enfermero, Personal de Admisión, Farmacéutico, Bacteriólogo, Auditor, Administrador de Sede y Encargado de TI) y los 21 casos de uso:
 
 ![Diagrama de Casos de Uso UML](docs/diagrams/01_casos_de_uso.png)
 
 ```mermaid
 flowchart LR
     subgraph Actores ["Actores del Sistema"]
+        Paciente["Paciente (Portal público, sin cuenta)"]
         Medico["Médico Tratante"]
         Enfermero["Enfermero / Triaje"]
         Admision["Personal de Admisión"]
+        Farmacia["Farmacéutico"]
+        Laboratorio["Bacteriólogo / Laboratorio"]
         Auditor["Auditor Clínico"]
-        Admin["Administrador del Sistema"]
+        Admin["Administrador de Sede"]
+        TI["Encargado de TI (único)"]
     end
 
     subgraph Sistema ["SaludConecta IPS v2.4 - Límite del Sistema"]
@@ -570,12 +574,20 @@ flowchart LR
         CU09(["CU09: Auditoría Forense y Trazabilidad de Hashes"])
         CU10(["CU10: Registro de Personal con Inactividad Mandatoria (Res. 1995)"])
         CU11(["CU11: Gobernanza ReTHUS, Habilitación y Suspensión"])
-        CU12(["CU12: Gestión de Sedes (catálogo local)"])
-        CU13(["CU13: Admisión de Pacientes y Registro de Alergias"])
+        CU12(["CU12: Gestión de Sedes en el Servidor (con coordenadas)"])
+        CU13(["CU13: Admisión de Pacientes, Correo y Alergias"])
+        CU14(["CU14: Registro Inicial de TI con Código de Instalación"])
+        CU15(["CU15: Solicitud de Administrador de Sede y Aprobación por TI"])
+        CU16(["CU16: Monitoreo Técnico y Cuentas del Sistema"])
+        CU17(["CU17: Solicitud de Primera Cita desde el Portal"])
+        CU18(["CU18: Bandeja de Solicitudes y Agendamiento con Correo"])
+        CU19(["CU19: Orden de Laboratorio, Sellado ReTHUS y Envío por Correo"])
+        CU20(["CU20: Lista de Chequeo y Notas de Turno de Enfermería"])
+        CU21(["CU21: Dispensación Farmacéutica y Alertas de Stock"])
     end
 
-    Admin --> CU10
-    CU10 -.->|"<<include>>"| CU09
+    Paciente --> CU17
+    CU17 -.->|"«include»"| CU12
 
     Medico --> CU01
     Medico --> CU03
@@ -583,31 +595,46 @@ flowchart LR
     Medico --> CU05
     Medico --> CU06
     Medico --> CU07
-    Medico --> CU08
     Medico --> CU13
+    Medico --> CU18
+    Medico --> CU19
 
     Enfermero --> CU01
     Enfermero --> CU02
-    Enfermero --> CU07
     Enfermero --> CU13
+    Enfermero --> CU20
 
     Admision --> CU01
     Admision --> CU13
+
+    Farmacia --> CU01
+    Farmacia --> CU21
+
+    Laboratorio --> CU01
+    Laboratorio --> CU19
 
     Auditor --> CU01
     Auditor --> CU08
     Auditor --> CU09
 
     Admin --> CU01
-    Admin --> CU09
+    Admin --> CU10
     Admin --> CU11
     Admin --> CU12
+    Admin --> CU15
 
-    CU11 -.->|"<<include>>"| CU09
-    CU04 -.->|"<<include>>"| CU09
-    CU06 -.->|"<<include>>"| CU09
-    CU03 -.->|"<<include>>"| CU04
-    CU13 -.->|"<<include>>"| CU09
+    TI --> CU14
+    TI --> CU15
+    TI --> CU16
+
+    CU10 -.->|"«include»"| CU09
+    CU11 -.->|"«include»"| CU09
+    CU04 -.->|"«include»"| CU09
+    CU06 -.->|"«include»"| CU09
+    CU03 -.->|"«include»"| CU04
+    CU13 -.->|"«include»"| CU09
+    CU06 -.->|"«extend»"| CU20
+    CU17 -.->|"«extend»"| CU18
 ```
 
 - Archivo fuente: [`docs/diagrams/01_casos_de_uso.mmd`](docs/diagrams/01_casos_de_uso.mmd)
@@ -1540,7 +1567,7 @@ proyecto-final/
 │       ├── vite.config.js         # Configuración de Vite y enrutamiento de tests
 │       ├── README.md              # Documentación detallada del cliente web
 │       └── src/
-│           ├── main.jsx           # Montaje raíz en el DOM
+│           ├── main.jsx           # Montaje raíz en el DOM; /solicitar-cita abre el portal público del paciente
 │           ├── App.jsx            # Enrutador asistencial/administrativo, persistencia F5 y sidebar
 │           ├── index.css          # Estilos globales y capas de Tailwind
 │           ├── setupTests.js      # Extensiones jest-dom para pruebas Vitest
@@ -1565,6 +1592,8 @@ proyecto-final/
 │           │   ├── ProfileScreen.jsx   # Perfil asistencial, aislamiento por userKey
 │           │   ├── SecurityMfaScreen.jsx  # Configuración MFA contra la API (setup y enable)
 │           │   ├── DoctorLabOrdersView.jsx # Recetario paraclínico médico, ID único LAB-YYYY e impresión
+│           │   ├── PatientPortal.jsx # Portal público: sede más cercana y solicitud de primera cita
+│           │   ├── DoctorRequestsInbox.jsx # Bandeja de solicitudes del médico: agendar (envío por correo) o rechazar
 │           │   ├── LaboratoryScreen.jsx # Bandeja de laboratorio, análisis y sellado ReTHUS
 │           │   ├── PharmacyDashboard.jsx # Dispensación, lector PDF417 y alertas de desabastecimiento
 │           │   ├── NurseSummaryView.jsx / NurseChecklistView.jsx # Módulos asistenciales de enfermería
@@ -1787,6 +1816,15 @@ Base: `/api/v1`. Todas las rutas, salvo `GET /health` y `POST /auth/login`, exig
 | Farmacia v2        | `POST /api/v2/pharmacy/dispense`                                                                                            | FARMACIA                                         | Dispensación atómica ACID con deducción de stock y 409 ante doble despacho                                                                         |
 | Educación en Salud | `GET /health-education`, `GET /health-education/:id`                                                                        | Autenticado (MEDICO, ENFERMERO, ADMIN, FARMACIA) | Muro educativo en tiempo real filtrable por categoría (`CONSEJOS`, `AYUDAS`, `ENFERMEDADES`, `VACUNAS`, `ESTILO_DE_VIDA`, `PREVENCION`)            |
 | Educación en Salud | `POST /health-education`, `PUT /health-education/:id`, `DELETE /health-education/:id`                                       | MEDICO                                           | Creación, edición y eliminación de publicaciones con fotos, enlaces de YouTube y videos cortos (máx. 120s). 403 para enfermeros.                   |
+| Registro inicial   | `GET /auth/setup-status`, `POST /auth/register-ti`, `POST /auth/register-branch-admin` | Público (límite por IP) | Estado de la instalación, registro único del Encargado de TI con código de instalación y solicitud de administrador de sede (queda pendiente). |
+| Encargado de TI    | `POST /auth/register-admin`, `GET /ti/overview`, `GET /ti/users`, `PATCH /ti/admins/:id/status`, `GET /ti/audit-logs` | TI | Monitoreo, aprobación y suspensión de administradores, cuentas y bitácora. |
+| Sedes              | `GET /branches` | Público | Catálogo de sedes guardado en el servidor. |
+| Sedes              | `POST /admin/branches`, `PUT /admin/branches/:id`, `DELETE /admin/branches/:id` | ADMIN | Alta, edición (con latitud y longitud) y retiro; 409 si la sede tiene personal. |
+| Portal del paciente | `GET /public/branches`, `POST /public/appointment-requests` | Público (5 solicitudes por minuto por IP) | Sedes con ubicación y solicitud de primera cita asignada al médico más libre. |
+| Solicitudes v2     | `GET /api/v2/appointment-requests`, `GET /pending-count`, `POST /:id/schedule`, `POST /:id/reject` | MEDICO | Bandeja de solicitudes, agendamiento con correo y rechazo con motivo. |
+| Laboratorio v2     | `GET /api/v2/lab-orders`, `POST /api/v2/lab-orders` | MEDICO, LABORATORIO | Órdenes en el servidor con consecutivo LAB-AAAA-XXX; el médico ve solo las suyas. |
+| Laboratorio v2     | `PUT /:id/progress`, `POST /:id/seal`, `POST /:id/dispatch` | LABORATORIO (dispatch también MEDICO, solo sus órdenes) | Avance, sellado ReTHUS inmodificable y envío real por correo. |
+| Enfermería v2      | `GET /api/v2/nursing`, `GET /:patientId`, `PUT /:patientId/order`, `PUT /:patientId/duties`, `POST /:patientId/notes` | ENFERMERO, MEDICO (orden: MEDICO) | Orden de tratamiento, lista de chequeo firmada por el servidor y notas de turno de solo anexo. |
 
 ---
 
@@ -2359,13 +2397,13 @@ Todas las soluciones fueron implementadas bajo arquitectura limpia hexagonal, de
 
 ---
 
-# Entrega Final (Tag: entrega-final): Plataforma Hospitalaria Integral SaludConecta IPS - Módulo de Laboratorio Diagnóstico, Prescripción Paraclínica, Dashboard Farmacéutico y Alertas de Desabastecimiento
+# Entrega Final (Tag: entrega-final-v2): Plataforma Hospitalaria Integral SaludConecta IPS - Módulo de Laboratorio Diagnóstico, Prescripción Paraclínica, Dashboard Farmacéutico y Alertas de Desabastecimiento
 
 - **Autor de la Entrega:** Santiago Velez
 - **Docente Supervisor:** Ing. Felipe Gutiérrez Isaza
 - **Institución:** Corporación de Estudios Tecnológicos del Norte del Valle (COTECNOVA) - 2026-2
 - **Rama Oficial de Entrega:** `prueba`
-- **Etiqueta Git (Tag):** `entrega-final`
+- **Etiqueta Git (Tag):** `entrega-final-v2` (la etiqueta `entrega-final` se conserva sin mover como referencia de la primera versión)
 - **Herramientas y Skills Aplicadas:**
   - `master-orchestrator`: Dirección integral de arquitectura limpia hexagonal, desacoplamiento estricto de capas y supervisión del ciclo de vida de desarrollo de inicio a fin.
   - `iso-standards-governance`: Aseguramiento normativo bajo ISO/IEC 25010 (calidad de producto de software), ISO/IEC 27001 / 27799 / 27701 (seguridad y privacidad de la información clínica), ISO/IEC 12207 (procesos del ciclo de vida del software) y Resoluciones MinSalud 1995 de 1999 y 2275 de 2023 (gobernanza de HCE y RIPS interoperables).
@@ -2547,7 +2585,7 @@ Todas las soluciones fueron implementadas bajo arquitectura limpia hexagonal, de
   - Una cuenta pendiente no puede iniciar sesión. Las solicitudes pendientes no ocupan la sede: una solicitud ajena no bloquea la del administrador real.
   - Los registros públicos se serializan con un candado (`setupMu`) para que dos solicitudes simultáneas no ocupen el mismo puesto. Verificado con 8 solicitudes concurrentes y el detector de carreras de Go.
   - Límite de 10 intentos por minuto por IP en ambos registros.
-- **Catálogo de sedes en el servidor (`core/domain/branch.go`):** Las cuatro sedes del login (Cartago, La Unión, Tuluá y Brigada Rural) pasan a estar en el servidor para poder saber cuáles tienen administrador. Las sedes creadas después desde el panel del administrador siguen guardándose solo en el navegador y no aparecen en el registro desde el login.
+- **Catálogo de sedes en el servidor (`core/domain/branch.go`):** Las cuatro sedes del login (Cartago, La Unión, Tuluá y Brigada Rural) pasan a estar en el servidor para poder saber cuáles tienen administrador. Desde la versión v2 las sedes creadas por el administrador también se guardan en el servidor (sección 1.19) y aparecen en el registro desde el login.
 - **Protección contra registros indebidos:** Quien instala el sistema ya edita el `.env` (`JWT_SECRET` y claves de la base de datos son obligatorias), así que define también `TI_SETUP_CODE` y entrega ese código en persona al Encargado de TI. Sin el código nadie puede registrarse como Encargado de TI. Las solicitudes de administrador hechas desde el login no dan acceso hasta que el Encargado de TI las aprueba; las que no reconozca simplemente no se aprueban. El personal de las sedes no necesita tocar ningún archivo.
 - **Panel del Encargado de TI (`screens/ti/`):** Entorno propio (`TiLayout.jsx`) con menú lateral por apartados, adaptado a celular:
 
@@ -2600,6 +2638,129 @@ La pantalla de inicio de sesión es la misma para todos los roles: **correo inst
 
 **Recuperación de acceso:** No existe recuperación por correo electrónico (Resolución 1995 de 1999 y Ley 1581 de 2012). Ante una contraseña olvidada o la pérdida del celular con la aplicación autenticadora, el personal asistencial acude al administrador de su sede y los administradores al Encargado de TI.
 
+### 1.18. Portal del Paciente y Bandeja de Solicitudes de Primera Cita
+
+**Objetivo:** que un paciente nuevo pida su primera cita desde la web, sin cuenta, y que el médico con más disponibilidad de la sede elegida la agende con el sistema de citas existente, que le envía el comprobante por correo.
+
+**Flujo completo:**
+
+1. **El paciente entra a `/solicitar-cita`**, desde el enlace "¿Es paciente? Solicite su primera cita" del login. No necesita iniciar sesión.
+2. **Elige la sede más cercana.** Con su permiso, el navegador obtiene su ubicación y el portal ordena las sedes por distancia (fórmula del semiverseno), marca la "Más cercana" y la selecciona. Sin permiso, elige la sede de la lista. Las sedes con ubicación son Cartago, La Unión y Tuluá; la Brigada Rural no se ofrece porque no tiene ubicación fija.
+3. **Llena sus datos:** documento, nombres, apellidos, fecha de nacimiento, sexo, grupo sanguíneo, EPS, teléfono, correo y dirección. Agrega la **observación** con el motivo de la consulta (5 a 1.000 caracteres) y acepta el **tratamiento de datos (Ley 1581 de 2012)**, que es obligatorio.
+4. **El servidor asigna la solicitud al médico con mayor disponibilidad de la sede:** el médico activo con menos carga, sumando sus citas de los próximos 14 días y las solicitudes que ya tiene pendientes. Ante empate gana el de menos pendientes y luego el orden alfabético. El paciente recibe un **código de solicitud** (por ejemplo `SOL-8F4HMZ`); no se le revela el médico asignado ni si su documento ya estaba registrado.
+5. **El médico la ve en "Bandeja de Solicitudes"**, en su menú lateral, con el número de pendientes. Revisa los datos, el motivo y **su agenda del día elegido**: las horas ocupadas aparecen deshabilitadas y hay un enlace al calendario completo.
+6. **Agenda la cita** con fecha, hora en bloques de 20 minutos e indicaciones opcionales. El sistema:
+   - asocia la cita al paciente con el mismo documento o, si no existe, lo **registra en ese momento** con los datos de la solicitud. Si ya existía sin correo, se completa con el de la solicitud sin modificar sus datos clínicos;
+   - usa el **agendamiento existente** (`ScheduleAppointment`), que valida fechas pasadas y choques de horario, genera el **PDF** y lo **envía por correo** al paciente.
+7. **O la rechaza** indicando un motivo obligatorio, que se envía al correo del paciente.
+
+**Por qué es una solicitud y no un paciente:** el formulario público no escribe en la tabla de pacientes. Solo cuando el médico agenda, la solicitud se convierte en paciente y cita. Así, las solicitudes falsas no llegan a las historias clínicas.
+
+**API:**
+
+| Método y ruta | Acceso | Uso |
+|---|---|---|
+| `GET /api/v1/public/branches` | Público (60/min por IP) | Sedes con coordenadas |
+| `POST /api/v1/public/appointment-requests` | Público (5/min por IP) | Enviar la solicitud |
+| `GET /api/v2/appointment-requests?status=` | `MEDICO` | Bandeja del médico (`PENDIENTE`, `AGENDADA`, `RECHAZADA`) |
+| `GET /api/v2/appointment-requests/pending-count` | `MEDICO` | Contador del menú |
+| `POST /api/v2/appointment-requests/:id/schedule` | `MEDICO` (solo su solicitud) | Agendar y enviar por correo |
+| `POST /api/v2/appointment-requests/:id/reject` | `MEDICO` (solo su solicitud) | Rechazar con motivo |
+
+**Persistencia:** tabla `appointment_requests` en MySQL, creada por la migración idempotente (`seeder.go`), y repositorio en memoria para desarrollo. Archivos principales: `core/domain/appointment_request.go`, `core/services/appointment_request_service.go`, `adapters/http/handlers/appointment_request_handler.go` y `adapters/storage/mysql/appointment_request_repo.go`.
+
+**Corrección incluida: hora del correo y del PDF.** Las citas se guardan en UTC y el correo y el PDF mostraban esa hora: una cita a las 10:20 de Colombia llegaba como 15:20. Ahora se muestran en la hora de Colombia (`domain.FormatColombia`, con desfase fijo de -5 si el servidor no tiene la base de zonas horarias). Esto aplica a todas las citas, no solo a las del portal.
+
+**Pruebas:**
+
+- Backend (`tests/backend/appointment_request_test.go`, 9 pruebas):
+  - sedes públicas con ubicación;
+  - asignación al médico con mayor disponibilidad, contando las pendientes como carga;
+  - validaciones y consentimiento;
+  - límite de envíos por IP;
+  - bandeja restringida a `MEDICO`;
+  - agendar (crea paciente y cita, impide agendar dos veces y en fechas pasadas, y otro médico no puede agendar);
+  - asociación a un paciente existente sin duplicarlo;
+  - rechazo con motivo obligatorio;
+  - hora de Colombia en el correo y el PDF.
+- Se corrigió una falla intermitente que ya existía en las pruebas de citas: el PDF se generaba en segundo plano mientras la prueba borraba su carpeta temporal.
+- Frontend (`tests/frontend/PatientRequests.test.jsx`, 11 pruebas): distancias, sede más cercana con y sin permiso de ubicación, consentimiento obligatorio, envío del formulario, mensajes del servidor, agendamiento con hora e indicaciones, horas ocupadas, rechazo con motivo y contador del menú solo para médicos.
+- **Resultados:** backend completo en verde y frontend **126 de 126** pruebas en 16 archivos.
+- **Recorrido con Playwright:**
+  - un paciente en Tuluá, desde el celular, recibe la sede de Tuluá como la más cercana y envía su solicitud;
+  - la solicitud llega a la médica más libre y no al médico con citas;
+  - la médica la agenda desde el computador y el contador queda en 0;
+  - el correo sale con el PDF adjunto y la hora de Colombia;
+  - el portal y la bandeja funcionan en celular sin desbordes.
+
+---
+
+### 1.19. Laboratorio, Enfermería y Sedes Guardados en el Servidor (v2)
+
+- **Problema:** Las órdenes y resultados de laboratorio, la lista de chequeo y las notas de enfermería y las sedes creadas por el administrador se guardaban en el navegador (`localStorage`). Un médico en un computador y el laboratorio en otro no veían lo mismo, y al borrar los datos del navegador se perdía información clínica.
+- **Solución:** Todo pasa a la base de datos con API propia, siguiendo la arquitectura hexagonal (dominio, puertos, servicios, repositorios en memoria y MySQL):
+
+| Módulo | Tabla MySQL | API | Quién |
+|---|---|---|---|
+| Órdenes de laboratorio | `lab_orders` | `GET/POST /api/v2/lab-orders`, `PUT /:id/progress`, `POST /:id/seal`, `POST /:id/dispatch` | Médico crea y consulta las suyas; Laboratorio procesa, sella y envía |
+| Enfermería | `nursing_care` (JSON de orden, deberes y notas) | `GET /api/v2/nursing`, `GET /:patientId`, `PUT /:patientId/order` (médico), `PUT /:patientId/duties` y `POST /:patientId/notes` (enfermería) | Médico y Enfermería |
+| Sedes | `branches` (con latitud y longitud opcionales) | `GET /api/v1/branches` (público), `POST/PUT/DELETE /api/v1/admin/branches` | Administrador |
+
+- **Reglas que aplica el servidor:**
+  - El identificador `LAB-2026-XXX` lo asigna el servidor; dos órdenes simultáneas nunca repiten número.
+  - Un resultado sellado no puede modificarse (HTTP 409). El correo de resultados se envía de verdad al paciente, con copia al médico solicitante. Un médico solo puede reenviar sus propias órdenes.
+  - Cada deber de enfermería cumplido queda firmado con la hora de Colombia y el nombre de la sesión, no con lo que envíe el navegador. Las notas de turno son de solo anexo (Res. 1995 de 1999).
+  - No se puede retirar ni renombrar una sede que tenga personal asignado (HTTP 409); el administrador ve el motivo.
+- **Pantallas actualizadas:** `LaboratoryScreen`, `DoctorLabOrdersView`, `DoctorPrintLabResultsView`, `NurseChecklistView`, `NurseSummaryView`, `TreatmentFollowUpView`, `AdminDashboardScreen` (con campos de latitud y longitud), `AuthScreen`, `AdminRegisterModal` y `StaffRegisterModal`. Las bandejas se actualizan cada 15 segundos. Se retiraron las órdenes de ejemplo.
+- **Lo que sigue en el navegador, a propósito:** la foto de perfil, el banner y las preferencias de cada usuario (`saludconecta_profile_*`, `saludconecta_avatar_*`), el estado del menú lateral y la copia local de los reportes de stock de farmacia (`saludconecta_pharmacy_reports`). No son datos clínicos.
+
+### 1.20. Registro de Pacientes con Correo y Dirección (DEF-96)
+
+- **Problema encontrado en la prueba contra MySQL real:** El formulario de registro de pacientes no pedía correo ni dirección y el servidor descartaba esos campos aunque llegaran. Por eso no se podía enviar por correo el resultado de laboratorio.
+- **Corrección:** `PatientRegisterModal.jsx` pide correo y dirección; `CreatePatientRequest` recibe correo, dirección y tipo de afiliación; el servicio valida el formato del correo (`net/mail`). Prueba: `TestRegistroDePacienteGuardaCorreoYDireccion`.
+
+### 1.21. Sesión Independiente por Pestaña (DEF-97)
+
+- **Problema:** Con varias ventanas abiertas para ver distintos perfiles, al recargar (F5) cualquiera de ellas se abría con el último perfil que había iniciado sesión. La sesión se guardaba en `localStorage`, que es compartido por todas las pestañas del navegador.
+- **Corrección (`services/session.js`):** El token, el token de renovación, el usuario y la vista actual se guardan en `sessionStorage`, que es propio de cada pestaña y se conserva al recargar. Una sesión de la versión anterior se adopta una sola vez y se retira del almacenamiento compartido, para que nadie pierda su sesión al actualizar.
+- **Efecto para el usuario:** Cada pestaña mantiene su perfil al recargar. Una pestaña nueva abierta en blanco pide iniciar sesión (duplicar la pestaña sí conserva la sesión).
+- **Verificación:** `tests/frontend/SessionPerTab.test.js` (3 pruebas) y recorrido con Playwright: en un mismo navegador se abrió la médica, luego laboratorio y luego enfermería, se recargaron las tres pestañas y cada una conservó su perfil.
+
+### 1.22. Pipeline de Calidad y Cierre de Defectos (v2)
+
+- **Pipeline `.github/workflows/calidad.yml`** (se ejecuta en cada PR a `main`):
+  - Backend: compilación, `go vet`, `golangci-lint` (bloqueante para código nuevo), `staticcheck`, `gosec`, `govulncheck` y `gocyclo` (informativos).
+  - Pruebas con detector de carreras (`-race`) y umbral de cobertura del backend: mínimo 60 %; la cobertura medida es **70,3 %**.
+  - Control de defectos abiertos (`tests/backend/herramientas/controldefectos`): la lista de `docs/calidad/defectos-abiertos.txt` quedó vacía y la herramienta acepta ese caso.
+  - Frontend: ESLint, Vitest con cobertura, build de producción y `npm audit` de las dependencias de producción (bloqueante).
+- Se incorporaron también la plantilla de PR, la plantilla de reporte de defectos, `.golangci.yml` y `eslint.config.js`.
+- **Defectos cerrados:** los 22 defectos que seguían marcados como abiertos en `docs/calidad/04-bitacora-defectos.md` ya estaban corregidos y verificados por pruebas automatizadas; se cerraron, igual que DEF-48 (tiempo de espera de 1 s en las pruebas con `-race`). Al corregir los avisos de lint apareció un error real: en `PatientPicker.jsx` se llamaba a una función inexistente al actualizar un paciente.
+- **Defectos nuevos encontrados y corregidos:** DEF-93 a DEF-97 (ver la bitácora).
+
+### 1.23. Verificación contra MySQL Real (MariaDB)
+
+- **DEF-93 (crítico):** El cierre del primer folio de historia clínica de cada paciente fallaba en MySQL: el hash génesis tiene 69 caracteres y la columna `previous_hash` era `VARCHAR(64)`. Se amplió a `VARCHAR(128)` en `schema.sql` de MySQL y PostgreSQL, y la migración corrige las bases existentes (`ensureChainHashWidth`).
+- La migración de MySQL crea las tablas `lab_orders`, `nursing_care` y `branches` y siembra las cuatro sedes iniciales.
+- **Pruebas de integración nuevas** (`tests/backend/mysql_entrega_integration_test.go`, etiqueta `integration`): fecha de vencimiento del inventario, solicitudes de primera cita, y laboratorio, enfermería y sedes. Se ejecutan con:
+
+```bash
+cd tests/backend
+MYSQL_TEST_HOST=127.0.0.1 MYSQL_TEST_PORT=3306 MYSQL_TEST_USER=root MYSQL_TEST_PASSWORD=... MYSQL_TEST_DB=saludconecta_db \
+  go test -tags integration -run TestMySQL -v .
+```
+
+- **Recorrido completo con el servidor sobre MariaDB y dos navegadores distintos (Playwright):** la médica crea la orden en el computador A; el laboratorio la ve en el computador B, la sella y la envía; el correo llega al paciente con copia a la médica; la médica ve el resultado sellado; la enfermera guarda una nota y otro equipo (celular) la ve.
+
+### 1.24. Documentación Actualizada
+
+- **RF01** incluye los ocho roles: ADMIN, MEDICO, ENFERMERO, ADMISION, AUDITOR, FARMACIA, LABORATORIO y TI.
+- **Diagramas regenerados en `docs/diagrams/` (PNG 2x y SVG):**
+  - `01_casos_de_uso`: 9 actores y 21 casos de uso, con el paciente del portal, Farmacia, Laboratorio y TI;
+  - `13_flujo_tripartito_enfermeria_farmacia`: enfermería con la API real del servidor;
+  - `16_secuencia_orden_laboratorio_sellado_impresion`: laboratorio con API, base de datos y correo real;
+  - nuevos: `19_secuencia_portal_paciente_primera_cita` y `20_secuencia_registro_inicial_ti`.
+- **Resultados actuales:** frontend **135 de 135** pruebas en 18 archivos; backend con `-race` en verde (129 pruebas en `tests/backend`); 4 pruebas contra MariaDB; `golangci-lint` y ESLint sin errores; build de producción correcto.
+
 ---
 
 ## 2. Diagramas Técnicos y Arquitectura Visual de la Entrega Final
@@ -2608,52 +2769,51 @@ Todos los diagramas técnicos fueron compilados de forma automatizada mediante `
 
 ### 2.1. Diagrama de Secuencia: Ciclo de Vida de Órdenes de Laboratorio, Sellado ReTHUS, Impresión Física y Despacho por Correo
 
-- **Archivos Compilados:** [`16_secuencia_orden_laboratorio_sellado_impresion.png`](file:///c:/Users/santi/Desktop/Proyecto_felipe/docs/diagrams/16_secuencia_orden_laboratorio_sellado_impresion.png) | [`16_secuencia_orden_laboratorio_sellado_impresion.svg`](file:///c:/Users/santi/Desktop/Proyecto_felipe/docs/diagrams/16_secuencia_orden_laboratorio_sellado_impresion.svg)
+- **Archivos Compilados:** [`16_secuencia_orden_laboratorio_sellado_impresion.png`](docs/diagrams/16_secuencia_orden_laboratorio_sellado_impresion.png) | [`16_secuencia_orden_laboratorio_sellado_impresion.svg`](docs/diagrams/16_secuencia_orden_laboratorio_sellado_impresion.svg)
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Medico as "Médico Asistencial (Dr. Santiago Vélez)"
-    participant UI_Med as "DoctorLabOrdersView (Frontend)"
-    participant EventBus as "EventBus / LocalStorage (Buzón Reactivo)"
-    participant UI_Lab as "LaboratoryScreen (Frontend)"
-    actor Bact as "Bacteriólogo (ReTHUS Activo)"
-    actor Paciente as "Paciente / Historia Clínica"
+    actor Medico as Médico (computador A)
+    participant UI_Med as DoctorLabOrdersView
+    participant API as Backend Go Fiber (/api/v2/lab-orders)
+    participant DB as MySQL (tabla lab_orders)
+    participant UI_Lab as LaboratoryScreen (computador B)
+    actor Bact as Bacteriólogo (ReTHUS)
+    participant SMTP as Servidor de Correo
+    actor Paciente as Paciente
 
-    Note over Medico,UI_Med: 1. Prescripción Paraclínica
-    Medico->>UI_Med: Selecciona paciente y tipo de examen (Catálogo Rápido / Personalizado)
-    Medico->>UI_Med: Ingresa muestra biológica, prioridad (RUTINA/URGENTE) y sospecha diagnóstica
-    UI_Med->>UI_Med: Genera ID único inmutable secuencial (LAB-2026-XXX)
-    Medico->>UI_Med: Clic en "Enviar al Buzón de Laboratorio"
-    UI_Med->>EventBus: Registra orden en almacenamiento y emite evento saludconecta_lab_orders_updated
+    Note over Medico,DB: 1. Prescripción paraclínica
+    Medico->>UI_Med: Elige paciente, examen, muestra, prioridad y observaciones
+    UI_Med->>API: POST /lab-orders { patient_id, test_type, sample_type, priority, observations }
+    API->>DB: Toma datos y correo del paciente y asigna el consecutivo LAB-2026-XXX
+    API-->>UI_Med: 201 Created (orden PENDIENTE)
 
-    Note over EventBus,UI_Lab: 2. Recepción y Toma en Laboratorio
-    EventBus->>UI_Lab: Notificación en tiempo real sin recargar página (F5)
-    UI_Lab->>Bact: Despliega orden en bandeja con badge de prioridad y datos del paciente
-    Bact->>UI_Lab: Recepciona muestra e inicia análisis cuantitativo/cualitativo
-    Bact->>UI_Lab: Digita parámetros obtenidos y valores de referencia biológicos
-    Bact->>UI_Lab: Clic en "Validar & Sellar Resultado"
+    Note over API,Bact: 2. Recepción en laboratorio (cualquier equipo)
+    UI_Lab->>API: GET /lab-orders (consulta cada 15 s)
+    API-->>UI_Lab: Órdenes del servidor con prioridad y datos del paciente
+    Bact->>UI_Lab: Digita parámetros y guarda avance
+    UI_Lab->>API: PUT /lab-orders/{id}/progress (EN_PROCESO)
 
-    Note over UI_Lab,EventBus: 3. Sellado ReTHUS y Notificación Médica
-    UI_Lab->>UI_Lab: Genera sello criptográfico ReTHUS inmutable (BAC-9421-VALLE)
-    UI_Lab->>EventBus: Actualiza estado a COMPLETADO y emite sincronización
-    EventBus->>UI_Med: Médico recibe resultado validado en su historial de órdenes
+    Note over UI_Lab,DB: 3. Sellado ReTHUS
+    Bact->>UI_Lab: Validar & Sellar Resultado
+    UI_Lab->>API: POST /lab-orders/{id}/seal
+    API->>DB: COMPLETADO + validado por, registro ReTHUS y hora
+    API-->>UI_Lab: Resultado sellado (ya no admite cambios: 409)
 
-    Note over UI_Med,Paciente: 4. Impresión Física y Despacho Digital
-    alt Impresión Formato Físico
-        Medico->>UI_Med: Clic en "Imprimir Físico"
-        UI_Med->>Paciente: Emite documento oficial con membrete IPS, NIT y firma legal
-    else Despacho por Correo Electrónico
-        Medico->>UI_Med: Clic en "Enviar Correo"
-        UI_Med->>Paciente: Remite informe oficial firmado en formato digital seguro
-    end
+    Note over API,Paciente: 4. Envío por correo e impresión
+    UI_Lab->>API: POST /lab-orders/{id}/dispatch { email, copy_doctor }
+    API->>SMTP: Resultado al paciente y copia al médico solicitante
+    SMTP-->>Paciente: Correo con el resultado sellado
+    UI_Med->>API: GET /lab-orders (el médico ve el resultado sellado)
+    Medico->>UI_Med: Imprimir físico o reenviar (solo sus propias órdenes)
 ```
 
 ---
 
 ### 2.2. Diagrama de Arquitectura y Eventos: Detección de Desabastecimiento Farmacéutico y Reportes de Dirección
 
-- **Archivos Compilados:** [`17_sistema_alertas_stock_farmacia_admin.png`](file:///c:/Users/santi/Desktop/Proyecto_felipe/docs/diagrams/17_sistema_alertas_stock_farmacia_admin.png) | [`17_sistema_alertas_stock_farmacia_admin.svg`](file:///c:/Users/santi/Desktop/Proyecto_felipe/docs/diagrams/17_sistema_alertas_stock_farmacia_admin.svg)
+- **Archivos Compilados:** [`17_sistema_alertas_stock_farmacia_admin.png`](docs/diagrams/17_sistema_alertas_stock_farmacia_admin.png) | [`17_sistema_alertas_stock_farmacia_admin.svg`](docs/diagrams/17_sistema_alertas_stock_farmacia_admin.svg)
 
 ```mermaid
 flowchart TD
@@ -2706,7 +2866,7 @@ flowchart TD
 
 ### 2.3. Diagrama Entidad-Relación (ERD): Modelo de Órdenes de Laboratorio, Pacientes y Reportes de Stock
 
-- **Archivos Compilados:** [`18_modelo_entidad_relacion_laboratorio_y_reportes.png`](file:///c:/Users/santi/Desktop/Proyecto_felipe/docs/diagrams/18_modelo_entidad_relacion_laboratorio_y_reportes.png) | [`18_modelo_entidad_relacion_laboratorio_y_reportes.svg`](file:///c:/Users/santi/Desktop/Proyecto_felipe/docs/diagrams/18_modelo_entidad_relacion_laboratorio_y_reportes.svg)
+- **Archivos Compilados:** [`18_modelo_entidad_relacion_laboratorio_y_reportes.png`](docs/diagrams/18_modelo_entidad_relacion_laboratorio_y_reportes.png) | [`18_modelo_entidad_relacion_laboratorio_y_reportes.svg`](docs/diagrams/18_modelo_entidad_relacion_laboratorio_y_reportes.svg)
 
 ```mermaid
 erDiagram
@@ -2778,6 +2938,149 @@ erDiagram
         datetime created_at
         datetime resolved_at
     }
+```
+
+---
+
+### 2.4. Diagrama de Secuencia: Portal del Paciente y Solicitud de Primera Cita
+
+El paciente, sin cuenta, recibe la sede más cercana y envía su solicitud; el servidor la asigna al médico más libre de esa sede, que la agenda y el sistema envía la cita por correo.
+
+- **Archivos Compilados:** [`19_secuencia_portal_paciente_primera_cita.png`](docs/diagrams/19_secuencia_portal_paciente_primera_cita.png) | [`19_secuencia_portal_paciente_primera_cita.svg`](docs/diagrams/19_secuencia_portal_paciente_primera_cita.svg)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Paciente as Paciente (celular, sin cuenta)
+    participant Portal as Portal del Paciente (PatientPortalScreen)
+    participant API as Backend Go Fiber
+    participant DB as MySQL (appointment_requests, branches)
+    participant UI_Med as Bandeja de Solicitudes (médico)
+    actor Medico as Médico de la sede
+    participant SMTP as Servidor de Correo
+
+    Note over Paciente,API: 1. Sede más cercana
+    Portal->>API: GET /api/v1/public/branches
+    API->>DB: Sedes con coordenadas
+    API-->>Portal: Sedes con latitud y longitud
+    Paciente->>Portal: Permite la ubicación (opcional)
+    Portal->>Portal: Calcula distancias (Haversine) y sugiere la sede más cercana
+
+    Note over Paciente,DB: 2. Solicitud de primera cita
+    Paciente->>Portal: Datos personales, observación y consentimiento (Ley 1581)
+    Portal->>API: POST /api/v1/public/appointment-requests (máx. 5 por minuto por IP)
+    API->>DB: Elige el médico activo de la sede con mayor disponibilidad (citas + pendientes)
+    API->>DB: Guarda la solicitud PENDIENTE asignada a ese médico
+    API-->>Portal: Código de solicitud (SOL-XXXXXX)
+
+    Note over UI_Med,Medico: 3. Bandeja del médico
+    UI_Med->>API: GET /api/v2/appointment-requests/pending-count (contador del menú)
+    UI_Med->>API: GET /api/v2/appointment-requests
+    Medico->>UI_Med: Revisa su calendario y elige fecha y hora libres
+
+    alt Agendar
+        UI_Med->>API: POST /api/v2/appointment-requests/{id}/schedule
+        API->>DB: Crea o asocia el paciente y crea la cita
+        API->>SMTP: Correo con la cita en hora de Colombia y PDF adjunto
+        SMTP-->>Paciente: Confirmación de la cita
+    else Rechazar
+        UI_Med->>API: POST /api/v2/appointment-requests/{id}/reject { motivo obligatorio }
+        API->>SMTP: Correo con el motivo
+    end
+```
+
+---
+
+### 2.5. Diagrama de Secuencia: Registro Inicial del Encargado de TI y Administradores de Sede
+
+Cómo se dan de alta las primeras cuentas desde el inicio de sesión sin editar archivos del servidor.
+
+- **Archivos Compilados:** [`20_secuencia_registro_inicial_ti.png`](docs/diagrams/20_secuencia_registro_inicial_ti.png) | [`20_secuencia_registro_inicial_ti.svg`](docs/diagrams/20_secuencia_registro_inicial_ti.svg)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Instalador as Quien instala el servidor
+    actor EncTI as Encargado de TI
+    participant Login as AuthScreen (inicio de sesión)
+    participant API as Backend Go Fiber (/api/v1/auth)
+    participant DB as MySQL (users, branches)
+    actor AdmSede as Administrador de Sede
+
+    Instalador->>API: Define TI_SETUP_CODE en .env y entrega el código en persona
+
+    Note over Login,DB: 1. Estado de la instalación
+    Login->>API: GET /setup-status
+    API->>DB: ¿Existe TI? ¿Qué sedes tienen administrador aprobado?
+    API-->>Login: ti_registered, ti_setup_enabled, sedes sin administrador
+    Login->>Login: Muestra solo los botones de registro que aplican
+
+    Note over EncTI,DB: 2. Registro del Encargado de TI (único)
+    EncTI->>Login: Registrar Encargado de TI + código de instalación
+    Login->>API: POST /register-ti
+    alt Código incorrecto o TI ya existe
+        API-->>Login: 403 / 409
+    else Código correcto
+        API->>DB: Crea la cuenta TI (rol 8) bajo candado setupMu
+        API-->>Login: 201 Created (el botón desaparece)
+    end
+
+    Note over AdmSede,DB: 3. Administrador de sede
+    AdmSede->>Login: Registrar Administrador de Sede (solo sedes sin administrador)
+    Login->>API: POST /register-branch-admin
+    API->>DB: Cuenta PENDIENTE (no puede iniciar sesión)
+    EncTI->>API: PATCH /api/v1/ti/admins/{id}/status { is_active: true }
+    API->>DB: Aprueba la cuenta y la sede queda ocupada
+    AdmSede->>Login: Inicia sesión como administrador de su sede
+```
+
+---
+
+### 2.6. Diagrama de Secuencia: Prescripción, Lista de Chequeo de Enfermería en el Servidor y Dispensación
+
+La orden de tratamiento, la lista de chequeo y las notas de turno viven en el servidor (`/api/v2/nursing`), así todo el personal del turno ve lo mismo desde cualquier equipo.
+
+- **Archivos Compilados:** [`13_flujo_tripartito_enfermeria_farmacia.png`](docs/diagrams/13_flujo_tripartito_enfermeria_farmacia.png) | [`13_flujo_tripartito_enfermeria_farmacia.svg`](docs/diagrams/13_flujo_tripartito_enfermeria_farmacia.svg)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Medico as Médico Tratante (DoctorLayout)
+    participant API as Backend GoFiber (API REST)
+    participant DB as Base de Datos MySQL (Transacción ACID)
+    actor Enfermero as Enfermero de Turno (NurseModules)
+    actor Farmacia as Farmacéutico (PharmacyDashboard)
+    actor Paciente as Paciente / PDF417
+
+    %% Fase 1: Emision y Triparticion de la Prescripcion
+    Note over Medico,API: 1. Prescripción Médica y Envío Simultáneo
+    Medico->>API: POST /api/v1/prescriptions { patient_id, items: [medicamento, dosis, via], triage_id }
+    API->>API: Valida alergias cruzadas en tiempo real (< 150 ms)
+    API->>DB: INSERT into prescriptions & prescription_items (Estado: PENDIENTE)
+    API->>DB: Registra copia en bitácora de enfermería (NurseChecklist)
+    API-->>Medico: 201 Created (Comprobante PDF firmado digitalmente con hash SHA-256)
+
+    %% Fase 2: Ejecucion de Cuidados por Enfermeria
+    Note over API,Enfermero: 2. Orden de Tratamiento y Lista de Chequeo de Enfermería
+    Medico->>API: PUT /api/v2/nursing/{patientId}/order (orden de tratamiento)
+    API->>DB: Guarda la orden en nursing_care (visible para todo el turno)
+    Enfermero->>API: GET /api/v2/nursing/{patientId}
+    API-->>Enfermero: 200 OK (orden vigente, lista de chequeo y notas de turno)
+    Enfermero->>API: PUT /api/v2/nursing/{patientId}/duties (deberes cumplidos)
+    API->>DB: El servidor firma cada deber con la hora de Colombia y el nombre de la sesión
+    Enfermero->>API: POST /api/v2/nursing/{patientId}/notes (nota de evolución, solo anexo)
+    API-->>Enfermero: 200 OK (cualquier equipo del turno ve lo mismo)
+
+    %% Fase 3: Dispensacion y Validacion en Farmacia con Lector PDF417
+    Note over Paciente,Farmacia: 3. Validación de Identidad y Dispensación en Farmacia
+    Paciente->>Farmacia: Presenta Cédula de Ciudadanía Colombiana
+    Farmacia->>Farmacia: Escaneo de código de barras PDF417 de la cédula
+    Farmacia->>API: GET /api/v1/pharmacy/inbox?document_number=...
+    API-->>Farmacia: 200 OK (Recetario pendiente, cobertura PBS 100% vs. copago)
+    Farmacia->>API: POST /api/v1/pharmacy/dispense { prescription_id, items }
+    API->>DB: Transacción ACID: Descuento atómico de stock por dosis y registro CUM
+    DB-->>API: Commit exitoso
+    API-->>Farmacia: 200 OK (Dispensación completada, inventario valorizado sincronizado)
 ```
 
 ---
@@ -2858,47 +3161,52 @@ $$V(G) = E - N + 2P$$
 
 ### 4.3. Evidencia Empírica de Ejecución en Caliente
 
-#### 4.3.1. Pruebas de Componentes y Vistas Frontend (Vitest v2.1.9)
+#### 4.3.1. Pruebas de Componentes y Vistas Frontend (Vitest v2.1.9, ejecución del 20 nov 2026)
 
 ```text
- RUN  v2.1.9 C:/Users/santi/Desktop/Proyecto_felipe/src/frontend
+ RUN  v2.1.9 src/frontend
 
- ✓ ../../tests/frontend/totp.test.js (18 tests) 89ms
- ✓ ../../tests/frontend/MedicalKit.test.jsx (7 tests) 547ms
- ✓ ../../tests/frontend/NurseModules.test.jsx (2 tests) 548ms
- ✓ ../../tests/frontend/DoctorLayout.test.jsx (6 tests) 480ms
- ✓ ../../tests/frontend/ResilienceQuality.test.jsx (2 tests) 682ms
- ✓ ../../tests/frontend/PharmacyDashboard.test.jsx (2 tests) 579ms
- ✓ ../../tests/frontend/AdminOrgChartAndBranches.test.jsx (6 tests) 1063ms
- ✓ ../../tests/frontend/PatientFlow.test.jsx (10 tests) 1494ms
- ✓ ../../tests/frontend/AuthMfa.test.jsx (14 tests) 2011ms
- ✓ ../../tests/frontend/ClinicalScreens.test.jsx (11 tests) 2291ms
- ✓ ../../tests/frontend/AdminGovernance.test.jsx (23 tests) 2313ms
- ✓ ../../tests/frontend/AllergyAlertModal.test.jsx (2 tests) 59ms
- ✓ ../../tests/frontend/TreatmentFollowUpView.test.jsx (1 test) 73ms
- ✓ ../../tests/frontend/DoctorAppointmentsView.test.jsx (1 test) 76ms
+ ✓ ../../tests/frontend/AuthMfa.test.jsx (13 tests)
+ ✓ ../../tests/frontend/AdminGovernance.test.jsx (23 tests)
+ ✓ ../../tests/frontend/TiSetup.test.jsx (11 tests)
+ ✓ ../../tests/frontend/ClinicalScreens.test.jsx (11 tests)
+ ✓ ../../tests/frontend/PatientFlow.test.jsx (10 tests)
+ ✓ ../../tests/frontend/PatientRequests.test.jsx (11 tests)
+ ✓ ../../tests/frontend/AdminOrgChartAndBranches.test.jsx (6 tests)
+ ✓ ../../tests/frontend/DoctorLayout.test.jsx (6 tests)
+ ✓ ../../tests/frontend/ServerBackedModules.test.jsx (6 tests)
+ ✓ ../../tests/frontend/MedicalKit.test.jsx (7 tests)
+ ✓ ../../tests/frontend/NurseModules.test.jsx (2 tests)
+ ✓ ../../tests/frontend/ResilienceQuality.test.jsx (2 tests)
+ ✓ ../../tests/frontend/totp.test.js (18 tests)
+ ✓ ../../tests/frontend/AllergyAlertModal.test.jsx (2 tests)
+ ✓ ../../tests/frontend/PharmacyDashboard.test.jsx (2 tests)
+ ✓ ../../tests/frontend/SessionPerTab.test.js (3 tests)
+ ✓ ../../tests/frontend/TreatmentFollowUpView.test.jsx (1 test)
+ ✓ ../../tests/frontend/DoctorAppointmentsView.test.jsx (1 test)
 
- Test Files  14 passed (14)
-      Tests  105 passed (105)
-   Start at  09:28:54
-   Duration  8.42s
+ Test Files  18 passed (18)
+      Tests  135 passed (135)
+   Duration  8.96s
 ```
 
-#### 4.3.2. Pruebas de Dominio y Servicios Backend (Go Testing)
+#### 4.3.2. Pruebas de Dominio y Servicios Backend (Go Testing, 129 pruebas en `tests/backend`)
 
 ```text
-=== RUN   TestTriageManchesterPriorities
---- PASS: TestTriageManchesterPriorities (0.00s)
-=== RUN   TestClinicalRecordImmutability
---- PASS: TestClinicalRecordImmutability (0.01s)
-=== RUN   TestPrescriptionAllergyInterception
---- PASS: TestPrescriptionAllergyInterception (0.01s)
-=== RUN   TestPharmacyStockAlertsAndDispensation
---- PASS: TestPharmacyStockAlertsAndDispensation (0.00s)
-=== RUN   TestAdminReTHUSGovernance
---- PASS: TestAdminReTHUSGovernance (0.01s)
-PASS
-ok  	saludconecta-tests	13.132s
+$ cd tests/backend && go test -race -count=1 ./...
+ok   saludconecta-tests                              214.462s
+ok   saludconecta-tests/herramientas/controldefectos   1.019s
+
+$ cd src/backend && golangci-lint run ./...
+0 issues.
+
+# Contra MariaDB real (build tag integration)
+$ MYSQL_TEST_HOST=127.0.0.1 ... go test -tags integration -run TestMySQL -v .
+--- PASS: TestMySQLInventarioConservaFechaDeVencimiento (0.02s)
+--- PASS: TestMySQLSolicitudesDeCitaPersisten (0.02s)
+--- PASS: TestMySQLLaboratorioEnfermeriaYSedes (0.02s)
+--- PASS: TestMySQLChainSyncAndTimestamps (0.05s)
+ok   saludconecta-tests   0.123s
 ```
 
 #### 4.3.3. Compilación de Producción de Vite (Vite v5.4.21 Build)

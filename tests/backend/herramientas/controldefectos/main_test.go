@@ -181,7 +181,6 @@ func TestLeerListaRechazaFormatoInvalido(t *testing.T) {
 		"DEF6 TestDEF06 marcador",
 		"DEF-06 TestDEF06 otro",
 		"DEF-06 TestDEF06 marcador\nDEF-06 TestOtra marcador",
-		"# solo comentarios",
 	}
 	for _, c := range casos {
 		if _, err := leerLista(strings.NewReader(c)); err == nil {
@@ -232,5 +231,36 @@ func TestEjecutarExtremoAExtremo(t *testing.T) {
 	salida.Reset()
 	if codigo := ejecutar(append(args, "-regex"), strings.NewReader(""), &salida); codigo != 0 || strings.TrimSpace(salida.String()) != "^(TestDEF06)$" {
 		t.Fatalf("regex inesperada: %q", salida.String())
+	}
+}
+
+func TestListaVaciaSignificaSinDefectosAbiertos(t *testing.T) {
+	dir := t.TempDir()
+	escribir := func(nombre, contenido string) string {
+		ruta := filepath.Join(dir, nombre)
+		if err := os.WriteFile(ruta, []byte(contenido), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		return ruta
+	}
+	lista := escribir("lista.txt", "# todos los defectos con prueba estan cerrados\n")
+	bitacora := escribir("bitacora.md", "| DEF-06 | Titulo | Backend | Crítica | P1 | Cerrado |\n")
+	sinAbiertos := escribir("fuente_test.go", "func TestDEF06(t *testing.T) {\n}\n")
+	args := []string{"-lista", lista, "-bitacora", bitacora, "-fuente", sinAbiertos}
+
+	var salida bytes.Buffer
+	if codigo := ejecutar(append(args, "-regex"), strings.NewReader(""), &salida); codigo != 0 || strings.TrimSpace(salida.String()) != "^$" {
+		t.Fatalf("regex para lista vacia: codigo %d, %q", codigo, salida.String())
+	}
+	salida.Reset()
+	if codigo := ejecutar(args, strings.NewReader(""), &salida); codigo != 0 || !strings.Contains(salida.String(), "No hay defectos abiertos") {
+		t.Fatalf("lista vacia coherente: codigo %d:\n%s", codigo, salida.String())
+	}
+
+	// Una prueba que sigue marcada como abierta pero no esta en la lista es una incoherencia
+	conAbierto := escribir("abierta_test.go", "func TestDEF06(t *testing.T) {\n\trequireDefectoAbierto(t, \"DEF-06\")\n}\n")
+	salida.Reset()
+	if codigo := ejecutar([]string{"-lista", lista, "-bitacora", bitacora, "-fuente", conAbierto}, strings.NewReader(""), &salida); codigo != 1 {
+		t.Fatalf("prueba huerfana con lista vacia: se esperaba codigo 1, obtenido %d:\n%s", codigo, salida.String())
 	}
 }

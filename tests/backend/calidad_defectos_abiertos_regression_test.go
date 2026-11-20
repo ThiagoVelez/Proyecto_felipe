@@ -55,7 +55,6 @@ func sembrarPacienteYFolio(t *testing.T, ds *memory.DataStore, patientID, record
 
 // DEF-29: el separador '|' no se escapa, por lo que entradas distintas producen el mismo hash.
 func TestDEF29HashSinColisionPorDelimitador(t *testing.T) {
-	requireDefectoAbierto(t, "DEF-29")
 	h1 := crypto.CalculateChainedRecordHash("prev", "pac", "doc", "dolor|toracico", "normal", "BA00", "dx", "plan", "2026-01-01T00:00:00Z")
 	h2 := crypto.CalculateChainedRecordHash("prev", "pac", "doc", "dolor", "toracico|normal", "BA00", "dx", "plan", "2026-01-01T00:00:00Z")
 	if h1 == h2 {
@@ -68,7 +67,6 @@ func TestDEF29HashSinColisionPorDelimitador(t *testing.T) {
 // enlace. Se simula un folio alterado en el almacenamiento (acceso directo a la base de datos o adaptador
 // defectuoso) cuyo previous_hash no corresponde a ningun folio anterior del paciente.
 func TestDEF30VerificacionValidaEnlaceConFolioAnterior(t *testing.T) {
-	requireDefectoAbierto(t, "DEF-30")
 	ctx := context.Background()
 	ds := memory.NewDataStore()
 	_ = memory.NewPatientMemoryRepo(ds).Create(ctx, newPatientFixture("p-def30", "DOC-30"))
@@ -139,7 +137,6 @@ func peticionJSON(t *testing.T, env calidadEnv, metodo, ruta, cuerpo, token stri
 
 // DEF-49: POST /api/v1/auth/register-admin es publico y crea un ADMIN activo sin autenticacion.
 func TestDEF49RegistroDeAdministradorRequiereAutenticacion(t *testing.T) {
-	requireDefectoAbierto(t, "DEF-49")
 	env := newCalidadEnv(t)
 	cuerpo := `{"full_name":"Atacante Anonimo","document_type":"CC","document_number":"900000049","email":"intruso49@example.com","password":"ClaveIntrusa-2026!","phone":"3000000049","branch":"Sede Cartago","professional_card":"ADM-49"}`
 	estado, _ := peticionJSON(t, env, http.MethodPost, "/api/v1/auth/register-admin", cuerpo, "")
@@ -152,7 +149,6 @@ func TestDEF49RegistroDeAdministradorRequiereAutenticacion(t *testing.T) {
 
 // DEF-50: GET /api/v1/auth/mfa-seed es publico y devuelve el secreto TOTP vigente de cualquier cuenta.
 func TestDEF50SemillaMFANoSeExponeSinAutenticacion(t *testing.T) {
-	requireDefectoAbierto(t, "DEF-50")
 	env := newCalidadEnv(t)
 	repo := memory.NewUserMemoryRepo(env.ds)
 	secreto, _ := crypto.GenerateMFASecret()
@@ -177,7 +173,6 @@ func TestDEF50SemillaMFANoSeExponeSinAutenticacion(t *testing.T) {
 
 // DEF-51: la prescripcion v2 (/api/v2/treatments/dispatch) no cruza las alergias del paciente.
 func TestDEF51PrescripcionV2CruzaAlergias(t *testing.T) {
-	requireDefectoAbierto(t, "DEF-51")
 	ds, treat, _ := entornoV2(t)
 	ctx := context.Background()
 	patients := memory.NewPatientMemoryRepo(ds)
@@ -193,7 +188,6 @@ func TestDEF51PrescripcionV2CruzaAlergias(t *testing.T) {
 
 // DEF-52: la receta v2 acepta cantidades negativas; al dispensarla el inventario aumenta.
 func TestDEF52RecetaV2RechazaCantidadNoPositiva(t *testing.T) {
-	requireDefectoAbierto(t, "DEF-52")
 	ds, treat, pharm := entornoV2(t)
 	ctx := context.Background()
 	_ = memory.NewPatientMemoryRepo(ds).Create(ctx, newPatientFixture("p-def52", "DOC-52"))
@@ -215,7 +209,6 @@ func TestDEF52RecetaV2RechazaCantidadNoPositiva(t *testing.T) {
 
 // DEF-53: la farmacia dispensa sin verificar el documento del paciente cuando no se escanea.
 func TestDEF53DispensacionExigeDocumentoDelPaciente(t *testing.T) {
-	requireDefectoAbierto(t, "DEF-53")
 	ds, treat, pharm := entornoV2(t)
 	ctx := context.Background()
 	_ = memory.NewPatientMemoryRepo(ds).Create(ctx, newPatientFixture("p-def53", "DOC-53"))
@@ -230,7 +223,6 @@ func TestDEF53DispensacionExigeDocumentoDelPaciente(t *testing.T) {
 
 // DEF-54: la dispensacion no comprueba la fecha de vencimiento del lote.
 func TestDEF54NoDispensaMedicamentoVencido(t *testing.T) {
-	requireDefectoAbierto(t, "DEF-54")
 	ds, treat, pharm := entornoV2(t)
 	ctx := context.Background()
 	_ = memory.NewPatientMemoryRepo(ds).Create(ctx, newPatientFixture("p-def54", "DOC-54"))
@@ -254,7 +246,6 @@ func TestDEF54NoDispensaMedicamentoVencido(t *testing.T) {
 
 // DEF-55: eliminar un paciente borra sus alergias; al readmitirlo el cruce de alergias deja de alertar.
 func TestDEF55EliminarPacienteNoPierdeAntecedentesAlergicos(t *testing.T) {
-	requireDefectoAbierto(t, "DEF-55")
 	ctx := context.Background()
 	svc := services.NewPatientService(memory.NewPatientMemoryRepo(memory.NewDataStore()))
 	p, err := svc.RegisterPatient(ctx, newPatientFixture("", "DOC-55"))
@@ -279,7 +270,6 @@ func TestDEF55EliminarPacienteNoPierdeAntecedentesAlergicos(t *testing.T) {
 
 // DEF-57: una nota anatomica puede asociarse al folio de otro paciente y de otro medico.
 func TestDEF57NotaAnatomicaCoincideConPacienteDelFolio(t *testing.T) {
-	requireDefectoAbierto(t, "DEF-57")
 	ctx := context.Background()
 	ds := memory.NewDataStore()
 	sembrarPacienteYFolio(t, ds, "p-def57-a", "cr-def57-a", medicoSemillaID)
@@ -300,7 +290,6 @@ func TestDEF57NotaAnatomicaCoincideConPacienteDelFolio(t *testing.T) {
 
 // DEF-58: reenviar una receta v2 con el ID de una receta ya dispensada la reactiva y permite dispensarla otra vez.
 func TestDEF58RecetaDispensadaNoSeReactiva(t *testing.T) {
-	requireDefectoAbierto(t, "DEF-58")
 	ds, treat, pharm := entornoV2(t)
 	ctx := context.Background()
 	_ = memory.NewPatientMemoryRepo(ds).Create(ctx, newPatientFixture("p-def58", "DOC-58"))
@@ -324,7 +313,6 @@ func TestDEF58RecetaDispensadaNoSeReactiva(t *testing.T) {
 
 // DEF-59: el adaptador en memoria dispensa recetas canceladas.
 func TestDEF59NoDispensaRecetaCancelada(t *testing.T) {
-	requireDefectoAbierto(t, "DEF-59")
 	ds := memory.NewDataStore()
 	ctx := context.Background()
 	repo := memory.NewPrescriptionV2MemoryRepo(ds)
@@ -341,7 +329,6 @@ func TestDEF59NoDispensaRecetaCancelada(t *testing.T) {
 
 // DEF-60: una alergia registrada a un farmaco concreto no se extiende a su familia (amoxicilina -> ampicilina).
 func TestDEF60AlergiaAFarmacoSeExtiendeASuFamilia(t *testing.T) {
-	requireDefectoAbierto(t, "DEF-60")
 	casos := []struct{ alergia, farmaco string }{
 		{"AMOXICILINA", "AMPICILINA"},
 		{"CEFTRIAXONA", "CEFALEXINA"},
@@ -355,7 +342,6 @@ func TestDEF60AlergiaAFarmacoSeExtiendeASuFamilia(t *testing.T) {
 
 // DEF-61: el codigo unico de la receta, enviado por el cliente, permite escribir el PDF fuera del directorio.
 func TestDEF61PDFNoSaleDelDirectorioDeDocumentos(t *testing.T) {
-	requireDefectoAbierto(t, "DEF-61")
 	docs := filepath.Join(t.TempDir(), "documents")
 	gen := pdf.NewGenerator(docs)
 	ruta, _, err := gen.GeneratePrescriptionPDF(&domain.PrescriptionV2{UniqueCode: "/../../escape-def61", PatientName: "X",
@@ -371,7 +357,6 @@ func TestDEF61PDFNoSaleDelDirectorioDeDocumentos(t *testing.T) {
 
 // DEF-67: un dolor EVA fuera de 0-10 se convierte en 0 (sin dolor) sin avisar.
 func TestDEF67EscalaEVAFueraDeRangoSeRechaza(t *testing.T) {
-	requireDefectoAbierto(t, "DEF-67")
 	tr := &domain.TriageRecord{SystolicBP: 120, DiastolicBP: 80, HeartRate: 75, RespiratoryRate: 16, OxygenSaturation: 98, BodyTemperature: 36.8, GlasgowScore: 15, PainScaleScore: 11}
 	if err := tr.Validate(); err == nil {
 		defectoReproducido(t, "DEF-67", "EVA 11 aceptada y registrada como %d", tr.PainScaleScore)
@@ -380,7 +365,6 @@ func TestDEF67EscalaEVAFueraDeRangoSeRechaza(t *testing.T) {
 
 // DEF-68: actualizar solo el telefono borra el correo y la direccion del paciente.
 func TestDEF68ActualizacionParcialConservaContacto(t *testing.T) {
-	requireDefectoAbierto(t, "DEF-68")
 	ctx := context.Background()
 	svc := services.NewPatientService(memory.NewPatientMemoryRepo(memory.NewDataStore()))
 	p, err := svc.RegisterPatient(ctx, newPatientFixture("", "DOC-68"))
@@ -401,7 +385,6 @@ func TestDEF68ActualizacionParcialConservaContacto(t *testing.T) {
 
 // DEF-70: un medico puede editar la publicacion de salud de otro medico.
 func TestDEF70PublicacionSoloLaEditaSuAutor(t *testing.T) {
-	requireDefectoAbierto(t, "DEF-70")
 	ctx := context.Background()
 	svc := services.NewHealthEducationService(memory.NewHealthEducationMemoryRepo(memory.NewDataStore()))
 	autor := newDoctorFixture("usr-def70-a", "RM-70A")
@@ -417,7 +400,6 @@ func TestDEF70PublicacionSoloLaEditaSuAutor(t *testing.T) {
 
 // DEF-72: la ruta de notas anatomicas por paciente declara acceso para AUDITOR, pero el grupo /patients lo bloquea.
 func TestDEF72AuditorConsultaNotasAnatomicasDelPaciente(t *testing.T) {
-	requireDefectoAbierto(t, "DEF-72")
 	env := newCalidadEnv(t)
 	sembrarUsuariosPorRol(t, env, []string{"AUDITOR"})
 	estado, _ := peticionJSON(t, env, http.MethodGet, "/api/v1/patients/x/anatomical-notes", "", calidadToken(t, "usr-rbac-auditor", "AUDITOR"))

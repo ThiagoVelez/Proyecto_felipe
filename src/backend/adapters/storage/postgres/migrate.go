@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"context"
 	"database/sql"
 	_ "embed"
 	"fmt"
@@ -16,12 +17,17 @@ func Migrate(db *sql.DB) error {
 	if db == nil {
 		return nil
 	}
-	if _, err := db.Exec(schemaSQL); err != nil {
+	ctx := context.Background()
+	if _, err := db.ExecContext(ctx, schemaSQL); err != nil {
 		return fmt.Errorf("fallo aplicando el esquema postgresql: %w", err)
+	}
+	// El hash genesis de la cadena tiene 69 caracteres: las bases creadas con VARCHAR(64) se amplian
+	if _, err := db.ExecContext(ctx, `ALTER TABLE clinical_records ALTER COLUMN previous_hash TYPE VARCHAR(128)`); err != nil {
+		return fmt.Errorf("fallo ampliando previous_hash: %w", err)
 	}
 
 	for _, med := range catalog.DemoMedications() {
-		_, err := db.Exec(`
+		_, err := db.ExecContext(ctx, `
 			INSERT INTO medications_catalog (cum_code, commercial_name, generic_name, active_ingredient, concentration, pharmaceutical_form, stock_quantity)
 			VALUES ($1, $2, $3, $4, $5, $6, $7)
 			ON CONFLICT (cum_code) DO NOTHING`,

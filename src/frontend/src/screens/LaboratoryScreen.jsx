@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   FlaskConical,
   Search,
@@ -27,102 +27,8 @@ import {
 } from 'lucide-react';
 import apiClient from '../services/api';
 
-const DEFAULT_ORDERS = [
-  {
-    id: 'LAB-2026-001',
-    patient_name: 'Santiago Vélez',
-    patient_document: '1006238743',
-    patient_document_type: 'CC',
-    patient_email: 'svelez@saludconecta.ips.gov.co',
-    patient_eps: 'CaliEps (CONTRIBUTIVO)',
-    patient_age: 28,
-    patient_gender: 'Masculino',
-    test_type: 'Hemograma Completo Automatizado + Plaquetas',
-    ordering_doctor: 'Dr. Santiago Vélez',
-    doctor_email: 'santiago.velez@saludconecta.ips.gov.co',
-    doctor_license: 'RM-94821-VALLE',
-    sample_type: 'Sangre Total (Tubo Tapa Lila EDTA)',
-    priority: 'URGENTE',
-    status: 'PENDIENTE',
-    observations: 'Paciente con cuadro febril agudo de 3 días de evolución, mialgias y sospecha de síndrome viral o dengue.',
-    created_at: '2026-11-10T07:30:00Z',
-    results: null,
-  },
-  {
-    id: 'LAB-2026-002',
-    patient_name: 'Camila Yaima',
-    patient_document: '1114567890',
-    patient_document_type: 'CC',
-    patient_email: 'camilayaima@saludconecta.ips.gov.co',
-    patient_eps: 'Nueva EPS (CONTRIBUTIVO)',
-    patient_age: 31,
-    patient_gender: 'Femenino',
-    test_type: 'Glucemia Basal & Perfil Lipídico Completo',
-    ordering_doctor: 'Dra. Camila Yaima',
-    doctor_email: 'camila.yaima@saludconecta.ips.gov.co',
-    doctor_license: 'RM-88310-VALLE',
-    sample_type: 'Suero (Tubo Tapa Amarilla con Gel Separador)',
-    priority: 'RUTINA',
-    status: 'EN_PROCESO',
-    observations: 'Control metabólico anual por antecedentes familiares de diabetes mellitus tipo 2 y dislipidemia.',
-    created_at: '2026-11-10T08:00:00Z',
-    results: `GLUCOSE: 92 mg/dL (Ref: 70 - 100 mg/dL)
-CHOLESTEROL TOTAL: 185 mg/dL (Ref: < 200 mg/dL)
-TRIGLYCERIDES: 130 mg/dL (Ref: < 150 mg/dL)
-HDL: 55 mg/dL (Ref: > 45 mg/dL)
-LDL: 104 mg/dL (Ref: < 130 mg/dL)`,
-  },
-  {
-    id: 'LAB-2026-003',
-    patient_name: 'Carlos Alberto Restrepo',
-    patient_document: '16789012',
-    patient_document_type: 'CC',
-    patient_email: '',
-    patient_eps: 'Emssanar (SUBSIDIADO)',
-    patient_age: 54,
-    patient_gender: 'Masculino',
-    test_type: 'Uroanálisis con Sedimento Microscópico',
-    ordering_doctor: 'Dr. Santiago Vélez',
-    doctor_email: 'santiago.velez@saludconecta.ips.gov.co',
-    doctor_license: 'RM-94821-VALLE',
-    sample_type: 'Orina Fracción Media',
-    priority: 'PRIORITARIO',
-    status: 'COMPLETADO',
-    observations: 'Disuria y dolor lumbar derecho. Descartar infección de vías urinarias o litiasis renal.',
-    created_at: '2026-11-09T16:20:00Z',
-    validated_at: '2026-11-09T17:45:00Z',
-    validated_by: 'Dra. Marcela Cardona (BAC-9421-VALLE)',
-    bacteriologist_license: 'BAC-9421-VALLE',
-    results: `ASPECT: Límpido, Amarillo pajizo
-DENSITY: 1.020 (Ref: 1.010 - 1.030)
-PH: 6.0 (Ref: 5.0 - 7.0)
-PROTEINS: Negativo
-GLUCOSE: Negativo
-LEUKOCYTES: 1 - 2 por campo (Normal)
-ERYTHROCYTES: 0 - 1 por campo
-BACTERIA: Escasa (+)`,
-  },
-  {
-    id: 'LAB-2026-004',
-    patient_name: 'María Elena Gómez',
-    patient_document: '31456789',
-    patient_document_type: 'CC',
-    patient_email: 'maria.gomez@hotmail.com',
-    patient_eps: 'Sanitas (CONTRIBUTIVO)',
-    patient_age: 62,
-    patient_gender: 'Femenino',
-    test_type: 'Troponina I Cuantitativa Ultrasensible',
-    ordering_doctor: 'Dr. Santiago Vélez',
-    doctor_email: 'santiago.velez@saludconecta.ips.gov.co',
-    doctor_license: 'RM-94821-VALLE',
-    sample_type: 'Plasma Heparinizado (Urgencias)',
-    priority: 'URGENTE',
-    status: 'PENDIENTE',
-    observations: 'Dolor precordial opresivo con irradiación a miembro superior izquierdo. Urgencias vital.',
-    created_at: '2026-11-10T08:15:00Z',
-    results: null,
-  },
-];
+// Las ordenes viven en el servidor (/api/v2/lab-orders); la bandeja se actualiza cada 15 segundos
+const REFRESH_MS = 15000;
 
 // Plantillas de resultados analíticos según examen
 const TEST_TEMPLATES = {
@@ -158,14 +64,8 @@ TASA DE FILTRACIÓN GLOMERULAR (eGFR): > 90 mL/min/1.73m2 (Función Renal Normal
 };
 
 export const LaboratoryScreen = ({ user }) => {
-  const [orders, setOrders] = useState(() => {
-    try {
-      const saved = localStorage.getItem('saludconecta_lab_orders');
-      return saved ? JSON.parse(saved) : DEFAULT_ORDERS;
-    } catch {
-      return DEFAULT_ORDERS;
-    }
-  });
+  const [orders, setOrders] = useState([]);
+  const [loadError, setLoadError] = useState('');
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('TODOS');
@@ -192,28 +92,22 @@ export const LaboratoryScreen = ({ user }) => {
   const bacteriologistName = currentUser.full_name || currentUser.name || 'Dra. Marcela Cardona';
   const license = currentUser.professional_card || 'BAC-9421-VALLE';
 
-  // Sincronización reactiva bidireccional
-  useEffect(() => {
-    const handleSync = () => {
-      try {
-        const saved = localStorage.getItem('saludconecta_lab_orders');
-        if (saved) setOrders(JSON.parse(saved));
-      } catch {}
-    };
-    window.addEventListener('saludconecta_lab_orders_updated', handleSync);
-    window.addEventListener('storage', handleSync);
-    return () => {
-      window.removeEventListener('saludconecta_lab_orders_updated', handleSync);
-      window.removeEventListener('storage', handleSync);
-    };
+  const loadOrders = useCallback(async () => {
+    try {
+      const list = await apiClient.getLabOrders();
+      setOrders(list);
+      setLoadError('');
+      setSelectedOrder((prev) => (prev ? list.find((o) => o.id === prev.id) || prev : prev));
+    } catch (err) {
+      setLoadError(err.message || 'No fue posible consultar las órdenes de laboratorio.');
+    }
   }, []);
 
-  // Persistencia local
   useEffect(() => {
-    try {
-      localStorage.setItem('saludconecta_lab_orders', JSON.stringify(orders));
-    } catch {}
-  }, [orders]);
+    loadOrders();
+    const timer = setInterval(loadOrders, REFRESH_MS);
+    return () => clearInterval(timer);
+  }, [loadOrders]);
 
   // Sincronización reactiva cuando cualquier departamento o médico actualiza los datos del paciente
   useEffect(() => {
@@ -317,58 +211,44 @@ export const LaboratoryScreen = ({ user }) => {
   };
 
   // Guardar avance como "EN_PROCESO" (Continuar Análisis después)
-  const handleSaveDraft = () => {
+  const handleSaveDraft = async () => {
     if (!selectedOrder) return;
-    const updatedOrder = {
-      ...selectedOrder,
-      status: 'EN_PROCESO',
-      results: resultText,
-      method_notes: methodNotes,
-      updated_at: new Date().toISOString(),
-    };
-    const updatedList = orders.map((o) => (o.id === selectedOrder.id ? updatedOrder : o));
-    setOrders(updatedList);
-    localStorage.setItem('saludconecta_lab_orders', JSON.stringify(updatedList));
-    window.dispatchEvent(new CustomEvent('saludconecta_lab_orders_updated', { detail: updatedOrder }));
-
-    setSelectedOrder(updatedOrder);
-    setNotice(`Avance de la orden ${selectedOrder.id} guardado en estado EN PROCESO.`);
+    try {
+      const updatedOrder = await apiClient.saveLabProgress(selectedOrder.id, resultText, methodNotes);
+      setOrders((list) => list.map((o) => (o.id === updatedOrder.id ? updatedOrder : o)));
+      setSelectedOrder(updatedOrder);
+      setNotice(`Avance de la orden ${selectedOrder.id} guardado en estado EN PROCESO.`);
+    } catch (err) {
+      setNotice(`No se pudo guardar el avance: ${err.message}`);
+    }
     setTimeout(() => setNotice(''), 4000);
   };
 
   // Validar y Sellar Resultado con ReTHUS
-  const handleValidateAndSeal = (e) => {
+  const handleValidateAndSeal = async (e) => {
     e?.preventDefault();
     if (!selectedOrder) return;
 
     if (!resultText.trim()) {
-      alert('Debe ingresar los parámetros analíticos antes de sellar el resultado.');
+      setNotice('Debe ingresar los parámetros analíticos antes de sellar el resultado.');
+      setTimeout(() => setNotice(''), 4000);
       return;
     }
 
-    const validatedTimestamp = new Date().toISOString();
-    const updatedOrder = {
-      ...selectedOrder,
-      status: 'COMPLETADO',
-      results: resultText,
-      method_notes: methodNotes,
-      validated_at: validatedTimestamp,
-      validated_by: bacteriologistName,
-      bacteriologist_license: license,
-    };
-
-    const updatedList = orders.map((o) => (o.id === selectedOrder.id ? updatedOrder : o));
-    setOrders(updatedList);
-    localStorage.setItem('saludconecta_lab_orders', JSON.stringify(updatedList));
-    window.dispatchEvent(new CustomEvent('saludconecta_lab_orders_updated', { detail: updatedOrder }));
-
-    setSelectedOrder(updatedOrder);
-    setNotice(`Examen ${selectedOrder.id} validado y sellado exitosamente bajo registro ReTHUS ${license}.`);
+    try {
+      // Quien valida y su registro ReTHUS los toma el servidor de la sesion
+      const updatedOrder = await apiClient.sealLabOrder(selectedOrder.id, resultText, methodNotes);
+      setOrders((list) => list.map((o) => (o.id === updatedOrder.id ? updatedOrder : o)));
+      setSelectedOrder(updatedOrder);
+      setNotice(`Examen ${selectedOrder.id} validado y sellado bajo registro ReTHUS ${updatedOrder.bacteriologist_license || license}.`);
+    } catch (err) {
+      setNotice(`No se pudo sellar el resultado: ${err.message}`);
+    }
     setTimeout(() => setNotice(''), 5000);
   };
 
   // Despacho de Correo Electrónico (al paciente con copia al médico)
-  const handleDispatchEmail = (e) => {
+  const handleDispatchEmail = async (e) => {
     e?.preventDefault();
     if (!patientEmailInput.trim()) {
       setEmailFeedback('Por favor especifique un correo electrónico válido para el paciente.');
@@ -376,61 +256,48 @@ export const LaboratoryScreen = ({ user }) => {
     }
 
     setIsSendingEmail(true);
-    setTimeout(() => {
-      setIsSendingEmail(false);
-      const doctorCopyText = sendDoctorCopy
-        ? ` y copia archivada al médico solicitante (${selectedOrder.ordering_doctor})`
+    try {
+      const updatedOrder = await apiClient.dispatchLabOrder(selectedOrder.id, patientEmailInput.trim(), sendDoctorCopy);
+      setOrders((list) => list.map((o) => (o.id === updatedOrder.id ? updatedOrder : o)));
+      setSelectedOrder(updatedOrder);
+      const doctorCopyText = sendDoctorCopy && updatedOrder.doctor_email
+        ? ` y copia al médico solicitante (${updatedOrder.ordering_doctor})`
         : '';
-      setEmailFeedback(`Resultado oficial sellado despachado exitosamente a ${patientEmailInput}${doctorCopyText}.`);
-
-      // Guardar constancia de correo en la orden
-      const updatedOrder = {
-        ...selectedOrder,
-        email_dispatched_at: new Date().toISOString(),
-        dispatched_to: patientEmailInput,
-      };
-      const updatedList = orders.map((o) => (o.id === selectedOrder.id ? updatedOrder : o));
-      setOrders(updatedList);
-      localStorage.setItem('saludconecta_lab_orders', JSON.stringify(updatedList));
-
+      setEmailFeedback(`Resultado oficial sellado enviado a ${updatedOrder.dispatched_to}${doctorCopyText}.`);
       setTimeout(() => {
         setShowEmailSection(false);
         setEmailFeedback('');
       }, 3500);
-    }, 1200);
+    } catch (err) {
+      setEmailFeedback(`No se pudo enviar el correo: ${err.message}`);
+    } finally {
+      setIsSendingEmail(false);
+    }
   };
 
   // Crear nueva orden manual
-  const handleCreateOrder = (e) => {
+  const handleCreateOrder = async (e) => {
     e.preventDefault();
     const form = e.target;
-    const newOrder = {
-      id: `LAB-2026-${String(orders.length + 1).padStart(3, '0')}`,
-      patient_name: form.patient_name.value.trim(),
-      patient_document: form.patient_document.value.trim(),
-      patient_document_type: 'CC',
-      patient_eps: form.patient_eps.value.trim() || 'CaliEps (CONTRIBUTIVO)',
-      patient_age: 35,
-      patient_gender: 'General',
-      patient_email: form.patient_email?.value.trim() || '',
-      test_type: form.test_type.value.trim(),
-      ordering_doctor: form.ordering_doctor.value.trim() || 'Dr. Santiago Vélez',
-      doctor_email: 'santiago.velez@saludconecta.ips.gov.co',
-      sample_type: form.sample_type.value.trim() || 'Sangre Total (Tubo Tapa Lila EDTA)',
-      priority: form.priority.value,
-      status: 'PENDIENTE',
-      observations: form.observations?.value.trim() || 'Orden emitida desde recepción de laboratorio.',
-      created_at: new Date().toISOString(),
-      results: null,
-    };
-
-    const updatedList = [newOrder, ...orders];
-    setOrders(updatedList);
-    localStorage.setItem('saludconecta_lab_orders', JSON.stringify(updatedList));
-    window.dispatchEvent(new CustomEvent('saludconecta_lab_orders_updated', { detail: newOrder }));
-
-    setIsNewOrderDrawerOpen(false);
-    setNotice(`Nueva orden ${newOrder.id} registrada en el sistema.`);
+    try {
+      // El servidor asigna el numero LAB-AAAA-NNN
+      const newOrder = await apiClient.createLabOrder({
+        patient_name: form.patient_name.value.trim(),
+        patient_document: form.patient_document.value.trim(),
+        patient_eps: form.patient_eps.value.trim(),
+        patient_email: form.patient_email?.value.trim() || '',
+        test_type: form.test_type.value.trim(),
+        ordering_doctor: form.ordering_doctor.value.trim(),
+        sample_type: form.sample_type.value.trim(),
+        priority: form.priority.value,
+        observations: form.observations?.value.trim() || 'Orden emitida desde recepción de laboratorio.',
+      });
+      setOrders((list) => [newOrder, ...list]);
+      setIsNewOrderDrawerOpen(false);
+      setNotice(`Nueva orden ${newOrder.id} registrada en el sistema.`);
+    } catch (err) {
+      setNotice(`No se pudo registrar la orden: ${err.message}`);
+    }
     setTimeout(() => setNotice(''), 4000);
   };
 
@@ -481,9 +348,9 @@ export const LaboratoryScreen = ({ user }) => {
         <div className="flex items-center gap-2.5">
           <button
             type="button"
-            onClick={() => {
-              setOrders(DEFAULT_ORDERS);
-              setNotice('Bandeja de órdenes de laboratorio sincronizada.');
+            onClick={async () => {
+              await loadOrders();
+              setNotice('Bandeja de órdenes de laboratorio sincronizada con el servidor.');
               setTimeout(() => setNotice(''), 3000);
             }}
             title="Refrescar catálogo"
@@ -502,6 +369,12 @@ export const LaboratoryScreen = ({ user }) => {
           </button>
         </div>
       </div>
+
+      {loadError && (
+        <div role="alert" className="p-3 rounded-2xl bg-red-50 border border-red-200 text-red-800 text-xs font-medium">
+          {loadError}
+        </div>
+      )}
 
       {notice && (
         <div className="p-4 rounded-2xl bg-purple-50 border border-purple-200 text-purple-900 text-xs font-semibold flex items-center gap-2 animate-fadeIn shadow-2xs">
@@ -1069,7 +942,7 @@ export const LaboratoryScreen = ({ user }) => {
                           {selectedOrder.ordering_doctor}
                         </div>
                         <div className="text-[11px] font-mono text-outline">
-                          {selectedOrder.doctor_email || 'santiago.velez@saludconecta.ips.gov.co'}
+                          {selectedOrder.doctor_email || 'Sin correo registrado (orden de recepción)'}
                         </div>
                       </div>
 
@@ -1089,7 +962,7 @@ export const LaboratoryScreen = ({ user }) => {
                   <div className="p-3 rounded-xl bg-purple-100/60 border border-purple-200 text-[11px] text-purple-950 space-y-1">
                     <div className="font-semibold flex items-center justify-between">
                       <span>Asunto: Resultados Oficiales • {selectedOrder.id} • SaludConecta IPS</span>
-                      <span className="font-mono text-[10px]">PDF Vectorial Adjunto</span>
+                      <span className="font-mono text-[10px]">Resultados en el cuerpo del correo</span>
                     </div>
                     <p className="text-purple-900/90">
                       Incluye informe con sello ReTHUS de <strong>{selectedOrder.validated_by || bacteriologistName}</strong> y membrete hospitalario para validez médico-legal.

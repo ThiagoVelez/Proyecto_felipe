@@ -9,18 +9,22 @@ import (
 )
 
 type RouterConfig struct {
-	AuthHandler           *handlers.AuthHandler
-	AdminHandler          *handlers.AdminHandler
-	PatientHandler        *handlers.PatientHandler
-	TriageHandler         *handlers.TriageHandler
-	ClinicalRecordHandler *handlers.ClinicalRecordHandler
-	PrescriptionHandler   *handlers.PrescriptionHandler
-	SyncHandler           *handlers.SyncHandler
-	AppointmentHandler    *handlers.AppointmentHandler
-	TreatmentHandler      *handlers.TreatmentHandler
-	PharmacyHandler       *handlers.PharmacyHandler
-	HealthEducationHandler *handlers.HealthEducationHandler
-	TIHandler              *handlers.TIHandler
+	AuthHandler               *handlers.AuthHandler
+	AdminHandler              *handlers.AdminHandler
+	PatientHandler            *handlers.PatientHandler
+	TriageHandler             *handlers.TriageHandler
+	ClinicalRecordHandler     *handlers.ClinicalRecordHandler
+	PrescriptionHandler       *handlers.PrescriptionHandler
+	SyncHandler               *handlers.SyncHandler
+	AppointmentHandler        *handlers.AppointmentHandler
+	TreatmentHandler          *handlers.TreatmentHandler
+	PharmacyHandler           *handlers.PharmacyHandler
+	HealthEducationHandler    *handlers.HealthEducationHandler
+	TIHandler                 *handlers.TIHandler
+	AppointmentRequestHandler *handlers.AppointmentRequestHandler
+	LabOrderHandler           *handlers.LabOrderHandler
+	NursingHandler            *handlers.NursingHandler
+	BranchHandler             *handlers.BranchHandler
 	// Sessions valida en cada solicitud que la cuenta del token siga activa
 	Sessions  middlewares.SessionValidator
 	JWTSecret string
@@ -59,6 +63,18 @@ func SetupRoutes(app *fiber.App, cfg RouterConfig) {
 	auth.Post("/register-ti", publicRegLimit, cfg.AuthHandler.RegisterTI)
 	auth.Post("/register-branch-admin", publicRegLimit, cfg.AuthHandler.RegisterBranchAdmin)
 
+	// Catalogo de sedes (publico: lo muestran el login y el portal del paciente)
+	if cfg.BranchHandler != nil {
+		api.Get("/branches", middlewares.RateLimitMiddleware(60, 1*time.Minute), cfg.BranchHandler.List)
+	}
+
+	// Portal publico del paciente: sedes con ubicacion y solicitud de primera cita (sin sesion)
+	if cfg.AppointmentRequestHandler != nil {
+		public := api.Group("/public")
+		public.Get("/branches", middlewares.RateLimitMiddleware(60, 1*time.Minute), cfg.AppointmentRequestHandler.PublicBranches)
+		public.Post("/appointment-requests", middlewares.AuthRateLimitMiddleware(5, 1*time.Minute), cfg.AppointmentRequestHandler.Submit)
+	}
+
 	authProtected := auth.Use(authMW)
 	authProtected.Get("/me", cfg.AuthHandler.Me)
 	// Los administradores adicionales los registra el Encargado de TI
@@ -77,6 +93,11 @@ func SetupRoutes(app *fiber.App, cfg RouterConfig) {
 		admin.Post("/users", cfg.AuthHandler.RegisterStaff) // Registro de personal por el administrador (entra inactivo)
 		admin.Patch("/users/:id/status", cfg.AdminHandler.UpdateUserStatus)
 		admin.Get("/audit-logs", cfg.AdminHandler.GetAuditLogs)
+		if cfg.BranchHandler != nil {
+			admin.Post("/branches", cfg.BranchHandler.Create)
+			admin.Put("/branches/:id", cfg.BranchHandler.Update)
+			admin.Delete("/branches/:id", cfg.BranchHandler.Delete)
+		}
 	}
 
 	// 3.1 Panel del Encargado de TI (monitoreo y administradores; sin acceso a datos clinicos)
@@ -176,6 +197,36 @@ func SetupRoutes(app *fiber.App, cfg RouterConfig) {
 		triageV2.Get("/", middlewares.RequireRoles("ENFERMERO", "MEDICO"), cfg.TriageHandler.GetQueue)
 		triageV2.Get("/:id", middlewares.RequireRoles("ENFERMERO", "MEDICO"), cfg.TriageHandler.GetByID)
 		triageV2.Patch("/:id/status", middlewares.RequireRoles("ENFERMERO", "MEDICO"), cfg.TriageHandler.UpdateStatus)
+	}
+
+	// 8.1 Bandeja de solicitudes de primera cita del medico (portal del paciente)
+	if cfg.AppointmentRequestHandler != nil {
+		reqGroup := apiV2.Group("/appointment-requests", middlewares.RequireRoles("MEDICO"))
+		reqGroup.Get("/", cfg.AppointmentRequestHandler.List)
+		reqGroup.Get("/pending-count", cfg.AppointmentRequestHandler.PendingCount)
+		reqGroup.Post("/:id/schedule", cfg.AppointmentRequestHandler.Schedule)
+		reqGroup.Post("/:id/reject", cfg.AppointmentRequestHandler.Reject)
+	}
+
+	// 8.2 Ordenes de laboratorio: el medico emite y consulta las suyas; el laboratorio procesa, sella y despacha
+	if cfg.LabOrderHandler != nil {
+		lab := apiV2.Group("/lab-orders")
+		lab.Get("/", middlewares.RequireRoles("MEDICO", "LABORATORIO"), cfg.LabOrderHandler.List)
+		lab.Post("/", middlewares.RequireRoles("MEDICO", "LABORATORIO"), cfg.LabOrderHandler.Create)
+		lab.Put("/:id/progress", middlewares.RequireRoles("LABORATORIO"), cfg.LabOrderHandler.SaveProgress)
+		lab.Post("/:id/seal", middlewares.RequireRoles("LABORATORIO"), cfg.LabOrderHandler.Seal)
+		// El medico puede reenviar por correo los resultados sellados de sus propias ordenes
+		lab.Post("/:id/dispatch", middlewares.RequireRoles("LABORATORIO", "MEDICO"), cfg.LabOrderHandler.Dispatch)
+	}
+
+	// 8.3 Registro de enfermeria por paciente: el medico envia la orden; enfermeria gestiona deberes y notas
+	if cfg.NursingHandler != nil {
+		nursing := apiV2.Group("/nursing")
+		nursing.Get("/", middlewares.RequireRoles("ENFERMERO", "MEDICO"), cfg.NursingHandler.List)
+		nursing.Get("/:patientId", middlewares.RequireRoles("ENFERMERO", "MEDICO"), cfg.NursingHandler.Get)
+		nursing.Put("/:patientId/order", middlewares.RequireRoles("MEDICO"), cfg.NursingHandler.AssignOrder)
+		nursing.Put("/:patientId/duties", middlewares.RequireRoles("ENFERMERO"), cfg.NursingHandler.SaveDuties)
+		nursing.Post("/:patientId/notes", middlewares.RequireRoles("ENFERMERO"), cfg.NursingHandler.AddNote)
 	}
 
 	// 9. Modulo de Agendamiento y Calendario Medico (/api/v2/appointments)

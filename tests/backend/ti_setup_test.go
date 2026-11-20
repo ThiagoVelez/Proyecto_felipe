@@ -91,8 +91,8 @@ func TestSetupStatusInicialSinTINiAdministradores(t *testing.T) {
 		t.Fatalf("ti_setup_enabled esperado true con TI_SETUP_CODE configurado, obtenido %v", out["ti_setup_enabled"])
 	}
 	sedes, _ := out["branches"].([]interface{})
-	if len(sedes) != len(domain.BranchCatalog) {
-		t.Fatalf("se esperaban %d sedes, se obtuvieron %d", len(domain.BranchCatalog), len(sedes))
+	if len(sedes) != len(domain.InitialBranches()) {
+		t.Fatalf("se esperaban %d sedes, se obtuvieron %d", len(domain.InitialBranches()), len(sedes))
 	}
 	for _, s := range sedes {
 		if s.(map[string]interface{})["has_admin"] != false {

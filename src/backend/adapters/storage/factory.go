@@ -14,18 +14,22 @@ import (
 
 // RepositoryBundle agrupa exclusivamente los contratos de interfaz (Puertos) requeridos por el dominio.
 type RepositoryBundle struct {
-	User           ports.UserRepository
-	Patient        ports.PatientRepository
-	Triage         ports.TriageRepository
-	ClinicalRecord ports.ClinicalRecordRepository
-	Prescription   ports.PrescriptionRepository
-	Audit          ports.AuditRepository
-	Appointment    ports.AppointmentRepository
-	Inventory      ports.InventoryRepository
-	PrescriptionV2 ports.PrescriptionV2Repository
-	HealthEducation ports.HealthEducationRepository
-	PharmacyReport ports.PharmacyReportRepository
-	Close          func() error
+	User               ports.UserRepository
+	Patient            ports.PatientRepository
+	Triage             ports.TriageRepository
+	ClinicalRecord     ports.ClinicalRecordRepository
+	Prescription       ports.PrescriptionRepository
+	Audit              ports.AuditRepository
+	Appointment        ports.AppointmentRepository
+	Inventory          ports.InventoryRepository
+	PrescriptionV2     ports.PrescriptionV2Repository
+	HealthEducation    ports.HealthEducationRepository
+	PharmacyReport     ports.PharmacyReportRepository
+	AppointmentRequest ports.AppointmentRequestRepository
+	LabOrder           ports.LabOrderRepository
+	Nursing            ports.NursingRepository
+	Branch             ports.BranchRepository
+	Close              func() error
 }
 
 // Config encapsula la parametrizacion del motor de persistencia.
@@ -55,17 +59,21 @@ func NewRepositoryBundle(cfg Config, log *logger.Logger) (*RepositoryBundle, err
 		log.Info("Activando Adaptador de Persistencia en Memoria (In-Memory Mock con Gobernanza ReTHUS)")
 		ds := memory.NewDataStore()
 		return &RepositoryBundle{
-			User:           memory.NewUserMemoryRepo(ds),
-			Patient:        memory.NewPatientMemoryRepo(ds),
-			Triage:         memory.NewTriageMemoryRepo(ds),
-			ClinicalRecord: memory.NewClinicalRecordMemoryRepo(ds),
-			Prescription:   memory.NewPrescriptionMemoryRepo(ds),
-			Audit:          memory.NewAuditMemoryRepo(ds),
-			Appointment:    memory.NewAppointmentMemoryRepo(ds),
-			Inventory:      memory.NewInventoryMemoryRepo(ds),
-			PrescriptionV2: memory.NewPrescriptionV2MemoryRepo(ds),
-			HealthEducation: memory.NewHealthEducationMemoryRepo(ds),
-			PharmacyReport: memory.NewPharmacyReportMemoryRepo(ds),
+			User:               memory.NewUserMemoryRepo(ds),
+			Patient:            memory.NewPatientMemoryRepo(ds),
+			Triage:             memory.NewTriageMemoryRepo(ds),
+			ClinicalRecord:     memory.NewClinicalRecordMemoryRepo(ds),
+			Prescription:       memory.NewPrescriptionMemoryRepo(ds),
+			Audit:              memory.NewAuditMemoryRepo(ds),
+			Appointment:        memory.NewAppointmentMemoryRepo(ds),
+			Inventory:          memory.NewInventoryMemoryRepo(ds),
+			PrescriptionV2:     memory.NewPrescriptionV2MemoryRepo(ds),
+			HealthEducation:    memory.NewHealthEducationMemoryRepo(ds),
+			PharmacyReport:     memory.NewPharmacyReportMemoryRepo(ds),
+			AppointmentRequest: memory.NewAppointmentRequestMemoryRepo(ds),
+			LabOrder:           memory.NewLabOrderMemoryRepo(ds),
+			Nursing:            memory.NewNursingMemoryRepo(ds),
+			Branch:             memory.NewBranchMemoryRepo(ds),
 			Close: func() error {
 				return nil
 			},
@@ -106,17 +114,21 @@ func NewRepositoryBundle(cfg Config, log *logger.Logger) (*RepositoryBundle, err
 		}
 
 		return &RepositoryBundle{
-			User:           mysql.NewUserRepository(db),
-			Patient:        mysql.NewPatientRepository(db),
-			Triage:         mysql.NewTriageRepository(db),
-			ClinicalRecord: mysql.NewClinicalRecordRepository(db),
-			Prescription:   mysql.NewPrescriptionRepository(db),
-			Audit:          mysql.NewAuditRepository(db),
-			Appointment:    mysql.NewAppointmentRepository(db),
-			Inventory:      mysql.NewInventoryRepository(db),
-			PrescriptionV2: mysql.NewPrescriptionV2Repository(db),
-			HealthEducation: mysql.NewHealthEducationRepository(db),
-			PharmacyReport: mysql.NewPharmacyReportRepository(db),
+			User:               mysql.NewUserRepository(db),
+			Patient:            mysql.NewPatientRepository(db),
+			Triage:             mysql.NewTriageRepository(db),
+			ClinicalRecord:     mysql.NewClinicalRecordRepository(db),
+			Prescription:       mysql.NewPrescriptionRepository(db),
+			Audit:              mysql.NewAuditRepository(db),
+			Appointment:        mysql.NewAppointmentRepository(db),
+			Inventory:          mysql.NewInventoryRepository(db),
+			PrescriptionV2:     mysql.NewPrescriptionV2Repository(db),
+			HealthEducation:    mysql.NewHealthEducationRepository(db),
+			PharmacyReport:     mysql.NewPharmacyReportRepository(db),
+			AppointmentRequest: mysql.NewAppointmentRequestRepository(db),
+			LabOrder:           mysql.NewLabOrderRepository(db),
+			Nursing:            mysql.NewNursingRepository(db),
+			Branch:             mysql.NewBranchRepository(db),
 			Close: func() error {
 				return db.Close()
 			},
@@ -154,17 +166,21 @@ func NewRepositoryBundle(cfg Config, log *logger.Logger) (*RepositoryBundle, err
 
 		ds := memory.NewDataStore()
 		return &RepositoryBundle{
-			User:           postgres.NewUserRepository(db),
-			Patient:        postgres.NewPatientRepository(db),
-			Triage:         postgres.NewTriageRepository(db),
-			ClinicalRecord: postgres.NewClinicalRecordRepository(db),
-			Prescription:   postgres.NewPrescriptionRepository(db),
-			Audit:          postgres.NewAuditRepository(db),
-			Appointment:    memory.NewAppointmentMemoryRepo(ds),
-			Inventory:      memory.NewInventoryMemoryRepo(ds),
-			PrescriptionV2: memory.NewPrescriptionV2MemoryRepo(ds),
-			HealthEducation: memory.NewHealthEducationMemoryRepo(ds),
-			PharmacyReport: memory.NewPharmacyReportMemoryRepo(ds),
+			User:               postgres.NewUserRepository(db),
+			Patient:            postgres.NewPatientRepository(db),
+			Triage:             postgres.NewTriageRepository(db),
+			ClinicalRecord:     postgres.NewClinicalRecordRepository(db),
+			Prescription:       postgres.NewPrescriptionRepository(db),
+			Audit:              postgres.NewAuditRepository(db),
+			Appointment:        memory.NewAppointmentMemoryRepo(ds),
+			Inventory:          memory.NewInventoryMemoryRepo(ds),
+			PrescriptionV2:     memory.NewPrescriptionV2MemoryRepo(ds),
+			HealthEducation:    memory.NewHealthEducationMemoryRepo(ds),
+			PharmacyReport:     memory.NewPharmacyReportMemoryRepo(ds),
+			AppointmentRequest: memory.NewAppointmentRequestMemoryRepo(ds),
+			LabOrder:           memory.NewLabOrderMemoryRepo(ds),
+			Nursing:            memory.NewNursingMemoryRepo(ds),
+			Branch:             memory.NewBranchMemoryRepo(ds),
 			Close: func() error {
 				return db.Close()
 			},

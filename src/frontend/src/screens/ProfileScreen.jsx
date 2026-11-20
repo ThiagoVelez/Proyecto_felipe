@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { sessionStore } from '../services/session';
 import {
   Camera,
   Check,
@@ -125,13 +126,13 @@ export const ProfileScreen = ({ user, onUpdateUser, onNavigate }) => {
   try {
     localStorage.removeItem('saludconecta_profile_custom');
     localStorage.removeItem('saludconecta_avatar');
-  } catch {}
+  } catch { /* almacenamiento local no disponible: se continúa sin él */ }
 
   const savedProfile = (() => {
     try {
       const userSpecific = localStorage.getItem(`saludconecta_profile_${userKey}`);
       if (userSpecific) return JSON.parse(userSpecific);
-    } catch {}
+    } catch { /* almacenamiento local no disponible: se continúa sin él */ }
     return {};
   })();
 
@@ -183,7 +184,7 @@ export const ProfileScreen = ({ user, onUpdateUser, onNavigate }) => {
             ...user,
             avatar: resultUrl,
           };
-          localStorage.setItem('saludconecta_user', JSON.stringify(updatedUser));
+          sessionStore.setItem('saludconecta_user', JSON.stringify(updatedUser));
           if (onUpdateUser) {
             onUpdateUser(updatedUser);
           }
@@ -222,7 +223,7 @@ export const ProfileScreen = ({ user, onUpdateUser, onNavigate }) => {
       bannerId,
     };
 
-    localStorage.setItem('saludconecta_user', JSON.stringify(updatedUser));
+    sessionStore.setItem('saludconecta_user', JSON.stringify(updatedUser));
 
     if (onUpdateUser) {
       onUpdateUser(updatedUser);

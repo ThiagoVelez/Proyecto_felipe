@@ -86,6 +86,41 @@ type AppointmentRepository interface {
 	UpdatePDFAndEmailStatus(ctx context.Context, id, pdfPath string, emailSent bool) error
 }
 
+// LabOrderRepository define el contrato de persistencia de las ordenes de laboratorio.
+type LabOrderRepository interface {
+	// CreateWithNextID asigna el siguiente identificador LAB-AAAA-NNN del anio y guarda la orden de forma atomica.
+	CreateWithNextID(ctx context.Context, order *domain.LabOrder) error
+	GetByID(ctx context.Context, id string) (*domain.LabOrder, error)
+	// List filtra por medico solicitante (vacio = todas) y estado (vacio = todos).
+	List(ctx context.Context, orderingDoctorID string, status domain.LabOrderStatus) ([]domain.LabOrder, error)
+	Update(ctx context.Context, order *domain.LabOrder) error
+}
+
+// NursingRepository define el contrato de persistencia del registro de enfermeria por paciente.
+type NursingRepository interface {
+	Get(ctx context.Context, patientID string) (*domain.NursingCare, error)
+	List(ctx context.Context) ([]domain.NursingCare, error)
+	Save(ctx context.Context, care *domain.NursingCare) error
+}
+
+// BranchRepository define el contrato de persistencia de las sedes de la red asistencial.
+type BranchRepository interface {
+	List(ctx context.Context) ([]domain.Branch, error)
+	GetByID(ctx context.Context, id string) (*domain.Branch, error)
+	Create(ctx context.Context, b *domain.Branch) error
+	Update(ctx context.Context, b *domain.Branch) error
+	Delete(ctx context.Context, id string) error
+}
+
+// AppointmentRequestRepository define el contrato de persistencia de las solicitudes de primera cita.
+type AppointmentRequestRepository interface {
+	Create(ctx context.Context, req *domain.AppointmentRequest) error
+	GetByID(ctx context.Context, id string) (*domain.AppointmentRequest, error)
+	ListByDoctor(ctx context.Context, doctorID string, status domain.AppointmentRequestStatus) ([]domain.AppointmentRequest, error)
+	CountPendingByDoctor(ctx context.Context, doctorID string) (int, error)
+	Update(ctx context.Context, req *domain.AppointmentRequest) error
+}
+
 // InventoryRepository define el contrato de persistencia para el inventario de farmacia diferenciado por dosis.
 type InventoryRepository interface {
 	GetAll(ctx context.Context) ([]domain.InventoryItem, error)

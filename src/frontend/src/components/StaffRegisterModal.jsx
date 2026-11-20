@@ -15,10 +15,11 @@ import {
   Plus,
 } from 'lucide-react';
 import { apiClient } from '../services/api';
-import { loadBranches, saveBranches } from '../services/branches';
+import { useBranches, notifyBranchesChanged } from '../services/branches';
+import { apiClient as branchApi } from '../services/api';
 
 export const StaffRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onBranchCreated }) => {
-  const [branchesList, setBranchesList] = useState(() => loadBranches());
+  const { branches: branchesList } = useBranches();
   const [isCreatingBranch, setIsCreatingBranch] = useState(false);
   const [newBranchData, setNewBranchData] = useState({
     name: '',
@@ -55,25 +56,27 @@ export const StaffRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onBranc
     }
   };
 
-  const handleCreateBranch = (e) => {
+  const handleCreateBranch = async (e) => {
     e.preventDefault();
     if (!newBranchData.name.trim()) {
       setErrorMsg('Por favor ingrese el nombre de la nueva sede.');
       return;
     }
 
-    const createdBranch = {
-      id: `br-${Date.now()}`,
-      name: newBranchData.name.trim(),
-      level: newBranchData.level || 'Nivel I • Ambulatorio',
-      municipality: newBranchData.municipality.trim() || 'Valle del Cauca',
-      status: 'Operativo',
-      description: 'Sede institucional registrada desde el panel de habilitación de personal.',
-    };
-
-    const updated = [...branchesList, createdBranch];
-    saveBranches(updated);
-    setBranchesList(updated);
+    let createdBranch;
+    try {
+      createdBranch = await branchApi.adminCreateBranch({
+        name: newBranchData.name.trim(),
+        level: newBranchData.level || 'Nivel I • Ambulatorio',
+        municipality: newBranchData.municipality.trim() || 'Valle del Cauca',
+        status: 'Operativo',
+        description: 'Sede institucional registrada desde el panel de habilitación de personal.',
+      });
+    } catch (err) {
+      setErrorMsg(err.message || 'No fue posible registrar la sede.');
+      return;
+    }
+    notifyBranchesChanged();
     setFormData((prev) => ({ ...prev, branch: createdBranch.name }));
     setIsCreatingBranch(false);
     setNewBranchData({

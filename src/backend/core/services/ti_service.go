@@ -13,21 +13,26 @@ import (
 type tiService struct {
 	userRepo  ports.UserRepository
 	auditRepo ports.AuditRepository
+	branches  ports.BranchRepository
 	dbDriver  string
 	version   string
 	startedAt time.Time
 }
 
 // NewTIService construye los casos de uso del Encargado de TI.
-func NewTIService(userRepo ports.UserRepository, auditRepo ports.AuditRepository, dbDriver, version string, startedAt time.Time) ports.TIService {
+func NewTIService(userRepo ports.UserRepository, auditRepo ports.AuditRepository, branches ports.BranchRepository, dbDriver, version string, startedAt time.Time) ports.TIService {
 	if startedAt.IsZero() {
 		startedAt = time.Now().UTC()
 	}
-	return &tiService{userRepo: userRepo, auditRepo: auditRepo, dbDriver: dbDriver, version: version, startedAt: startedAt}
+	return &tiService{userRepo: userRepo, auditRepo: auditRepo, branches: branches, dbDriver: dbDriver, version: version, startedAt: startedAt}
 }
 
 func (s *tiService) Overview(ctx context.Context) (*domain.SystemOverview, error) {
 	users, err := s.userRepo.List(ctx, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	catalog, err := loadBranches(ctx, s.branches)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +61,7 @@ func (s *tiService) Overview(ctx context.Context) (*domain.SystemOverview, error
 			rc.Pending++
 		}
 		if u.RoleID == 1 {
-			if name, ok := domain.CanonicalBranch(u.Branch); ok {
+			if name, ok := domain.CanonicalBranchIn(catalog, u.Branch); ok {
 				branchAdmins[name] = append(branchAdmins[name], u)
 			} else {
 				adminsNoBranch = append(adminsNoBranch, u)
@@ -68,8 +73,9 @@ func (s *tiService) Overview(ctx context.Context) (*domain.SystemOverview, error
 	}
 	sort.Slice(summary.ByRole, func(i, j int) bool { return summary.ByRole[i].RoleID < summary.ByRole[j].RoleID })
 
-	branches := make([]domain.BranchAdmins, 0, len(domain.BranchCatalog))
-	for _, b := range domain.BranchCatalog {
+	branches := make([]domain.BranchAdmins, 0, len(catalog))
+	for _, cb := range catalog {
+		b := cb.Name
 		admins := branchAdmins[b]
 		if admins == nil {
 			admins = []*domain.User{}

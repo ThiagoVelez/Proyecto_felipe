@@ -99,7 +99,6 @@ func TestR3CitaEnElPasadoSeRechazaEnElServidor(t *testing.T) {
 // DEF-85: el formulario envia la hora local de Colombia (datetime-local, sin zona) y el handler la
 // interpreta como UTC, por lo que la cita queda 5 horas antes de lo que eligio el medico.
 func TestDEF85CitaConservaLaHoraLocalDeColombia(t *testing.T) {
-	requireDefectoAbierto(t, "DEF-85")
 	ds, svc := servicioCitasR3(t)
 	_ = memory.NewPatientMemoryRepo(ds).Create(context.Background(), newPatientFixture("p-def85", "DOC-85"))
 	bogota := time.FixedZone("America/Bogota", -5*60*60)
@@ -128,7 +127,6 @@ func TestDEF85CitaConservaLaHoraLocalDeColombia(t *testing.T) {
 
 // DEF-88: se agenda una cita para un paciente que no existe; el servicio ignora el error de busqueda.
 func TestDEF88CitaExigePacienteExistente(t *testing.T) {
-	requireDefectoAbierto(t, "DEF-88")
 	_, svc := servicioCitasR3(t)
 	cita, err := svc.ScheduleAppointment(context.Background(), &domain.Appointment{DoctorID: medicoSemillaID, PatientID: "paciente-inexistente-def88", AppointmentDate: time.Now().UTC().Add(72 * time.Hour)})
 	if err == nil {
@@ -139,7 +137,6 @@ func TestDEF88CitaExigePacienteExistente(t *testing.T) {
 // DEF-87: el limite de 120 s se aplica sobre la duracion que declara el cliente; el servidor no la
 // verifica y acepta valores negativos y contenido que no es video.
 func TestDEF87MuroNoConfiaEnLaDuracionDeclaradaPorElCliente(t *testing.T) {
-	requireDefectoAbierto(t, "DEF-87")
 	svc := services.NewHealthEducationService(memory.NewHealthEducationMemoryRepo(memory.NewDataStore()))
 	autor := newDoctorFixture("usr-def87", "RM-87")
 	post, err := svc.CreatePost(context.Background(), autor, &domain.HealthEducationPost{
@@ -187,7 +184,6 @@ func TestR3NotaAnatomicaSoloLaModificaSuAutorYNoTrasElCierre(t *testing.T) {
 
 // DEF-89: la EVA de una nota anatomica no se valida (-1 y 11 se aceptan); 0 y 10 son validos.
 func TestDEF89NotaAnatomicaRechazaEVAFueraDeRango(t *testing.T) {
-	requireDefectoAbierto(t, "DEF-89")
 	ds := memory.NewDataStore()
 	ctx := context.Background()
 	sembrarPacienteYFolio(t, ds, "p-def89", "f-def89", medicoSemillaID)

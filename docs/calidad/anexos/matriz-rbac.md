@@ -53,7 +53,7 @@
 - `router.go` registra **70 rutas** (`origin/main` `9bacb0a`; comparación automática en `informe-revision-r3.md`, H34): 6 públicas y 64 protegidas por JWT.
 - La prueba `TestRBACMatrizRutasPorRol` (ampliada en la revisión 2 con el rol FARMACIA y las rutas `/api/v2`) ejecuta **55 rutas** con un token por rol contra el router real. Salida literal: `evidencias/r3/45-matriz-rbac.txt` (`CALIDAD_MATRIZ_SALIDA=… go test -run TestRBACMatrizRutasPorRol`). La prueba pasa: la política efectiva coincide con la registrada.
 - Las 15 rutas restantes se verificaron por lectura de `router.go` (tabla C.R3.3).
-- El rol **FARMACIA** existe en el código (rol 6) y en 14 rutas, pero no figura en el modelo de roles documentado (README, RF01: MEDICO, ENFERMERO, ADMISION, AUDITOR, ADMIN).
+- El rol **FARMACIA** existe en el código (rol 6) y en 14 rutas, pero no figura en el modelo de roles documentado (README, RF01: MEDICO, ENFERMERO, ADMISION, AUDITOR, ADMIN). **Actualización v2 (20 nov 2026):** RF01 ya documenta los ocho roles (ADMIN, MEDICO, ENFERMERO, ADMISION, AUDITOR, FARMACIA, LABORATORIO y TI).
 
 ### C.R3.2 Resultado ejecutado (55 rutas)
 

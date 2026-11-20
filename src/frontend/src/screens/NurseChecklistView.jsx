@@ -36,7 +36,9 @@ export const NurseChecklistView = ({ user, patient, onSelectPatient, onNavigate 
 
   const nurseDisplayName = formatDoctorName(user?.full_name || user?.name || 'Enf. Elizabeth', 'ENFERMERO');
 
-  // Cargar pacientes y órdenes médicas
+  const [syncError, setSyncError] = useState('');
+
+  // Cargar pacientes y registros de enfermeria desde el servidor
   useEffect(() => {
     const init = async () => {
       try {
@@ -44,106 +46,13 @@ export const NurseChecklistView = ({ user, patient, onSelectPatient, onNavigate 
         const pList = Array.isArray(patients) ? patients : [];
         setPatientsList(pList);
 
-        let storedOrders = [];
-        try {
-          storedOrders = JSON.parse(localStorage.getItem('saludconecta_nurse_orders') || '[]');
-        } catch {
-          storedOrders = [];
-        }
-        setNurseOrders(storedOrders);
-
-        // Cargar listas de chequeo persistidas
-        const loadedChecklists = {};
-        pList.forEach((p) => {
-          const key = `saludconecta_nurse_checklist_${p.id}`;
-          const saved = localStorage.getItem(key);
-          if (saved) {
-            try {
-              loadedChecklists[p.id] = JSON.parse(saved);
-            } catch {
-              loadedChecklists[p.id] = null;
-            }
-          }
-
-          // Si no existe checklist para este paciente, inicializarla con sus deberes
-          if (!loadedChecklists[p.id]) {
-            const pOrder = storedOrders.find((o) => o.patient_id === p.id);
-            const medDuties = (pOrder?.items || []).map((med, idx) => ({
-              id: `med-${idx}-${Date.now()}`,
-              category: 'MEDICAMENTOS',
-              label: `Administrar ${med.medication_name} ${med.dosage} (${med.presentation || 'Tableta'})`,
-              instructions: med.instructions,
-              completed: false,
-              completedAt: null,
-              completedBy: null,
-            }));
-
-            loadedChecklists[p.id] = {
-              duties: [
-                {
-                  id: 'id-verify',
-                  category: 'SEGURIDAD',
-                  label: 'Verificar identificación: brazalete, cédula y entidad de salud (EPS)',
-                  instructions: 'Comprobar datos cruzados con el paciente antes de cualquier procedimiento',
-                  completed: false,
-                  completedAt: null,
-                  completedBy: null,
-                },
-                {
-                  id: 'allergy-check',
-                  category: 'SEGURIDAD',
-                  label: 'Revisión y confirmación de alergias farmacológicas conocidas',
-                  instructions: p.allergies ? `Alerta reportada: ${p.allergies}` : 'Preguntar al paciente por reacciones adversas a medicamentos',
-                  completed: false,
-                  completedAt: null,
-                  completedBy: null,
-                },
-                ...medDuties,
-                {
-                  id: 'vital-signs',
-                  category: 'MONITOREO',
-                  label: 'Monitoreo horario de signos vitales (PA, FC, FR, SpO2, Temperatura)',
-                  instructions: 'Registrar en curva térmica asistencial',
-                  completed: false,
-                  completedAt: null,
-                  completedBy: null,
-                },
-                {
-                  id: 'iv-line',
-                  category: 'ACCESOS',
-                  label: 'Inspección de vía venosa periférica / permeabilidad de catéter',
-                  instructions: 'Descartar signos de flebitis, extravasación o dolor en sitio de punción',
-                  completed: false,
-                  completedAt: null,
-                  completedBy: null,
-                },
-                {
-                  id: 'diet-intake',
-                  category: 'NUTRICION',
-                  label: 'Control de tolerancia oral, ingesta de líquidos y dieta asistencial',
-                  instructions: 'Confirmar recepción y tolerancia de alimentación programada',
-                  completed: false,
-                  completedAt: null,
-                  completedBy: null,
-                },
-                {
-                  id: 'comfort-safety',
-                  category: 'CONFORT',
-                  label: 'Medidas de seguridad física: barandas elevadas y timbre al alcance',
-                  instructions: 'Prevención activa de caídas según protocolo institucional',
-                  completed: false,
-                  completedAt: null,
-                  completedBy: null,
-                },
-              ],
-              notes: [],
-            };
-
-            localStorage.setItem(key, JSON.stringify(loadedChecklists[p.id]));
-          }
+        const records = await apiClient.getNursingRecords();
+        setNurseOrders(records.filter((r) => r.order).map((r) => ({ ...r.order, patient_id: r.patient_id })));
+        const loaded = {};
+        records.forEach((r) => {
+          loaded[r.patient_id] = { duties: r.duties || [], notes: r.notes || [] };
         });
-
-        setChecklists(loadedChecklists);
+        setChecklists(loaded);
 
         // Seleccionar paciente
         if (patient?.id) {
@@ -151,8 +60,9 @@ export const NurseChecklistView = ({ user, patient, onSelectPatient, onNavigate 
         } else if (pList.length > 0) {
           setSelectedPatientId(pList[0].id);
         }
+        setSyncError('');
       } catch (err) {
-        console.error('Error inicializando lista de chequeo de enfermería:', err);
+        setSyncError(err.message || 'No fue posible cargar el registro de enfermería.');
       }
     };
 
@@ -164,17 +74,41 @@ export const NurseChecklistView = ({ user, patient, onSelectPatient, onNavigate 
   const activeOrder = nurseOrders.find((o) => o.patient_id === selectedPatientId);
   const activeChecklist = (activePatient && checklists[activePatient.id]) || { duties: [], notes: [] };
 
-  // Guardar cambios del paciente activo en estado y localStorage
-  const persistChecklist = (patientId, updatedData) => {
-    setChecklists((prev) => {
-      const next = { ...prev, [patientId]: updatedData };
+  // Paciente sin registro: el servidor devuelve la lista inicial sugerida (todavia sin guardar)
+  useEffect(() => {
+    const id = activePatient?.id;
+    if (!id || checklists[id]) return;
+    let active = true;
+    apiClient
+      .getNursingRecord(id)
+      .then((care) => {
+        if (active) setChecklists((prev) => ({ ...prev, [id]: { duties: care.duties || [], notes: care.notes || [] } }));
+      })
+      .catch((err) => active && setSyncError(err.message || 'No fue posible cargar la lista del paciente.'));
+    return () => {
+      active = false;
+    };
+  }, [activePatient?.id, checklists]);
+
+  const applyServerCare = (patientId, care) => {
+    setChecklists((prev) => ({ ...prev, [patientId]: { duties: care.duties || [], notes: care.notes || [] } }));
+  };
+
+  // Guarda los deberes en el servidor. Quien completo cada deber y a que hora los fija el servidor con la sesion.
+  const persistChecklist = async (patientId, updatedData) => {
+    setChecklists((prev) => ({ ...prev, [patientId]: updatedData }));
+    try {
+      const care = await apiClient.saveNursingDuties(patientId, updatedData.duties);
+      applyServerCare(patientId, care);
+      setSyncError('');
+    } catch (err) {
+      setSyncError(`No se pudo guardar en el servidor: ${err.message}`);
       try {
-        localStorage.setItem(`saludconecta_nurse_checklist_${patientId}`, JSON.stringify(updatedData));
-      } catch (e) {
-        console.error('Error persistiendo checklist:', e);
+        applyServerCare(patientId, await apiClient.getNursingRecord(patientId));
+      } catch {
+        // Se conserva la vista hasta el proximo intento
       }
-      return next;
-    });
+    }
   };
 
   // Alternar estado de una tarea
@@ -237,25 +171,18 @@ export const NurseChecklistView = ({ user, patient, onSelectPatient, onNavigate 
   };
 
   // Guardar nota de evolución de enfermería
-  const handleSaveNote = (e) => {
+  const handleSaveNote = async (e) => {
     e.preventDefault();
     if (!currentNoteText.trim() || !activePatient) return;
-
-    const newNote = {
-      id: `note-${Date.now()}`,
-      timestamp: new Date().toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short' }),
-      author: nurseDisplayName,
-      content: currentNoteText.trim(),
-    };
-
-    const updatedNotes = [newNote, ...(activeChecklist.notes || [])];
-    persistChecklist(activePatient.id, {
-      ...activeChecklist,
-      notes: updatedNotes,
-    });
-
-    setCurrentNoteText('');
-    setSaveSuccessMessage('Nota de evolución guardada en el historial de enfermería.');
+    try {
+      // Las notas son de solo anexo: el servidor registra autor y hora
+      const care = await apiClient.addNursingNote(activePatient.id, currentNoteText.trim());
+      applyServerCare(activePatient.id, care);
+      setCurrentNoteText('');
+      setSaveSuccessMessage('Nota de evolución guardada en el historial de enfermería.');
+    } catch (err) {
+      setSaveSuccessMessage(`No se pudo guardar la nota: ${err.message}`);
+    }
     setTimeout(() => setSaveSuccessMessage(''), 3500);
   };
 
@@ -347,6 +274,12 @@ export const NurseChecklistView = ({ user, patient, onSelectPatient, onNavigate 
       </div>
 
       {/* MENSAJE DE CONFIRMACIÓN */}
+      {syncError && (
+        <div role="alert" className="p-3 rounded-2xl bg-red-50 border border-red-200 text-red-800 text-xs font-medium">
+          {syncError}
+        </div>
+      )}
+
       {saveSuccessMessage && (
         <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-semibold flex items-center gap-2 shadow-xs animate-fade-in">
           <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />

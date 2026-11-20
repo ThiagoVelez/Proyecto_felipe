@@ -43,10 +43,11 @@ export const NurseSummaryView = ({ user, patient, onNavigate, onSelectPatient })
         const pList = Array.isArray(patients) ? patients : [];
         setPatientsList(pList);
 
-        // Órdenes emitidas por médicos guardadas en localStorage
+        // Órdenes que los médicos envían a enfermería: se leen del servidor
         let storedOrders = [];
         try {
-          storedOrders = JSON.parse(localStorage.getItem('saludconecta_nurse_orders') || '[]');
+          const records = await apiClient.getNursingRecords();
+          storedOrders = records.filter((r) => r.order).map((r) => ({ ...r.order, patient_id: r.patient_id }));
         } catch {
           storedOrders = [];
         }

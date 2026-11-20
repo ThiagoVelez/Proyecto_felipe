@@ -15,13 +15,14 @@ import {
   X,
   UserPlus,
   ServerCog,
+  CalendarPlus,
 } from 'lucide-react';
 import BranchAccordion from '../components/BranchAccordion';
 import MfaQrModal from '../components/MfaQrModal';
 import ClinicalBiometricVisualizer from '../components/ClinicalBiometricVisualizer';
 import BrandLogo from '../components/BrandLogo';
 import AdminRegisterModal from '../components/AdminRegisterModal';
-import { loadBranches } from '../services/branches';
+import { useBranches } from '../services/branches';
 import { apiClient } from '../services/api';
 import {
   calculateTotpCode,
@@ -35,8 +36,15 @@ const EMPTY_CODE = ['', '', '', '', '', ''];
 
 export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
   const [identifier, setIdentifier] = useState('');
-  const [branches] = useState(loadBranches);
+  const { branches } = useBranches();
   const [branch, setBranch] = useState(() => branches[0]?.name || '');
+
+  // Si la sede elegida no existe en el catalogo del servidor, se preselecciona la primera disponible
+  useEffect(() => {
+    if (branches.length > 0 && !branches.some((b) => b.name === branch)) {
+      setBranch(branches[0].name);
+    }
+  }, [branches, branch]);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [totp, setTotp] = useState(EMPTY_CODE);
@@ -467,6 +475,15 @@ export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
               </button>
             </form>
           </div>
+
+          {/* Acceso de pacientes al portal publico de solicitud de citas */}
+          <a
+            href="/solicitar-cita"
+            className="flex items-center justify-center gap-2 h-10 rounded-xl border border-teal-200 bg-teal-50 hover:bg-teal-100 text-teal-900 text-xs sm:text-sm font-semibold transition-colors"
+          >
+            <CalendarPlus className="w-4 h-4 text-teal-700" />
+            <span>¿Es paciente? Solicite su primera cita</span>
+          </a>
 
           {/* Footer y Cumplimiento Normativo Asistencial */}
           <footer className="pt-2 sm:pt-2.5 mt-1 sm:mt-1.5 border-t border-slate-100 flex flex-col gap-1.5">

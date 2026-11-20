@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"net/mail"
 	"strings"
 	"time"
 
@@ -64,6 +65,11 @@ func (s *patientService) RegisterPatient(ctx context.Context, patient *domain.Pa
 
 	if !validDocumentTypes[patient.DocumentType] {
 		return nil, domain.ErrInvalidDocumentType
+	}
+	if patient.Email != "" {
+		if addr, err := mail.ParseAddress(patient.Email); err != nil || addr.Address != patient.Email {
+			return nil, domain.ErrInvalidPatientData
+		}
 	}
 	if patient.DocumentNumber == "" || len(patient.DocumentNumber) > 25 ||
 		patient.FirstName == "" || patient.LastName == "" || patient.EPSName == "" ||

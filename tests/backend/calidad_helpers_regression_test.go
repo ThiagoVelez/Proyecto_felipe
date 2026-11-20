@@ -9,10 +9,10 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
+	"saludconecta-backend/adapters/email"
 	httpadapter "saludconecta-backend/adapters/http"
 	"saludconecta-backend/adapters/http/handlers"
 	"saludconecta-backend/adapters/interoperability"
-	"saludconecta-backend/adapters/email"
 	"saludconecta-backend/adapters/pdf"
 	"saludconecta-backend/adapters/storage/memory"
 	"saludconecta-backend/core/ports"
@@ -52,9 +52,9 @@ func newCalidadEnvConCodigo(t *testing.T, setupCode string) calidadEnv {
 
 	// El cableado replica cmd/api/main.go (v2), incluido el validador de sesion activa.
 	log := logger.New()
-	pdfGen := pdf.NewGenerator(t.TempDir())
+	pdfGen := pdf.NewGenerator(dirPDFConMargen(t))
 	emailSvc := email.NewService(email.Config{}, log)
-	authService := services.NewAuthServiceWithSetup(userRepo, calidadJWTSecret, time.Hour, 7*24*time.Hour, setupCode)
+	authService := services.NewAuthServiceFull(userRepo, memory.NewBranchMemoryRepo(ds), calidadJWTSecret, time.Hour, 7*24*time.Hour, setupCode)
 	recordService := services.NewClinicalRecordService(recordRepo, patientRepo, userRepo)
 
 	app := fiber.New()
@@ -70,9 +70,15 @@ func newCalidadEnvConCodigo(t *testing.T, setupCode string) calidadEnv {
 		TreatmentHandler:       handlers.NewTreatmentHandler(services.NewTreatmentService(prescV2Repo, patientRepo, userRepo, pdfGen, emailSvc, log)),
 		PharmacyHandler:        handlers.NewPharmacyHandler(services.NewPharmacyService(inventoryRepo, prescV2Repo, memory.NewPharmacyReportMemoryRepo(ds), log)),
 		HealthEducationHandler: handlers.NewHealthEducationHandler(services.NewHealthEducationService(healthRepo)),
-		TIHandler:              handlers.NewTIHandler(services.NewTIService(userRepo, auditRepo, "memory", "test", time.Now().UTC())),
-		Sessions:               authService,
-		JWTSecret:              calidadJWTSecret,
+		TIHandler:              handlers.NewTIHandler(services.NewTIService(userRepo, auditRepo, memory.NewBranchMemoryRepo(ds), "memory", "test", time.Now().UTC())),
+		AppointmentRequestHandler: handlers.NewAppointmentRequestHandler(services.NewAppointmentRequestService(
+			memory.NewAppointmentRequestMemoryRepo(ds), memory.NewBranchMemoryRepo(ds), userRepo, appointmentRepo, services.NewPatientService(patientRepo),
+			services.NewAppointmentService(appointmentRepo, patientRepo, userRepo, pdfGen, emailSvc, log), emailSvc, log)),
+		LabOrderHandler: handlers.NewLabOrderHandler(services.NewLabOrderService(memory.NewLabOrderMemoryRepo(ds), userRepo, patientRepo, emailSvc, log)),
+		NursingHandler:  handlers.NewNursingHandler(services.NewNursingService(memory.NewNursingMemoryRepo(ds), userRepo, patientRepo)),
+		BranchHandler:   handlers.NewBranchHandler(services.NewBranchService(memory.NewBranchMemoryRepo(ds), userRepo)),
+		Sessions:        authService,
+		JWTSecret:       calidadJWTSecret,
 	})
 	return calidadEnv{app: app, ds: ds}
 }
@@ -111,9 +117,25 @@ func defectoReproducido(t *testing.T, id, formato string, args ...interface{}) {
 // requireDefectoAbierto omite por defecto las pruebas que documentan defectos aun no corregidos.
 // Con CALIDAD_DEFECTOS_ABIERTOS=1 se ejecutan y fallan mientras el defecto siga presente,
 // lo que permite reproducirlo sin romper el pipeline del equipo.
+// Hoy no hay defectos abiertos con reproduccion; el helper se conserva para los proximos (plan de calidad, seccion 5.4).
+//
+//nolint:unused // se usa al registrar el proximo defecto abierto
 func requireDefectoAbierto(t *testing.T, id string) {
 	t.Helper()
 	if os.Getenv("CALIDAD_DEFECTOS_ABIERTOS") != "1" {
 		t.Skipf("%s abierto: ejecute con CALIDAD_DEFECTOS_ABIERTOS=1 para reproducirlo", id)
 	}
+}
+
+// dirPDFConMargen crea el directorio de comprobantes PDF de una prueba. El PDF de las citas se genera en una
+// goroutine que puede terminar despues de la prueba; t.TempDir fallaria al borrar un directorio en uso, por eso
+// el borrado se hace con un margen.
+func dirPDFConMargen(t *testing.T) string {
+	t.Helper()
+	dir, err := os.MkdirTemp("", "pdf-prueba-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { time.Sleep(300 * time.Millisecond); _ = os.RemoveAll(dir) })
+	return dir
 }

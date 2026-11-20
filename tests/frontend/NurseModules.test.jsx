@@ -83,6 +83,25 @@ describe('Módulo Asistencial de Enfermería - Resumen Clínico & Lista de Chequ
   });
 
   it('renderiza NurseChecklistView con tareas marcables, estadísticas y notas de evolución', async () => {
+    // Servidor simulado del registro de enfermería: fija quién completa cada deber y guarda las notas
+    const care = {
+      duties: [
+        { id: 'id-verify', category: 'SEGURIDAD', label: 'Verificar identificación: brazalete, cédula y entidad de salud (EPS)', completed: false, completedAt: null, completedBy: null },
+        { id: 'vital-signs', category: 'MONITOREO', label: 'Monitoreo horario de signos vitales (PA, FC, FR, SpO2, Temperatura)', completed: false, completedAt: null, completedBy: null },
+      ],
+      notes: [],
+    };
+    vi.spyOn(apiClient, 'getNursingRecords').mockResolvedValue([]);
+    vi.spyOn(apiClient, 'getNursingRecord').mockImplementation(async () => ({ ...care, saved: false }));
+    const saveSpy = vi.spyOn(apiClient, 'saveNursingDuties').mockImplementation(async (_pid, duties) => {
+      care.duties = duties.map((d) => (d.completed ? { ...d, completedAt: '10:30', completedBy: 'Servidor: Enf. Elizabeth' } : d));
+      return { ...care, saved: true };
+    });
+    const noteSpy = vi.spyOn(apiClient, 'addNursingNote').mockImplementation(async (_pid, content) => {
+      care.notes = [{ id: 'n1', timestamp: '19/11/26, 10:31', author: 'Enf. Elizabeth', content }, ...care.notes];
+      return { ...care, saved: true };
+    });
+
     render(
       <NurseChecklistView
         user={mockNurseUser}
@@ -96,8 +115,8 @@ describe('Módulo Asistencial de Enfermería - Resumen Clínico & Lista de Chequ
     expect(await screen.findByText(/Lista de Chequeo y Deberes de Enfermería/i)).toBeInTheDocument();
     expect(screen.getAllByText(/Carlos Mendoza/i).length).toBeGreaterThanOrEqual(1);
 
-    // Verificar tareas predeterminadas
-    expect(screen.getByText(/Verificar identificación: brazalete/i)).toBeInTheDocument();
+    // Verificar tareas predeterminadas (llegan del servidor)
+    expect(await screen.findByText(/Verificar identificación: brazalete/i)).toBeInTheDocument();
     expect(screen.getByText(/Monitoreo horario de signos vitales/i)).toBeInTheDocument();
 
     // Marcar una tarea
@@ -117,6 +136,10 @@ describe('Módulo Asistencial de Enfermería - Resumen Clínico & Lista de Chequ
     fireEvent.click(screen.getByRole('button', { name: /Guardar Nota de Evolución/i }));
 
     expect(await screen.findByText(/Paciente hemodinámicamente estable/i)).toBeInTheDocument();
+    expect(noteSpy).toHaveBeenCalledWith('pat-001', 'Paciente hemodinámicamente estable, afebril, recibe tratamiento.');
+    // Los deberes se guardan en el servidor, que registra quién los completó
+    expect(saveSpy).toHaveBeenCalled();
+    expect(saveSpy.mock.calls[0][1].find((d) => d.id === 'id-verify').completed).toBe(true);
   });
 });
 

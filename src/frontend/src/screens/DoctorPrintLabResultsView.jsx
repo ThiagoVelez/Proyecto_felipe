@@ -15,34 +15,28 @@ import {
   X,
 } from 'lucide-react';
 import { calculateAge, formatDoctorName } from '../utils/clinical';
+import { apiClient } from '../services/api';
 
 export const DoctorPrintLabResultsView = ({ user, patient, onNavigate }) => {
-  const [orders, setOrders] = useState(() => {
-    try {
-      const saved = localStorage.getItem('saludconecta_lab_orders');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [orders, setOrders] = useState([]);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-  // Sincronizar en tiempo real órdenes
+  // Resultados del medico desde el servidor, actualizados cada 15 segundos
   useEffect(() => {
-    const handleSync = () => {
-      try {
-        const saved = localStorage.getItem('saludconecta_lab_orders');
-        if (saved) setOrders(JSON.parse(saved));
-      } catch {}
-    };
-    window.addEventListener('saludconecta_lab_orders_updated', handleSync);
-    window.addEventListener('storage', handleSync);
+    let active = true;
+    const load = () =>
+      apiClient
+        .getLabOrders()
+        .then((list) => active && setOrders(list))
+        .catch(() => {});
+    load();
+    const timer = setInterval(load, 15000);
     return () => {
-      window.removeEventListener('saludconecta_lab_orders_updated', handleSync);
-      window.removeEventListener('storage', handleSync);
+      active = false;
+      clearInterval(timer);
     };
   }, []);
 
