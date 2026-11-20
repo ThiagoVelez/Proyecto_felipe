@@ -14,7 +14,7 @@
 
 | Codigo | Nombre del Requisito | Descripcion Detallada | Prioridad MoSCoW |
 | :--- | :--- | :--- | :--- |
-| **RF01** | Autenticacion, MFA y Roles RBAC | Control de acceso basado en roles (MEDICO, ENFERMERO, ADMISION, AUDITOR, ADMIN) con tokens JWT (HS256) y autenticacion multifactor obligatoria mediante algoritmo TOTP (RFC 6238). | **Must Have** |
+| **RF01** | Autenticacion, MFA y Roles RBAC | Control de acceso basado en roles (ADMIN, MEDICO, ENFERMERO, ADMISION, AUDITOR, FARMACIA, LABORATORIO y TI) con tokens JWT (HS256) y autenticacion multifactor obligatoria mediante algoritmo TOTP (RFC 6238). | **Must Have** |
 | **RF02** | Triaje Manchester y Guardia Fisiologica | Valoracion en urgencias con semaforizacion automatica en 5 niveles (Nivel I a V) segun constantes vitales e intercepcion preventiva de rangos fisiologicos incompatibles (Glasgow < 3 o > 15, FC <= 0, etc.). | **Must Have** |
 | **RF03** | HCE e Inmutabilidad Absoluta | Registro de atencion clinica con bloqueo de modificacion post-cierre. Una vez firmado electronicamente el folio, cualquier peticion de mutacion es rechazada con HTTP 403/409 y protegida por triggers a nivel de BD. | **Must Have** |
 | **RF04** | Cadena Criptografica SHA-256 | Calculo determinista de hash SHA-256 encadenado que incorpora el hash del folio previo del paciente, asegurando trazabilidad contra alteraciones o ataques de sustitucion. | **Must Have** |

@@ -16,7 +16,7 @@
 >
 > - **22 defectos cerrados por prueba automatizada:** DEF-29, 30, 49 a 55, 57 a 61, 67, 68, 70, 72, 85, 87, 88 y 89. Sus pruebas de reproducción pasan sobre `main` (la herramienta `controldefectos` reportaba «DEF-XX parece corregido» en los 22). Se quitaron de `defectos-abiertos.txt` y ahora se ejecutan siempre como regresión permanente.
 > - **DEF-48 cerrado:** las pruebas de `auth_security_test.go` usaban el tiempo límite de 1 s de Fiber; con `app.Test(req, -1)` la suite `tests/backend` pasa completa con `-race`.
-> - **Defectos nuevos encontrados y corregidos:** DEF-93 (crítico, cierre del primer folio en MySQL), DEF-94 (hora UTC en el correo y el PDF de la cita) y DEF-95 (prueba intermitente). Ver la tabla de la sección 2.
+> - **Defectos nuevos encontrados y corregidos:** DEF-93 (crítico, cierre del primer folio en MySQL), DEF-94 (hora UTC en el correo y el PDF de la cita) DEF-95 (prueba intermitente), DEF-96 (el registro de paciente descartaba el correo) y DEF-97 (al recargar una pestaña se abría el último perfil iniciado). Ver la tabla de la sección 2.
 > - **Pipeline:** `.github/workflows/calidad.yml`, `.golangci.yml`, `src/frontend/eslint.config.js` y las plantillas de `.github/` existían solo en la rama `calidad/revision-r3`; se incorporaron a `main`. golangci-lint (hallazgos nuevos desde `6492f07`): 0.
 > - **Pendiente para el equipo de QA:** los defectos abiertos **sin** prueba automatizada no se reverificaron en esta actualización; conservan su estado R3 hasta su verificación manual.
 
@@ -154,6 +154,8 @@ El contenido de las columnas originales se transcribe sin cambios desde `docs/in
 | DEF-93 | Rechazar el cierre del primer folio de cada paciente en MySQL: el hash génesis (69 caracteres) no cabe en `previous_hash VARCHAR(64)` | Backend / Persistencia | Crítica | P1 | Cerrado (corregido y verificado contra MySQL real, v2 19 nov 2026) |
 | DEF-94 | Mostrar al paciente la hora UTC en el correo y el PDF de la cita (5 horas de diferencia) | Backend | Alta | P1 | Cerrado (corregido y verificado, v2 19 nov 2026) |
 | DEF-95 | Fallar de forma intermitente las pruebas de citas al borrar el directorio temporal mientras se genera el PDF | Pruebas | Baja | P3 | Cerrado (corregido, v2 19 nov 2026) |
+| DEF-96 | Descartar el correo, la dirección y la afiliación al registrar un paciente: los resultados de laboratorio no se podían enviar por correo | Backend / Frontend | Alta | P1 | Cerrado (corregido y verificado contra MySQL real, v2 20 nov 2026) |
+| DEF-97 | Cambiar al último perfil iniciado al recargar (F5) una pestaña cuando hay varias abiertas en el mismo navegador | Frontend / Sesión | Alta | P1 | Cerrado (corregido y verificado con Playwright, v2 20 nov 2026) |
 
 Los defectos DEF-46 a DEF-48 se detectaron en la primera ejecución del pipeline `calidad` sobre el PR (run `41361540450`, `anexos/evidencias/89-ci-run-41361540450.txt`).
 

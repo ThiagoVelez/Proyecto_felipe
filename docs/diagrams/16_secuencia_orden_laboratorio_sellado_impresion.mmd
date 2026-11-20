@@ -1,37 +1,35 @@
 sequenceDiagram
     autonumber
-    actor Medico as "Médico Asistencial (Dr. Santiago Vélez)"
-    participant UI_Med as "DoctorLabOrdersView (Frontend)"
-    participant EventBus as "EventBus / LocalStorage (Buzón Reactivo)"
-    participant UI_Lab as "LaboratoryScreen (Frontend)"
-    actor Bact as "Bacteriólogo (ReTHUS Activo)"
-    actor Paciente as "Paciente / Historia Clínica"
+    actor Medico as Médico (computador A)
+    participant UI_Med as DoctorLabOrdersView
+    participant API as Backend Go Fiber (/api/v2/lab-orders)
+    participant DB as MySQL (tabla lab_orders)
+    participant UI_Lab as LaboratoryScreen (computador B)
+    actor Bact as Bacteriólogo (ReTHUS)
+    participant SMTP as Servidor de Correo
+    actor Paciente as Paciente
 
-    Note over Medico,UI_Med: 1. Prescripción Paraclínica
-    Medico->>UI_Med: Selecciona paciente y tipo de examen (Catálogo Rápido / Personalizado)
-    Medico->>UI_Med: Ingresa muestra biológica, prioridad (RUTINA/URGENTE) y sospecha diagnóstica
-    UI_Med->>UI_Med: Genera ID único inmutable secuencial (LAB-2026-XXX)
-    Medico->>UI_Med: Clic en "Enviar al Buzón de Laboratorio"
-    UI_Med->>EventBus: Registra orden en almacenamiento y emite evento saludconecta_lab_orders_updated
+    Note over Medico,DB: 1. Prescripción paraclínica
+    Medico->>UI_Med: Elige paciente, examen, muestra, prioridad y observaciones
+    UI_Med->>API: POST /lab-orders { patient_id, test_type, sample_type, priority, observations }
+    API->>DB: Toma datos y correo del paciente y asigna el consecutivo LAB-2026-XXX
+    API-->>UI_Med: 201 Created (orden PENDIENTE)
 
-    Note over EventBus,UI_Lab: 2. Recepción y Toma en Laboratorio
-    EventBus->>UI_Lab: Notificación en tiempo real sin recargar página (F5)
-    UI_Lab->>Bact: Despliega orden en bandeja con badge de prioridad y datos del paciente
-    Bact->>UI_Lab: Recepciona muestra e inicia análisis cuantitativo/cualitativo
-    Bact->>UI_Lab: Digita parámetros obtenidos y valores de referencia biológicos
-    Bact->>UI_Lab: Clic en "Validar & Sellar Resultado"
+    Note over API,Bact: 2. Recepción en laboratorio (cualquier equipo)
+    UI_Lab->>API: GET /lab-orders (consulta cada 15 s)
+    API-->>UI_Lab: Órdenes del servidor con prioridad y datos del paciente
+    Bact->>UI_Lab: Digita parámetros y guarda avance
+    UI_Lab->>API: PUT /lab-orders/{id}/progress (EN_PROCESO)
 
-    Note over UI_Lab,EventBus: 3. Sellado ReTHUS y Notificación Médica
-    UI_Lab->>UI_Lab: Genera sello criptográfico ReTHUS inmutable (BAC-9421-VALLE)
-    UI_Lab->>EventBus: Actualiza estado a COMPLETADO y emite sincronización
-    EventBus->>UI_Med: Médico recibe resultado validado en su historial de órdenes
+    Note over UI_Lab,DB: 3. Sellado ReTHUS
+    Bact->>UI_Lab: Validar & Sellar Resultado
+    UI_Lab->>API: POST /lab-orders/{id}/seal
+    API->>DB: COMPLETADO + validado por, registro ReTHUS y hora
+    API-->>UI_Lab: Resultado sellado (ya no admite cambios: 409)
 
-    Note over UI_Med,Paciente: 4. Impresión Física y Despacho Digital
-    alt Impresión Formato Físico
-        Medico->>UI_Med: Clic en "Imprimir Físico"
-        UI_Med->>Paciente: Emite documento oficial con membrete IPS, NIT y firma legal
-    else Despacho por Correo Electrónico
-        Medico->>UI_Med: Clic en "Enviar Correo"
-        UI_Med->>Paciente: Remite informe oficial firmado en formato digital seguro
-    end
-
+    Note over API,Paciente: 4. Envío por correo e impresión
+    UI_Lab->>API: POST /lab-orders/{id}/dispatch { email, copy_doctor }
+    API->>SMTP: Resultado al paciente y copia al médico solicitante
+    SMTP-->>Paciente: Correo con el resultado sellado
+    UI_Med->>API: GET /lab-orders (el médico ve el resultado sellado)
+    Medico->>UI_Med: Imprimir físico o reenviar (solo sus propias órdenes)

@@ -1,0 +1,38 @@
+sequenceDiagram
+    autonumber
+    actor Paciente as Paciente (celular, sin cuenta)
+    participant Portal as Portal del Paciente (PatientPortalScreen)
+    participant API as Backend Go Fiber
+    participant DB as MySQL (appointment_requests, branches)
+    participant UI_Med as Bandeja de Solicitudes (médico)
+    actor Medico as Médico de la sede
+    participant SMTP as Servidor de Correo
+
+    Note over Paciente,API: 1. Sede más cercana
+    Portal->>API: GET /api/v1/public/branches
+    API->>DB: Sedes con coordenadas
+    API-->>Portal: Sedes con latitud y longitud
+    Paciente->>Portal: Permite la ubicación (opcional)
+    Portal->>Portal: Calcula distancias (Haversine) y sugiere la sede más cercana
+
+    Note over Paciente,DB: 2. Solicitud de primera cita
+    Paciente->>Portal: Datos personales, observación y consentimiento (Ley 1581)
+    Portal->>API: POST /api/v1/public/appointment-requests (máx. 5 por minuto por IP)
+    API->>DB: Elige el médico activo de la sede con mayor disponibilidad (citas + pendientes)
+    API->>DB: Guarda la solicitud PENDIENTE asignada a ese médico
+    API-->>Portal: Código de solicitud (SOL-XXXXXX)
+
+    Note over UI_Med,Medico: 3. Bandeja del médico
+    UI_Med->>API: GET /api/v2/appointment-requests/pending-count (contador del menú)
+    UI_Med->>API: GET /api/v2/appointment-requests
+    Medico->>UI_Med: Revisa su calendario y elige fecha y hora libres
+
+    alt Agendar
+        UI_Med->>API: POST /api/v2/appointment-requests/{id}/schedule
+        API->>DB: Crea o asocia el paciente y crea la cita
+        API->>SMTP: Correo con la cita en hora de Colombia y PDF adjunto
+        SMTP-->>Paciente: Confirmación de la cita
+    else Rechazar
+        UI_Med->>API: POST /api/v2/appointment-requests/{id}/reject { motivo obligatorio }
+        API->>SMTP: Correo con el motivo
+    end

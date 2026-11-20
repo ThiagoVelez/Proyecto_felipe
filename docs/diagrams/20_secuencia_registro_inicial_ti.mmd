@@ -1,0 +1,34 @@
+sequenceDiagram
+    autonumber
+    actor Instalador as Quien instala el servidor
+    actor EncTI as Encargado de TI
+    participant Login as AuthScreen (inicio de sesión)
+    participant API as Backend Go Fiber (/api/v1/auth)
+    participant DB as MySQL (users, branches)
+    actor AdmSede as Administrador de Sede
+
+    Instalador->>API: Define TI_SETUP_CODE en .env y entrega el código en persona
+
+    Note over Login,DB: 1. Estado de la instalación
+    Login->>API: GET /setup-status
+    API->>DB: ¿Existe TI? ¿Qué sedes tienen administrador aprobado?
+    API-->>Login: ti_registered, ti_setup_enabled, sedes sin administrador
+    Login->>Login: Muestra solo los botones de registro que aplican
+
+    Note over EncTI,DB: 2. Registro del Encargado de TI (único)
+    EncTI->>Login: Registrar Encargado de TI + código de instalación
+    Login->>API: POST /register-ti
+    alt Código incorrecto o TI ya existe
+        API-->>Login: 403 / 409
+    else Código correcto
+        API->>DB: Crea la cuenta TI (rol 8) bajo candado setupMu
+        API-->>Login: 201 Created (el botón desaparece)
+    end
+
+    Note over AdmSede,DB: 3. Administrador de sede
+    AdmSede->>Login: Registrar Administrador de Sede (solo sedes sin administrador)
+    Login->>API: POST /register-branch-admin
+    API->>DB: Cuenta PENDIENTE (no puede iniciar sesión)
+    EncTI->>API: PATCH /api/v1/ti/admins/{id}/status { is_active: true }
+    API->>DB: Aprueba la cuenta y la sede queda ocupada
+    AdmSede->>Login: Inicia sesión como administrador de su sede
