@@ -64,7 +64,7 @@ func buildMinimalPDF(title string, lines []string, barcodeText string) []byte {
 	stream.WriteString("BT\n")
 	stream.WriteString("/F2 14 Tf\n")
 	stream.WriteString("0.1 0.1 0.1 rg\n")
-	stream.WriteString(fmt.Sprintf("48 640 Td (%s) Tj\n", sanitize(title)))
+	fmt.Fprintf(&stream, "48 640 Td (%s) Tj\n", sanitize(title))
 	stream.WriteString("ET\n")
 
 	// Separador horizontal
@@ -80,10 +80,10 @@ func buildMinimalPDF(title string, lines []string, barcodeText string) []byte {
 			// Subtitulo destacado
 			clean := strings.TrimSpace(strings.TrimPrefix(line, "###"))
 			stream.WriteString("ET\nBT\n/F2 11 Tf\n0.04 0.38 0.33 rg\n")
-			stream.WriteString(fmt.Sprintf("48 %d Td (%s) Tj\n", y, sanitize(clean)))
+			fmt.Fprintf(&stream, "48 %d Td (%s) Tj\n", y, sanitize(clean))
 			stream.WriteString("ET\nBT\n/F1 10 Tf\n0.15 0.15 0.15 rg\n")
 		} else {
-			stream.WriteString(fmt.Sprintf("48 %d Td (%s) Tj\n", y, sanitize(line)))
+			fmt.Fprintf(&stream, "48 %d Td (%s) Tj\n", y, sanitize(line))
 		}
 		y -= 16
 		if y < 140 {
@@ -102,14 +102,14 @@ func buildMinimalPDF(title string, lines []string, barcodeText string) []byte {
 		stream.WriteString("0 0 0 rg\n")
 		for bx := 60; bx < 220; bx += 4 {
 			width := (bx % 3) + 1
-			stream.WriteString(fmt.Sprintf("%d 92 %d 24 re f\n", bx, width))
+			fmt.Fprintf(&stream, "%d 92 %d 24 re f\n", bx, width)
 		}
 		stream.WriteString("Q\n")
 
 		stream.WriteString("BT\n")
 		stream.WriteString("/F2 9 Tf\n")
 		stream.WriteString("0.1 0.1 0.1 rg\n")
-		stream.WriteString(fmt.Sprintf("235 104 Td (CODIGO UNICO VALIDABLE: %s) Tj\n", sanitize(barcodeText)))
+		fmt.Fprintf(&stream, "235 104 Td (CODIGO UNICO VALIDABLE: %s) Tj\n", sanitize(barcodeText))
 		stream.WriteString("/F1 8 Tf\n")
 		stream.WriteString("235 90 Td (Verificacion digital en ventanilla de farmacia o consulta externa) Tj\n")
 		stream.WriteString("ET\n")
@@ -119,7 +119,7 @@ func buildMinimalPDF(title string, lines []string, barcodeText string) []byte {
 	stream.WriteString("BT\n")
 	stream.WriteString("/F1 8 Tf\n")
 	stream.WriteString("0.4 0.4 0.4 rg\n")
-	stream.WriteString(fmt.Sprintf("48 45 Td (Generado electronicamente por SaludConecta IPS v2.4 | Fecha: %s) Tj\n", time.Now().Format("2006-01-02 15:04:05")))
+	fmt.Fprintf(&stream, "48 45 Td (Generado electronicamente por SaludConecta IPS v2.4 | Fecha: %s) Tj\n", time.Now().Format("2006-01-02 15:04:05"))
 	stream.WriteString("ET\n")
 
 	streamBytes := stream.Bytes()
@@ -141,7 +141,7 @@ func buildMinimalPDF(title string, lines []string, barcodeText string) []byte {
 	pdf.WriteString("3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>\nendobj\n")
 
 	offsets = append(offsets, pdf.Len())
-	pdf.WriteString(fmt.Sprintf("4 0 obj\n<< /Length %d >>\nstream\n", streamLen))
+	fmt.Fprintf(&pdf, "4 0 obj\n<< /Length %d >>\nstream\n", streamLen)
 	pdf.Write(streamBytes)
 	pdf.WriteString("\nendstream\nendobj\n")
 
@@ -153,15 +153,15 @@ func buildMinimalPDF(title string, lines []string, barcodeText string) []byte {
 
 	startxref := pdf.Len()
 	pdf.WriteString("xref\n")
-	pdf.WriteString(fmt.Sprintf("0 %d\n", len(offsets)+1))
+	fmt.Fprintf(&pdf, "0 %d\n", len(offsets)+1)
 	pdf.WriteString("0000000000 65535 f \n")
 	for _, off := range offsets {
-		pdf.WriteString(fmt.Sprintf("%010d 00000 n \n", off))
+		fmt.Fprintf(&pdf, "%010d 00000 n \n", off)
 	}
 	pdf.WriteString("trailer\n")
-	pdf.WriteString(fmt.Sprintf("<< /Size %d /Root 1 0 R >>\n", len(offsets)+1))
+	fmt.Fprintf(&pdf, "<< /Size %d /Root 1 0 R >>\n", len(offsets)+1)
 	pdf.WriteString("startxref\n")
-	pdf.WriteString(fmt.Sprintf("%d\n", startxref))
+	fmt.Fprintf(&pdf, "%d\n", startxref)
 	pdf.WriteString("%%EOF\n")
 
 	return pdf.Bytes()

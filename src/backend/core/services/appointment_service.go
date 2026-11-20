@@ -95,7 +95,7 @@ func (s *appointmentService) ScheduleAppointment(ctx context.Context, app *domai
 
 	// 6. Worker en segundo plano (Goroutine desacoplada): genera PDF y envia confirmacion por correo SMTP
 	go func(appCopy domain.Appointment) {
-		bgCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		bgCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 30*time.Second)
 		defer cancel()
 
 		pdfPath, pdfBytes, err := s.pdfGen.GenerateAppointmentPDF(&appCopy)

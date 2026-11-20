@@ -72,21 +72,21 @@ func (s *Service) SendWithPDFAttachment(to string, subject, body, pdfFilename st
 	boundary := fmt.Sprintf("boundary_%d", time.Now().UnixNano())
 	var msg bytes.Buffer
 
-	msg.WriteString(fmt.Sprintf("From: %s\r\n", s.cfg.From))
-	msg.WriteString(fmt.Sprintf("To: %s\r\n", to))
-	msg.WriteString(fmt.Sprintf("Subject: %s\r\n", subject))
+	fmt.Fprintf(&msg, "From: %s\r\n", s.cfg.From)
+	fmt.Fprintf(&msg, "To: %s\r\n", to)
+	fmt.Fprintf(&msg, "Subject: %s\r\n", subject)
 	msg.WriteString("MIME-Version: 1.0\r\n")
-	msg.WriteString(fmt.Sprintf("Content-Type: multipart/mixed; boundary=\"%s\"\r\n\r\n", boundary))
+	fmt.Fprintf(&msg, "Content-Type: multipart/mixed; boundary=\"%s\"\r\n\r\n", boundary)
 
 	// Cuerpo en texto plano
-	msg.WriteString(fmt.Sprintf("--%s\r\n", boundary))
+	fmt.Fprintf(&msg, "--%s\r\n", boundary)
 	msg.WriteString("Content-Type: text/plain; charset=UTF-8\r\n\r\n")
 	msg.WriteString(body)
 	msg.WriteString("\r\n\r\n")
 
 	// Adjunto PDF
 	if len(pdfData) > 0 {
-		msg.WriteString(fmt.Sprintf("--%s\r\n", boundary))
+		fmt.Fprintf(&msg, "--%s\r\n", boundary)
 		msg.WriteString("Content-Type: application/pdf; name=\"" + pdfFilename + "\"\r\n")
 		msg.WriteString("Content-Transfer-Encoding: base64\r\n")
 		msg.WriteString("Content-Disposition: attachment; filename=\"" + pdfFilename + "\"\r\n\r\n")
@@ -100,7 +100,7 @@ func (s *Service) SendWithPDFAttachment(to string, subject, body, pdfFilename st
 			msg.WriteString(encoded[i:end] + "\r\n")
 		}
 	}
-	msg.WriteString(fmt.Sprintf("--%s--\r\n", boundary))
+	fmt.Fprintf(&msg, "--%s--\r\n", boundary)
 
 	addr := fmt.Sprintf("%s:%s", s.cfg.Host, s.cfg.Port)
 	auth := smtp.PlainAuth("", s.cfg.Username, s.cfg.Password, s.cfg.Host)
