@@ -19,77 +19,11 @@ import {
 } from 'lucide-react';
 import apiClient from '../services/api';
 
-const DEFAULT_REPORTS = [
-  {
-    id: 'rep-001',
-    report_code: 'REP-FARM-2026-001',
-    inventory_item_id: 'inv-risp-1',
-    medication_name: 'Risperidona 1 mg',
-    generic_name: 'Risperidona',
-    code_cum: '19982341-01',
-    dosage: '1 mg',
-    presentation: 'Caja x 20 tabletas',
-    batch_number: 'LOTE-RIS-2026A',
-    current_stock: 4,
-    min_stock: 15,
-    deficit: 11,
-    severity: 'CRITICO',
-    clinical_impact:
-      'Alerta automática de seguridad clínica (ISO/IEC 25010): El inventario de Risperidona (1 mg) ha descendido a 4 unidades (umbral mínimo de seguridad: 15 unidades). Riesgo de desabastecimiento hospitalario inmediato en el servicio de salud mental y urgencias.',
-    branch: 'Sede Cartago - Hospital Central',
-    status: 'PENDIENTE',
-    notes: 'Reporte generado automáticamente al registrarse demanda asistencial continua.',
-    created_at: '2026-11-10T07:45:00Z',
-  },
-  {
-    id: 'rep-002',
-    report_code: 'REP-FARM-2026-002',
-    inventory_item_id: 'inv-losar-100',
-    medication_name: 'Losartán Potásico 100 mg',
-    generic_name: 'Losartan Potasico',
-    code_cum: '19941122-03',
-    dosage: '100 mg',
-    presentation: 'Caja x 30 tabletas',
-    batch_number: 'LOTE-LOS-2026B',
-    current_stock: 8,
-    min_stock: 20,
-    deficit: 12,
-    severity: 'BAJO',
-    clinical_impact:
-      'Alerta automática de seguridad clínica: El inventario de Losartán Potásico (100 mg) se encuentra en 8 unidades disponibles (umbral de seguridad: 20 unidades). Pacientes crónicos hipertensos en riesgo de interrupción de tratamiento ambulatorio PBS.',
-    branch: 'Sede Cartago - Hospital Central',
-    status: 'EN_GESTION',
-    notes: 'Solicitud de compra y reposición remitida al regente de farmacia.',
-    created_at: '2026-11-09T14:30:00Z',
-  },
-  {
-    id: 'rep-003',
-    report_code: 'REP-FARM-2026-003',
-    inventory_item_id: 'inv-amox-250',
-    medication_name: 'Amoxicilina 250 mg Suspensión',
-    generic_name: 'Amoxicilina',
-    code_cum: '20015544-01',
-    dosage: '250 mg',
-    presentation: 'Frasco x 100 ml polvo para suspensión',
-    batch_number: 'LOTE-AMX-2026C',
-    current_stock: 0,
-    min_stock: 20,
-    deficit: 20,
-    severity: 'AGOTADO',
-    clinical_impact:
-      'ALERTA ROJA - FÁRMACO AGOTADO (0 unidades): Desabastecimiento total de antibiótico de primera línea pediátrico. Requiere derivación o despacho de alternativa terapéutica cefalosporínica según criterio médico.',
-    branch: 'Sede Cartago - Hospital Central',
-    status: 'PENDIENTE',
-    notes: 'Agotado tras alta demanda en urgencias respiratorias pediátricas.',
-    created_at: '2026-11-10T06:10:00Z',
-  },
-];
 
 export const PharmacyStockReportsView = ({ isCopyMode = false, user }) => {
-  const [reports, setReports] = useState(() => {
-    const saved = localStorage.getItem('saludconecta_pharmacy_reports');
-    return saved ? JSON.parse(saved) : DEFAULT_REPORTS;
-  });
+  // DEF-22/DEF-76: los reportes vienen solo del servidor; no hay datos de ejemplo ni copia en el navegador
+  const [reports, setReports] = useState([]);
+  const [loadError, setLoadError] = useState('');
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('TODOS');
@@ -108,12 +42,10 @@ export const PharmacyStockReportsView = ({ isCopyMode = false, user }) => {
     setLoading(true);
     try {
       const res = await apiClient.getPharmacyStockReports(statusFilter);
-      if (Array.isArray(res) && res.length > 0) {
-        setReports(res);
-        localStorage.setItem('saludconecta_pharmacy_reports', JSON.stringify(res));
-      }
+      setReports(Array.isArray(res) ? res : []);
+      setLoadError('');
     } catch (err) {
-      // Usar datos locales si el endpoint no está disponible
+      setLoadError(`No se pudieron cargar los reportes de stock: ${err?.message || 'servicio no disponible'}`);
     } finally {
       setLoading(false);
     }
@@ -123,9 +55,6 @@ export const PharmacyStockReportsView = ({ isCopyMode = false, user }) => {
     fetchReports();
   }, [statusFilter]);
 
-  useEffect(() => {
-    localStorage.setItem('saludconecta_pharmacy_reports', JSON.stringify(reports));
-  }, [reports]);
 
   // Verificar en caliente si hay nuevos ítems en stock bajo
   const handleCheckStock = async () => {
@@ -138,8 +67,7 @@ export const PharmacyStockReportsView = ({ isCopyMode = false, user }) => {
       setNotice('Escaneo de stock ejecutado. Reportes automáticos sincronizados.');
       setTimeout(() => setNotice(''), 3500);
     } catch (err) {
-      setNotice('Escaneo preventivo verificado contra inventario local.');
-      setTimeout(() => setNotice(''), 3000);
+      setLoadError(`No se pudo ejecutar el escaneo de stock: ${err?.message || 'servicio no disponible'}`);
     } finally {
       setLoading(false);
     }
@@ -149,21 +77,10 @@ export const PharmacyStockReportsView = ({ isCopyMode = false, user }) => {
     try {
       await apiClient.resolvePharmacyStockReport(report.id, 'EN_GESTION', currentUserName);
     } catch (err) {
-      // Continuar con mutación optimista
+      setLoadError(`No se pudo actualizar el reporte ${report.report_code}: ${err?.message || 'servicio no disponible'}`);
+      return;
     }
-
-    const updated = reports.map((r) => {
-      if (r.id === report.id) {
-        return {
-          ...r,
-          status: 'EN_GESTION',
-          notes: `Puesto en gestión de compra y reposición por ${currentUserName}.`,
-        };
-      }
-      return r;
-    });
-
-    setReports(updated);
+    await fetchReports();
     setNotice(`El reporte ${report.report_code} fue marcado como "EN GESTIÓN".`);
     setTimeout(() => setNotice(''), 3500);
   };
@@ -196,26 +113,11 @@ export const PharmacyStockReportsView = ({ isCopyMode = false, user }) => {
         currentUserName
       );
     } catch (err) {
-      // Continuar con mutación local si la API estuviese ocupada
+      setLoadError(`No se pudo registrar el reabastecimiento: ${err?.message || 'servicio no disponible'}`);
+      return;
     }
 
-    const updated = reports.map((r) => {
-      if (r.id === selectedReport.id) {
-        return {
-          ...r,
-          status: 'REABASTECIDO',
-          current_stock: newStock,
-          deficit: 0,
-          batch_number: restockBatch,
-          resolved_by: currentUserName,
-          resolved_at: new Date().toISOString(),
-          notes: `Reabastecido con ${newUnits} unidades por ${currentUserName}. Nuevo stock: ${newStock}.`,
-        };
-      }
-      return r;
-    });
-
-    setReports(updated);
+    await fetchReports();
     setShowRestockModal(false);
     setSelectedReport(null);
     setNotice(
@@ -323,6 +225,13 @@ Notas de Gestión: ${report.notes || 'Ninguna'}
         <div className="p-3.5 rounded-xl bg-teal-50 border border-teal-200 text-teal-950 text-xs font-medium flex items-center gap-2 animate-fadeIn">
           <CheckCircle2 className="w-4 h-4 text-teal-700 shrink-0" />
           <span>{notice}</span>
+        </div>
+      )}
+
+      {loadError && (
+        <div role="alert" className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-900 text-xs font-medium flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
+          <span>{loadError}</span>
         </div>
       )}
 

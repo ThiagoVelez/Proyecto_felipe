@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { DOCUMENT_TYPES, getErrorMessage, formatDoctorName } from '../utils/clinical';
 import BrandLogo from './BrandLogo';
+import { hasRole } from '../utils/roles';
 
 export const Header = ({
   onLogout,
@@ -50,23 +51,11 @@ export const Header = ({
     return () => document.removeEventListener('keydown', onKeyDown);
   }, []);
 
-  const currentUser = user || {
-    name: 'Dr. Santiago Vélez',
-    role: 'MEDICO',
-    license: 'RM-94821-VALLE',
-    branch: 'Sede Cartago - Central',
-  };
-  const isAdmin = currentUser.role === 'ADMIN' || currentUser.role_id === 1;
-  const isPharmacist =
-    currentUser.role === 'FARMACIA' ||
-    currentUser.role_id === 6 ||
-    currentUser.specialty?.toLowerCase().includes('farmac') ||
-    (currentUser.full_name || currentUser.name || '').toLowerCase().includes('farma');
-  const isLab =
-    currentUser.role === 'LABORATORIO' ||
-    Number(currentUser.role_id) === 7 ||
-    currentUser.specialty?.toLowerCase().includes('laborat') ||
-    currentUser.specialty?.toLowerCase().includes('bacteri');
+  // DEF-43 y DEF-80: sin usuario de respaldo con datos personales; el rol sale solo de la sesión
+  const currentUser = user || { name: '', role: '' };
+  const isAdmin = hasRole(currentUser, 'ADMIN');
+  const isPharmacist = hasRole(currentUser, 'FARMACIA');
+  const isLab = hasRole(currentUser, 'LABORATORIO');
   const roleLabel = isAdmin ? 'ADMIN TI' : isPharmacist ? 'FARMACIA' : isLab ? 'LABORATORIO' : currentUser.role || 'MEDICO';
 
   // Temporizador de sesion asistencial

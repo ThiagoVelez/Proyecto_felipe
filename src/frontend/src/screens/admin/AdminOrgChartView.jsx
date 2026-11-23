@@ -25,6 +25,7 @@ import {
   FlaskConical,
 } from 'lucide-react';
 import { apiClient } from '../../services/api';
+import { hasRole } from '../../utils/roles';
 
 /**
  * Obtiene el avatar persistido en almacenamiento local para un usuario determinado
@@ -45,6 +46,7 @@ const getPersonAvatar = (person) => {
 export const AdminOrgChartView = ({ users: initialUsers = [] }) => {
   const [users, setUsers] = useState(initialUsers);
   const [loading, setLoading] = useState(initialUsers.length === 0);
+  const [loadError, setLoadError] = useState('');
   const [selectedPerson, setSelectedPerson] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -67,7 +69,8 @@ export const AdminOrgChartView = ({ users: initialUsers = [] }) => {
       .then((data) => {
         setUsers(Array.isArray(data) ? data : []);
       })
-      .catch((err) => console.error('Error cargando personal para organigrama:', err))
+      // DEF-22/DEF-82: el error de carga se muestra en lugar de dejar el organigrama vacío sin aviso
+      .catch((err) => setLoadError(`No se pudo cargar el personal: ${err?.message || 'servicio no disponible'}`))
       .finally(() => setLoading(false));
   }, [initialUsers]);
 
@@ -107,74 +110,23 @@ export const AdminOrgChartView = ({ users: initialUsers = [] }) => {
     setPan({ x: 0, y: 0 });
   };
 
-  // Persona Cúspide: Gerencia General & Dirección Médica Institucional
-  const generalManager = {
-    id: 'gerente-01',
-    full_name: 'Dr. Felipe Gutiérrez Isaza',
-    role_name: 'GERENCIA GENERAL & DIRECCIÓN MÉDICA',
-    specialty: 'Dirección Médica Hospitalaria & Salud Pública',
-    branch: 'Sede Cartago - Hospital Central (Nivel II)',
-    document_type: 'CC',
-    document_number: '16289450',
-    email: 'gerencia@saludconecta.ips.gov.co',
-    phone: '315 892 1040',
-    professional_card: 'DIR-GEN-001',
-    is_active: true,
-    created_at: '2026-01-15T08:00:00Z',
-    bio: 'Director General y Decano Académico. Responsable de la habilitación ReTHUS, gobierno clínico, estándares de interoperabilidad RIPS (Res. 2275) y certificación ISO/IEC 25010 en la Red Norte del Valle.',
+  // DEF-22/DEF-43: la cúspide son los administradores registrados en el servidor, no una persona inventada
+  const directors = users.filter((u) => hasRole(u, 'ADMIN'));
+  const generalManager = directors[0] || {
+    id: 'sin-direccion',
+    full_name: 'Sin administrador registrado',
+    role_name: 'DIRECCIÓN ADMINISTRATIVA',
+    is_active: false,
   };
 
   // Clasificación jerárquica de personas registradas según su rol
-  const doctors = users.filter(
-    (u) =>
-      Number(u.role_id) === 2 ||
-      u.role === 'MEDICO' ||
-      u.specialty?.toLowerCase().includes('medicin') ||
-      u.specialty?.toLowerCase().includes('urgenc') ||
-      u.specialty?.toLowerCase().includes('pediatr')
-  );
-
-  const pharmacists = users.filter(
-    (u) =>
-      Number(u.role_id) === 6 ||
-      u.role === 'FARMACIA' ||
-      u.specialty?.toLowerCase().includes('farmac') ||
-      (u.full_name || '').toLowerCase().includes('farma')
-  );
-
-  const nurses = users.filter(
-    (u) =>
-      Number(u.role_id) === 3 ||
-      u.role === 'ENFERMERO' ||
-      u.role === 'ENFERMERA' ||
-      u.specialty?.toLowerCase().includes('enferm') ||
-      (u.full_name || '').toLowerCase().includes('enf')
-  );
-
-  const assistants = users.filter(
-    (u) =>
-      u.role === 'AUXILIAR' ||
-      u.specialty?.toLowerCase().includes('auxiliar') ||
-      u.specialty?.toLowerCase().includes('asistencial')
-  );
-
-  const labStaff = users.filter(
-    (u) =>
-      Number(u.role_id) === 7 ||
-      u.role === 'LABORATORIO' ||
-      u.specialty?.toLowerCase().includes('laborat') ||
-      u.specialty?.toLowerCase().includes('bacteri')
-  );
-
-  const administrative = users.filter(
-    (u) =>
-      Number(u.role_id) === 1 ||
-      Number(u.role_id) === 4 ||
-      Number(u.role_id) === 5 ||
-      u.role === 'ADMIN' ||
-      u.role === 'ADMISION' ||
-      u.role === 'AUDITOR'
-  );
+  // DEF-80: el personal se clasifica por su rol del servidor, no por el nombre o la especialidad
+  const doctors = users.filter((u) => hasRole(u, 'MEDICO'));
+  const pharmacists = users.filter((u) => hasRole(u, 'FARMACIA'));
+  const nurses = users.filter((u) => hasRole(u, 'ENFERMERO'));
+  const assistants = users.filter((u) => String(u.role || '').toUpperCase() === 'AUXILIAR');
+  const labStaff = users.filter((u) => hasRole(u, 'LABORATORIO'));
+  const administrative = users.filter((u) => hasRole(u, 'ADMIN', 'ADMISION', 'AUDITOR'));
 
   // Departamentos estructurados
   const departments = [
@@ -328,6 +280,11 @@ export const AdminOrgChartView = ({ users: initialUsers = [] }) => {
 
   return (
     <div className="space-y-4 animate-fade-in">
+      {loadError && (
+        <div role="alert" className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-900 text-xs font-medium">
+          {loadError}
+        </div>
+      )}
       {/* BARRA DE HERRAMIENTAS Y CONTROLES INTERACTIVOS */}
       <div className="bg-white rounded-3xl p-4 sm:p-5 border border-surface-container-high shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>

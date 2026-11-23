@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { apiClient } from '../services/api';
 import { REQUESTS_UPDATED_EVENT } from '../screens/DoctorRequestsInbox';
+import { hasRole } from '../utils/roles';
 
 export const Sidebar = ({
   currentView,
@@ -58,18 +59,9 @@ export const Sidebar = ({
       window.removeEventListener(REQUESTS_UPDATED_EVENT, refresh);
     };
   }, [isMedico]);
-  const isPharmacist =
-    user?.role === 'FARMACIA' ||
-    user?.role_id === 6 ||
-    user?.specialty?.toLowerCase().includes('farmac') ||
-    (user?.full_name || user?.name || '').toLowerCase().includes('farma');
-
-  const isNurse =
-    user?.role === 'ENFERMERO' ||
-    user?.role === 'ENFERMERA' ||
-    Number(user?.role_id) === 3 ||
-    user?.specialty?.toLowerCase().includes('enferm') ||
-    (user?.full_name || user?.name || '').toLowerCase().includes('enf');
+  // DEF-80: el rol sale solo de la sesión del servidor
+  const isPharmacist = hasRole(user, 'FARMACIA');
+  const isNurse = hasRole(user, 'ENFERMERO');
 
   const pharmacyMenuItems = [
     {
@@ -217,12 +209,7 @@ export const Sidebar = ({
     },
   ];
 
-  const isLab =
-    user?.role === 'LABORATORIO' ||
-    Number(user?.role_id) === 7 ||
-    user?.specialty?.toLowerCase().includes('laborat') ||
-    user?.specialty?.toLowerCase().includes('bacteri') ||
-    (user?.full_name || user?.name || '').toLowerCase().includes('laborat');
+  const isLab = hasRole(user, 'LABORATORIO');
 
   const labMenuItems = [
     {

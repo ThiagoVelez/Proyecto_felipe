@@ -331,6 +331,12 @@ export const apiClient = {
     });
   },
 
+  // Alergias registradas del paciente (DEF-74: la lista de pacientes no las trae)
+  async getPatientAllergies(patientId) {
+    const res = await this.request(`/patients/${encodeURIComponent(patientId)}/allergies`, { strict: true });
+    return Array.isArray(res?.allergies) ? res.allergies : [];
+  },
+
   async addPatientAllergy(patientId, data) {
     return this.request(`/patients/${encodeURIComponent(patientId)}/allergies`, {
       strict: true,

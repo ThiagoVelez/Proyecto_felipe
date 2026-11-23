@@ -150,7 +150,7 @@ export const ProfileScreen = ({ user, onUpdateUser, onNavigate }) => {
 
   const [bannerId, setBannerId] = useState(initialBanner);
   const [avatarUrl, setAvatarUrl] = useState(savedAvatarPersisted);
-  const [fullName, setFullName] = useState(user?.full_name || user?.name || 'Dr. Santiago Vélez');
+  const [fullName, setFullName] = useState(user?.full_name || user?.name || '');
   const [phone, setPhone] = useState(savedProfile.phone || user?.phone || '312 345 6789');
   const [specialty, setSpecialty] = useState(user?.specialty || 'Medicina de Urgencias');
   const [branch, setBranch] = useState(user?.branch || 'Sede Cartago - Hospital Central (Nivel II)');
@@ -277,20 +277,20 @@ export const ProfileScreen = ({ user, onUpdateUser, onNavigate }) => {
           <div className="relative z-10 flex items-start justify-between gap-3 flex-wrap">
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-white font-bold text-xs uppercase tracking-wider border border-white/20">
+                <span className="px-3 py-1 rounded-full bg-slate-950/80 backdrop-blur-md text-white font-bold text-xs uppercase tracking-wider border border-white/20">
                   SaludConecta IPS v2.4
                 </span>
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${currentBanner.bgBadge}`}>
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold border bg-white text-slate-900 border-white/80`}>
                   {currentBanner.name}
                 </span>
               </div>
 
               {/* Cápsula de Especialidad y Descripción del Banner (Ubicada en la parte superior para evitar cualquier colisión visual con el avatar o el óvalo) */}
-              <div className="max-w-md bg-black/45 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-white/15 text-white/95 shadow-xs">
+              <div className="max-w-md bg-slate-950/85 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-white/15 text-white shadow-xs">
                 <span className="text-[10px] font-bold text-white uppercase tracking-wider font-mono block">
                   {currentBanner.category}
                 </span>
-                <p className="text-xs text-white/90 font-medium line-clamp-1 mt-0.5">
+                <p className="text-xs text-white font-medium line-clamp-1 mt-0.5">
                   {currentBanner.description}
                 </p>
               </div>
@@ -301,7 +301,7 @@ export const ProfileScreen = ({ user, onUpdateUser, onNavigate }) => {
               <button
                 type="button"
                 onClick={() => setActiveTab('banners')}
-                className="px-4 py-2 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-md text-white text-xs font-semibold flex items-center gap-2 border border-white/30 transition-all cursor-pointer shadow-sm animate-fade-in"
+                className="px-4 py-2 rounded-xl bg-slate-950/80 hover:bg-slate-950/90 backdrop-blur-md text-white text-xs font-semibold flex items-center gap-2 border border-white/30 transition-all cursor-pointer shadow-sm animate-fade-in"
               >
                 <Sparkles className="w-4 h-4 text-amber-300" />
                 <span>Cambiar Portada ({MEDICAL_BANNERS.length} Banners)</span>
@@ -779,11 +779,11 @@ export const ProfileScreen = ({ user, onUpdateUser, onNavigate }) => {
 
             <div className="flex items-center justify-between p-4 rounded-2xl bg-surface-container-low">
               <div>
-                <div className="font-bold text-on-surface">Cifrado en Tránsito y Reposo</div>
-                <div className="text-[11px] text-outline">TLS 1.3 con RSA-256 y almacenamiento seguro</div>
+                <div className="font-bold text-on-surface">Protección de Credenciales</div>
+                <div className="text-[11px] text-outline">Contraseñas con bcrypt y folios clínicos sellados con SHA-256. El cifrado en tránsito lo da HTTPS en el despliegue.</div>
               </div>
               <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-800 text-xs font-bold">
-                AES-256 / TLS 1.3
+                bcrypt / SHA-256
               </span>
             </div>
           </div>

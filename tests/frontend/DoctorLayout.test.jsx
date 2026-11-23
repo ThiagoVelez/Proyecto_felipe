@@ -27,12 +27,12 @@ describe('Doctor Clinical Layout & Sidebar', () => {
     expect(handleSetView).toHaveBeenCalledWith('medical_kit');
   });
 
-  it('renderiza el Header asistencial con datos del Dr. Santiago Vélez y navega al perfil al hacer clic', () => {
+  it('renderiza el Header asistencial con datos del Dr. Médico Demo 01 y navega al perfil al hacer clic', () => {
     const mockUser = {
       id: 'usr-med-01',
       role: 'MEDICO',
       role_id: 2,
-      full_name: 'Dr. Santiago Vélez',
+      full_name: 'Dr. Médico Demo 01',
       email: 'svelez@saludconecta.ips.gov.co',
       professional_card: 'RM-94821-VALLE',
       specialty: 'Medicina General y Urgencias',
@@ -51,7 +51,7 @@ describe('Doctor Clinical Layout & Sidebar', () => {
       />
     );
 
-    expect(screen.getByText('Dr. Santiago Vélez')).toBeInTheDocument();
+    expect(screen.getByText('Dr. Médico Demo 01')).toBeInTheDocument();
     expect(screen.getByText('MEDICO')).toBeInTheDocument();
     expect(screen.getByText('RM-94821-VALLE')).toBeInTheDocument();
 
@@ -65,7 +65,7 @@ describe('Doctor Clinical Layout & Sidebar', () => {
       id: 'usr-med-01',
       role: 'MEDICO',
       role_id: 2,
-      full_name: 'Dr. Santiago Vélez',
+      full_name: 'Dr. Médico Demo 01',
       email: 'svelez@saludconecta.ips.gov.co',
       professional_card: 'RM-94821-VALLE',
       specialty: 'Medicina General y Urgencias',
@@ -83,7 +83,7 @@ describe('Doctor Clinical Layout & Sidebar', () => {
     expect(screen.getByText('Mi Perfil Asistencial')).toBeInTheDocument();
     fireEvent.click(screen.getByText('Editar Perfil'));
     expect(screen.getByText(/Cambiar Portada/i)).toBeInTheDocument();
-    expect(screen.getAllByText('Dr. Santiago Vélez').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Dr. Médico Demo 01').length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText('RM-94821-VALLE').length).toBeGreaterThanOrEqual(1);
   });
 
@@ -131,7 +131,7 @@ describe('Doctor Clinical Layout & Sidebar', () => {
       id: 'usr-pharm-01',
       role: 'FARMACIA',
       role_id: 6,
-      full_name: 'Farmaseutico Santiago Arcos',
+      full_name: 'Farmacia Demo 01',
       specialty: 'farmacia',
     };
     render(<Sidebar currentView="pharmacy" setCurrentView={handleSetView} user={pharmacistUser} />);
@@ -157,7 +157,7 @@ describe('Doctor Clinical Layout & Sidebar', () => {
       id: 'usr-enf-01',
       role: 'ENFERMERO',
       role_id: 3,
-      full_name: 'Enf. Elizabeth',
+      full_name: 'Enf. Enfermería Demo 01',
       specialty: 'Enfermera',
     };
     render(<Sidebar currentView="dashboard" setCurrentView={handleSetView} user={nurseUser} />);

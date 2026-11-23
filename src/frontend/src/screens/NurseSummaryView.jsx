@@ -33,6 +33,9 @@ export const NurseSummaryView = ({ user, patient, onNavigate, onSelectPatient })
   const [selectedPatientId, setSelectedPatientId] = useState(patient?.id || '');
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  // Alergias consultadas al servidor para el paciente seleccionado (DEF-74)
+  const [allergyState, setAllergyState] = useState({ status: 'idle', list: [] });
 
   // Carga pacientes y órdenes de cuidado asistencial
   useEffect(() => {
@@ -64,7 +67,8 @@ export const NurseSummaryView = ({ user, patient, onNavigate, onSelectPatient })
           setSelectedPatientId(pList[0].id);
         }
       } catch (err) {
-        console.error('Error cargando datos de enfermería:', err);
+        // DEF-82: el error se muestra en lugar de dejar la lista vacía sin aviso
+        setLoadError(err?.message || 'No se pudieron cargar los pacientes y órdenes de enfermería.');
       } finally {
         setLoading(false);
       }
@@ -73,13 +77,26 @@ export const NurseSummaryView = ({ user, patient, onNavigate, onSelectPatient })
     fetchData();
   }, [patient]);
 
+  useEffect(() => {
+    if (!selectedPatientId) return undefined;
+    let cancelled = false;
+    setAllergyState({ status: 'loading', list: [] });
+    apiClient
+      .getPatientAllergies(selectedPatientId)
+      .then((list) => !cancelled && setAllergyState({ status: 'ok', list }))
+      .catch(() => !cancelled && setAllergyState({ status: 'error', list: [] }));
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedPatientId]);
+
   // Paciente seleccionado actualmente
   const activePatient =
     patientsList.find((p) => p.id === selectedPatientId) || patient || patientsList[0];
   const activeOrder = nurseOrders.find((o) => o.patient_id === selectedPatientId);
 
   const patientAge = activePatient ? calculateAge(activePatient.birth_date) : null;
-  const nurseDisplayName = formatDoctorName(user?.full_name || user?.name || 'Enf. Elizabeth', 'ENFERMERO');
+  const nurseDisplayName = formatDoctorName(user?.full_name || user?.name || 'Personal de enfermería', 'ENFERMERO');
 
   // Filtrado de pacientes en el selector
   const filteredPatients = patientsList.filter((p) => {
@@ -108,6 +125,12 @@ export const NurseSummaryView = ({ user, patient, onNavigate, onSelectPatient })
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12 animate-fade-in">
+      {loadError && (
+        <div role="alert" className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-900 text-sm flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
+          <span>{loadError}</span>
+        </div>
+      )}
       {/* HEADER DE CABECERA ASISTENCIAL */}
       <div className="bg-white rounded-3xl p-6 sm:p-7 border border-surface-container-high shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
@@ -116,7 +139,7 @@ export const NurseSummaryView = ({ user, patient, onNavigate, onSelectPatient })
               Módulo Asistencial de Enfermería
             </span>
             <span className="text-xs text-outline font-medium">
-              Operador: <strong className="text-on-surface">{nurseDisplayName}</strong> • Sede Cartago
+              Operador: <strong className="text-on-surface">{nurseDisplayName}</strong>{user?.branch ? ` • ${user.branch}` : ''}
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold text-on-surface flex items-center gap-2.5">
@@ -235,7 +258,7 @@ export const NurseSummaryView = ({ user, patient, onNavigate, onSelectPatient })
                 <div>
                   <span className="text-outline block text-[11px] font-semibold">Grupo Sanguíneo</span>
                   <span className="font-mono font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded inline-block">
-                    {activePatient.blood_type || activeOrder?.blood_type || 'Sin registrar'}
+                    {activePatient.blood_type || 'Sin registrar'}
                   </span>
                 </div>
                 <div>
@@ -266,20 +289,35 @@ export const NurseSummaryView = ({ user, patient, onNavigate, onSelectPatient })
                 </span>
               </div>
 
-              {activePatient.allergies || activeOrder?.allergies ? (
+              {allergyState.status === 'loading' && (
+                <p className="text-xs text-outline">Consultando alergias registradas…</p>
+              )}
+              {allergyState.status === 'error' && (
+                <div role="alert" className="p-3.5 rounded-2xl bg-red-50 border border-red-200 text-red-900 text-xs flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
+                  <span>No se pudieron consultar las alergias. Verifíquelas con el paciente antes de administrar medicamentos.</span>
+                </div>
+              )}
+              {allergyState.status === 'ok' && allergyState.list.length > 0 && (
                 <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-950 text-xs space-y-1">
                   <div className="flex items-center gap-1.5 font-bold text-amber-900">
                     <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
                     <span>Reacciones Farmacológicas Reportadas:</span>
                   </div>
-                  <p className="font-medium pl-5 text-amber-900">
-                    {activePatient.allergies || activeOrder?.allergies}
-                  </p>
+                  <ul className="font-medium pl-5 text-amber-900 list-disc">
+                    {allergyState.list.map((a) => (
+                      <li key={a.id || a.active_ingredient}>
+                        {a.active_ingredient}
+                        {a.severity ? ` (${a.severity})` : ''}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-              ) : (
+              )}
+              {allergyState.status === 'ok' && allergyState.list.length === 0 && (
                 <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Sin alergias reportadas en el registro asistencial.</span>
+                  <span>Sin alergias registradas en la historia del paciente.</span>
                 </div>
               )}
             </div>
@@ -342,7 +380,7 @@ export const NurseSummaryView = ({ user, patient, onNavigate, onSelectPatient })
                     Diagnóstico Principal
                   </span>
                   <p className="text-xs font-bold text-on-surface mt-0.5">
-                    {activeOrder?.diagnosis || 'Consulta Externa / Valoración de Urgencias General'}
+                    {activeOrder?.diagnosis || 'Sin diagnóstico en la orden médica'}
                   </p>
                 </div>
                 <div className="p-3.5 rounded-2xl bg-surface-container-low border border-surface-container-high">

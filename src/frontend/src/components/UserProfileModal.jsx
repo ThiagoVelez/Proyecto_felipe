@@ -189,7 +189,7 @@ export const UserProfileModal = ({ isOpen, onClose, user, onUpdateUser }) => {
   const [avatarUrl, setAvatarUrl] = useState(
     user?.avatar || localStorage.getItem(`saludconecta_avatar_${userKey}`) || savedProfile.avatarUrl || ''
   );
-  const [fullName, setFullName] = useState(user?.full_name || user?.name || 'Dr. Santiago Vélez');
+  const [fullName, setFullName] = useState(user?.full_name || user?.name || '');
   const [phone, setPhone] = useState(savedProfile.phone || user?.phone || '312 345 6789');
   const [specialty, setSpecialty] = useState(user?.specialty || 'Medicina de Urgencias');
   const [branch, setBranch] = useState(user?.branch || 'Sede Cartago - Hospital Central (Nivel II)');
@@ -292,10 +292,10 @@ export const UserProfileModal = ({ isOpen, onClose, user, onUpdateUser }) => {
             {/* Badges Institucionales Superiores */}
             <div className="relative z-10 flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <span className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-white font-bold text-xs uppercase tracking-wider border border-white/20">
+                <span className="px-3 py-1 rounded-full bg-slate-950/80 backdrop-blur-md text-white font-bold text-xs uppercase tracking-wider border border-white/20">
                   SaludConecta IPS v2.4
                 </span>
-                <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${currentBanner.bgBadge}`}>
+                <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold border bg-white text-slate-900 border-white/80`}>
                   {currentBanner.name}
                 </span>
               </div>
@@ -304,7 +304,7 @@ export const UserProfileModal = ({ isOpen, onClose, user, onUpdateUser }) => {
               <button
                 type="button"
                 onClick={() => setActiveTab('banners')}
-                className="px-3 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-md text-white text-xs font-semibold flex items-center gap-1.5 border border-white/30 transition-all cursor-pointer shadow-sm"
+                className="px-3 py-1.5 rounded-xl bg-slate-950/80 hover:bg-slate-950/90 backdrop-blur-md text-white text-xs font-semibold flex items-center gap-1.5 border border-white/30 transition-all cursor-pointer shadow-sm"
               >
                 <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                 <span>Elegir Banner ({MEDICAL_BANNERS.length})</span>
@@ -312,9 +312,10 @@ export const UserProfileModal = ({ isOpen, onClose, user, onUpdateUser }) => {
             </div>
 
             {/* Texto de Especialidad en la Portada */}
-            <div className="relative z-10 hidden sm:block text-white/90">
-              <div className="text-xs font-medium text-white/80 uppercase tracking-widest">{currentBanner.category}</div>
-              <p className="text-[12px] text-white/90 max-w-md line-clamp-1">{currentBanner.description}</p>
+            {/* DEF-36: fondo oscuro detrás del texto para contraste AAA sobre cualquier parada del degradado */}
+            <div className="relative z-10 hidden sm:block text-white bg-slate-950/85 rounded-xl px-3 py-1.5 max-w-md">
+              <div className="text-xs font-medium text-white uppercase tracking-widest">{currentBanner.category}</div>
+              <p className="text-[12px] text-white line-clamp-1">{currentBanner.description}</p>
             </div>
           </div>
 
@@ -772,11 +773,11 @@ export const UserProfileModal = ({ isOpen, onClose, user, onUpdateUser }) => {
 
                     <div className="flex items-center justify-between p-3 rounded-xl bg-surface-container-low">
                       <div>
-                        <div className="font-bold text-on-surface">Cifrado en Tránsito y Reposo</div>
-                        <div className="text-[11px] text-outline">TLS 1.3 con RSA-256 y almacenamiento seguro</div>
+                        <div className="font-bold text-on-surface">Protección de Credenciales</div>
+                        <div className="text-[11px] text-outline">Contraseñas con bcrypt y folios clínicos sellados con SHA-256. El cifrado en tránsito lo da HTTPS en el despliegue.</div>
                       </div>
                       <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-800 text-[11px] font-bold">
-                        AES-256 / TLS 1.3
+                        bcrypt / SHA-256
                       </span>
                     </div>
                   </div>

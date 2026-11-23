@@ -1107,7 +1107,8 @@ export const LaboratoryScreen = ({ user }) => {
                   <input
                     type="text"
                     name="ordering_doctor"
-                    defaultValue="Dr. Santiago Vélez"
+                    required
+                    placeholder="Nombre del médico que ordena el examen"
                     className="w-full h-9 px-3 rounded-xl border border-surface-container-high bg-surface-container-low text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-purple-700"
                   />
                 </div>

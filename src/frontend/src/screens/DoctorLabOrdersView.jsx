@@ -195,7 +195,7 @@ export const DoctorLabOrdersView = ({ user, patient, onSelectPatient, onNavigate
   }, [patient]);
 
   const doctorName = formatDoctorName(
-    user?.full_name || user?.name || 'Dr. Santiago Vélez',
+    user?.full_name || user?.name || '',
     user?.role || 'MEDICO'
   );
   const doctorLicense = user?.professional_card || user?.license || 'RM-94821-VALLE';
@@ -947,7 +947,7 @@ export const DoctorLabOrdersView = ({ user, patient, onSelectPatient, onNavigate
                           {viewingResultOrder.ordering_doctor}
                         </div>
                         <div className="text-[11px] font-mono text-outline">
-                          santiago.velez@saludconecta.ips.gov.co
+                          medico.demo01@ips.example
                         </div>
                       </div>
 

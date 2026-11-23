@@ -48,7 +48,7 @@ describe('TreatmentFollowUpView - Prescripción Tripartita', () => {
 
     render(
       <TreatmentFollowUpView
-        user={{ id: 'doc-01', full_name: 'Dr. Santiago Vélez' }}
+        user={{ id: 'doc-01', full_name: 'Dr. Médico Demo 01' }}
         patient={mockPatient}
       />
     );

@@ -274,7 +274,7 @@ export const StaffRegisterModal = ({ isOpen, onClose, onRegisterSuccess, onBranc
                   <input
                     type="text"
                     name="full_name"
-                    placeholder="Ej: Dr. Santiago Vélez"
+                    placeholder="Nombre y apellidos completos"
                     value={formData.full_name}
                     onChange={handleChange}
                     required

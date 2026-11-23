@@ -8,8 +8,8 @@ import { apiClient } from '../../src/frontend/src/services/api';
 describe('Módulo Asistencial de Enfermería - Resumen Clínico & Lista de Chequeo', () => {
   const mockNurseUser = {
     id: 'usr-enf-0001',
-    name: 'Enf. Elizabeth',
-    full_name: 'Enf. Elizabeth',
+    name: 'Enf. Enfermería Demo 01',
+    full_name: 'Enf. Enfermería Demo 01',
     role: 'ENFERMERO',
     license: 'RM-6632-VALLE',
     specialty: 'Enfermera',
@@ -49,10 +49,28 @@ describe('Módulo Asistencial de Enfermería - Resumen Clínico & Lista de Chequ
     vi.clearAllMocks();
     localStorage.clear();
     listSpy = vi.spyOn(apiClient, 'listPatients').mockResolvedValue(mockPatients);
+    // DEF-74: las alergias se consultan al servidor para el paciente seleccionado
+    vi.spyOn(apiClient, 'getPatientAllergies').mockImplementation(async (id) =>
+      id === 'pat-001'
+        ? [
+            { id: 'al-1', active_ingredient: 'Penicilina', severity: 'SEVERA' },
+            { id: 'al-2', active_ingredient: 'Dipirona', severity: 'MODERADA' },
+          ]
+        : []
+    );
   });
 
   afterEach(() => {
     listSpy?.mockRestore();
+    vi.restoreAllMocks();
+  });
+
+  it('si no se pueden consultar las alergias lo advierte en lugar de decir que no tiene (DEF-74)', async () => {
+    vi.spyOn(apiClient, 'getPatientAllergies').mockRejectedValue(new Error('sin conexión'));
+    render(<NurseSummaryView user={mockNurseUser} patient={mockPatients[0]} onNavigate={vi.fn()} onSelectPatient={vi.fn()} />);
+
+    expect(await screen.findByText(/No se pudieron consultar las alergias/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Sin alergias registradas/i)).not.toBeInTheDocument();
   });
 
   it('renderiza NurseSummaryView con datos del paciente, diagnóstico y fármacos activos', async () => {
@@ -67,7 +85,7 @@ describe('Módulo Asistencial de Enfermería - Resumen Clínico & Lista de Chequ
 
     // Encabezado
     expect(await screen.findByText(/Resumen Clínico Asistencial \(HCE Básica\)/i)).toBeInTheDocument();
-    expect(screen.getByText(/Enf\. Elizabeth/i)).toBeInTheDocument();
+    expect(screen.getByText(/Enf\. Enfermería Demo 01/i)).toBeInTheDocument();
 
     // Datos del paciente
     expect(screen.getAllByText(/Carlos Mendoza/i).length).toBeGreaterThanOrEqual(1);
@@ -76,7 +94,8 @@ describe('Módulo Asistencial de Enfermería - Resumen Clínico & Lista de Chequ
 
     // Alerta de alergias
     expect(screen.getByText(/Alergias & Contraindicaciones/i)).toBeInTheDocument();
-    expect(screen.getByText(/Penicilina, Dipirona/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Penicilina \(SEVERA\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/Dipirona \(MODERADA\)/i)).toBeInTheDocument();
 
     // Botón para ir a lista de chequeo
     expect(screen.getAllByText(/Ir a Lista de Chequeo/i).length).toBeGreaterThanOrEqual(1);
@@ -94,11 +113,11 @@ describe('Módulo Asistencial de Enfermería - Resumen Clínico & Lista de Chequ
     vi.spyOn(apiClient, 'getNursingRecords').mockResolvedValue([]);
     vi.spyOn(apiClient, 'getNursingRecord').mockImplementation(async () => ({ ...care, saved: false }));
     const saveSpy = vi.spyOn(apiClient, 'saveNursingDuties').mockImplementation(async (_pid, duties) => {
-      care.duties = duties.map((d) => (d.completed ? { ...d, completedAt: '10:30', completedBy: 'Servidor: Enf. Elizabeth' } : d));
+      care.duties = duties.map((d) => (d.completed ? { ...d, completedAt: '10:30', completedBy: 'Servidor: Enf. Enfermería Demo 01' } : d));
       return { ...care, saved: true };
     });
     const noteSpy = vi.spyOn(apiClient, 'addNursingNote').mockImplementation(async (_pid, content) => {
-      care.notes = [{ id: 'n1', timestamp: '19/11/26, 10:31', author: 'Enf. Elizabeth', content }, ...care.notes];
+      care.notes = [{ id: 'n1', timestamp: '19/11/26, 10:31', author: 'Enf. Enfermería Demo 01', content }, ...care.notes];
       return { ...care, saved: true };
     });
 

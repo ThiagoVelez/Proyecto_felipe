@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import PainScaleSelector from '../../src/frontend/src/components/PainScaleSelector';
 import MedicalKitScreen, { getYoutubeEmbedUrl } from '../../src/frontend/src/screens/MedicalKitScreen';
-import api from '../../src/frontend/src/services/api';
+import api, { apiClient } from '../../src/frontend/src/services/api';
 
 vi.mock('../../src/frontend/src/services/api', () => ({
   apiClient: {
@@ -23,7 +23,7 @@ vi.mock('../../src/frontend/src/services/api', () => ({
 describe('Kit Informático Médico: Muro de Salud & Escala EVA (ISO/IEC 25010 & Res. 1995)', () => {
   const doctorUser = {
     id: 'doc-001',
-    full_name: 'Dr. Santiago Vélez',
+    full_name: 'Dr. Médico Demo 01',
     role: 'MEDICO',
     role_id: 2,
     specialty: 'Medicina de Urgencias',
@@ -32,16 +32,28 @@ describe('Kit Informático Médico: Muro de Salud & Escala EVA (ISO/IEC 25010 & 
 
   const nurseUser = {
     id: 'nur-001',
-    full_name: 'Enfermera Elizabeth',
+    full_name: 'Enf. Enfermería Demo 01',
     role: 'ENFERMERO',
     role_id: 3,
     specialty: 'Enfermería Asistencial',
     branch: 'Sede Cartago - Central',
   };
 
+  const publicacionServidor = {
+    id: 'post-1',
+    category: 'VACUNAS',
+    title: 'Esquema Nacional de Vacunación 2026: Dosis de Refuerzo Adulto',
+    summary: 'Guía de refuerzos.',
+    content: 'Contenido de la publicación guardada en el servidor.',
+    doctor_id: 'doc-001',
+    doctor_name: 'Dr. Médico Demo 01',
+    created_at: '2026-11-20T10:00:00Z',
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
     api.getHealthEducationPosts.mockResolvedValue([]);
+    apiClient.getHealthEducationPosts.mockResolvedValue([publicacionServidor]);
   });
 
   describe('1. Componente PainScaleSelector (Escala Visual Analógica EVA 0-10)', () => {
@@ -112,6 +124,24 @@ describe('Kit Informático Médico: Muro de Salud & Escala EVA (ISO/IEC 25010 & 
       expect(screen.getAllByText('Esquema de Vacunas').length).toBeGreaterThanOrEqual(1);
       expect(screen.getAllByText('Manejo de Enfermedades').length).toBeGreaterThanOrEqual(1);
       expect(screen.getByText(/Esquema Nacional de Vacunación 2026/i)).toBeInTheDocument();
+    });
+
+    it('si el servidor falla muestra el error y no publicaciones de ejemplo (DEF-21)', async () => {
+      apiClient.getHealthEducationPosts.mockRejectedValue(new Error('servicio no disponible'));
+      await act(async () => {
+        render(<MedicalKitScreen user={doctorUser} onNavigate={vi.fn()} />);
+      });
+
+      expect(await screen.findByText(/No se pudieron cargar las publicaciones del muro/i)).toBeInTheDocument();
+      expect(screen.queryByText(/Esquema Nacional de Vacunación 2026/i)).not.toBeInTheDocument();
+    });
+
+    it('el rol sale de la sesión y no del nombre o la especialidad (DEF-80)', async () => {
+      const enfermeraConNombreDr = { id: 'n-2', full_name: 'Dra. Enfermera', role: 'ENFERMERO', role_id: 3, specialty: 'Medicina interna' };
+      await act(async () => {
+        render(<MedicalKitScreen user={enfermeraConNombreDr} onNavigate={vi.fn()} />);
+      });
+      expect(screen.queryByTestId('create-health-post-btn')).not.toBeInTheDocument();
     });
 
     it('permite al médico ver el botón de Nueva Publicación y abrir el modal', async () => {
