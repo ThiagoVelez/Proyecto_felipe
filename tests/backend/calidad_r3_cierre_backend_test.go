@@ -413,3 +413,28 @@ func TestDEF44VerificarFolioInexistenteResponde404(t *testing.T) {
 		t.Fatalf("verificar un folio inexistente respondio %d", code)
 	}
 }
+
+// Fiber devuelve c.Params como vistas del bufer de la peticion, que se reutiliza. Si el handler guarda ese texto (por
+// ejemplo como clave del mapa en memoria) la clave cambia con la siguiente peticion. Fallaba de forma intermitente en
+// TestSedesEnElServidorConCRUDDelAdministrador (404 al eliminar la sede editada).
+func TestParametrosDeRutaNoSeCorrompenEntrePeticiones(t *testing.T) {
+	env := newCalidadEnv(t)
+	admin := crearUsuarioRol(t, env, "usr-admin-params", 1, "Administrador Demo", "Sede Cartago - Hospital Central")
+	for i := 0; i < 30; i++ {
+		estado, creada := peticionJSON(t, env, http.MethodPost, "/api/v1/admin/branches",
+			fmt.Sprintf(`{"name":"Sede Parametros %d","level":"Nivel I","municipality":"Cartago"}`, i), admin)
+		if estado != http.StatusCreated {
+			t.Fatalf("crear sede %d: %d", i, estado)
+		}
+		id := creada["id"].(string)
+		if estado, _ := peticionJSON(t, env, http.MethodPut, "/api/v1/admin/branches/"+id,
+			fmt.Sprintf(`{"name":"Sede Parametros %d","status":"En Espera"}`, i), admin); estado != http.StatusOK {
+			t.Fatalf("editar sede %d: %d", i, estado)
+		}
+		// Otra peticion con parametro de ruta reutiliza el bufer donde estaba el id de la anterior
+		peticionJSON(t, env, http.MethodDelete, "/api/v1/admin/branches/br-01", "", admin)
+		if estado, _ := peticionJSON(t, env, http.MethodDelete, "/api/v1/admin/branches/"+id, "", admin); estado != http.StatusNoContent {
+			t.Fatalf("iteracion %d: eliminar la sede recien editada respondio %d (clave corrompida)", i, estado)
+		}
+	}
+}

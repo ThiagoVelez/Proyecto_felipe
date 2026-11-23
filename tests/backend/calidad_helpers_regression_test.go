@@ -57,7 +57,8 @@ func newCalidadEnvConCodigo(t *testing.T, setupCode string) calidadEnv {
 	authService := services.NewAuthServiceFull(userRepo, memory.NewBranchMemoryRepo(ds), calidadJWTSecret, time.Hour, 7*24*time.Hour, setupCode)
 	recordService := services.NewClinicalRecordService(recordRepo, patientRepo, userRepo)
 
-	app := fiber.New()
+	// Immutable igual que adapters/http/server.go (produccion)
+	app := fiber.New(fiber.Config{Immutable: true})
 	httpadapter.SetupRoutes(app, httpadapter.RouterConfig{
 		AuthHandler:            handlers.NewAuthHandler(authService),
 		AdminHandler:           handlers.NewAdminHandler(services.NewAdminService(userRepo, auditRepo)),

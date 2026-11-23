@@ -31,7 +31,11 @@ type Server struct {
 // NewServer construye el servidor HTTP Fiber v2 bajo estandares de eficiencia y tolerancia a fallos.
 func NewServer(cfg ServerConfig) *Server {
 	app := fiber.New(fiber.Config{
-		AppName:      "SaludConecta IPS v2.4",
+		AppName: "SaludConecta IPS v2.4",
+		// Fiber devuelve parametros, cabeceras y consultas como vistas del bufer de la peticion, que se reutiliza.
+		// Con Immutable las copia: un handler puede guardarlas (por ejemplo como clave de un mapa) sin que cambien
+		// con la siguiente peticion. Sin esto la sede editada quedaba con una clave corrompida (404 al eliminarla).
+		Immutable:    true,
 		ServerHeader: "SaludConecta-API",
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,

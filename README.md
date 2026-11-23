@@ -2812,7 +2812,7 @@ La revisión R3 del Responsable de Calidad dejó unos 40 defectos abiertos o rea
 | Infraestructura y pruebas | DEF-35, 40, 44, 45, 90 | CSP, HSTS y Permissions-Policy en nginx; Vite 6.4.6 y Vitest 4 (npm audit en 0, bloqueante); golangci-lint en 0 sobre todo el código y `gofmt` en el pipeline; pruebas que verifican el caso real y el componente real. |
 | Documentación | DEF-02, 03, 28, 39, 41, 63, 91, 92 | RTM con RF01 a RF16 sin «100 % conforme»; listas de Trello y rangos vigentes; registros de la Entrega-s2 renombrados; diagrama de sesión corregido. |
 
-- **Resultado:** 96 de 97 defectos cerrados. DEF-44 queda corregido parcialmente: se acepta la complejidad ciclomática de 12 funciones, entre ellas la clasificación Manchester, porque refactorizar lógica clínica solo para bajar la métrica tiene más riesgo que beneficio.
+- **Resultado:** 97 de 98 defectos cerrados (incluido DEF-98, encontrado durante el cierre: los parámetros de ruta de Fiber se guardaban sin copiar y causaban un 404 intermitente; se activó `Immutable: true`). DEF-44 queda corregido parcialmente: se acepta la complejidad ciclomática de 12 funciones, entre ellas la clasificación Manchester, porque refactorizar lógica clínica solo para bajar la métrica tiene más riesgo que beneficio.
 - **Hallazgos nuevos del cierre:** la farmacia v2 compartía la tabla `prescriptions` con las recetas de la HCE y no funcionaba en MySQL; el repositorio de pacientes de PostgreSQL no leía el correo. Ambos quedaron corregidos y probados.
 - **Decisión del equipo:** con MySQL el servicio no arranca si no hay base de datos, porque el equipo trabaja con conexión en la nube.
 - **Verificación:**

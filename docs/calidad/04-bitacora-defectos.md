@@ -14,9 +14,9 @@
 <!-- v2: cierre de la revision R3, 23 nov 2026 -->
 > **Cierre de la revisión R3 (23 nov 2026).** Se trabajaron todos los defectos que seguían abiertos o reabiertos tras R3. Cada ficha tiene un bloque «Cierre v2» con la corrección y la prueba que la sostiene.
 >
-> - **Estado:** 96 cerrados y 1 corregido parcialmente (DEF-44: el lint quedó en 0 sobre todo el código; se acepta la deuda de complejidad ciclomática de 12 funciones). No quedan defectos críticos, altos ni medios abiertos.
+> - **Estado:** 97 cerrados y 1 corregido parcialmente (DEF-44: el lint quedó en 0 sobre todo el código; se acepta la deuda de complejidad ciclomática de 12 funciones). No quedan defectos críticos, altos ni medios abiertos.
 > - **Verificación con motores reales:** MariaDB (`TestMySQL…`, 8 pruebas) y PostgreSQL 16 (`TestPostgres…`, 2 pruebas), con la etiqueta `integration`.
-> - **Hallazgos nuevos durante el cierre:** la farmacia v2 no funcionaba en MySQL porque compartía la tabla `prescriptions` con las recetas v1 (resuelto en DEF-56); el repositorio de pacientes de PostgreSQL no leía el correo (resuelto en DEF-65).
+> - **Hallazgos nuevos durante el cierre:** DEF-98 (parámetros de ruta de Fiber guardados sin copiar; fallo intermitente con `-race`, resuelto con `Immutable: true` y la prueba `TestParametrosDeRutaNoSeCorrompenEntrePeticiones`); la farmacia v2 no funcionaba en MySQL porque compartía la tabla `prescriptions` con las recetas v1 (resuelto en DEF-56); el repositorio de pacientes de PostgreSQL no leía el correo (resuelto en DEF-65).
 > - **Decisión del equipo registrada:** con MySQL el servicio no arranca si no hay base de datos; el equipo trabaja con conexión en la nube y acepta ese comportamiento. El modo en memoria queda solo para `DB_DRIVER=memory` y para PostgreSQL con autorización explícita (DEF-10).
 > - **Pendientes fuera del código:** govulncheck no pudo ejecutarse en local (sin acceso a vuln.go.dev); se ejecuta en el pipeline.
 
@@ -172,6 +172,7 @@ El contenido de las columnas originales se transcribe sin cambios desde `docs/in
 | DEF-95 | Fallar de forma intermitente las pruebas de citas al borrar el directorio temporal mientras se genera el PDF | Pruebas | Baja | P3 | Cerrado (corregido, v2 19 nov 2026) |
 | DEF-96 | Descartar el correo, la dirección y la afiliación al registrar un paciente: los resultados de laboratorio no se podían enviar por correo | Backend / Frontend | Alta | P1 | Cerrado (corregido y verificado contra MySQL real, v2 20 nov 2026) |
 | DEF-97 | Cambiar al último perfil iniciado al recargar (F5) una pestaña cuando hay varias abiertas en el mismo navegador | Frontend / Sesión | Alta | P1 | Cerrado (corregido y verificado con Playwright, v2 20 nov 2026) |
+| DEF-98 | Corromper claves guardadas en memoria con parámetros de ruta de Fiber (vistas del búfer reutilizado): 404 intermitente al eliminar una sede editada | Backend | Media | P2 | Cerrado (corregido y verificado con -race, v2 23 nov 2026) |
 
 Los defectos DEF-46 a DEF-48 se detectaron en la primera ejecución del pipeline `calidad` sobre el PR (run `41361540450`, `anexos/evidencias/89-ci-run-41361540450.txt`).
 
