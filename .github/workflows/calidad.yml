@@ -130,7 +130,11 @@ jobs:
       - name: Pruebas de integracion de tests/backend completas (cobertura sobre los paquetes reales)
         if: ${{ !cancelled() }}
         working-directory: tests/backend
-        run: go test -count=1 -coverpkg=saludconecta-backend/... -coverprofile=coverage-tests.out ./...
+        # Los adaptadores MySQL y PostgreSQL solo se ejercitan con motor real (pruebas con etiqueta integration, que
+        # requieren MYSQL_TEST_* y PG_TEST_*); se excluyen del denominador para medir lo mismo que antes del cierre R3.
+        run: |
+          paquetes=$(cd ../../src/backend && go list ./... | grep -v -e '/adapters/storage/mysql$' -e '/adapters/storage/postgres$' | paste -sd, -)
+          go test -count=1 -coverpkg="$paquetes" -coverprofile=coverage-tests.out ./...
       - name: Verificar umbral de cobertura
         if: ${{ !cancelled() }}
         working-directory: tests/backend
