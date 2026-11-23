@@ -324,6 +324,47 @@ func (r *branchRepository) Delete(ctx context.Context, id string) error {
 func ensureLabNursingBranchTables(db *sql.DB) error {
 	ctx := context.Background()
 	stmts := []string{
+		// DEF-56: la farmacia v2 usa tablas propias. Antes compartia el nombre "prescriptions" con las recetas de la
+		// HCE, y la unica forma de que funcionara era una migracion que borraba las recetas v1.
+		`CREATE TABLE IF NOT EXISTS pharmacy_prescriptions (
+			id VARCHAR(36) PRIMARY KEY,
+			hce_id VARCHAR(36) NOT NULL,
+			doctor_id VARCHAR(36) NOT NULL,
+			patient_id VARCHAR(36) NOT NULL,
+			patient_document VARCHAR(20) NOT NULL,
+			patient_name VARCHAR(150) NOT NULL,
+			patient_eps VARCHAR(100) NOT NULL,
+			unique_code VARCHAR(64) NOT NULL,
+			treatment_notes TEXT,
+			subtotal_amount DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+			coverage_type ENUM('EPS_PBS_100', 'COPAY', 'PARTICULAR') NOT NULL DEFAULT 'EPS_PBS_100',
+			patient_payable_amount DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+			eps_coverage_amount DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+			payment_method ENUM('EPS_DIRECT', 'CASH', 'CREDIT_CARD', 'DEBIT_CARD', 'TRANSFER', 'EXEMPT') DEFAULT 'EPS_DIRECT',
+			status ENUM('PENDING', 'DISPENSED', 'CANCELLED') NOT NULL DEFAULT 'PENDING',
+			dispensed_at DATETIME NULL,
+			dispensed_by VARCHAR(36) NULL,
+			pdf_patient_path VARCHAR(255) NULL,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			UNIQUE KEY uq_pharmacy_presc_code (unique_code),
+			INDEX idx_pharmacy_inbox (patient_document, status),
+			CONSTRAINT fk_pharm_presc_doctor FOREIGN KEY (doctor_id) REFERENCES users(id),
+			CONSTRAINT fk_pharm_presc_patient FOREIGN KEY (patient_id) REFERENCES patients(id)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
+		`CREATE TABLE IF NOT EXISTS pharmacy_prescription_items (
+			id VARCHAR(36) PRIMARY KEY,
+			prescription_id VARCHAR(36) NOT NULL,
+			inventory_item_id VARCHAR(36) NOT NULL,
+			medication_name VARCHAR(150) NOT NULL,
+			dosage VARCHAR(50) NOT NULL,
+			quantity_prescribed INT NOT NULL,
+			unit_price DECIMAL(10, 2) NOT NULL,
+			total_item_price DECIMAL(10, 2) NOT NULL,
+			instructions TEXT,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			CONSTRAINT fk_pharm_item_presc FOREIGN KEY (prescription_id) REFERENCES pharmacy_prescriptions(id) ON DELETE CASCADE,
+			CONSTRAINT fk_pharm_item_inventory FOREIGN KEY (inventory_item_id) REFERENCES inventory_items(id)
+		) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`,
 		`CREATE TABLE IF NOT EXISTS lab_orders (
 			id VARCHAR(20) PRIMARY KEY,
 			patient_id VARCHAR(36) NULL,

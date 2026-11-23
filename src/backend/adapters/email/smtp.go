@@ -22,6 +22,18 @@ type Config struct {
 	From     string
 }
 
+// MaskEmail oculta el correo del paciente en los registros (DEF-62): "lucia@correo.example" -> "l***@correo.example".
+func MaskEmail(address string) string {
+	at := strings.LastIndex(address, "@")
+	if at <= 0 {
+		return "***"
+	}
+	return address[:1] + "***" + address[at:]
+}
+
+// OutboxDir es la carpeta donde se guardan los correos cuando no hay servidor SMTP.
+func (s *Service) OutboxDir() string { return s.outboxDir }
+
 // Service gestiona el envio asincrono de correos con adjuntos en segundo plano
 type Service struct {
 	cfg       Config
@@ -32,7 +44,7 @@ type Service struct {
 // NewService inicializa el servicio de correo asegurando la carpeta de auditoria de salida
 func NewService(cfg Config, log *logger.Logger) *Service {
 	outbox := "storage/outbox"
-	_ = os.MkdirAll(outbox, 0750)
+	_ = os.MkdirAll(outbox, 0700)
 	if cfg.From == "" {
 		cfg.From = "notificaciones@saludconecta.ips.gov.co"
 	}
@@ -59,7 +71,7 @@ func (s *Service) SendWithPDFAttachment(to string, subject, body, pdfFilename st
 
 		_ = os.WriteFile(filePath, []byte(content), 0600)
 		s.log.Info("Correo electronico despachado y registrado en outbox local", map[string]interface{}{
-			"destinatario": to,
+			"destinatario": MaskEmail(to),
 			"asunto":       subject,
 			"archivo_pdf":  pdfFilename,
 			"tamano_bytes": len(pdfData),

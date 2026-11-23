@@ -25,6 +25,9 @@ func NewGenerator(outputDir string) *Generator {
 	return &Generator{outputDir: outputDir}
 }
 
+// OutputDir es la carpeta donde se guardan los comprobantes PDF.
+func (g *Generator) OutputDir() string { return g.outputDir }
+
 // sanitize limpia cadenas de caracteres para texto seguro en streams PDF
 func sanitize(s string) string {
 	s = strings.ReplaceAll(s, "\\", "\\\\")

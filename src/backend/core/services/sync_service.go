@@ -10,7 +10,6 @@ import (
 	"github.com/google/uuid"
 	"saludconecta-backend/core/domain"
 	"saludconecta-backend/core/ports"
-	"saludconecta-backend/pkg/crypto"
 )
 
 type syncService struct {
@@ -131,17 +130,7 @@ func (s *syncService) processOnce(ctx context.Context, doctorID, batchID string,
 				}
 			}
 
-			computedHash := crypto.CalculateChainedRecordHash(
-				previousHash,
-				rec.PatientID,
-				rec.DoctorID,
-				rec.Anamnesis,
-				rec.PhysicalExam,
-				rec.CIE11Code,
-				rec.DiagnosisDescription,
-				rec.TreatmentPlan,
-				sealed.Format(time.RFC3339),
-			)
+			computedHash := sealRecordHash(previousHash, &rec, sealed)
 			rec.PreviousHash = &previousHash
 			rec.HashSHA256 = &computedHash
 			chainHeads[rec.PatientID] = computedHash

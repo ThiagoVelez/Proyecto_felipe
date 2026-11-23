@@ -24,6 +24,9 @@ var knownInsecureSecrets = []string{
 	"secret",
 }
 
+// DefaultTrustedProxies son los origenes cuya cabecera X-Real-IP se acepta si no se configura TRUSTED_PROXIES.
+const DefaultTrustedProxies = "127.0.0.1,::1"
+
 // Config concentra la configuracion de arranque ya validada.
 type Config struct {
 	Port           string
@@ -46,6 +49,10 @@ type Config struct {
 	// SetupCode (TI_SETUP_CODE) habilita el registro del Encargado de TI desde el inicio de sesion
 	SetupCode      string
 	DBConnectTries int
+	// AllowPostgresMemoryModules (ALLOW_POSTGRES_MEMORY_MODULES=true) acepta arrancar PostgreSQL con modulos en memoria (DEF-10)
+	AllowPostgresMemoryModules bool
+	// DocumentRetention (RETENCION_DOCUMENTOS_DIAS) es el plazo de las copias locales de PDF y correos (DEF-62)
+	DocumentRetention time.Duration
 }
 
 func getEnv(lookup func(string) string, key, fallback string) string {
@@ -122,9 +129,17 @@ func LoadFrom(lookup func(string) string) (*Config, error) {
 		CodPrestador:  getEnv(lookup, "COD_PRESTADOR", "000000000000"),
 		AdminEmail:    strings.TrimSpace(lookup("ADMIN_INITIAL_EMAIL")),
 
-		AdminPassword:  lookup("ADMIN_INITIAL_PASSWORD"),
-		SetupCode:      strings.TrimSpace(lookup("TI_SETUP_CODE")),
-		DBConnectTries: 10,
+		AdminPassword:              lookup("ADMIN_INITIAL_PASSWORD"),
+		SetupCode:                  strings.TrimSpace(lookup("TI_SETUP_CODE")),
+		DBConnectTries:             10,
+		AllowPostgresMemoryModules: strings.EqualFold(strings.TrimSpace(lookup("ALLOW_POSTGRES_MEMORY_MODULES")), "true"),
+	}
+
+	cfg.DocumentRetention = 30 * 24 * time.Hour
+	if days := strings.TrimSpace(lookup("RETENCION_DOCUMENTOS_DIAS")); days != "" {
+		if val, err := strconv.Atoi(days); err == nil && val > 0 {
+			cfg.DocumentRetention = time.Duration(val) * 24 * time.Hour
+		}
 	}
 
 	if accessMinsStr := lookup("JWT_ACCESS_TTL_MINUTES"); accessMinsStr != "" {
@@ -143,8 +158,10 @@ func LoadFrom(lookup func(string) string) (*Config, error) {
 		return nil, err
 	}
 
-	// Por defecto solo se confia en cabeceras de reenvio provenientes de redes privadas (proxy inverso interno)
-	proxies := getEnv(lookup, "TRUSTED_PROXIES", "127.0.0.1,::1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16")
+	// DEF-15: por defecto solo se confia en X-Real-IP enviada desde la misma maquina. Confiar en redes privadas
+	// completas permitia que cualquier equipo de la red local rotara la cabecera y evadiera el limite por IP.
+	// Detras de un proxy inverso se declara su IP exacta (docker-compose fija la del contenedor nginx).
+	proxies := getEnv(lookup, "TRUSTED_PROXIES", DefaultTrustedProxies)
 	for _, proxy := range strings.Split(proxies, ",") {
 		if proxy = strings.TrimSpace(proxy); proxy != "" {
 			cfg.TrustedProxies = append(cfg.TrustedProxies, proxy)

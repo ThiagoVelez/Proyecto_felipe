@@ -74,23 +74,23 @@ func (h *AppointmentHandler) Create(c *fiber.Ctx) error {
 		if errors.Is(err, domain.ErrDoctorScheduleOverlap) {
 			return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": err.Error()})
 		}
+		if errors.Is(err, domain.ErrPatientNotFound) {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": err.Error()})
+		}
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"message":     "Cita programada con éxito. El comprobante en PDF ha sido enviado al correo del paciente.",
+		"message":     "Cita programada con éxito. El comprobante PDF se genera y se envía al correo del paciente en segundo plano.",
 		"appointment": created,
 	})
 }
 
 // GetByDoctor retorna todas las citas programadas para un médico determinado
 func (h *AppointmentHandler) GetByDoctor(c *fiber.Ctx) error {
-	doctorID := c.Params("id")
-	if doctorID == "" {
-		current := c.Locals("user_id")
-		if current != nil {
-			doctorID = current.(string)
-		}
+	doctorID, ok := ownAgenda(c, c.Params("id"))
+	if !ok {
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "solo puede consultar su propia agenda"})
 	}
 
 	appointments, err := h.svc.GetDoctorAppointments(c.Context(), doctorID)
@@ -102,12 +102,9 @@ func (h *AppointmentHandler) GetByDoctor(c *fiber.Ctx) error {
 
 // GetByRange filtra citas por rango de fechas para el calendario
 func (h *AppointmentHandler) GetByRange(c *fiber.Ctx) error {
-	doctorID := c.Query("doctor_id")
-	if doctorID == "" {
-		current := c.Locals("user_id")
-		if current != nil {
-			doctorID = current.(string)
-		}
+	doctorID, ok := ownAgenda(c, c.Query("doctor_id"))
+	if !ok {
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "solo puede consultar su propia agenda"})
 	}
 	start := c.Query("start")
 	end := c.Query("end")
@@ -119,3 +116,14 @@ func (h *AppointmentHandler) GetByRange(c *fiber.Ctx) error {
 	return c.JSON(appointments)
 }
 
+// ownAgenda resuelve la agenda pedida: la del medico de la sesion. Pedir la de otro medico se rechaza (DEF-69).
+func ownAgenda(c *fiber.Ctx, requested string) (string, bool) {
+	current, _ := c.Locals("user_id").(string)
+	if current == "" {
+		return "", false
+	}
+	if requested != "" && requested != current {
+		return "", false
+	}
+	return current, true
+}

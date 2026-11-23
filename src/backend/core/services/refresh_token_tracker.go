@@ -38,8 +38,32 @@ func (t *refreshTokenTracker) Register(userID, jti string, expiresAt time.Time) 
 		userID:    userID,
 		expiresAt: expiresAt,
 	}
-	t.userJTI[userID] = append(t.userJTI[userID], jti)
+	// DEF-73: al registrar se podan los identificadores del usuario que ya no estan activos (rotados o vencidos),
+	// asi la lista por usuario queda acotada a sus sesiones vigentes.
+	t.userJTI[userID] = append(t.pruneUserLocked(userID), jti)
 	t.cleanExpiredLocked()
+}
+
+// pruneUserLocked retorna los identificadores del usuario que siguen activos y sin vencer.
+func (t *refreshTokenTracker) pruneUserLocked(userID string) []string {
+	now := t.now()
+	current := t.userJTI[userID]
+	kept := current[:0]
+	for _, id := range current {
+		if sess, ok := t.active[id]; ok && !now.After(sess.expiresAt) {
+			kept = append(kept, id)
+		} else if ok {
+			delete(t.active, id)
+		}
+	}
+	return kept
+}
+
+// trackedCount retorna cuantos identificadores conserva el registro de un usuario (pruebas de DEF-73).
+func (t *refreshTokenTracker) trackedCount(userID string) int {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	return len(t.userJTI[userID])
 }
 
 // ConsumeAndRotate valida el token actual, lo revoca para rotarlo y detecta si ya habia sido consumido previamente.
@@ -123,6 +147,13 @@ func (t *refreshTokenTracker) cleanExpiredLocked() {
 	for jti, revTime := range t.revoked {
 		if now.Sub(revTime) > 24*time.Hour {
 			delete(t.revoked, jti)
+		}
+	}
+	for userID := range t.userJTI {
+		if kept := t.pruneUserLocked(userID); len(kept) == 0 {
+			delete(t.userJTI, userID)
+		} else {
+			t.userJTI[userID] = kept
 		}
 	}
 }

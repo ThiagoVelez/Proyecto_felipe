@@ -1750,7 +1750,7 @@ Siguiendo la política de protección de infraestructura sensible (Regla 27), to
 | `ADMIN_INITIAL_PASSWORD` | Clave inicial para inicialización automática                                                          | `defina_una_clave_privada_larga`                        |
 | `TI_SETUP_CODE`          | Código de instalación (mínimo 12 caracteres) que exige el registro del Encargado de TI desde el login. Sin él, ese registro queda deshabilitado | `defina_un_codigo_de_instalacion`                       |
 | `IPS_NIT`                | NIT de la institución prestadora de salud                                                             | `900123456`                                             |
-| `TRUSTED_PROXIES`        | IPs/CIDR del proxy inverso cuya cabecera `X-Real-IP` se acepta como IP del cliente                    | `127.0.0.1,::1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16` |
+| `TRUSTED_PROXIES`        | IPs/CIDR del proxy inverso cuya cabecera `X-Real-IP` se acepta como IP del cliente                    | `127.0.0.1,::1` (en Docker: `127.0.0.1,::1,172.28.0.10`, la IP fija de nginx) |
 | `DB_ROOT_PASSWORD`       | Solo `docker compose`: clave root de MySQL                                                            | `defina_una_clave_privada`                              |
 | `COD_PRESTADOR`          | Código de habilitación MinSalud (12 dígitos)                                                          | `110010999901`                                          |
 

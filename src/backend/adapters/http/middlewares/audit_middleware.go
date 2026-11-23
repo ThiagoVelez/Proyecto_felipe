@@ -101,8 +101,19 @@ func AuditMiddleware(log *logger.Logger, auditRepo ports.AuditRepository) fiber.
 }
 
 // isSensitivePath identifica los recursos cuya lectura debe quedar en la bitacora forense.
+// sensitivePathMarkers son los segmentos de ruta que devuelven datos de salud o datos personales de pacientes.
+// DEF-71: incluye los modulos v2 (tratamientos, farmacia, citas, laboratorio, enfermeria, triaje y solicitudes).
+var sensitivePathMarkers = []string{
+	"/clinical-records", "/patients", "/prescriptions", "/anatomical-notes",
+	"/treatments", "/pharmacy/inbox", "/pharmacy/prescriptions", "/appointments", "/appointment-requests",
+	"/lab-orders", "/nursing", "/triage",
+}
+
 func isSensitivePath(path string) bool {
-	return strings.Contains(path, "/clinical-records") ||
-		strings.Contains(path, "/patients") ||
-		strings.Contains(path, "/prescriptions")
+	for _, marker := range sensitivePathMarkers {
+		if strings.Contains(path, marker) {
+			return true
+		}
+	}
+	return false
 }

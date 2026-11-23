@@ -2,6 +2,7 @@ package domain
 
 import (
 	"errors"
+	"strings"
 	"time"
 )
 
@@ -109,4 +110,20 @@ func (p *Patient) IsAllergicToIngredient(ingredient string) (bool, *PatientAller
 		return true, allergy
 	}
 	return false, nil
+}
+
+// NormalizeDocument deja el numero de documento en una forma comparable (DEF-86): sin espacios, puntos ni guiones,
+// en mayusculas y, si es numerico, sin ceros a la izquierda (el PDF417 de la cedula rellena con ceros).
+func NormalizeDocument(document string) string {
+	var b strings.Builder
+	for _, r := range strings.ToUpper(strings.TrimSpace(document)) {
+		if (r >= '0' && r <= '9') || (r >= 'A' && r <= 'Z') {
+			b.WriteRune(r)
+		}
+	}
+	out := b.String()
+	if out != "" && strings.Trim(out, "0123456789") == "" {
+		out = strings.TrimLeft(out, "0")
+	}
+	return out
 }

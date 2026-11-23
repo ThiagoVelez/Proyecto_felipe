@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -30,7 +31,24 @@ type RepositoryBundle struct {
 	Nursing            ports.NursingRepository
 	Branch             ports.BranchRepository
 	Close              func() error
+	// Ping comprueba que el motor de persistencia responde (DEF-32: /health/ready). Nil en memoria.
+	Ping func(ctx context.Context) error
+	// Mode describe la persistencia efectiva: "persistente", "memoria" o "mixta".
+	Mode string
+	// MemoryModules lista los modulos que se guardan en memoria con un motor real (DEF-10).
+	MemoryModules []string
 }
+
+// Modos de persistencia expuestos en /health/ready.
+const (
+	ModePersistent = "persistente"
+	ModeMemory     = "memoria"
+	ModeMixed      = "mixta"
+)
+
+// postgresMemoryModules son los modulos v2 que aun no tienen adaptador PostgreSQL.
+var postgresMemoryModules = []string{"citas", "inventario", "recetas_v2", "educacion_en_salud", "reportes_farmacia",
+	"solicitudes_de_cita", "laboratorio", "enfermeria", "sedes"}
 
 // Config encapsula la parametrizacion del motor de persistencia.
 type Config struct {
@@ -44,6 +62,8 @@ type Config struct {
 	MaxIdleConns    int
 	ConnMaxLifetime time.Duration
 	ConnMaxIdleTime time.Duration
+	// AllowPostgresMemoryModules autoriza arrancar con PostgreSQL aunque los modulos v2 queden en memoria (DEF-10).
+	AllowPostgresMemoryModules bool
 }
 
 // NewRepositoryBundle fabrica la instancia del adaptador secundario correspondiente.
@@ -74,6 +94,7 @@ func NewRepositoryBundle(cfg Config, log *logger.Logger) (*RepositoryBundle, err
 			LabOrder:           memory.NewLabOrderMemoryRepo(ds),
 			Nursing:            memory.NewNursingMemoryRepo(ds),
 			Branch:             memory.NewBranchMemoryRepo(ds),
+			Mode:               ModeMemory,
 			Close: func() error {
 				return nil
 			},
@@ -129,12 +150,23 @@ func NewRepositoryBundle(cfg Config, log *logger.Logger) (*RepositoryBundle, err
 			LabOrder:           mysql.NewLabOrderRepository(db),
 			Nursing:            mysql.NewNursingRepository(db),
 			Branch:             mysql.NewBranchRepository(db),
+			Mode:               ModePersistent,
+			Ping:               db.PingContext,
 			Close: func() error {
 				return db.Close()
 			},
 		}, nil
 
 	case "postgres":
+		// DEF-10: con PostgreSQL los modulos v2 se guardan en memoria y se pierden al reiniciar. No se arranca en ese
+		// modo sin una autorizacion explicita del operador.
+		if !cfg.AllowPostgresMemoryModules {
+			return nil, fmt.Errorf("con DB_DRIVER=postgres los modulos %s se guardarian en memoria y se perderian al reiniciar; "+
+				"use DB_DRIVER=mysql o defina ALLOW_POSTGRES_MEMORY_MODULES=true para aceptarlo de forma explicita", strings.Join(postgresMemoryModules, ", "))
+		}
+		log.Warn("PostgreSQL en modo MIXTO: estos modulos se guardan en memoria y se pierden al reiniciar", map[string]interface{}{
+			"modulos": strings.Join(postgresMemoryModules, ", "),
+		})
 		log.Info("Activando Adaptador de Persistencia PostgreSQL", map[string]interface{}{
 			"host": cfg.Host,
 			"port": cfg.Port,
@@ -181,6 +213,9 @@ func NewRepositoryBundle(cfg Config, log *logger.Logger) (*RepositoryBundle, err
 			LabOrder:           memory.NewLabOrderMemoryRepo(ds),
 			Nursing:            memory.NewNursingMemoryRepo(ds),
 			Branch:             memory.NewBranchMemoryRepo(ds),
+			Mode:               ModeMixed,
+			MemoryModules:      postgresMemoryModules,
+			Ping:               db.PingContext,
 			Close: func() error {
 				return db.Close()
 			},

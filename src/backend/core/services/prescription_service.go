@@ -88,15 +88,10 @@ func (s *prescriptionService) IssuePrescription(ctx context.Context, prescriptio
 	}
 	prescription.CreatedAt = time.Now().UTC()
 
-	// Persistir la prescripcion y descontar inventario
+	// Guardar la receta y descontar el inventario en una sola transaccion (DEF-38): con dos recetas simultaneas
+	// que juntas superan el stock, la segunda se rechaza completa y no queda guardada.
 	if err := s.prescRepo.Create(ctx, prescription); err != nil {
 		return nil, err
-	}
-
-	for medicationID, quantity := range requested {
-		if err := s.prescRepo.DeductStock(ctx, medicationID, quantity); err != nil {
-			return nil, err
-		}
 	}
 
 	return prescription, nil

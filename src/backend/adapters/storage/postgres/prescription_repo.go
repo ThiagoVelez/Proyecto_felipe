@@ -68,6 +68,19 @@ func (r *prescriptionRepo) Create(ctx context.Context, prescription *domain.Pres
 		}
 	}
 
+	// DEF-38: el descuento va en la misma transaccion; si un medicamento no alcanza se revierte la receta completa
+	for medicationID, quantity := range prescription.QuantitiesByMedication() {
+		res, err := tx.ExecContext(ctx, `UPDATE medications_catalog SET stock_quantity = stock_quantity - $1 WHERE id = $2 AND stock_quantity >= $3`, quantity, medicationID, quantity)
+		if err != nil {
+			return err
+		}
+		if affected, err := res.RowsAffected(); err != nil {
+			return err
+		} else if affected == 0 {
+			return domain.ErrInsufficientMedicationStock
+		}
+	}
+
 	return tx.Commit()
 }
 
@@ -206,24 +219,4 @@ func (r *prescriptionRepo) SearchMedications(ctx context.Context, query string) 
 		list = append(list, m)
 	}
 	return list, rows.Err()
-}
-
-func (r *prescriptionRepo) DeductStock(ctx context.Context, medicationID int, quantity int) error {
-	query := `
-		UPDATE medications_catalog
-		SET stock_quantity = stock_quantity - $1
-		WHERE id = $2 AND stock_quantity >= $3
-	`
-	res, err := r.db.ExecContext(ctx, query, quantity, medicationID, quantity)
-	if err != nil {
-		return err
-	}
-	affected, err := res.RowsAffected()
-	if err != nil {
-		return err
-	}
-	if affected == 0 {
-		return domain.ErrInsufficientMedicationStock
-	}
-	return nil
 }

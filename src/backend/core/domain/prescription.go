@@ -7,7 +7,11 @@ import (
 )
 
 var (
-	ErrPrescriptionNotFound        = errors.New("receta o prescripcion medica no encontrada")
+	ErrPrescriptionNotFound = errors.New("receta o prescripcion medica no encontrada")
+	// ErrAmbiguousPrescription: el documento tiene varias recetas pendientes y se debe buscar por codigo (DEF-64)
+	ErrAmbiguousPrescription = errors.New("el paciente tiene varias recetas pendientes; busque por el codigo unico de la receta")
+	// ErrDuplicatePrescriptionCode: el codigo generado ya existe (se reintenta con otro)
+	ErrDuplicatePrescriptionCode   = errors.New("el codigo de la receta ya existe")
 	ErrMedicationNotFound          = errors.New("medicamento no hallado en el catalogo institucional")
 	ErrInsufficientMedicationStock = errors.New("cantidad insuficiente en stock hospitalario")
 	ErrEmptyPrescriptionItems      = errors.New("la prescripcion medica debe contener al menos un item farmacologico")
@@ -62,4 +66,13 @@ type Prescription struct {
 	Observations     *string            `json:"observations"`
 	CreatedAt        time.Time          `json:"created_at"`
 	Items            []PrescriptionItem `json:"items"`
+}
+
+// QuantitiesByMedication suma las unidades pedidas de cada medicamento (un farmaco puede repetirse en la receta).
+func (p *Prescription) QuantitiesByMedication() map[int]int {
+	out := make(map[int]int)
+	for _, item := range p.Items {
+		out[item.MedicationID] += item.TotalQuantity
+	}
+	return out
 }

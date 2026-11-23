@@ -73,9 +73,10 @@ func TestRBACMatrizRutasPorRol(t *testing.T) {
 		{http.MethodPut, "/api/v1/health-education/x", []string{"MEDICO"}},
 		{http.MethodDelete, "/api/v1/health-education/x", []string{"MEDICO"}},
 		{http.MethodPost, "/api/v2/triage/", []string{"ENFERMERO", "MEDICO"}},
-		{http.MethodPost, "/api/v2/appointments/", []string{"MEDICO", "ADMIN", "ENFERMERO"}},
-		{http.MethodGet, "/api/v2/appointments/", []string{"MEDICO", "ADMIN", "ENFERMERO"}},
-		{http.MethodGet, "/api/v2/appointments/doctor/x", []string{"MEDICO", "ADMIN", "ENFERMERO"}},
+		// DEF-69: la agenda es solo del medico de la sesion; la de otro medico responde 403 (ver prueba de agenda)
+		{http.MethodPost, "/api/v2/appointments/", []string{"MEDICO"}},
+		{http.MethodGet, "/api/v2/appointments/", []string{"MEDICO"}},
+		{http.MethodGet, "/api/v2/appointments/doctor/usr-rbac-medico", []string{"MEDICO"}},
 		{http.MethodPost, "/api/v2/treatments/dispatch", []string{"MEDICO"}},
 		{http.MethodGet, "/api/v2/treatments/x", []string{"MEDICO", "FARMACIA", "ADMIN", "ENFERMERO"}},
 		{http.MethodGet, "/api/v2/pharmacy/inbox", []string{"FARMACIA", "ADMIN", "MEDICO", "ENFERMERO"}},

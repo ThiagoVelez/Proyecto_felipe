@@ -60,12 +60,13 @@ type ClinicalRecordRepository interface {
 
 // PrescriptionRepository define el contrato para recetas medicas y catalogo de medicamentos CUM.
 type PrescriptionRepository interface {
+	// Create guarda la receta y descuenta el stock de sus medicamentos en una sola transaccion (DEF-38).
+	// Si algun medicamento no alcanza, retorna domain.ErrInsufficientMedicationStock y no guarda nada.
 	Create(ctx context.Context, prescription *domain.Prescription) error
 	GetByID(ctx context.Context, id string) (*domain.Prescription, error)
 	GetByClinicalRecordID(ctx context.Context, recordID string) (*domain.Prescription, error)
 	GetMedicationByID(ctx context.Context, id int) (*domain.MedicationCatalog, error)
 	SearchMedications(ctx context.Context, query string) ([]domain.MedicationCatalog, error)
-	DeductStock(ctx context.Context, medicationID int, quantity int) error
 }
 
 // AuditRepository define el contrato para la bitacora forense y transacciones RIPS.
@@ -78,6 +79,8 @@ type AuditRepository interface {
 
 // AppointmentRepository define el contrato para el agendamiento y calendario medico.
 type AppointmentRepository interface {
+	// Create comprueba que el medico no tenga otra cita a menos de 20 minutos y guarda la nueva en una sola
+	// operacion atomica (DEF-69); si se cruza retorna domain.ErrDoctorScheduleOverlap.
 	Create(ctx context.Context, appointment *domain.Appointment) error
 	GetByID(ctx context.Context, id string) (*domain.Appointment, error)
 	GetByDoctorID(ctx context.Context, doctorID string) ([]domain.Appointment, error)

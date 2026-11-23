@@ -60,9 +60,8 @@ func (s *treatmentService) DispatchTreatment(ctx context.Context, presc *domain.
 		presc.ID = uuid.New().String()
 	}
 
-	if presc.UniqueCode == "" {
-		presc.UniqueCode = GenerateRandomRXCode()
-	}
+	// DEF-64: el codigo lo genera siempre el servidor; el que envie el cliente se ignora
+	presc.UniqueCode = GenerateRandomRXCode()
 	if presc.HCEID == "" {
 		presc.HCEID = uuid.New().String()
 	}
@@ -142,8 +141,15 @@ func (s *treatmentService) DispatchTreatment(ctx context.Context, presc *domain.
 		presc.PatientPayableAmount = subtotal
 	}
 
-	// 5. Persistencia transaccional sincrona
-	if err := s.prescRepo.CreateWithItemsTx(ctx, presc); err != nil {
+	// 5. Persistencia transaccional sincrona. Si el codigo aleatorio ya existe (restriccion UNIQUE) se genera otro.
+	var err error
+	for attempt := 0; attempt < 5; attempt++ {
+		if err = s.prescRepo.CreateWithItemsTx(ctx, presc); !errors.Is(err, domain.ErrDuplicatePrescriptionCode) {
+			break
+		}
+		presc.UniqueCode = GenerateRandomRXCode()
+	}
+	if err != nil {
 		return nil, fmt.Errorf("error persistiendo prescripcion tripartita: %w", err)
 	}
 
@@ -172,4 +178,3 @@ func (s *treatmentService) DispatchTreatment(ctx context.Context, presc *domain.
 func (s *treatmentService) GetPrescriptionByID(ctx context.Context, id string) (*domain.PrescriptionV2, error) {
 	return s.prescRepo.GetByID(ctx, id)
 }
-

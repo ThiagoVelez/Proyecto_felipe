@@ -74,6 +74,26 @@ func CalculateChainedRecordHash(previousHash, patientID, doctorID, anamnesis, ph
 	return ComputeSHA256(normalized)
 }
 
+// CalculateChainedRecordHashV2 es el sello vigente de los folios (DEF-66): ademas de los campos de la version 1
+// incluye la escala de dolor EVA, sus observaciones y el mapeo anatomico, que antes podian cambiar sin romper el sello.
+// Se guarda en hexadecimal MAYUSCULA para distinguirlo de la version 1 (minuscula) sin cambiar el esquema: los
+// folios cerrados antes se siguen verificando con su formula original.
+func CalculateChainedRecordHashV2(previousHash, patientID, doctorID, anamnesis, physicalExam, cie11, diagnosis, plan, closedAt string,
+	painScore int, painObservations, anatomicalMapping string) string {
+	escape := func(s string) string {
+		return strings.ReplaceAll(strings.ReplaceAll(s, "\\", "\\\\"), "|", "\\|")
+	}
+	v1 := CalculateChainedRecordHash(previousHash, patientID, doctorID, anamnesis, physicalExam, cie11, diagnosis, plan, closedAt)
+	normalized := fmt.Sprintf("v2|%s|%d|%s|%s", v1, painScore,
+		escape(strings.TrimSpace(painObservations)), escape(strings.TrimSpace(anatomicalMapping)))
+	return strings.ToUpper(ComputeSHA256(normalized))
+}
+
+// IsRecordHashV2 indica si un sello se genero con CalculateChainedRecordHashV2.
+func IsRecordHashV2(hash string) bool {
+	return hash != "" && hash == strings.ToUpper(hash) && hash != strings.ToLower(hash)
+}
+
 // GenerateAccessToken firma un nuevo token de acceso de corta duracion (ej: 15 minutos).
 func GenerateAccessToken(userID, role, email, secret string, ttl time.Duration) (string, error) {
 	claims := JWTClaims{

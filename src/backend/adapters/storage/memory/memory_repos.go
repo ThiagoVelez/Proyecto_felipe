@@ -695,6 +695,20 @@ func NewPrescriptionMemoryRepo(ds *DataStore) ports.PrescriptionRepository {
 func (r *PrescriptionMemoryRepo) Create(_ context.Context, prescription *domain.Prescription) error {
 	r.ds.mu.Lock()
 	defer r.ds.mu.Unlock()
+	// DEF-38: se comprueba todo el stock antes de tocar nada, bajo el mismo candado que guarda la receta
+	quantities := prescription.QuantitiesByMedication()
+	for medicationID, quantity := range quantities {
+		med, ok := r.ds.medications[medicationID]
+		if !ok {
+			return domain.ErrMedicationNotFound
+		}
+		if med.StockQuantity < quantity {
+			return domain.ErrInsufficientMedicationStock
+		}
+	}
+	for medicationID, quantity := range quantities {
+		r.ds.medications[medicationID].StockQuantity -= quantity
+	}
 	r.ds.prescriptions[prescription.ID] = copyPrescription(prescription)
 	return nil
 }
@@ -720,7 +734,7 @@ func (r *PrescriptionMemoryRepo) GetByClinicalRecordID(_ context.Context, record
 	return nil, domain.ErrPrescriptionNotFound
 }
 
-// GetMedicationByID retorna una copia: el stock interno solo cambia bajo candado en DeductStock.
+// GetMedicationByID retorna una copia: el stock interno solo cambia bajo candado en Create.
 func (r *PrescriptionMemoryRepo) GetMedicationByID(_ context.Context, id int) (*domain.MedicationCatalog, error) {
 	r.ds.mu.RLock()
 	defer r.ds.mu.RUnlock()
@@ -749,20 +763,6 @@ func (r *PrescriptionMemoryRepo) SearchMedications(_ context.Context, query stri
 		result = result[:maxMedicationResults]
 	}
 	return result, nil
-}
-
-func (r *PrescriptionMemoryRepo) DeductStock(_ context.Context, medicationID int, quantity int) error {
-	r.ds.mu.Lock()
-	defer r.ds.mu.Unlock()
-	med, ok := r.ds.medications[medicationID]
-	if !ok {
-		return domain.ErrMedicationNotFound
-	}
-	if med.StockQuantity < quantity {
-		return domain.ErrInsufficientMedicationStock
-	}
-	med.StockQuantity -= quantity
-	return nil
 }
 
 // AuditMemoryRepo implementa ports.AuditRepository en memoria.
@@ -832,6 +832,15 @@ func NewAppointmentMemoryRepo(ds *DataStore) ports.AppointmentRepository {
 func (r *AppointmentMemoryRepo) Create(_ context.Context, app *domain.Appointment) error {
 	r.ds.mu.Lock()
 	defer r.ds.mu.Unlock()
+	// DEF-69: la comprobacion de cruce y el registro ocurren bajo el mismo candado
+	start := app.AppointmentDate.Add(-20 * time.Minute)
+	end := app.AppointmentDate.Add(20 * time.Minute)
+	for _, other := range r.ds.appointments {
+		if other.DoctorID == app.DoctorID && other.Status != domain.AppointmentCancelled &&
+			other.AppointmentDate.After(start) && other.AppointmentDate.Before(end) {
+			return domain.ErrDoctorScheduleOverlap
+		}
+	}
 	stored := *app
 	if stored.CreatedAt.IsZero() {
 		stored.CreatedAt = time.Now().UTC()
@@ -1020,6 +1029,11 @@ func NewPrescriptionV2MemoryRepo(ds *DataStore) ports.PrescriptionV2Repository {
 func (r *PrescriptionV2MemoryRepo) CreateWithItemsTx(_ context.Context, presc *domain.PrescriptionV2) error {
 	r.ds.mu.Lock()
 	defer r.ds.mu.Unlock()
+	for _, existing := range r.ds.prescriptionsV2 {
+		if existing.UniqueCode == presc.UniqueCode {
+			return domain.ErrDuplicatePrescriptionCode
+		}
+	}
 	stored := *presc
 	if stored.CreatedAt.IsZero() {
 		stored.CreatedAt = time.Now().UTC()
@@ -1081,16 +1095,30 @@ func (r *PrescriptionV2MemoryRepo) GetByID(_ context.Context, id string) (*domai
 func (r *PrescriptionV2MemoryRepo) GetByUniqueCodeOrDocument(ctx context.Context, term string) (*domain.PrescriptionV2, error) {
 	r.ds.mu.RLock()
 	defer r.ds.mu.RUnlock()
+	var match *domain.PrescriptionV2
+	pending := 0
 	for _, p := range r.ds.prescriptionsV2 {
-		if p.UniqueCode == term || p.PatientDocument == term {
-			pCopy := *p
-			items := make([]domain.PrescriptionItemV2, len(p.Items))
-			copy(items, p.Items)
-			pCopy.Items = items
-			return &pCopy, nil
+		if p.UniqueCode == term {
+			match, pending = p, 1
+			break
+		}
+		// DEF-64: por documento solo se acepta una unica receta pendiente
+		if p.PatientDocument == term && p.Status == domain.PrescriptionStatusPending {
+			match = p
+			pending++
 		}
 	}
-	return nil, domain.ErrPrescriptionNotFound
+	switch {
+	case pending == 0:
+		return nil, domain.ErrPrescriptionNotFound
+	case pending > 1:
+		return nil, domain.ErrAmbiguousPrescription
+	}
+	pCopy := *match
+	items := make([]domain.PrescriptionItemV2, len(match.Items))
+	copy(items, match.Items)
+	pCopy.Items = items
+	return &pCopy, nil
 }
 
 func (r *PrescriptionV2MemoryRepo) MarkAsDispensedTx(_ context.Context, req domain.DispenseRequestDTO, items []domain.PrescriptionItemV2) error {
@@ -1110,7 +1138,7 @@ func (r *PrescriptionV2MemoryRepo) MarkAsDispensedTx(_ context.Context, req doma
 	if req.PatientDocument == "" {
 		return fmt.Errorf("se requiere el documento de identidad del paciente para cotejo físico obligatorio")
 	}
-	if req.PatientDocument != p.PatientDocument {
+	if domain.NormalizeDocument(req.PatientDocument) != domain.NormalizeDocument(p.PatientDocument) {
 		return domain.ErrDocumentMismatch
 	}
 

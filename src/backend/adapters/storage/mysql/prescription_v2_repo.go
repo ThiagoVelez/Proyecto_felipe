@@ -27,7 +27,7 @@ func (r *prescriptionV2Repository) CreateWithItemsTx(ctx context.Context, presc 
 	defer tx.Rollback()
 
 	queryPresc := `
-		INSERT INTO prescriptions (
+		INSERT INTO pharmacy_prescriptions (
 			id, hce_id, doctor_id, patient_id, patient_document, patient_name, patient_eps,
 			unique_code, treatment_notes, subtotal_amount, coverage_type, patient_payable_amount,
 			eps_coverage_amount, payment_method, status, pdf_patient_path, created_at
@@ -45,11 +45,14 @@ func (r *prescriptionV2Repository) CreateWithItemsTx(ctx context.Context, presc 
 		presc.PDFPatientPath, presc.CreatedAt,
 	)
 	if err != nil {
+		if isDuplicate(err) {
+			return domain.ErrDuplicatePrescriptionCode
+		}
 		return fmt.Errorf("error insertando cabecera de prescripcion: %w", err)
 	}
 
 	queryItem := `
-		INSERT INTO prescription_items (
+		INSERT INTO pharmacy_prescription_items (
 			id, prescription_id, inventory_item_id, medication_name, dosage,
 			quantity_prescribed, unit_price, total_item_price, instructions
 		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -71,7 +74,7 @@ func (r *prescriptionV2Repository) loadItems(ctx context.Context, prescID string
 	query := `
 		SELECT id, prescription_id, inventory_item_id, medication_name, dosage,
 		       quantity_prescribed, unit_price, total_item_price, COALESCE(instructions, '')
-		FROM prescription_items
+		FROM pharmacy_prescription_items
 		WHERE prescription_id = ?
 	`
 	rows, err := r.db.QueryContext(ctx, query, prescID)
@@ -105,7 +108,7 @@ func (r *prescriptionV2Repository) GetAllInbox(ctx context.Context, statusFilter
 		       p.subtotal_amount, p.coverage_type, p.patient_payable_amount, p.eps_coverage_amount,
 		       p.payment_method, p.status, p.dispensed_at, p.dispensed_by, COALESCE(disp.full_name, ''),
 		       COALESCE(p.pdf_patient_path, ''), p.created_at
-		FROM prescriptions p
+		FROM pharmacy_prescriptions p
 		LEFT JOIN users u ON p.doctor_id = u.id
 		LEFT JOIN users disp ON p.dispensed_by = disp.id
 		WHERE 1=1
@@ -173,7 +176,7 @@ func (r *prescriptionV2Repository) GetByID(ctx context.Context, id string) (*dom
 		       p.subtotal_amount, p.coverage_type, p.patient_payable_amount, p.eps_coverage_amount,
 		       p.payment_method, p.status, p.dispensed_at, p.dispensed_by, COALESCE(disp.full_name, ''),
 		       COALESCE(p.pdf_patient_path, ''), p.created_at
-		FROM prescriptions p
+		FROM pharmacy_prescriptions p
 		LEFT JOIN users u ON p.doctor_id = u.id
 		LEFT JOIN users disp ON p.dispensed_by = disp.id
 		WHERE p.id = ?
@@ -217,22 +220,40 @@ func (r *prescriptionV2Repository) GetByID(ctx context.Context, id string) (*dom
 }
 
 func (r *prescriptionV2Repository) GetByUniqueCodeOrDocument(ctx context.Context, term string) (*domain.PrescriptionV2, error) {
-	query := `
-		SELECT p.id
-		FROM prescriptions p
-		WHERE (p.unique_code = ? OR p.patient_document = ?)
-		ORDER BY CASE WHEN p.status = 'PENDING' THEN 0 ELSE 1 END, p.created_at DESC
-		LIMIT 1
-	`
+	// 1. El codigo unico identifica una sola receta
 	var id string
-	err := r.db.QueryRowContext(ctx, query, term, term).Scan(&id)
-	if err == sql.ErrNoRows {
-		return nil, domain.ErrPrescriptionNotFound
+	err := r.db.QueryRowContext(ctx, `SELECT id FROM pharmacy_prescriptions WHERE unique_code = ?`, term).Scan(&id)
+	if err == nil {
+		return r.GetByID(ctx, id)
 	}
+	if err != sql.ErrNoRows {
+		return nil, err
+	}
+
+	// 2. Por documento: solo si hay exactamente una receta pendiente (DEF-64: no se elige la primera coincidencia)
+	rows, err := r.db.QueryContext(ctx, `SELECT id FROM pharmacy_prescriptions WHERE patient_document = ? AND status = 'PENDING' LIMIT 2`, term)
 	if err != nil {
 		return nil, err
 	}
-	return r.GetByID(ctx, id)
+	defer rows.Close()
+	var ids []string
+	for rows.Next() {
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		ids = append(ids, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	switch len(ids) {
+	case 0:
+		return nil, domain.ErrPrescriptionNotFound
+	case 1:
+		return r.GetByID(ctx, ids[0])
+	default:
+		return nil, domain.ErrAmbiguousPrescription
+	}
 }
 
 func (r *prescriptionV2Repository) MarkAsDispensedTx(ctx context.Context, req domain.DispenseRequestDTO, items []domain.PrescriptionItemV2) error {
@@ -244,7 +265,7 @@ func (r *prescriptionV2Repository) MarkAsDispensedTx(ctx context.Context, req do
 
 	// 1. Bloquear y verificar estado actual de la prescripcion (SELECT FOR UPDATE)
 	var currentStatus, patientDoc string
-	checkQuery := `SELECT status, patient_document FROM prescriptions WHERE id = ? FOR UPDATE`
+	checkQuery := `SELECT status, patient_document FROM pharmacy_prescriptions WHERE id = ? FOR UPDATE`
 	err = tx.QueryRowContext(ctx, checkQuery, req.PrescriptionID).Scan(&currentStatus, &patientDoc)
 	if err == sql.ErrNoRows {
 		return domain.ErrPrescriptionNotFound
@@ -262,7 +283,7 @@ func (r *prescriptionV2Repository) MarkAsDispensedTx(ctx context.Context, req do
 	if req.PatientDocument == "" {
 		return fmt.Errorf("se requiere el documento de identidad del paciente para cotejo físico obligatorio")
 	}
-	if req.PatientDocument != patientDoc {
+	if domain.NormalizeDocument(req.PatientDocument) != domain.NormalizeDocument(patientDoc) {
 		return domain.ErrDocumentMismatch
 	}
 
@@ -302,7 +323,7 @@ func (r *prescriptionV2Repository) MarkAsDispensedTx(ctx context.Context, req do
 	}
 
 	updateQuery := `
-		UPDATE prescriptions 
+		UPDATE pharmacy_prescriptions 
 		SET status = 'DISPENSED', dispensed_at = ?, dispensed_by = ?, coverage_type = ?, payment_method = ?
 		WHERE id = ?
 	`
