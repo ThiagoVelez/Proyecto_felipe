@@ -3,7 +3,7 @@ sequenceDiagram
     actor User as Usuario Clínico / Admin
     participant Browser as Navegador Web (DOM & PWA)
     participant App as React App (Estado en Memoria)
-    participant Storage as LocalStorage Cripto-Protegido
+    participant Storage as sessionStorage (una sesion por pestana, sin cifrado)
     participant API as Backend GoFiber v2
 
     %% Fase 1: Inicio de Sesion
@@ -28,10 +28,11 @@ sequenceDiagram
     App->>Storage: getItem('saludconecta_user')
     App->>Storage: getItem('saludconecta_current_view')
     Storage-->>App: Retorna sesión activa, usuario almacenado y vista actual
-    App->>App: setIsAuthenticated(true), setCurrentUser(user), setCurrentView(view)
+    App-->>Browser: Muestra "Verificando la sesion con el servidor" (no pinta ninguna pantalla con el rol local, DEF-33)
     App->>API: GET /api/v1/auth/me (revalida que la cuenta siga activa)
-    API-->>App: 200 OK { user }
-    App-->>Browser: Restaura exactamente la pantalla de trabajo previa (Sin ir a Login)
+    API-->>App: 200 OK { user con el rol del servidor }
+    App->>App: setCurrentUser(user del servidor), setCurrentView(view)
+    App-->>Browser: Restaura la pantalla de trabajo previa de esa pestana (Sin ir a Login)
 
     %% Fase 3: Renovacion Silenciosa en Segundo Plano (Refresh Token)
     Note over User,API: FASE 3: Renovación Transparente de Token de Acceso (Cada 15 min)
@@ -55,6 +56,7 @@ sequenceDiagram
     App->>Storage: removeItem('saludconecta_token')
     App->>Storage: removeItem('saludconecta_refresh_token')
     App->>Storage: removeItem('saludconecta_current_view')
+    App->>App: purgeClinicalStorage() borra datos clinicos heredados de localStorage (DEF-76)
     App->>App: setIsAuthenticated(false), setCurrentUser(null)
     App-->>Browser: Redirige limpiamente a AuthScreen (Login con fondo ECG animado)
 
