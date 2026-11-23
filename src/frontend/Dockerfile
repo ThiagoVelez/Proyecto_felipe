@@ -28,6 +28,7 @@ RUN rm -rf /etc/nginx/conf.d/default.conf
 
 # Copiar configuracion optimizada con proxy inverso y SPA fallback
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY security-headers.conf /etc/nginx/snippets/security-headers.conf
 
 # Copiar artefactos compilados desde el builder
 COPY --from=builder /app/dist /usr/share/nginx/html

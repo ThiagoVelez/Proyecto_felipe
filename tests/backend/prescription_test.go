@@ -41,11 +41,13 @@ func TestPrescriptionAllergyInterceptor(t *testing.T) {
 
 	// 3. Medicamentos en el catalogo institucional CUM
 	amoxicilina := &domain.MedicationCatalog{
-		ID:                 101,
-		CUMCode:            "19934201-01",
-		CommercialName:     "Amoxil 500mg",
-		GenericName:        "Amoxicilina",
-		ActiveIngredient:   "BETALACTAMICOS",
+		ID:             101,
+		CUMCode:        "19934201-01",
+		CommercialName: "Amoxil 500mg",
+		GenericName:    "Amoxicilina",
+		// DEF-40: principio activo real. La prueba exige reconocer la familia betalactamica (reactividad cruzada),
+		// no una coincidencia de texto con la alergia registrada.
+		ActiveIngredient:   "AMOXICILINA",
 		Concentration:      "500 mg",
 		PharmaceuticalForm: "Capsula",
 		StockQuantity:      500,

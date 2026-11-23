@@ -1,94 +1,62 @@
-import { describe, it, expect } from 'vitest';
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+// DEF-90: se prueba el componente real, no una copia definida en la prueba
+import AllergyAlertModal from '../../src/frontend/src/components/AllergyAlertModal';
 
-// Simulacion del componente AllergyAlertModal segun los requerimientos de interfaz
-const AllergyAlertModal = ({ isOpen, activeIngredient, severity, medicationName, onClose }) => {
-  if (!isOpen) return null;
-
-  const isSevere = severity === 'SEVERA';
-
-  return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="allergy-alert-title"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
-    >
-      <div
-        className={`w-full max-w-md p-6 rounded-lg shadow-xl border-2 ${
-          isSevere ? 'bg-red-50 border-red-600 text-red-900' : 'bg-yellow-50 border-yellow-600 text-yellow-900'
-        }`}
-        data-testid="allergy-modal-card"
-      >
-        <h2 id="allergy-alert-title" className="text-xl font-bold uppercase tracking-wide">
-          Alerta Critica: Contraindicacion Farmacologica
-        </h2>
-        <div className="mt-4 space-y-2 text-sm">
-          <p>
-            <span className="font-semibold">Medicamento recetado:</span> {medicationName}
-          </p>
-          <p>
-            <span className="font-semibold">Principio activo conflictivo:</span> {activeIngredient}
-          </p>
-          <p>
-            <span className="font-semibold">Severidad del riesgo:</span>{' '}
-            <span className={`px-2 py-0.5 rounded font-bold ${isSevere ? 'bg-red-200 text-red-900' : 'bg-yellow-200 text-yellow-900'}`}>
-              {severity}
-            </span>
-          </p>
-        </div>
-        <div className="mt-6 flex justify-end">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 bg-red-700 hover:bg-red-800 text-white font-medium rounded transition-colors"
-          >
-            Entendido / Cancelar Prescripcion
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+const props = {
+  isOpen: true,
+  activeIngredient: 'BETALACTAMICOS',
+  severity: 'SEVERA',
+  medicationName: 'Amoxicilina 500 mg',
+  message: 'Conflicto alérgico detectado por el servidor',
 };
 
-describe('AllergyAlertModal - Intercepcion Visual de Seguridad Farmacologica', () => {
-  it('debe renderizarse con borde y estilo de alerta roja ante severidad SEVERA', () => {
-    const mockProps = {
-      isOpen: true,
-      activeIngredient: 'BETALACTAMICOS',
-      severity: 'SEVERA',
-      medicationName: 'Amoxil 500mg (Amoxicilina)',
-      onClose: () => {},
-    };
+describe('AllergyAlertModal (componente real)', () => {
+  it('no se muestra cerrado y abierto es un diálogo accesible con los datos del conflicto', () => {
+    const { rerender } = render(<AllergyAlertModal {...props} isOpen={false} onClose={vi.fn()} />);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 
-    render(<AllergyAlertModal {...mockProps} />);
-
-    // Verificar presencia del titulo accesible
-    const titleElement = screen.getByRole('heading', { level: 2 });
-    expect(titleElement).toBeTruthy();
-    expect(titleElement.textContent).toContain('Alerta Critica');
-
-    // Verificar presencia de la advertencia del principio activo
-    expect(screen.getByText(/BETALACTAMICOS/i)).toBeTruthy();
-
-    // Verificar aplicacion de clases de color rojo estricto para severidad critica
-    const modalCard = screen.getByTestId('allergy-modal-card');
-    expect(modalCard.className).toContain('border-red-600');
-    expect(modalCard.className).toContain('bg-red-50');
+    rerender(<AllergyAlertModal {...props} onClose={vi.fn()} />);
+    const dialog = screen.getByRole('dialog', { name: /Contraindicacion Farmacologica/i });
+    expect(dialog).toHaveAttribute('aria-modal', 'true');
+    expect(screen.getByText('Amoxicilina 500 mg')).toBeInTheDocument();
+    expect(screen.getByTestId('allergy-active-ingredient')).toHaveTextContent('BETALACTAMICOS');
+    expect(screen.getByTestId('allergy-server-message')).toHaveTextContent(/servidor/);
+    // El foco inicial queda en la acción segura (cancelar la prescripción)
+    expect(screen.getByRole('button', { name: /Entendido \/ Cancelar Prescripcion/i })).toHaveFocus();
   });
 
-  it('no debe renderizar nada en el DOM cuando isOpen es false', () => {
-    const mockProps = {
-      isOpen: false,
-      activeIngredient: 'BETALACTAMICOS',
-      severity: 'SEVERA',
-      medicationName: 'Amoxil 500mg',
-      onClose: () => {},
-    };
+  it('cancelar llama a onClose', () => {
+    const onClose = vi.fn();
+    render(<AllergyAlertModal {...props} onClose={onClose} />);
+    fireEvent.click(screen.getByRole('button', { name: /Entendido \/ Cancelar Prescripcion/i }));
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
 
-    const { container } = render(<AllergyAlertModal {...mockProps} />);
-    expect(container.firstChild).toBeNull();
+  it('omitir la alerta exige confirmar el riesgo antes', () => {
+    const onOverride = vi.fn();
+    render(<AllergyAlertModal {...props} onClose={vi.fn()} onOverride={onOverride} />);
+    const omitir = screen.getByRole('button', { name: /Omitir Alerta bajo Criterio/i });
+
+    expect(omitir).toBeDisabled();
+    fireEvent.click(omitir);
+    expect(onOverride).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('checkbox'));
+    expect(omitir).toBeEnabled();
+    fireEvent.click(omitir);
+    expect(onOverride).toHaveBeenCalledTimes(1);
+  });
+
+  it('sin onOverride no ofrece omitir la alerta', () => {
+    render(<AllergyAlertModal {...props} onClose={vi.fn()} />);
+    expect(screen.queryByRole('button', { name: /Omitir Alerta/i })).not.toBeInTheDocument();
+  });
+
+  it('usa colores de texto con contraste AAA en el dato crítico (DEF-90)', () => {
+    render(<AllergyAlertModal {...props} onClose={vi.fn()} />);
+    // red-900 sobre el fondo de la tarjeta: 9,84:1 (docs/calidad/evidencias/v2/def90-contraste-modal-alergias.txt)
+    expect(screen.getByTestId('allergy-active-ingredient').className).toMatch(/text-red-9[05]0/);
   });
 });
-
