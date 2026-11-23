@@ -36,60 +36,6 @@ export const CATEGORIES = [
   { id: 'PREVENCION', label: 'Prevención y Autocuidado', color: 'bg-rose-50 text-rose-800 border-rose-300' },
 ];
 
-export const INITIAL_SEEDS = [
-  {
-    id: 'seed-01',
-    category: 'VACUNAS',
-    title: 'Esquema Nacional de Vacunación 2026: Dosis de Refuerzo Adulto',
-    summary: 'Guía oficial para actualización de esquemas contra Influenza estacional, Tétanos y COVID-19 en población vulnerable.',
-    content: 'La vacunación en adultos mayores y personal de salud es prioritaria en la red pública hospitalaria. Se recomienda verificar carné de vacunación en cada triaje o consulta externa. Los biológicos disponibles en sede cuentan con cadena de frío garantizada entre 2°C y 8°C según protocolos del Instituto Nacional de Salud.',
-    doctor_name: 'Dr. Santiago Vélez',
-    specialty: 'Medicina de Urgencias',
-    branch: 'Sede Cartago - Central',
-    youtube_url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-    video_duration: 90,
-    created_at: new Date(Date.now() - 3600000 * 5).toISOString(),
-  },
-  {
-    id: 'seed-02',
-    category: 'CONSEJOS',
-    title: 'Pautas para el Control y Registro Domiciliario de la Presión Arterial',
-    summary: 'Instrucciones claras para pacientes con hipertensión arterial o cifras tensionales limítrofes en triaje.',
-    content: 'Recomiende al paciente reposar 5 minutos antes de la toma de tensión, evitar café o tabaco 30 minutos previos y mantener el brazo a la altura del corazón. Indicar el registro en la libreta ambulatoria para la próxima consulta de seguimiento con medicina general.',
-    doctor_name: 'Dra. Camila Yalma',
-    specialty: 'Pediatría y Urgencias',
-    branch: 'Sede La Unión',
-    youtube_url: '',
-    video_duration: 0,
-    created_at: new Date(Date.now() - 3600000 * 12).toISOString(),
-  },
-  {
-    id: 'seed-03',
-    category: 'ENFERMEDADES',
-    title: 'Detección Temprana de Signos de Alarma en Infecciones Respiratorias Agudas (IRA)',
-    summary: 'Criterios clínicos para consulta inmediata en el servicio de urgencias hospitalario.',
-    content: 'Fiebre persistente mayor a 38.5°C por más de 72 horas, retracciones intercostales, cianosis peribucal, saturación de oxígeno menor a 90% a nivel del mar o somnolencia extrema son criterios de ingreso directo a Triaje Manchester Nivel I o II.',
-    doctor_name: 'Dr. Santiago Vélez',
-    specialty: 'Medicina de Urgencias',
-    branch: 'Sede Cartago - Central',
-    youtube_url: '',
-    video_duration: 0,
-    created_at: new Date(Date.now() - 3600000 * 24).toISOString(),
-  },
-  {
-    id: 'seed-04',
-    category: 'ESTILO_DE_VIDA',
-    title: 'Hábitos Cardioprotectores: Hidratación y Pausas Activas',
-    summary: 'Recomendaciones básicas de promoción de la salud física y mental para la comunidad asistencial.',
-    content: 'La actividad física moderada de al menos 150 minutos semanales combinada con una ingesta reducida de sodio (< 5g diarios) reduce en un 28% el riesgo de complicaciones cardiovasculares mayores según la OMS.',
-    doctor_name: 'Dra. Camila Yalma',
-    specialty: 'Pediatría y Urgencias',
-    branch: 'Sede La Unión',
-    youtube_url: '',
-    video_duration: 0,
-    created_at: new Date(Date.now() - 3600000 * 48).toISOString(),
-  },
-];
 
 /**
  * Transforma un link de YouTube en URL embebible segura
@@ -122,17 +68,9 @@ export function getYoutubeEmbedUrl(rawUrl) {
 }
 
 export const MedicalKitScreen = ({ user, onNavigate }) => {
-  const isDoctor =
-    user?.role === 'MEDICO' ||
-    Number(user?.role_id) === 2 ||
-    (user?.specialty || '').toLowerCase().includes('med') ||
-    (user?.full_name || '').toLowerCase().startsWith('dr');
-
-  const isNurse =
-    user?.role === 'ENFERMERO' ||
-    user?.role === 'ENFERMERA' ||
-    Number(user?.role_id) === 3 ||
-    (user?.specialty || '').toLowerCase().includes('enferm');
+  // DEF-80: el rol sale solo de la sesión del servidor, nunca del nombre o la especialidad
+  const isDoctor = user?.role === 'MEDICO' || Number(user?.role_id) === 2;
+  const isNurse = user?.role === 'ENFERMERO' || Number(user?.role_id) === 3;
 
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -171,25 +109,19 @@ export const MedicalKitScreen = ({ user, onNavigate }) => {
     try {
       const data = await apiClient.getHealthEducationPosts(selectedCategory);
       if (seq !== fetchSeq.current) return;
-      if (Array.isArray(data) && data.length > 0) {
-        setPosts(data);
-      } else if (!isSilent && posts.length === 0) {
-        // Fallback a seeds iniciales si la BD está vacía
-        setPosts(INITIAL_SEEDS);
-      }
+      // DEF-21: solo se muestran publicaciones del servidor; sin publicaciones el muro queda vacío
+      setPosts(Array.isArray(data) ? data : []);
       setError('');
     } catch (err) {
       if (seq !== fetchSeq.current) return;
-      if (posts.length === 0) {
-        setPosts(INITIAL_SEEDS);
-      }
+      setError(`No se pudieron cargar las publicaciones del muro: ${err?.message || 'servicio no disponible'}`);
     } finally {
       if (seq === fetchSeq.current) {
         setLoading(false);
         setRefreshing(false);
       }
     }
-  }, [selectedCategory, posts.length]);
+  }, [selectedCategory]);
 
   // Carga inicial y cambio de categoría
   useEffect(() => {

@@ -148,14 +148,14 @@ export const downloadJson = (fileName, data) => {
 
 /** Formatea el nombre del facultativo o personal asistencial respetando su rol sin duplicar prefijos. */
 export const formatDoctorName = (name, role = '') => {
-  if (!name) return 'Dr. Santiago Vélez';
+  // DEF-81: sin nombre no se inventa un médico; DEF-80: el prefijo depende del rol, no del texto del nombre
+  if (!name) return 'Profesional sin identificar';
   const roleUpper = String(role).toUpperCase();
-  const lowerName = String(name).toLowerCase();
-  const clean = String(name).replace(/^(?:dr\.|enf\.)\s*/gi, '').replace(/^(?:dr\.|enf\.)\s*/gi, '').trim();
-  if (roleUpper === 'FARMACIA' || roleUpper.includes('FARMAC') || lowerName.includes('farma')) {
+  const clean = String(name).replace(/^(?:dr\.|dra\.|enf\.)\s*/gi, '').replace(/^(?:dr\.|dra\.|enf\.)\s*/gi, '').trim();
+  if (!roleUpper || roleUpper.includes('FARMAC') || roleUpper.includes('LABORAT') || roleUpper === 'ADMIN' || roleUpper === 'TI') {
     return clean;
   }
-  if (roleUpper === 'ENFERMERO' || roleUpper.includes('ENFERM') || lowerName.includes('enf')) {
+  if (roleUpper.includes('ENFERM')) {
     return `Enf. ${clean}`;
   }
   return `Dr. ${clean}`;

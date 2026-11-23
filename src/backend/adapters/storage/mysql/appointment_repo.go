@@ -33,10 +33,6 @@ func NewAppointmentRepository(db *sql.DB) ports.AppointmentRepository {
 }
 
 func (r *appointmentRepository) Create(ctx context.Context, app *domain.Appointment) error {
-	query := `
-		INSERT INTO appointments (id, patient_id, doctor_id, appointment_date, observations, status, pdf_path, email_sent, created_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-	`
 	if app.CreatedAt.IsZero() {
 		app.CreatedAt = time.Now().UTC()
 	}
@@ -44,11 +40,43 @@ func (r *appointmentRepository) Create(ctx context.Context, app *domain.Appointm
 	if statusStr == "" {
 		statusStr = string(domain.AppointmentScheduled)
 	}
-	_, err := r.db.ExecContext(ctx, query,
+
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// DEF-69: bloquear la fila del medico serializa los agendamientos concurrentes de su agenda; luego se comprueba
+	// el cruce y se inserta dentro de la misma transaccion.
+	var locked string
+	if err := tx.QueryRowContext(ctx, `SELECT id FROM users WHERE id = ? FOR UPDATE`, app.DoctorID).Scan(&locked); err != nil {
+		if err == sql.ErrNoRows {
+			return domain.ErrUserNotFound
+		}
+		return err
+	}
+	var count int
+	if err := tx.QueryRowContext(ctx, `
+		SELECT COUNT(*) FROM appointments
+		WHERE doctor_id = ? AND appointment_date > ? AND appointment_date < ?
+		  AND status != 'CANCELLED' AND status != 'CANCELADA'`,
+		app.DoctorID, app.AppointmentDate.Add(-20*time.Minute), app.AppointmentDate.Add(20*time.Minute)).Scan(&count); err != nil {
+		return err
+	}
+	if count > 0 {
+		return domain.ErrDoctorScheduleOverlap
+	}
+
+	if _, err := tx.ExecContext(ctx, `
+		INSERT INTO appointments (id, patient_id, doctor_id, appointment_date, observations, status, pdf_path, email_sent, created_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		app.ID, app.PatientID, app.DoctorID, app.AppointmentDate, app.Observations,
 		statusStr, app.PDFPath, app.EmailSent, app.CreatedAt,
-	)
-	return err
+	); err != nil {
+		return err
+	}
+	return tx.Commit()
 }
 
 func (r *appointmentRepository) GetByID(ctx context.Context, id string) (*domain.Appointment, error) {
@@ -169,4 +197,3 @@ func (r *appointmentRepository) UpdatePDFAndEmailStatus(ctx context.Context, id,
 	_, err := r.db.ExecContext(ctx, query, pdfPath, emailSent, id)
 	return err
 }
-

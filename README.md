@@ -35,12 +35,12 @@
 | :----------------------------------------------------- | :------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------ |
 | **Santiago Vélez**                                     | Líder Técnico / Arquitecto de Software | Diseño de arquitectura hexagonal, definición de puertos y adaptadores, gobernanza ReTHUS, coordinación Go/Fiber y persistencia. |
 | **Santiago Arcos**                                     | Responsable de Pruebas (QA / Testing)  | Diseño de casos de prueba aplicando partición de equivalencia y valores límite, automatización de suites en Go y React.         |
-| **Juan José Sánchez**                                  | Responsable de Calidad (ISO/IEC 25010) | Evaluación de características de calidad ISO 25010, bitácora de defectos (DEF-01 a DEF-04) y verificación de seguridad.         |
+| **Juan José Sánchez**                                  | Responsable de Calidad (ISO/IEC 25010) | Evaluación de características de calidad ISO 25010, bitácora de defectos (DEF-01 a DEF-97, `docs/calidad/04-bitacora-defectos.md`) y verificación de seguridad.         |
 | **Santiago Vélez, Santiago Arcos y Juan José Sánchez** | Responsables de Documentación          | Elaboración de especificaciones formales de requisitos, marco normativo (Res. 1995 / 2275), criterios BDD y manuales técnicos.  |
 
 ### Persona de Pruebas Clínicas
 
-Los casos de prueba clínicos se modelan con el **Dr. Santiago Vélez** (Medicina de Urgencias, Cartago - Hospital Central, Tarjeta Profesional ReTHUS de ejemplo `RM-94821-VALLE`). Por seguridad el sistema **no siembra cuentas con credenciales conocidas**: el Encargado de TI y el primer administrador de cada sede se registran desde la pantalla de inicio de sesión mientras esos puestos estén vacíos (o, opcionalmente, el administrador inicial con `ADMIN_INITIAL_EMAIL` y `ADMIN_INITIAL_PASSWORD`). El administrador registra al facultativo desde el panel administrativo (la cuenta nace inactiva hasta la verificación ReTHUS). Ver la sección 1.16 de la Entrega Final.
+Los casos de prueba clínicos se modelan con personas sintéticas, por ejemplo el **Dr. Médico Demo 01** (Medicina de Urgencias, documento `0000000001`, tarjeta ReTHUS de ejemplo `RM-DEMO-0001`). Desde el cierre de la revisión R3 (DEF-43) el código y las pruebas no usan nombres ni documentos de personas reales. Por seguridad el sistema **no siembra cuentas con credenciales conocidas**: el Encargado de TI y el primer administrador de cada sede se registran desde la pantalla de inicio de sesión mientras esos puestos estén vacíos (o, opcionalmente, el administrador inicial con `ADMIN_INITIAL_EMAIL` y `ADMIN_INITIAL_PASSWORD`). El administrador registra al facultativo desde el panel administrativo (la cuenta nace inactiva hasta la verificación ReTHUS). Ver la sección 1.16 de la Entrega Final.
 
 ---
 
@@ -52,10 +52,12 @@ El flujo de trabajo, la priorización de requisitos y el ciclo de vida del desar
 
 ### Organización de las Listas Operativas:
 
-1. **Por hacer (Backlog):** Requisitos funcionales (RF01 a RF12) priorizados mediante técnica MoSCoW, diseño de modelos de dominio y contratos de interfaces.
-2. **En curso (In Progress):** Módulos y adaptadores en desarrollo activo (handlers HTTP, repositorios MySQL/Postgres y componentes de interfaz de usuario).
-3. **En revisión (In Review / Code Review):** Inspección de código estricta, análisis estático con `go vet` y verificación de desacoplamiento de capas según la Arquitectura Hexagonal.
-4. **Hecho (Done):** Incrementos de software con pruebas automatizadas aprobadas (100% pass), sin defectos críticos abiertos y con trazabilidad documental completa.
+1. **Avisos:** comunicados del equipo (fechas de entrega, sincronización del repositorio).
+2. **Tareas por realizar:** trabajo pendiente del equipo, incluidos los requisitos funcionales RF01 a RF16 aún no terminados.
+3. **Tareas realizadas:** trabajo terminado.
+4. **Bugs encontrados para solucionar:** defectos abiertos registrados por Calidad (fichas en `docs/calidad/04-bitacora-defectos.md`).
+5. **Pruebas QA:** diseño, automatización y resultados de pruebas del Responsable de Pruebas.
+6. **Bugs solucionados:** defectos corregidos; Calidad comenta en cada tarjeta el resultado de la verificación.
 
 ---
 
@@ -360,7 +362,9 @@ A continuación se detalla el catálogo de suites desarrolladas y automatizadas,
 
 ### 4.5. Matriz de Trazabilidad de Requisitos (RTM)
 
-La siguiente matriz certifica la cobertura del 100% de los requisitos funcionales (RF01 a RF12) y no funcionales (RNF01 a RNF08) contra las suites de prueba ejecutadas:
+La siguiente matriz relaciona cada requisito funcional (RF01 a RF16) y no funcional (RNF01 a RNF08) con las pruebas automatizadas que fallarían si el requisito se incumple. El estado es el de la última ejecución del pipeline `calidad`; la matriz no es una certificación.
+
+> **Actualización v2 (23 nov 2026, cierre de la revisión R3).** Se corrigió la RTM según DEF-91: la fila del Kit Informático se reubica bajo RF03 (RF13 es Agendamiento), se agregan RF13 a RF16 y se retira la afirmación de «cobertura del 100 %».
 
 | Código Requisito | Descripción del Requisito                    | Suite / Casos de Prueba Asociados                                                                                                                                     | Tipo de Prueba               | Estado de Ejecución |
 | :--------------- | :------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------- | :-----------------: |
@@ -376,7 +380,11 @@ La siguiente matriz certifica la cobertura del 100% de los requisitos funcionale
 | **RF10**         | Menú Colapsable y Persistencia F5            | `DoctorLayout.test.jsx`, `AuthMfa.test.jsx`                                                                                                                           | UI / Persistencia            | **APROBADO (PASS)** |
 | **RF11**         | Admisión de Pacientes y Alergias             | `TestAdmissionPatientAndAllergyAPI`, `PatientFlow.test.jsx`                                                                                                           | API / Integración / UI       | **APROBADO (PASS)** |
 | **RF12**         | Catálogo Farmacológico y Stock               | `TestConcurrentPrescriptionsDoNotRaceOnStock`, `TestGetMedicationReturnsCopy`                                                                                         | Concurrencia / Negocio       | **APROBADO (PASS)** |
-| **RF13**         | Kit Informático Médico (EVA & Anatomía)      | `TestAnatomicalNotesCreationAndDoctorLicensing`, `TestAnatomicalNotesImmutabilityOnClosedRecord`, `TestAnatomicalNotesDoctorOwnership`, `MedicalKit.test.jsx`         | Modelo Anatómico / RBAC / UI | **APROBADO (PASS)** |
+| **RF03 · Kit**   | Kit Informático Médico (EVA & Anatomía)      | `TestAnatomicalNotesCreationAndDoctorLicensing`, `TestAnatomicalNotesImmutabilityOnClosedRecord`, `TestAnatomicalNotesDoctorOwnership`, `MedicalKit.test.jsx`         | Modelo Anatómico / RBAC / UI | **APROBADO (PASS)** |
+| **RF13**         | Agendamiento y Calendario Médico             | `TestAppointment_ScheduleSuccessAndRetrieve`, `TestAppointment_RejectsScheduleOverlap`, `TestDEF69CitasSimultaneasNoSeDuplican`, `TestDEF69AgendaSoloDelMedicoDeLaSesion`, `TestMySQLCitasSimultaneasNoSeDuplican`, `DoctorAppointmentsView.test.jsx` | Concurrencia / RBAC / UI | **APROBADO (PASS)** |
+| **RF14**         | Seguimiento de Tratamiento y Prescripción Tripartita | `TestDEF51PrescripcionV2CruzaAlergias`, `TestDEF52RecetaV2RechazaCantidadNoPositiva`, `TestDEF64CodigosDeRecetaYBusquedaAmbigua`, `TreatmentFollowUpView.test.jsx` | Seguridad del paciente / Integración | **APROBADO (PASS)** |
+| **RF15**         | Farmacia, Inventario y Dispensación PDF417    | `TestDEF53DispensacionExigeDocumentoDelPaciente`, `TestR3DispensacionConcurrenteEntregaUnaSolaVez`, `TestDEF86DocumentoDeCedulaNormalizado`, `TestMySQLFarmaciaV2ConvivenConRecetasV1`, `PharmacyDashboard.test.jsx`, `CedulaPdf417.test.js` | Concurrencia / Integración / UI | **APROBADO (PASS)** |
+| **RF16**         | Módulo Asistencial de Enfermería              | `TestEnfermeriaRecibeLaOrdenYRegistraDeberesYNotas`, `TestMySQLLaboratorioEnfermeriaYSedes`, `NurseModules.test.jsx`, `ServerBackedModules.test.jsx` | Integración / UI | **APROBADO (PASS)** |
 | **RNF01**        | Latencia de Respuesta (< 400 ms)             | Benchmarks de Go: Triaje en ns/op, Alergias en $\mu\text{s/op}$                                                                                                       | Eficiencia de Desempeño      | **APROBADO (PASS)** |
 | **RNF02**        | Trazabilidad y Auditoría Forense             | `TestStaffGovernanceAndReTHUSVerification` (AuditRepo), clonación de buffer                                                                                           | Auditoría / No Repudio       | **APROBADO (PASS)** |
 | **RNF03**        | Seguridad OWASP ASVS Nivel 2                 | Suites completas de `auth_security_test.go` y `prescription_security_test.go`                                                                                         | Seguridad Defensiva          | **APROBADO (PASS)** |
@@ -426,7 +434,7 @@ Los resultados empíricos obtenidos en las mediciones del sistema contra los umb
 | Característica ISO 25010    | Métrica Evaluada                                 |    Meta de Calidad     |      Resultado Medido      | Dictamen QA  |
 | :-------------------------- | :----------------------------------------------- | :--------------------: | :------------------------: | :----------: |
 | **Adecuación Funcional**    | Tasa de éxito en transacciones clínicas          |          100%          |            100%            | **Conforme** |
-| **Eficiencia de Desempeño** | Latencia p95 en lectura y prescripción           |   $< 180\text{ ms}$    |      $28.4\text{ ms}$      | **Conforme** |
+| **Eficiencia de Desempeño** | Latencia p95 en lectura y prescripción           |   $< 180\text{ ms}$    | No medido bajo carga HTTP (DEF-91). En memoria, la intercepción de alergias mide p95 de 1,9 a 2,2 ms | **Pendiente de medición** |
 | **Eficiencia de Desempeño** | Velocidad de cálculo Manchester                  |    $< 1\text{ ms}$     |    $5.55\text{ ns/op}$     | **Conforme** |
 | **Eficiencia de Desempeño** | Tiempo de intercepción de alergias               |    $< 90\text{ ms}$    |   $3.23\ \mu\text{s/op}$   | **Conforme** |
 | **Eficiencia de Desempeño** | Consumo de RAM en reposo del binario Go          |    $< 35\text{ MB}$    |      $18.2\text{ MB}$      | **Conforme** |
@@ -486,14 +494,14 @@ npm run build
 
 Habiendo culminado el proceso de auditoría y pruebas sobre la totalidad de los módulos asistenciales, repositorios de persistencia y componentes de interfaz de usuario de «SaludConecta IPS v2.4», se certifica que:
 
-1. **La plataforma cumple de forma estricta y verificable con el 100% de los requisitos funcionales (RF01 a RF12) y no funcionales (RNF01 a RNF08).**
+1. **Cada requisito funcional (RF01 a RF16) y no funcional (RNF01 a RNF08) tiene pruebas automatizadas asociadas en la RTM de la sección 4.5, y todas pasan en el pipeline.**
 2. **Las técnicas formales de Partición de Equivalencia y Valores Límite blindan las variables fisiológicas críticas del triaje Manchester y la seguridad de la medicación del paciente.**
 3. **El principio de inmutabilidad de la Historia Clínica Electrónica prescrito por la Resolución 1995 de 1999 se encuentra asegurado tanto a nivel lógico (capa de servicios Go) como físico (disparadores de base de datos relacional y sellado SHA-256 encadenado).**
-4. **La plataforma presenta cero defectos críticos abiertos y es declarada apta para despliegue y sustentación académica.**
+4. **Tras el cierre de la revisión R3 (v2, 23 nov 2026) no quedan defectos críticos ni altos abiertos en `docs/calidad/04-bitacora-defectos.md`; la deuda de complejidad que queda está aceptada y planificada (DEF-44).**
 
 ---
 
-**Dictamen:** **APROBADO — 100% CONFORME**  
+**Dictamen:** **APTO PARA SUSTENTACIÓN** (estado verificado por el pipeline; no es una certificación ISO/IEC 25010)  
 **Santiago Arcos**  
 _Responsable de Pruebas (QA / Testing Lead)_  
 _Ingeniería de Software II — COTECNOVA 2026-2_
@@ -1323,18 +1331,19 @@ sequenceDiagram
     actor User as Usuario Clínico / Admin
     participant Browser as Navegador Web (DOM & PWA)
     participant App as React App (Estado en Memoria)
-    participant Storage as LocalStorage Cripto-Protegido
+    participant Storage as sessionStorage (una sesion por pestana, sin cifrado)
     participant API as Backend GoFiber v2
 
     %% Fase 1: Inicio de Sesion
     Note over User,Storage: FASE 1: Autenticación Exitosa Inicial
     User->>Browser: Ingresa credenciales (y TOTP de 6 dígitos si la cuenta tiene MFA)
     Browser->>API: POST /api/v1/auth/login { email, password, totp_code }
-    API-->>Browser: 200 OK { token, user: { role, full_name, professional_card } }
+    API-->>Browser: 200 OK { access_token (15 min), refresh_token (7 días), token, user }
     Browser->>App: handleLoginSuccess(data)
     App->>Storage: setItem('saludconecta_session_active', 'true')
     App->>Storage: setItem('saludconecta_user', JSON.stringify(user))
-    App->>Storage: setItem('saludconecta_token', token)
+    App->>Storage: setItem('saludconecta_token', access_token)
+    App->>Storage: setItem('saludconecta_refresh_token', refresh_token)
     App->>Storage: setItem('saludconecta_current_view', 'dashboard')
     App-->>Browser: Renderiza Entorno Autorizado (Clínico o AdminLayout)
 
@@ -1347,27 +1356,43 @@ sequenceDiagram
     App->>Storage: getItem('saludconecta_user')
     App->>Storage: getItem('saludconecta_current_view')
     Storage-->>App: Retorna sesión activa, usuario almacenado y vista actual
-    App->>App: setIsAuthenticated(true), setCurrentUser(user), setCurrentView(view)
+    App-->>Browser: Muestra "Verificando la sesion con el servidor" (no pinta ninguna pantalla con el rol local, DEF-33)
     App->>API: GET /api/v1/auth/me (revalida que la cuenta siga activa)
-    API-->>App: 200 OK { user }
-    App-->>Browser: Restaura exactamente la pantalla de trabajo previa (Sin ir a Login)
+    API-->>App: 200 OK { user con el rol del servidor }
+    App->>App: setCurrentUser(user del servidor), setCurrentView(view)
+    App-->>Browser: Restaura la pantalla de trabajo previa de esa pestana (Sin ir a Login)
 
-    %% Fase 3: Cierre de Sesion Seguro
-    Note over User,Storage: FASE 3: Finalización Explícita de Sesión
+    %% Fase 3: Renovacion Silenciosa en Segundo Plano (Refresh Token)
+    Note over User,API: FASE 3: Renovación Transparente de Token de Acceso (Cada 15 min)
+    App->>API: Solicitud con Access Token vencido (15 min)
+    API-->>App: 401 Unauthorized
+    Note over App: Interceptor silencioso en background (sin interrumpir al médico)
+    App->>API: POST /api/v1/auth/refresh { refresh_token }
+    API-->>App: 200 OK { access_token, refresh_token (rotado) }
+    App->>Storage: setItem('saludconecta_token', access_token)
+    App->>Storage: setItem('saludconecta_refresh_token', refresh_token)
+    App->>API: Reintenta solicitud clínica original con el nuevo token
+    API-->>App: 200 OK (Datos clínicos devueltos sin interrupción)
+
+    %% Fase 4: Cierre de Sesion Seguro
+    Note over User,Storage: FASE 4: Finalización Explícita de Sesión
     User->>Browser: Hace clic en botón 'Salir' / 'Cerrar Sesión'
     Browser->>App: handleLogout()
+    App->>API: POST /api/v1/auth/logout { refresh_token }
     App->>Storage: removeItem('saludconecta_session_active')
     App->>Storage: removeItem('saludconecta_user')
     App->>Storage: removeItem('saludconecta_token')
+    App->>Storage: removeItem('saludconecta_refresh_token')
     App->>Storage: removeItem('saludconecta_current_view')
+    App->>App: purgeClinicalStorage() borra datos clinicos heredados de localStorage (DEF-76)
     App->>App: setIsAuthenticated(false), setCurrentUser(null)
     App-->>Browser: Redirige limpiamente a AuthScreen (Login con fondo ECG animado)
 
-    %% Fase 4: Revocacion por el servidor
-    Note over User,API: FASE 4: Sesión Vencida o Cuenta Suspendida
-    App->>API: Cualquier solicitud con el token vigente
-    API-->>App: 401 Unauthorized
-    App->>Storage: Limpia sesión, usuario, token y vista
+    %% Fase 5: Revocacion por el servidor o inactividad prolongada
+    Note over User,API: FASE 5: Sesión Vencida (7 días de inactividad) o Cuenta Suspendida
+    App->>API: Solicitud con Refresh Token vencido o cuenta inactiva
+    API-->>App: 401 / 403 Unauthorized
+    App->>Storage: Limpia sesión, usuario, tokens y vista
     App-->>Browser: Evento saludconecta:session-expired y aviso en AuthScreen
 ```
 
@@ -1750,7 +1775,9 @@ Siguiendo la política de protección de infraestructura sensible (Regla 27), to
 | `ADMIN_INITIAL_PASSWORD` | Clave inicial para inicialización automática                                                          | `defina_una_clave_privada_larga`                        |
 | `TI_SETUP_CODE`          | Código de instalación (mínimo 12 caracteres) que exige el registro del Encargado de TI desde el login. Sin él, ese registro queda deshabilitado | `defina_un_codigo_de_instalacion`                       |
 | `IPS_NIT`                | NIT de la institución prestadora de salud                                                             | `900123456`                                             |
-| `TRUSTED_PROXIES`        | IPs/CIDR del proxy inverso cuya cabecera `X-Real-IP` se acepta como IP del cliente                    | `127.0.0.1,::1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16` |
+| `TRUSTED_PROXIES`        | IPs/CIDR del proxy inverso cuya cabecera `X-Real-IP` se acepta como IP del cliente                    | `127.0.0.1,::1` (en Docker: `127.0.0.1,::1,172.28.0.10`, la IP fija de nginx) |
+| `RETENCION_DOCUMENTOS_DIAS` | Días que se conservan las copias locales de PDF y correos con datos de pacientes (DEF-62) | `30` |
+| `ALLOW_POSTGRES_MEMORY_MODULES` | Con `DB_DRIVER=postgres`, acepta arrancar con los módulos v2 en memoria (DEF-10) | `false` |
 | `DB_ROOT_PASSWORD`       | Solo `docker compose`: clave root de MySQL                                                            | `defina_una_clave_privada`                              |
 | `COD_PRESTADOR`          | Código de habilitación MinSalud (12 dígitos)                                                          | `110010999901`                                          |
 
@@ -1762,7 +1789,7 @@ Para consultar el detalle extendido de la ingeniería del proyecto, accede a los
 
 1. [Especificación de Requisitos de Software (`docs/especificacion.md`)](docs/especificacion.md):
    - Marco regulatorio: Resolución 1995 de 1999 (HCE), Resolución 2275 de 2023 (RIPS) y Ley 1581 de 2012 (Habeas Data).
-   - Requisitos Funcionales (RF01 a RF12) y No Funcionales (RNF01 a RNF08); el detalle vigente de cada uno está en la sección 5 de este README.
+   - Requisitos Funcionales (RF01 a RF16) y No Funcionales (RNF01 a RNF08); el detalle vigente de cada uno está en la sección 5 de este README.
    - Escenarios de aceptación formales en formato BDD (Dado-Cuando-Entonces / Gherkin).
 
 2. [Plan de Pruebas y Técnicas de Diseño (`docs/plan-de-pruebas.md`)](docs/plan-de-pruebas.md):
@@ -1771,7 +1798,7 @@ Para consultar el detalle extendido de la ingeniería del proyecto, accede a los
 
 3. [Informe de Calidad ISO/IEC 25010 (`docs/informe-calidad.md`)](docs/informe-calidad.md):
    - Evaluación de las características esenciales de calidad de software y seguridad OWASP.
-   - Bitácora de defectos técnicos registrados durante el ciclo de vida (DEF-01 a DEF-04) y, en la sección 13 de este README, el registro de la auditoría de seguridad (25 defectos corregidos).
+   - Bitácora de defectos técnicos registrados durante el ciclo de vida (DEF-01 a DEF-97, en `docs/calidad/04-bitacora-defectos.md`) y, en la sección 13 de este README, el registro de la auditoría de seguridad (25 defectos corregidos).
    - Medidas de mantenimiento preventivo y refactorizaciones implementadas.
 
 4. [Guía del Cliente Web y Arquitectura Frontend (`src/frontend/README.md`)](src/frontend/README.md):
@@ -1789,7 +1816,8 @@ Base: `/api/v1`. Todas las rutas, salvo `GET /health` y `POST /auth/login`, exig
 
 | Módulo             | Ruta                                                                                                                        | Roles                                            | Notas                                                                                                                                              |
 | :----------------- | :-------------------------------------------------------------------------------------------------------------------------- | :----------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Salud              | `GET /health`                                                                                                               | Público                                          | Estado del servicio                                                                                                                                |
+| Salud              | `GET /health`, `GET /health/live`                                                                                           | Público                                          | Prueba de vida del proceso                                                                                                                         |
+| Salud              | `GET /health/ready`                                                                                                         | Público                                          | Consulta la base de datos: 200 `READY` o 503 `NOT_READY`, con el modo de persistencia (DEF-32). Lo usan los healthchecks de Docker                |
 | Auth               | `POST /auth/login`                                                                                                          | Público                                          | `{email, password, totp_code?}`; 401 con `mfa_required` si falta el TOTP; 403 cuenta inactiva; 429 tras 5 intentos fallidos                        |
 | Auth               | `GET /auth/me`                                                                                                              | Autenticado                                      | Revalida la sesión y retorna el usuario vigente                                                                                                    |
 | Auth               | `POST /auth/mfa/setup`                                                                                                      | Autenticado                                      | `{current_code?}` (obligatorio si ya hay MFA activo); retorna `secret` y `otpauth_uri`                                                             |
@@ -1924,7 +1952,7 @@ La siguiente matriz presenta los resultados empíricos y cuantitativos obtenidos
 | Característica ISO/IEC 25010 | Métrica Cuantitativa                                     | Herramienta de Medición                            | Umbral / Meta                                  | Resultado Obtenido                                      | Conformidad |
 | :--------------------------- | :------------------------------------------------------- | :------------------------------------------------- | :--------------------------------------------- | :------------------------------------------------------ | :---------- |
 | **Adecuación Funcional**     | Tasa de éxito en transacciones clínicas asistenciales    | Go Test Runner / Vitest                            | 100%                                           | 100% transacciones aprobadas sin discrepancias          | Conforme    |
-| **Eficiencia de Desempeño**  | Latencia percentil 95 (p95) en endpoints GoFiber         | Go Benchmarks / HTTP Load Harness                  | p95 < 180 ms                                   | p95 = 28.4 ms en carga asistencial                      | Conforme    |
+| **Eficiencia de Desempeño**  | Latencia percentil 95 (p95) en endpoints GoFiber         | Go Benchmarks / HTTP Load Harness                  | p95 < 180 ms                                   | Sin comando de origen (DEF-91); ver la sección 4.7       | No medido   |
 | **Eficiencia de Desempeño**  | Consumo de memoria RAM en reposo del binario Go          | Profiler `runtime.MemStats`                        | < 35 MB                                        | 18.2 MB en reposo                                       | Conforme    |
 | **Eficiencia de Desempeño**  | Velocidad de cálculo algorítmico Manchester              | `BenchmarkTriageCalculation`                       | < 1 ms                                         | **5.55 ns/op** (0 B/op, 0 allocs/op en > 218M ops)      | Conforme    |
 | **Eficiencia de Desempeño**  | Tiempo de intercepción cruzada de alergias               | `BenchmarkAllergyInterception`                     | < 90 ms                                        | **3.23 µs/op** (0.00323 ms por cruce completo)          | Conforme    |
@@ -1939,9 +1967,18 @@ La siguiente matriz presenta los resultados empíricos y cuantitativos obtenidos
 
 ### 14.3. Bitácora de Defectos Críticos Mitigados (Bug Log de Entrega-s2)
 
-Durante las pruebas de calidad y estrés hospitalario se identificaron, corrigieron y blindaron con pruebas de regresión automatizadas los siguientes cuatro defectos técnicos críticos:
+Durante las pruebas de calidad y estrés hospitalario se identificaron, corrigieron y blindaron con pruebas de regresión automatizadas los siguientes cuatro defectos técnicos críticos.
 
-#### DEF-01: Bypass de Modificación en Folios Clínicos Cerrados
+> **Corrección v2 (DEF-92).** Estos registros usaban los identificadores DEF-01 a DEF-04, que en la bitácora oficial (`docs/calidad/04-bitacora-defectos.md`) significan otros defectos. Se renombran como **S2-01 a S2-04** y se indica su equivalencia; también se corrigen las rutas de archivo y las afirmaciones que no correspondían al código.
+
+| Registro Entrega-s2 | Equivale en la bitácora oficial |
+|---|---|
+| S2-01 Bypass de folios cerrados | DEF-01 y DEF-25 |
+| S2-02 Carrera en la auditoría | DEF-03 y DEF-28 |
+| S2-03 Pool de conexiones MySQL | Sin registro propio (configuración) |
+| S2-04 Alergias por familia y tildes | DEF-06 |
+
+#### S2-01: Bypass de Modificación en Folios Clínicos Cerrados
 
 - **Ubicación:** `src/backend/core/services/clinical_record_service.go`, `src/backend/adapters/http/handlers/clinical_record_handler.go`.
 - **Severidad:** Crítica (Violación médico-legal a la Resolución 1995 de 1999 de MinSalud y al principio de no repudio de la HCE).
@@ -1953,27 +1990,27 @@ Durante las pruebas de calidad y estrés hospitalario se identificaron, corrigie
 - **Prueba de Regresión:** `TestRegression_ClosedRecordImmutability` en `tests/backend/quality_regression_test.go` y prueba de interfaz en `tests/frontend/ResilienceQuality.test.jsx`.
 - **Commit:** `fix(hce): enforce strict immutability check on closed records`.
 
-#### DEF-02: Condición de Carrera (Data Race) en Goroutines de Auditoría Forense
+#### S2-02: Condición de Carrera (Data Race) en Goroutines de Auditoría Forense
 
-- **Ubicación:** `src/backend/adapters/http/middleware/audit.go`.
+- **Ubicación:** `src/backend/adapters/http/middlewares/audit_middleware.go`.
 - **Severidad:** Alta (Pérdida de trazabilidad legal requerida por la Ley 1581 de 2012 y riesgo de pánico en el runtime de Go).
 - **Causa Raíz:** GoFiber reutiliza en un pool de memoria los buffers de `fasthttp.RequestCtx`. Al lanzar una goroutine asíncrona para insertar en `audit_logs`, la goroutine leía la referencia directa del cuerpo de la petición (`c.Body()`). Cuando la petición HTTP principal finalizaba, el buffer era reciclado por otra solicitud concurrente, corrompiendo los registros de auditoría o provocando desreferenciación de punteros nulos.
-- **Solución Aplicada:** Clonación profunda e independiente en memoria del payload mediante copia explícita de bytes (`append([]byte(nil), c.Body()...)`) y extracción inmutable de metadatos de sesión (ID de usuario, IP cliente real, método y ruta) antes de despachar la goroutine.
+- **Solución Aplicada:** Copia con `strings.Clone` de la ruta, la IP, el método y el identificador de correlación antes de despachar la goroutine (el cuerpo de la petición no se registra). La corrección completa llegó con DEF-28; la prueba que la demuestra es `TestDEF28AuditoriaConservaDatosTrasFinalizarPeticion`.
 - **Prueba de Regresión:** `TestConcurrentClosesKeepChainLinear` y `TestRegression_HTTPTriageSecurityIntegration`.
 - **Commit:** `fix(audit): clone request payload buffer before async logging goroutine`.
 
-#### DEF-03: Fuga de Memoria y Agotamiento del Pool de Conexiones MySQL bajo Concurrencia
+#### S2-03: Fuga de Memoria y Agotamiento del Pool de Conexiones MySQL bajo Concurrencia
 
-- **Ubicación:** `src/backend/adapters/storage/mysql/db.go`.
+- **Ubicación:** `src/backend/adapters/storage/mysql/connection.go` y `src/backend/cmd/api/main.go`.
 - **Severidad:** Alta (Degradación progresiva y denegación de servicio en horas pico de urgencias).
 - **Causa Raíz:** La inicialización de `*sql.DB` carecía de límites máximos de conexiones y tiempos de vida para conexiones inactivas. Además, las consultas SQL se ejecutaban sin fecha límite de contexto (`context.Background()`), manteniendo sockets TCP abiertos indefinidamente ante bloqueos de fila.
 - **Solución Aplicada:**
-  1. Configuración rigurosa del pool de conexiones: `db.SetMaxOpenConns(25)`, `db.SetMaxIdleConns(10)`, `db.SetConnMaxLifetime(5 * time.Minute)` y `db.SetConnMaxIdleTime(2 * time.Minute)`.
-  2. Aplicación sistemática de `context.WithTimeout(ctx, 3*time.Second)` en todas las transacciones SQL de los repositorios relacionales.
+  1. Configuración del pool de conexiones desde `cmd/api/main.go`: 30 conexiones abiertas como máximo, 10 inactivas, vida de 5 minutos y 2 minutos de inactividad.
+  2. Las consultas usan el contexto de cada petición HTTP (`c.Context()`), que se cancela al terminar la petición. *Corrección v2:* no existe un `context.WithTimeout` de 3 s por consulta, como se afirmaba; el único límite fijo es el de 10 s en la verificación inicial de la conexión (`PingContext`).
 - **Prueba de Regresión:** `TestConcurrentPrescriptionsDoNotRaceOnStock` y validación de ciclo de vida en adaptadores.
 - **Commit:** `perf(db): configure connection pool limits and context deadlines`.
 
-#### DEF-04: Omisión de Alerta Cruzada ante Familias Farmacológicas y Faltas de Ortografía
+#### S2-04: Omisión de Alerta Cruzada ante Familias Farmacológicas y Faltas de Ortografía
 
 - **Ubicación:** `src/backend/core/domain/allergy.go`, `src/backend/core/services/prescription_service.go`.
 - **Severidad:** Crítica (Riesgo inminente de shock anafiláctico por prescripción de fármacos contraindicados).
@@ -2760,6 +2797,29 @@ MYSQL_TEST_HOST=127.0.0.1 MYSQL_TEST_PORT=3306 MYSQL_TEST_USER=root MYSQL_TEST_P
   - `16_secuencia_orden_laboratorio_sellado_impresion`: laboratorio con API, base de datos y correo real;
   - nuevos: `19_secuencia_portal_paciente_primera_cita` y `20_secuencia_registro_inicial_ti`.
 - **Resultados actuales:** frontend **135 de 135** pruebas en 18 archivos; backend con `-race` en verde (129 pruebas en `tests/backend`); 4 pruebas contra MariaDB; `golangci-lint` y ESLint sin errores; build de producción correcto.
+
+---
+
+### 1.25. Cierre de la Revisión de Calidad R3 (Juan José Sánchez)
+
+La revisión R3 del Responsable de Calidad dejó unos 40 defectos abiertos o reabiertos en `main`. Todos se trabajaron. Cada uno tiene en `docs/calidad/04-bitacora-defectos.md` un bloque «Cierre v2» con la corrección y la prueba que la sostiene.
+
+| Grupo | Defectos | Qué se corrigió |
+|---|---|---|
+| Seguridad y datos (backend) | DEF-15, 32, 38, 62, 64, 66, 69, 71, 73, 86 | Proxies de confianza; `/health/ready` con la base de datos; receta y stock en una sola transacción; retención de PDF y correos; códigos de receta seguros y únicos; notas anatómicas que fallan cerrado y sello con dolor y mapeo; citas atómicas y agenda propia; auditoría de lecturas v2; poda de tokens; documento de la cédula normalizado. |
+| Base de datos y dependencias | DEF-10, 25, 56, 65, 83, 84 | PostgreSQL no arranca en modo mixto sin autorización; disparadores probados en MySQL y PostgreSQL; la farmacia v2 con tablas propias (antes no funcionaba en MySQL); triaje y contacto en PostgreSQL; brotli actualizado; el núcleo ya no importa adaptadores. |
+| Frontend clínico | DEF-21, 22, 33, 36, 43, 74 a 82 | Sin datos inventados ni éxito simulado; alergias consultadas al servidor; grupo sanguíneo obligatorio; rol solo desde el servidor; sin nombres reales; limpieza de datos clínicos del navegador; búsqueda exacta por documento; errores visibles; sesión verificada antes de pintar; contraste AAA en banners. |
+| Infraestructura y pruebas | DEF-35, 40, 44, 45, 90 | CSP, HSTS y Permissions-Policy en nginx; Vite 6.4.6 y Vitest 4 (npm audit en 0, bloqueante); golangci-lint en 0 sobre todo el código y `gofmt` en el pipeline; pruebas que verifican el caso real y el componente real. |
+| Documentación | DEF-02, 03, 28, 39, 41, 63, 91, 92 | RTM con RF01 a RF16 sin «100 % conforme»; listas de Trello y rangos vigentes; registros de la Entrega-s2 renombrados; diagrama de sesión corregido. |
+
+- **Resultado:** 97 de 98 defectos cerrados (incluido DEF-98, encontrado durante el cierre: los parámetros de ruta de Fiber se guardaban sin copiar y causaban un 404 intermitente; se activó `Immutable: true`). DEF-44 queda corregido parcialmente: se acepta la complejidad ciclomática de 12 funciones, entre ellas la clasificación Manchester, porque refactorizar lógica clínica solo para bajar la métrica tiene más riesgo que beneficio.
+- **Hallazgos nuevos del cierre:** la farmacia v2 compartía la tabla `prescriptions` con las recetas de la HCE y no funcionaba en MySQL; el repositorio de pacientes de PostgreSQL no leía el correo. Ambos quedaron corregidos y probados.
+- **Decisión del equipo:** con MySQL el servicio no arranca si no hay base de datos, porque el equipo trabaja con conexión en la nube.
+- **Verificación:**
+  - backend con `-race` en verde y golangci-lint en 0 sobre todo el código;
+  - frontend con 147 pruebas en 20 archivos y `npm audit` en 0;
+  - 8 pruebas contra MariaDB y 2 contra PostgreSQL 16;
+  - recorrido en navegador con nginx y la CSP activa, sin violaciones.
 
 ---
 

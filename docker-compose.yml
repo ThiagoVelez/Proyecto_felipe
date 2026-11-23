@@ -55,12 +55,13 @@ services:
       TI_SETUP_CODE: ${TI_SETUP_CODE:-}
       IPS_NIT: ${IPS_NIT:-000000000}
       COD_PRESTADOR: ${COD_PRESTADOR:-000000000000}
-      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-127.0.0.1,::1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}
+      # DEF-15: solo el contenedor nginx (IP fija en la red interna) puede declarar la IP real del cliente
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-127.0.0.1,::1,172.28.0.10}
     ports:
       # Solo loopback: el acceso publico pasa por el proxy nginx, que informa la IP real del cliente
       - "127.0.0.1:8080:8080"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/health/ready"]
       interval: 15s
       timeout: 5s
       retries: 3
@@ -89,7 +90,8 @@ services:
       retries: 3
       start_period: 10s
     networks:
-      - saludconecta-net
+      saludconecta-net:
+        ipv4_address: 172.28.0.10
 
 volumes:
   mysql_data:
@@ -99,4 +101,7 @@ networks:
   saludconecta-net:
     name: saludconecta_network
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/24
 

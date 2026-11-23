@@ -130,7 +130,6 @@ func (r *userRepo) List(ctx context.Context, roleID *int, isActive *bool) ([]*do
 	if isActive != nil {
 		conditions = append(conditions, fmt.Sprintf("u.is_active = $%d", argIdx))
 		args = append(args, *isActive)
-		argIdx++
 	}
 
 	whereClause := ""

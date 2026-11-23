@@ -66,7 +66,7 @@ export const DoctorPrintLabResultsView = ({ user, patient, onNavigate }) => {
   }, []);
 
   const doctorName = formatDoctorName(
-    user?.full_name || user?.name || 'Dr. Santiago Vélez',
+    user?.full_name || user?.name || '',
     user?.role || 'MEDICO'
   );
 

@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -28,6 +29,11 @@ type RouterConfig struct {
 	// Sessions valida en cada solicitud que la cuenta del token siga activa
 	Sessions  middlewares.SessionValidator
 	JWTSecret string
+	// Readiness comprueba la base de datos para /health/ready (DEF-32); nil cuando no hay motor externo.
+	Readiness func(ctx context.Context) error
+	// StorageMode y MemoryModules informan la persistencia efectiva (DEF-10).
+	StorageMode   string
+	MemoryModules []string
 }
 
 // SetupRoutes define los puntos de enlace REST y el control RBAC estricto de la API.
@@ -35,13 +41,34 @@ func SetupRoutes(app *fiber.App, cfg RouterConfig) {
 	api := app.Group("/api/v1")
 	authMW := middlewares.AuthMiddleware(cfg.JWTSecret, cfg.Sessions)
 
-	// 1. Verificacion de estado del servicio
+	// 1. Estado del servicio. /health es la prueba de vida del proceso; /health/ready comprueba que la base de datos
+	// responda y declara el modo de persistencia (DEF-32, DEF-10). No se publican afirmaciones de certificacion (DEF-91).
 	api.Get("/health", func(c *fiber.Ctx) error {
-		return c.JSON(fiber.Map{
-			"status":      "UP",
-			"system":      "SaludConecta IPS v2.4",
-			"iso_quality": "ISO/IEC 25010 Evaluated",
-		})
+		return c.JSON(fiber.Map{"status": "UP", "system": "SaludConecta IPS v2.4"})
+	})
+	api.Get("/health/live", func(c *fiber.Ctx) error {
+		return c.JSON(fiber.Map{"status": "UP"})
+	})
+	api.Get("/health/ready", func(c *fiber.Ctx) error {
+		mode := cfg.StorageMode
+		if mode == "" {
+			mode = "desconocido"
+		}
+		body := fiber.Map{"status": "READY", "persistence": mode}
+		if len(cfg.MemoryModules) > 0 {
+			body["memory_modules"] = cfg.MemoryModules
+		}
+		if cfg.Readiness != nil {
+			ctx, cancel := context.WithTimeout(c.UserContext(), 2*time.Second)
+			defer cancel()
+			if err := cfg.Readiness(ctx); err != nil {
+				body["status"] = "NOT_READY"
+				body["database"] = "sin respuesta"
+				return c.Status(fiber.StatusServiceUnavailable).JSON(body)
+			}
+			body["database"] = "UP"
+		}
+		return c.JSON(body)
 	})
 
 	// 2. Modulo Autenticacion y Credenciales: limites por IP independientes por ruta
@@ -231,10 +258,11 @@ func SetupRoutes(app *fiber.App, cfg RouterConfig) {
 
 	// 9. Modulo de Agendamiento y Calendario Medico (/api/v2/appointments)
 	if cfg.AppointmentHandler != nil {
-		appGroup := apiV2.Group("/appointments")
-		appGroup.Post("/", middlewares.RequireRoles("MEDICO", "ADMIN", "ENFERMERO"), cfg.AppointmentHandler.Create)
-		appGroup.Get("/", middlewares.RequireRoles("MEDICO", "ADMIN", "ENFERMERO"), cfg.AppointmentHandler.GetByRange)
-		appGroup.Get("/doctor/:id", middlewares.RequireRoles("MEDICO", "ADMIN", "ENFERMERO"), cfg.AppointmentHandler.GetByDoctor)
+		// DEF-69: la cita queda a nombre del medico de la sesion y cada medico solo consulta su propia agenda
+		appGroup := apiV2.Group("/appointments", middlewares.RequireRoles("MEDICO"))
+		appGroup.Post("/", cfg.AppointmentHandler.Create)
+		appGroup.Get("/", cfg.AppointmentHandler.GetByRange)
+		appGroup.Get("/doctor/:id", cfg.AppointmentHandler.GetByDoctor)
 	}
 
 	// 10. Modulo de Seguimiento de Tratamiento y Prescripcion Tripartita (/api/v2/treatments)

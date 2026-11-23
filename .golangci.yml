@@ -14,8 +14,11 @@ run:
   timeout: 5m
   tests: true
 
+# DEF-44 (cierre v2): la deuda historica quedo en 0 hallazgos, asi que se analiza todo el codigo y no solo lo
+# nuevo desde 6492f07.
 issues:
-  new-from-rev: 6492f07
+  max-issues-per-linter: 0
+  max-same-issues: 0
 
 linters:
   default: none

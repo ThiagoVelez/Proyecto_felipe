@@ -3,25 +3,24 @@ package services
 import (
 	"context"
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"math/big"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
-	"saludconecta-backend/adapters/email"
-	"saludconecta-backend/adapters/pdf"
 	"saludconecta-backend/core/domain"
 	"saludconecta-backend/core/ports"
-	"saludconecta-backend/pkg/logger"
 )
 
 type appointmentService struct {
 	appRepo     ports.AppointmentRepository
 	patientRepo ports.PatientRepository
 	userRepo    ports.UserRepository
-	pdfGen      *pdf.Generator
-	emailSvc    *email.Service
-	log         *logger.Logger
+	pdfGen      ports.DocumentGenerator
+	emailSvc    ports.Notifier
+	log         ports.Logger
 }
 
 // NewAppointmentService crea el servicio de agendamiento y calendario con despacho asincrono de PDF y correo
@@ -29,9 +28,9 @@ func NewAppointmentService(
 	appRepo ports.AppointmentRepository,
 	patientRepo ports.PatientRepository,
 	userRepo ports.UserRepository,
-	pdfGen *pdf.Generator,
-	emailSvc *email.Service,
-	log *logger.Logger,
+	pdfGen ports.DocumentGenerator,
+	emailSvc ports.Notifier,
+	log ports.Logger,
 ) ports.AppointmentService {
 	return &appointmentService{
 		appRepo:     appRepo,
@@ -88,8 +87,11 @@ func (s *appointmentService) ScheduleAppointment(ctx context.Context, app *domai
 	}
 	app.CreatedAt = now
 
-	// 5. Persistencia sincrona
+	// 5. Persistencia sincrona: el repositorio vuelve a comprobar el cruce de forma atomica (DEF-69)
 	if err := s.appRepo.Create(ctx, app); err != nil {
+		if errors.Is(err, domain.ErrDoctorScheduleOverlap) {
+			return nil, err
+		}
 		return nil, fmt.Errorf("error guardando cita medica: %w", err)
 	}
 
@@ -139,12 +141,20 @@ func (s *appointmentService) GetDoctorAppointmentsByRange(ctx context.Context, d
 	return s.appRepo.GetByDateRange(ctx, doctorID, start, end)
 }
 
-// GenerateRandomRXCode genera un codigo alfanumerico unico y criptograficamente seguro para recetas de farmacia
+// rxAlphabet excluye caracteres que se confunden al leerlos en voz alta o impresos (0/O, 1/I/L).
+const rxAlphabet = "23456789ABCDEFGHJKMNPQRSTUVWXYZ"
+
+// GenerateRandomRXCode genera el codigo de una receta de farmacia: RX-AAAA-XXXX-XXXX con 8 caracteres de
+// crypto/rand (31^8, unos 8,5 x 10^11 valores por ano). DEF-64: antes eran 90 000 valores por ano.
 func GenerateRandomRXCode() string {
-	nBig, err := rand.Int(rand.Reader, big.NewInt(90000))
-	n := 10000
-	if err == nil {
-		n += int(nBig.Int64())
+	buf := make([]byte, 8)
+	for i := range buf {
+		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(rxAlphabet))))
+		if err != nil {
+			// Sin fuente de aleatoriedad no se emite un codigo predecible: se usa un UUID completo
+			return "RX-" + strings.ToUpper(strings.ReplaceAll(uuid.New().String(), "-", ""))
+		}
+		buf[i] = rxAlphabet[n.Int64()]
 	}
-	return fmt.Sprintf("RX-%d-%05d", time.Now().Year(), n)
+	return fmt.Sprintf("RX-%d-%s-%s", time.Now().Year(), buf[:4], buf[4:])
 }

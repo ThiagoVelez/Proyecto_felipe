@@ -22,7 +22,8 @@ import LaboratoryScreen from './screens/LaboratoryScreen';
 import DoctorLabOrdersView from './screens/DoctorLabOrdersView';
 import DoctorPrintLabResultsView from './screens/DoctorPrintLabResultsView';
 import { apiClient, SESSION_EXPIRED_EVENT } from './services/api';
-import { sessionStore } from './services/session';
+import { hasRole } from './utils/roles';
+import { sessionStore, purgeClinicalStorage } from './services/session';
 
 const getUserStorageKey = (u) => {
   if (!u) return 'anonymous';
@@ -107,28 +108,9 @@ function enrichUserWithCustomProfile(rawUser) {
   return merged;
 }
 
-const isNurseUser = (u) => {
-  if (!u) return false;
-  return (
-    u.role === 'ENFERMERO' ||
-    u.role === 'ENFERMERA' ||
-    Number(u.role_id) === 3 ||
-    u.specialty?.toLowerCase().includes('enferm') ||
-    (u.full_name || u.name || '').toLowerCase().includes('enf')
-  );
-};
-
-const isLabUser = (u) => {
-  if (!u) return false;
-  return (
-    u.role === 'LABORATORIO' ||
-    Number(u.role_id) === 7 ||
-    u.specialty?.toLowerCase().includes('laborat') ||
-    u.specialty?.toLowerCase().includes('bacteri') ||
-    (u.full_name || u.name || '').toLowerCase().includes('laborat') ||
-    (u.full_name || u.name || '').toLowerCase().includes('bacteri')
-  );
-};
+// DEF-80: el rol sale solo de la sesión del servidor
+const isNurseUser = (u) => hasRole(u, 'ENFERMERO');
+const isLabUser = (u) => hasRole(u, 'LABORATORIO');
 
 export function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -157,6 +139,8 @@ export function App() {
       return 'dashboard';
     }
   });
+
+  const [sessionVerified, setSessionVerified] = useState(() => !apiClient.token);
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
     try {
@@ -195,9 +179,13 @@ export function App() {
     return () => window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
   }, []);
 
-  // Revalida el token guardado contra el servidor al montar la aplicacion
+  // Revalida el token guardado contra el servidor al montar la aplicacion. DEF-33: mientras el servidor no confirme
+  // la sesion no se pinta ninguna pantalla con el rol guardado en el navegador.
   useEffect(() => {
-    if (!apiClient.token) return undefined;
+    if (!apiClient.token) {
+      setSessionVerified(true);
+      return undefined;
+    }
     let cancelled = false;
     apiClient
       .me()
@@ -207,7 +195,12 @@ export function App() {
           setCurrentUser(enriched);
         }
       })
-      .catch(() => {});
+      // Sin conexion se conserva la sesion local (el servidor sigue validando el rol en cada peticion);
+      // un 401 cierra la sesion mediante SESSION_EXPIRED_EVENT.
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setSessionVerified(true);
+      });
     return () => {
       cancelled = true;
     };
@@ -216,11 +209,7 @@ export function App() {
   // Redirección de rol: situar a enfermeros y farmacéuticos en sus módulos especializados
   useEffect(() => {
     if (currentUser) {
-      const isPharmacist =
-        currentUser.role === 'FARMACIA' ||
-        Number(currentUser.role_id) === 6 ||
-        currentUser.specialty?.toLowerCase().includes('farmac') ||
-        (currentUser.full_name || currentUser.name || '').toLowerCase().includes('farma');
+      const isPharmacist = hasRole(currentUser, 'FARMACIA');
 
       const isNurse = isNurseUser(currentUser);
       const isLab = isLabUser(currentUser);
@@ -256,11 +245,7 @@ export function App() {
       setCurrentUser(enriched);
 
       // Vista inicial según rol
-      const isPharm =
-        enriched.role === 'FARMACIA' ||
-        Number(enriched.role_id) === 6 ||
-        enriched.specialty?.toLowerCase().includes('farmac') ||
-        (enriched.full_name || enriched.name || '').toLowerCase().includes('farma');
+      const isPharm = hasRole(enriched, 'FARMACIA');
 
       const isNurse = isNurseUser(enriched);
       const isLab = isLabUser(enriched);
@@ -288,17 +273,8 @@ export function App() {
     sessionStore.removeItem('saludconecta_token');
     sessionStore.removeItem('saludconecta_refresh_token');
     sessionStore.removeItem('saludconecta_current_view');
-    localStorage.removeItem('saludconecta_nurse_orders');
-    // Limpieza de claves volátiles de enfermería (DEF-76)
-    try {
-      Object.keys(localStorage).forEach((key) => {
-        if (key.startsWith('saludconecta_nurse_checklist_')) {
-          localStorage.removeItem(key);
-        }
-      });
-    } catch {
-      // Ignorar en entornos restringidos
-    }
+    // DEF-76: no se deja información clínica en el navegador de una estación compartida
+    purgeClinicalStorage();
     setIsAuthenticated(false);
     setCurrentUser(null);
     setCurrentView('dashboard');
@@ -371,9 +347,10 @@ export function App() {
     } catch (e) {
       try {
         const list = await apiClient.listPatients({ limit: 200 });
+        // DEF-78: solo coincidencia exacta de tipo y número de documento; nunca por nombre ni parcial
         found = list.find((p) => {
           const doc = String(p.document_number ?? '').trim();
-          return doc === cleanDoc || doc === documentNumber.trim();
+          return p.document_type === documentType && (doc === cleanDoc || doc === documentNumber.trim());
         });
       } catch {
         // Ignorar
@@ -401,6 +378,14 @@ export function App() {
   // Si no esta autenticado, mostrar pantalla de Login / AuthScreen
   if (!isAuthenticated) {
     return <AuthScreen onLoginSuccess={handleLoginSuccess} sessionNotice={sessionNotice} />;
+  }
+
+  if (!sessionVerified) {
+    return (
+      <div role="status" className="min-h-screen flex items-center justify-center bg-surface text-sm text-on-surface-variant">
+        Verificando la sesión con el servidor…
+      </div>
+    );
   }
 
   // El Encargado de TI dispone de su propio entorno de monitoreo, sin acceso a datos clinicos

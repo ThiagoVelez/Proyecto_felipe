@@ -7,20 +7,17 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"saludconecta-backend/adapters/email"
-	"saludconecta-backend/adapters/pdf"
 	"saludconecta-backend/core/domain"
 	"saludconecta-backend/core/ports"
-	"saludconecta-backend/pkg/logger"
 )
 
 type treatmentService struct {
 	prescRepo   ports.PrescriptionV2Repository
 	patientRepo ports.PatientRepository
 	userRepo    ports.UserRepository
-	pdfGen      *pdf.Generator
-	emailSvc    *email.Service
-	log         *logger.Logger
+	pdfGen      ports.DocumentGenerator
+	emailSvc    ports.Notifier
+	log         ports.Logger
 }
 
 // NewTreatmentService crea el servicio de seguimiento de tratamiento y emision tripartita de recetas
@@ -28,9 +25,9 @@ func NewTreatmentService(
 	prescRepo ports.PrescriptionV2Repository,
 	patientRepo ports.PatientRepository,
 	userRepo ports.UserRepository,
-	pdfGen *pdf.Generator,
-	emailSvc *email.Service,
-	log *logger.Logger,
+	pdfGen ports.DocumentGenerator,
+	emailSvc ports.Notifier,
+	log ports.Logger,
 ) ports.TreatmentService {
 	return &treatmentService{
 		prescRepo:   prescRepo,
@@ -60,9 +57,8 @@ func (s *treatmentService) DispatchTreatment(ctx context.Context, presc *domain.
 		presc.ID = uuid.New().String()
 	}
 
-	if presc.UniqueCode == "" {
-		presc.UniqueCode = GenerateRandomRXCode()
-	}
+	// DEF-64: el codigo lo genera siempre el servidor; el que envie el cliente se ignora
+	presc.UniqueCode = GenerateRandomRXCode()
 	if presc.HCEID == "" {
 		presc.HCEID = uuid.New().String()
 	}
@@ -142,8 +138,15 @@ func (s *treatmentService) DispatchTreatment(ctx context.Context, presc *domain.
 		presc.PatientPayableAmount = subtotal
 	}
 
-	// 5. Persistencia transaccional sincrona
-	if err := s.prescRepo.CreateWithItemsTx(ctx, presc); err != nil {
+	// 5. Persistencia transaccional sincrona. Si el codigo aleatorio ya existe (restriccion UNIQUE) se genera otro.
+	var err error
+	for attempt := 0; attempt < 5; attempt++ {
+		if err = s.prescRepo.CreateWithItemsTx(ctx, presc); !errors.Is(err, domain.ErrDuplicatePrescriptionCode) {
+			break
+		}
+		presc.UniqueCode = GenerateRandomRXCode()
+	}
+	if err != nil {
 		return nil, fmt.Errorf("error persistiendo prescripcion tripartita: %w", err)
 	}
 
@@ -172,4 +175,3 @@ func (s *treatmentService) DispatchTreatment(ctx context.Context, presc *domain.
 func (s *treatmentService) GetPrescriptionByID(ctx context.Context, id string) (*domain.PrescriptionV2, error) {
 	return s.prescRepo.GetByID(ctx, id)
 }
-

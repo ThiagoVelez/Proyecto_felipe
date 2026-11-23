@@ -16,7 +16,7 @@ src/frontend/.env.*
 
 # 2. Compilados y binarios de Go
 *.exe
-api
+/src/backend/api
 server
 bin/
 *.test

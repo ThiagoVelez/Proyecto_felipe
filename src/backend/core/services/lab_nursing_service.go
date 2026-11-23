@@ -13,7 +13,6 @@ import (
 
 	"saludconecta-backend/core/domain"
 	"saludconecta-backend/core/ports"
-	"saludconecta-backend/pkg/logger"
 )
 
 // LabOrderInput son los datos que envia el medico o la recepcion del laboratorio al crear una orden.
@@ -23,14 +22,14 @@ type labOrderService struct {
 	orders   ports.LabOrderRepository
 	users    ports.UserRepository
 	patients ports.PatientRepository
-	mailer   requestMailer
-	log      *logger.Logger
+	mailer   ports.Notifier
+	log      ports.Logger
 	mu       sync.Mutex
 }
 
 // NewLabOrderService construye el flujo de ordenes de laboratorio: emision, avance, sellado y despacho por correo.
 func NewLabOrderService(orders ports.LabOrderRepository, users ports.UserRepository, patients ports.PatientRepository,
-	mailer requestMailer, log *logger.Logger) ports.LabOrderService {
+	mailer ports.Notifier, log ports.Logger) ports.LabOrderService {
 	return &labOrderService{orders: orders, users: users, patients: patients, mailer: mailer, log: log}
 }
 

@@ -67,4 +67,22 @@ export function migrateLegacySession() {
   }
 }
 
+// DEF-76: datos clínicos que versiones anteriores dejaban en localStorage (compartido entre usuarios del equipo).
+// Hoy viven en el servidor; se borran al cargar la aplicación y al cerrar sesión.
+const CLINICAL_LEGACY_KEYS = ['saludconecta_lab_orders', 'saludconecta_nurse_orders', 'saludconecta_admin_branches',
+  'saludconecta_admin_medicines', 'saludconecta_pharmacy_reports', 'saludconecta_profile_custom', 'saludconecta_avatar'];
+const CLINICAL_LEGACY_PREFIXES = ['saludconecta_nurse_checklist_'];
+
+export function purgeClinicalStorage() {
+  try {
+    CLINICAL_LEGACY_KEYS.forEach((key) => window.localStorage.removeItem(key));
+    Object.keys(window.localStorage).forEach((key) => {
+      if (CLINICAL_LEGACY_PREFIXES.some((prefix) => key.startsWith(prefix))) window.localStorage.removeItem(key);
+    });
+  } catch {
+    /* sin acceso a localStorage */
+  }
+}
+
 migrateLegacySession();
+purgeClinicalStorage();

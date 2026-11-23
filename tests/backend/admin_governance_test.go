@@ -95,4 +95,3 @@ func TestStaffGovernanceAndReTHUSVerification(t *testing.T) {
 		t.Fatal("El token generado es vacio o el usuario sigue inactivo")
 	}
 }
-

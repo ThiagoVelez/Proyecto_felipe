@@ -17,6 +17,7 @@ import (
 	"saludconecta-backend/core/services"
 	"saludconecta-backend/pkg/config"
 	"saludconecta-backend/pkg/logger"
+	"saludconecta-backend/pkg/retention"
 )
 
 // connectRetryDelay es la espera entre intentos de conexion mientras el motor de base de datos termina de iniciar.
@@ -36,16 +37,17 @@ func main() {
 
 	// 3. Resolucion del Adaptador de Persistencia (Inyeccion Hexagonal de Puertos)
 	storageCfg := storage.Config{
-		Driver:          cfg.DBDriver,
-		Host:            cfg.DBHost,
-		Port:            cfg.DBPort,
-		User:            cfg.DBUser,
-		Password:        cfg.DBPassword,
-		DBName:          cfg.DBName,
-		MaxOpenConns:    30,
-		MaxIdleConns:    10,
-		ConnMaxLifetime: 5 * time.Minute,
-		ConnMaxIdleTime: 2 * time.Minute,
+		Driver:                     cfg.DBDriver,
+		Host:                       cfg.DBHost,
+		Port:                       cfg.DBPort,
+		User:                       cfg.DBUser,
+		Password:                   cfg.DBPassword,
+		DBName:                     cfg.DBName,
+		MaxOpenConns:               30,
+		MaxIdleConns:               10,
+		ConnMaxLifetime:            5 * time.Minute,
+		ConnMaxIdleTime:            2 * time.Minute,
+		AllowPostgresMemoryModules: cfg.AllowPostgresMemoryModules,
 	}
 
 	repos, err := connectWithRetry(storageCfg, log, cfg.DBConnectTries)
@@ -56,7 +58,11 @@ func main() {
 		})
 		os.Exit(1)
 	}
-	defer repos.Close()
+	defer func() {
+		if err := repos.Close(); err != nil {
+			log.Warn("Error cerrando la conexion de persistencia", map[string]interface{}{"error": err.Error()})
+		}
+	}()
 
 	if cfg.DBDriver == "memory" {
 		log.Warn("Persistencia EN MEMORIA activa: los datos clinicos se perderan al reiniciar. Uso exclusivo de desarrollo y pruebas")
@@ -80,6 +86,9 @@ func main() {
 		Password: os.Getenv("SMTP_PASSWORD"),
 		From:     os.Getenv("SMTP_FROM"),
 	}, log)
+
+	// DEF-62: las copias locales de PDF y correos contienen datos del paciente; se borran al vencer su plazo
+	go purgeLocalDocuments([]string{pdfGen.OutputDir(), emailSvc.OutboxDir()}, cfg.DocumentRetention, log)
 
 	// 6. Instanciacion de Servicios de Dominio (Casos de Uso Puros)
 	// Codigo de instalacion: sin el (o si es invalido) el Encargado de TI no puede registrarse desde el login
@@ -133,6 +142,9 @@ func main() {
 		AuditRepo:      repos.Audit,
 		Logger:         log,
 		RouterConfig: http.RouterConfig{
+			Readiness:                 repos.Ping,
+			StorageMode:               repos.Mode,
+			MemoryModules:             repos.MemoryModules,
 			AuthHandler:               authHandler,
 			AdminHandler:              adminHandler,
 			PatientHandler:            patientHandler,
@@ -211,4 +223,19 @@ func connectWithRetry(cfg storage.Config, log *logger.Logger, attempts int) (*st
 	}
 
 	return nil, fmt.Errorf("se agotaron los %d intentos de conexion a %s: %w", attempts, cfg.Driver, lastErr)
+}
+
+// purgeLocalDocuments borra al arrancar y luego una vez al dia los PDF y correos locales mas antiguos que maxAge.
+func purgeLocalDocuments(dirs []string, maxAge time.Duration, log *logger.Logger) {
+	for {
+		for _, dir := range dirs {
+			removed, err := retention.PurgeOlderThan(dir, maxAge, time.Now())
+			if err != nil {
+				log.Warn("No se pudo depurar la carpeta de documentos locales", map[string]interface{}{"carpeta": dir, "error": err.Error()})
+			} else if removed > 0 {
+				log.Info("Documentos locales vencidos eliminados", map[string]interface{}{"carpeta": dir, "archivos": removed})
+			}
+		}
+		time.Sleep(24 * time.Hour)
+	}
 }

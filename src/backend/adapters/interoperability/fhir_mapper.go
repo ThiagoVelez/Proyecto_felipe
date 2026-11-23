@@ -42,7 +42,7 @@ func (m *FHIRMapper) MapToFHIRBundle(
 		"id":           patient.ID,
 		"identifier": []map[string]interface{}{
 			{
-				"use":   "official",
+				"use":    "official",
 				"system": "urn:oid:minsalud:identificacion",
 				"value":  fmt.Sprintf("%s-%s", patient.DocumentType, patient.DocumentNumber),
 			},
@@ -63,8 +63,8 @@ func (m *FHIRMapper) MapToFHIRBundle(
 		"id":           "enc-" + record.ID,
 		"status":       "finished",
 		"class": map[string]interface{}{
-			"system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
-			"code":   "AMB",
+			"system":  "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+			"code":    "AMB",
 			"display": "ambulatory",
 		},
 		"subject": map[string]interface{}{
@@ -162,4 +162,3 @@ func (m *FHIRMapper) MapToFHIRBundle(
 
 	return bundle, nil
 }
-

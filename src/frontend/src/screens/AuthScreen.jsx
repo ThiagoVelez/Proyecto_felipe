@@ -230,7 +230,7 @@ export const AuthScreen = ({ onLoginSuccess, sessionNotice = '' }) => {
               {/* Badge de Seguridad Cifrada */}
               <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-[10px] sm:text-[11px] font-medium shadow-2xs">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                <span className="font-semibold">TLS 1.3 / SHA-256</span>
+                <span className="font-semibold">bcrypt / SHA-256</span>
               </div>
             </header>
 

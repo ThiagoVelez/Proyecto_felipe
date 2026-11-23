@@ -8,7 +8,7 @@ import { mockApi, TEST_PATIENT, buildRecord } from './helpers/mockApi';
 beforeEach(() => {
   apiClient.setAuth('token-resilience-qa', {
     id: 'doc-qa-1',
-    full_name: 'Dr. Santiago Velez',
+    full_name: 'Dr. Médico Demo 01',
     role: 'MEDICO',
     role_id: 2,
     professional_card: 'RM-94821-VALLE',

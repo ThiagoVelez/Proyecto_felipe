@@ -21,7 +21,7 @@ const INITIAL_FORM = {
   second_last_name: '',
   birth_date: '',
   gender: 'M',
-  blood_type: 'O+',
+  blood_type: '', // DEF-79: dato transfusional sin valor por defecto
   eps_name: '',
   affiliation_status: 'ACTIVO',
   phone: '',
@@ -51,6 +51,8 @@ export const validatePatientForm = (form) => {
     errors.birth_date = 'La fecha de nacimiento no puede ser futura.';
   }
   if (!form.eps_name.trim()) errors.eps_name = 'La EPS es obligatoria.';
+  // DEF-79: el grupo sanguíneo es obligatorio y no tiene valor por defecto
+  if (!form.blood_type) errors.blood_type = 'Seleccione el grupo sanguíneo del paciente.';
   if (form.phone.trim() && !/^[0-9+\-\s]{7,15}$/.test(form.phone.trim())) {
     errors.phone = 'El teléfono debe tener entre 7 y 15 dígitos.';
   }
@@ -387,14 +389,21 @@ export const PatientRegisterModal = ({ isOpen, onClose, onCreated }) => {
                 name="blood_type"
                 value={form.blood_type}
                 onChange={handleChange}
+                required
+                aria-invalid={Boolean(fieldErrors.blood_type)}
+                aria-describedby={fieldErrors.blood_type ? 'pr-blood-type-error' : undefined}
                 className={inputClass}
               >
+                <option value="" disabled>
+                  Seleccione el grupo sanguíneo
+                </option>
                 {BLOOD_TYPES.map((b) => (
                   <option key={b} value={b}>
                     {b}
                   </option>
                 ))}
               </select>
+              <FieldError id="pr-blood-type-error" message={fieldErrors.blood_type} />
             </div>
 
             <div className="md:col-span-2">

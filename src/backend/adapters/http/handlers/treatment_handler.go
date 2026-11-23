@@ -66,4 +66,3 @@ func (h *TreatmentHandler) GetByID(c *fiber.Ctx) error {
 	}
 	return c.JSON(presc)
 }
-

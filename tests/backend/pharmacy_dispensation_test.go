@@ -194,4 +194,3 @@ func TestPharmacyDispensation_RejectsPatientDocumentMismatch(t *testing.T) {
 		t.Errorf("error esperado %v, obtenido %v", domain.ErrDocumentMismatch, err)
 	}
 }
-

@@ -109,17 +109,7 @@ func (s *clinicalRecordService) CloseAndSign(ctx context.Context, recordID, doct
 		}
 
 		now := sealTime(time.Now())
-		hashCalculated := crypto.CalculateChainedRecordHash(
-			previousHash,
-			record.PatientID,
-			record.DoctorID,
-			record.Anamnesis,
-			record.PhysicalExam,
-			record.CIE11Code,
-			record.DiagnosisDescription,
-			record.TreatmentPlan,
-			now.Format(time.RFC3339),
-		)
+		hashCalculated := sealRecordHash(previousHash, record, now)
 
 		err = s.recordRepo.CloseRecord(ctx, record.ID, signatureToken, previousHash, hashCalculated, now)
 		if errors.Is(err, domain.ErrChainConflict) {
@@ -208,19 +198,7 @@ func (s *clinicalRecordService) VerifyIntegrity(ctx context.Context, recordID st
 		}
 	}
 
-	recalculated := crypto.CalculateChainedRecordHash(
-		prevHash,
-		record.PatientID,
-		record.DoctorID,
-		record.Anamnesis,
-		record.PhysicalExam,
-		record.CIE11Code,
-		record.DiagnosisDescription,
-		record.TreatmentPlan,
-		record.ClosedAt.UTC().Format(time.RFC3339),
-	)
-
-	return recalculated == *record.HashSHA256, nil
+	return recordHashMatches(prevHash, record, *record.HashSHA256), nil
 }
 
 func (s *clinicalRecordService) AddAnatomicalNote(ctx context.Context, note *domain.ClinicalAnatomicalNote) (*domain.ClinicalAnatomicalNote, error) {
@@ -291,9 +269,13 @@ func (s *clinicalRecordService) UpdateAnatomicalNote(ctx context.Context, note *
 		return nil, domain.ErrNotRecordOwner
 	}
 
+	// DEF-66: si no se puede comprobar el folio, no se permite editar la nota (falla cerrada)
 	if existing.ClinicalRecordID != nil && *existing.ClinicalRecordID != "" {
 		rec, err := s.recordRepo.GetByID(ctx, *existing.ClinicalRecordID)
-		if err == nil && rec != nil && !rec.CanModify() {
+		if err != nil {
+			return nil, err
+		}
+		if rec == nil || !rec.CanModify() {
 			return nil, domain.ErrRecordAlreadyClosed
 		}
 	}
@@ -322,9 +304,13 @@ func (s *clinicalRecordService) DeleteAnatomicalNote(ctx context.Context, noteID
 		return domain.ErrNotRecordOwner
 	}
 
+	// DEF-66: si no se puede comprobar el folio, no se permite borrar la nota (falla cerrada)
 	if existing.ClinicalRecordID != nil && *existing.ClinicalRecordID != "" {
 		rec, err := s.recordRepo.GetByID(ctx, *existing.ClinicalRecordID)
-		if err == nil && rec != nil && !rec.CanModify() {
+		if err != nil {
+			return err
+		}
+		if rec == nil || !rec.CanModify() {
 			return domain.ErrRecordAlreadyClosed
 		}
 	}
@@ -347,4 +333,36 @@ func (s *clinicalRecordService) UpdatePainAndMapping(ctx context.Context, record
 		return domain.ErrNotRecordOwner
 	}
 	return s.recordRepo.UpdatePainAndMapping(ctx, recordID, painScore, painObs, mapping)
+}
+
+// sealRecordHash calcula el sello vigente (version 2) de un folio al cerrarlo.
+func sealRecordHash(previousHash string, record *domain.ClinicalRecord, closedAt time.Time) string {
+	return crypto.CalculateChainedRecordHashV2(previousHash, record.PatientID, record.DoctorID, record.Anamnesis,
+		record.PhysicalExam, record.CIE11Code, record.DiagnosisDescription, record.TreatmentPlan,
+		closedAt.UTC().Format(time.RFC3339), record.PainScaleScore, derefString(record.PainScaleObservations),
+		derefString(record.AnatomicalMapping))
+}
+
+// recordHashMatches verifica el sello guardado con la formula con que se genero: version 2 (incluye EVA y mapeo,
+// DEF-66) o version 1 para los folios cerrados antes de la correccion.
+func recordHashMatches(previousHash string, record *domain.ClinicalRecord, stored string) bool {
+	if record.ClosedAt == nil {
+		return false
+	}
+	if stored == sealRecordHash(previousHash, record, *record.ClosedAt) {
+		return true
+	}
+	if crypto.IsRecordHashV2(stored) {
+		return false
+	}
+	return stored == crypto.CalculateChainedRecordHash(previousHash, record.PatientID, record.DoctorID, record.Anamnesis,
+		record.PhysicalExam, record.CIE11Code, record.DiagnosisDescription, record.TreatmentPlan,
+		record.ClosedAt.UTC().Format(time.RFC3339))
+}
+
+func derefString(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
 }

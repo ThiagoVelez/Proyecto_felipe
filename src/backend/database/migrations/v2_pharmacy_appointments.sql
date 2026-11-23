@@ -63,8 +63,8 @@ CREATE TABLE IF NOT EXISTS inventory_items (
     INDEX idx_med_dosage (generic_name, dosage)
 ) ENGINE=InnoDB;
 
--- 5. Prescripciones y Recetario para Farmacia (Migración no destructiva DEF-56)
-CREATE TABLE IF NOT EXISTS prescriptions (
+-- 5. Prescripciones y Recetario para Farmacia (DEF-56: tablas propias, no se tocan las recetas v1 de la HCE)
+CREATE TABLE IF NOT EXISTS pharmacy_prescriptions (
     id VARCHAR(36) PRIMARY KEY,
     hce_id VARCHAR(36) NOT NULL,
     doctor_id VARCHAR(36) NOT NULL,
@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS prescriptions (
     patient_document VARCHAR(20) NOT NULL,
     patient_name VARCHAR(150) NOT NULL,
     patient_eps VARCHAR(100) NOT NULL,
-    unique_code VARCHAR(64) NOT NULL UNIQUE, -- Ej: RX-2026-89412
+    unique_code VARCHAR(64) NOT NULL UNIQUE, -- Ej: RX-2026-K7QM-4HZP (DEF-64)
     treatment_notes TEXT,
     subtotal_amount DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
     coverage_type ENUM('EPS_PBS_100', 'COPAY', 'PARTICULAR') NOT NULL DEFAULT 'EPS_PBS_100',
@@ -84,15 +84,13 @@ CREATE TABLE IF NOT EXISTS prescriptions (
     dispensed_by VARCHAR(36) NULL,
     pdf_patient_path VARCHAR(255) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_presc_hce FOREIGN KEY (hce_id) REFERENCES clinical_records(id),
-    CONSTRAINT fk_presc_doctor FOREIGN KEY (doctor_id) REFERENCES users(id),
-    CONSTRAINT fk_presc_patient FOREIGN KEY (patient_id) REFERENCES patients(id),
-    INDEX idx_inbox_search (patient_document, status),
-    INDEX idx_unique_code (unique_code)
+    CONSTRAINT fk_pharm_presc_doctor FOREIGN KEY (doctor_id) REFERENCES users(id),
+    CONSTRAINT fk_pharm_presc_patient FOREIGN KEY (patient_id) REFERENCES patients(id),
+    INDEX idx_pharmacy_inbox (patient_document, status)
 ) ENGINE=InnoDB;
 
 -- 6. Items Formulados asociados a la Concentracion Exacta
-CREATE TABLE IF NOT EXISTS prescription_items (
+CREATE TABLE IF NOT EXISTS pharmacy_prescription_items (
     id VARCHAR(36) PRIMARY KEY,
     prescription_id VARCHAR(36) NOT NULL,
     inventory_item_id VARCHAR(36) NOT NULL,
@@ -103,8 +101,8 @@ CREATE TABLE IF NOT EXISTS prescription_items (
     total_item_price DECIMAL(10, 2) NOT NULL,
     instructions TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_item_prescription FOREIGN KEY (prescription_id) REFERENCES prescriptions(id) ON DELETE CASCADE,
-    CONSTRAINT fk_item_inventory FOREIGN KEY (inventory_item_id) REFERENCES inventory_items(id)
+    CONSTRAINT fk_pharm_item_presc FOREIGN KEY (prescription_id) REFERENCES pharmacy_prescriptions(id) ON DELETE CASCADE,
+    CONSTRAINT fk_pharm_item_inventory FOREIGN KEY (inventory_item_id) REFERENCES inventory_items(id)
 ) ENGINE=InnoDB;
 
 -- 7. Semilla de Medicamentos e Insumos en Inventario con Variaciones por Dosis
@@ -120,14 +118,6 @@ VALUES
 ('inv-aceta-1000','CUM-180021-2','Acetaminofen', 'Dolex Forte 1g', '1000 mg', 'Tableta', 700.00, 220, 30, 'LOT-ACT-2026B', '2028-01-31', 1),
 ('inv-losar-50', 'CUM-210987-1', 'Losartan Potasico', 'Cozaar 50mg', '50 mg', 'Tableta', 1450.00, 250, 35, 'LOT-LOS-2026A', '2027-11-30', 1),
 ('inv-losar-100','CUM-210987-2', 'Losartan Potasico', 'Cozaar 100mg', '100 mg', 'Tableta', 2300.00, 140, 20, 'LOT-LOS-2026B', '2027-11-30', 1)
-ON DUPLICATE KEY UPDATE 
-    generic_name = VALUES(generic_name),
-    brand_name = VALUES(brand_name),
-    dosage = VALUES(dosage),
-    presentation = VALUES(presentation),
-    unit_price = VALUES(unit_price),
-    stock_quantity = VALUES(stock_quantity),
-    min_stock = VALUES(min_stock),
-    batch_number = VALUES(batch_number),
-    expiry_date = VALUES(expiry_date);
+-- DEF-56: la semilla solo inserta lo que falta; ejecutar la migracion otra vez no reinicia el stock
+ON DUPLICATE KEY UPDATE id = id;
 

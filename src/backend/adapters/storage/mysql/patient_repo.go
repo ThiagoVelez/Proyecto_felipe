@@ -229,4 +229,3 @@ func (r *patientRepo) AddPatientAllergy(ctx context.Context, allergy *domain.Pat
 	}
 	return nil
 }
-

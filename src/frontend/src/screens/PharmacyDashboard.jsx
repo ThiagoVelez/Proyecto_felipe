@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { extractDocumentFromPdf417 } from '../utils/cedula';
 import {
   Inbox,
   Package,
@@ -163,12 +164,14 @@ export const PharmacyDashboard = ({ user, initialTab = 'inbox' }) => {
 
       reader.decodeFromVideoDevice(selectedDeviceId, videoRef.current, (result) => {
         if (result) {
-          const rawText = result.getText();
-          // Extracción del documento de la cédula colombiana (secuencia numérica de 8 a 10 dígitos)
-          const docMatch = rawText.match(/\b\d{8,10}\b/);
-          const doc = docMatch ? docMatch[0] : rawText.trim();
-          handleDocumentFound(doc);
+          // DEF-86: el número se toma de su posición en el PDF417 de la cédula, no de la primera secuencia de dígitos
+          const doc = extractDocumentFromPdf417(result.getText());
           stopScanner();
+          if (doc) {
+            handleDocumentFound(doc);
+          } else {
+            setCameraError('No se pudo leer el número de documento en la cédula. Digítelo en la entrada manual.');
+          }
         }
       });
     } catch (err) {
@@ -472,7 +475,7 @@ export const PharmacyDashboard = ({ user, initialTab = 'inbox' }) => {
               {activeTab === 'inbox' ? 'Dispensación Farmacéutica' : activeTab === 'inventory' ? 'Gestión de Inventario' : 'Copia de Reportes'}
             </span>
             <span className="text-xs text-on-surface-variant font-mono">
-              Operador: {formatDoctorName(user?.full_name, user?.role || user?.role_name)} • Sede Cartago
+              Operador: {formatDoctorName(user?.full_name, user?.role || user?.role_name)}{user?.branch ? ` • ${user.branch}` : ''}
             </span>
           </div>
           <h1 className="text-xl sm:text-2xl font-bold text-on-surface flex items-center gap-2">

@@ -74,7 +74,7 @@ export const AllergyAlertModal = ({
             </p>
             <p className="flex justify-between items-baseline">
               <span className="font-semibold text-red-950">Principio activo conflictivo:</span>
-              <span className="font-bold text-red-700 uppercase">{activeIngredient}</span>
+              <span className="font-bold text-red-900 uppercase" data-testid="allergy-active-ingredient">{activeIngredient}</span>
             </p>
             <p className="flex justify-between items-baseline">
               <span className="font-semibold text-red-950">Severidad del riesgo:</span>

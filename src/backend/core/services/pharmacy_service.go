@@ -9,14 +9,13 @@ import (
 	"github.com/google/uuid"
 	"saludconecta-backend/core/domain"
 	"saludconecta-backend/core/ports"
-	"saludconecta-backend/pkg/logger"
 )
 
 type pharmacyService struct {
 	inventoryRepo ports.InventoryRepository
 	prescRepo     ports.PrescriptionV2Repository
 	reportRepo    ports.PharmacyReportRepository
-	log           *logger.Logger
+	log           ports.Logger
 }
 
 // NewPharmacyService crea el servicio de farmacia, control de stock, alertas automáticas y dispensación atómica con escáner PDF417
@@ -24,7 +23,7 @@ func NewPharmacyService(
 	inventoryRepo ports.InventoryRepository,
 	prescRepo ports.PrescriptionV2Repository,
 	reportRepo ports.PharmacyReportRepository,
-	log *logger.Logger,
+	log ports.Logger,
 ) ports.PharmacyService {
 	return &pharmacyService{
 		inventoryRepo: inventoryRepo,
@@ -150,7 +149,8 @@ func (s *pharmacyService) DispensePrescription(ctx context.Context, req domain.D
 	if req.PatientDocument == "" {
 		return nil, fmt.Errorf("se requiere el documento de identidad del paciente para cotejo físico obligatorio")
 	}
-	if req.PatientDocument != presc.PatientDocument {
+	// DEF-86: se comparan los documentos normalizados (el PDF417 de la cedula trae ceros a la izquierda)
+	if domain.NormalizeDocument(req.PatientDocument) != domain.NormalizeDocument(presc.PatientDocument) {
 		return nil, domain.ErrDocumentMismatch
 	}
 
@@ -160,12 +160,11 @@ func (s *pharmacyService) DispensePrescription(ctx context.Context, req domain.D
 	}
 
 	s.log.Info("Dispensacion farmacologica completada exitosamente", map[string]interface{}{
-		"prescription_id":  req.PrescriptionID,
-		"unique_code":      presc.UniqueCode,
-		"patient_document": presc.PatientDocument,
-		"dispensed_by":     req.DispensedByID,
-		"coverage_type":    req.CoverageType,
-		"payment_method":   req.PaymentMethod,
+		"prescription_id": req.PrescriptionID,
+		"unique_code":     presc.UniqueCode,
+		"dispensed_by":    req.DispensedByID,
+		"coverage_type":   req.CoverageType,
+		"payment_method":  req.PaymentMethod,
 	})
 
 	// 4. Verificar si algun item dispensado quedo en nivel de stock bajo para disparar reporte automatico

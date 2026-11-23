@@ -52,7 +52,7 @@ EXPOSE 8080
 
 # Healthcheck nativo
 HEALTHCHECK --interval=15s --timeout=5s --start-period=10s --retries=3 \
-  CMD curl -f http://localhost:8080/api/v1/health || exit 1
+  CMD curl -f http://localhost:8080/api/v1/health/ready || exit 1
 
 ENTRYPOINT ["/app/saludconecta-api"]
 

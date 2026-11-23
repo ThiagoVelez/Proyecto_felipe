@@ -121,6 +121,9 @@ func (h *PharmacyHandler) LookupPrescription(c *fiber.Ctx) error {
 		if errors.Is(err, domain.ErrPrescriptionNotFound) {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "no se encontró ninguna receta pendiente para el criterio indicado"})
 		}
+		if errors.Is(err, domain.ErrAmbiguousPrescription) {
+			return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": err.Error()})
+		}
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 	return c.JSON(presc)
@@ -227,4 +230,3 @@ func (h *PharmacyHandler) GetMetrics(c *fiber.Ctx) error {
 	}
 	return c.JSON(metrics)
 }
-

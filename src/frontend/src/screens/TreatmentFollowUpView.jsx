@@ -48,12 +48,13 @@ export const TreatmentFollowUpView = ({ user, patient, onNavigate }) => {
     apiClient
       .getPharmacyInventory()
       .then((data) => setInventory(Array.isArray(data) ? data : []))
-      .catch((err) => console.error('Error cargando inventario:', err));
+      // DEF-82: los errores de carga se muestran al médico en lugar de dejar listas vacías sin aviso
+      .catch((err) => setErrorMessage(`No se pudo cargar el inventario de farmacia: ${err?.message || 'servicio no disponible'}`));
 
     apiClient
       .listPatients()
       .then((data) => setPatientsList(Array.isArray(data) ? data : []))
-      .catch((err) => console.error('Error cargando pacientes:', err));
+      .catch((err) => setErrorMessage(`No se pudo cargar la lista de pacientes: ${err?.message || 'servicio no disponible'}`));
   }, []);
 
   useEffect(() => {
@@ -163,7 +164,7 @@ export const TreatmentFollowUpView = ({ user, patient, onNavigate }) => {
         patient_eps: currentPatient.eps_name || 'Particular',
         birth_date: currentPatient.birth_date,
         gender: currentPatient.gender,
-        blood_type: currentPatient.blood_type || 'O+',
+        blood_type: currentPatient.blood_type || '',
         allergies: currentPatient.allergies || 'Ninguna conocida',
         diagnosis: diagnosis.trim() || 'Tratamiento Médico Asistencial',
         duration: treatmentDuration,
@@ -217,7 +218,7 @@ export const TreatmentFollowUpView = ({ user, patient, onNavigate }) => {
               Prescripción Tripartita
             </span>
             <span className="text-xs text-on-surface-variant font-mono">
-              {formatDoctorName(user?.full_name || user?.name, user?.role)} • Sede Cartago
+              {formatDoctorName(user?.full_name || user?.name, user?.role)}{user?.branch ? ` • ${user.branch}` : ''}
             </span>
           </div>
           <h1 className="text-2xl font-bold text-on-surface flex items-center gap-2">

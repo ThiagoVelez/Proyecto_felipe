@@ -150,12 +150,12 @@ func BenchmarkPrescriptionPipelineService(b *testing.B) {
 	_ = patientRepo.Create(ctx, pat)
 
 	medParacetamol := &domain.MedicationCatalog{
-		ID:                 801,
-		CUMCode:            "CUM-BENCH-801",
-		CommercialName:     "Acetaminofen Hospitalario",
-		GenericName:        "Paracetamol",
-		ActiveIngredient:   "PARACETAMOL",
-		StockQuantity:      1000000000,
+		ID:               801,
+		CUMCode:          "CUM-BENCH-801",
+		CommercialName:   "Acetaminofen Hospitalario",
+		GenericName:      "Paracetamol",
+		ActiveIngredient: "PARACETAMOL",
+		StockQuantity:    1000000000,
 	}
 	startMedInjection(store, medParacetamol)
 

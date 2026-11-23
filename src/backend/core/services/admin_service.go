@@ -60,4 +60,3 @@ func (s *adminService) GetAuditLogs(ctx context.Context, limit int) ([]*domain.A
 	}
 	return s.auditRepo.ListLogs(ctx, limit)
 }
-

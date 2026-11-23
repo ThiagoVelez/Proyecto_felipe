@@ -93,48 +93,58 @@ describe('AdminOrgChartView - Árbol Jerárquico Didáctico e Interactivo', () =
   const mockStaff = [
     {
       id: 'usr-1',
-      full_name: 'Dr. Santiago Vélez',
+      full_name: 'Dr. Médico Demo 01',
       role: 'MEDICO',
       role_id: 2,
       specialty: 'Medicina de Urgencias',
       branch: 'Sede Cartago - Hospital Central (Nivel II)',
       is_active: true,
-      email: 'svelez@saludconecta.ips.gov.co',
-      document_number: '1118234567',
+      email: 'medico.demo01@ips.example',
+      document_number: '0000000001',
       professional_card: 'RM-94821-VALLE',
     },
     {
       id: 'usr-2',
-      full_name: 'Enf. Elizabeth',
+      full_name: 'Enf. Enfermería Demo 01',
       role: 'ENFERMERO',
       role_id: 3,
       specialty: 'Enfermera',
       branch: 'Sede Cartago - Hospital Central (Nivel II)',
       is_active: true,
-      email: 'elizabeth@saludconecta.ips.gov.co',
-      document_number: '12579622',
+      email: 'enfermeria.demo01@ips.example',
+      document_number: '0000000002',
       professional_card: 'RM-6632-VALLE',
     },
     {
       id: 'usr-3',
-      full_name: 'Santiago Arcos',
+      full_name: 'Farmacia Demo 01',
       role: 'FARMACIA',
       role_id: 6,
       specialty: 'Farmacia Hospitalaria',
       branch: 'Sede Cartago - Hospital Central (Nivel II)',
       is_active: true,
-      email: 'arcos@farmacia.com',
-      document_number: '125698744',
+      email: 'farmacia.demo01@ips.example',
+      document_number: '0000000003',
       professional_card: 'RM-6589-VALLE',
+    },
+    {
+      id: 'usr-4',
+      full_name: 'Administrador Demo 01',
+      role: 'ADMIN',
+      role_id: 1,
+      branch: 'Sede Cartago - Hospital Central (Nivel II)',
+      is_active: true,
+      email: 'admin.demo01@ips.example',
     },
   ];
 
-  it('renderiza la Gerencia General en la cúspide y los departamentos ramificados', () => {
+  it('pone en la cúspide al administrador registrado, no a una persona inventada (DEF-22)', () => {
     render(<AdminOrgChartView users={mockStaff} />);
 
-    // Cúspide
-    expect(screen.getByText(/Dr\. Felipe Gutiérrez Isaza/i)).toBeInTheDocument();
-    expect(screen.getByText(/ALTA DIRECCIÓN/i)).toBeInTheDocument();
+    // Cúspide: el administrador que devuelve el servidor
+    expect(screen.getAllByText(/Administrador Demo 01/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText(/ALTA DIRECCIÓN/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.queryByText(/Gutiérrez Isaza/i)).not.toBeInTheDocument();
 
     // Departamentos
     expect(screen.getByText(/Jefatura de Consulta Externa & Urgencias/i)).toBeInTheDocument();
@@ -142,20 +152,20 @@ describe('AdminOrgChartView - Árbol Jerárquico Didáctico e Interactivo', () =
     expect(screen.getByText(/Coordinación Asistencial de Enfermería/i)).toBeInTheDocument();
 
     // Personal asignado bajo sus ramas
-    expect(screen.getByText(/Dr\. Santiago Vélez/i)).toBeInTheDocument();
-    expect(screen.getByText(/Enf\. Elizabeth/i)).toBeInTheDocument();
-    expect(screen.getByText(/Santiago Arcos/i)).toBeInTheDocument();
+    expect(screen.getByText(/Médico Demo 01/i)).toBeInTheDocument();
+    expect(screen.getByText(/Enfermería Demo 01/i)).toBeInTheDocument();
+    expect(screen.getByText(/Farmacia Demo 01/i)).toBeInTheDocument();
   });
 
   it('abre el modal de detalles con información completa al hacer clic en un perfil', () => {
     render(<AdminOrgChartView users={mockStaff} />);
 
-    const personCard = screen.getByText(/Dr\. Santiago Vélez/i).closest('.interactive-card');
+    const personCard = screen.getByText(/Médico Demo 01/i).closest('.interactive-card');
     fireEvent.click(personCard);
 
     // Modal de detalles
     expect(screen.getByText(/Ficha de Personal Institucional/i)).toBeInTheDocument();
-    expect(screen.getByText(/svelez@saludconecta\.ips\.gov\.co/i)).toBeInTheDocument();
+    expect(screen.getByText(/medico\.demo01@ips\.example/i)).toBeInTheDocument();
     expect(screen.getAllByText(/RM-94821-VALLE/i).length).toBeGreaterThanOrEqual(1);
 
     // Botón cerrar

@@ -37,7 +37,7 @@ describe('DoctorAppointmentsView - Agendamiento y Calendario', () => {
 
     render(
       <DoctorAppointmentsView
-        user={{ id: 'doc-01', full_name: 'Dr. Santiago Vélez', specialty: 'Medicina General' }}
+        user={{ id: 'doc-01', full_name: 'Dr. Médico Demo 01', specialty: 'Medicina General' }}
       />
     );
 

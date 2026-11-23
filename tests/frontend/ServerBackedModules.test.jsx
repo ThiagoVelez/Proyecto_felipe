@@ -39,7 +39,7 @@ describe('Laboratorio - órdenes en el servidor', () => {
 
     expect(await screen.findByText('Hemograma Completo')).toBeInTheDocument();
     expect(screen.getAllByText(/Lucía Prado/).length).toBeGreaterThan(0);
-    expect(screen.queryByText(/Santiago Vélez/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Médico Demo 01/)).not.toBeInTheDocument();
   });
 
   it('sella el resultado en el servidor y envía el correo real', async () => {

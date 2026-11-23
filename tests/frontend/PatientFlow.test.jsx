@@ -66,6 +66,7 @@ describe('PatientRegisterModal - alta de paciente y alergias', () => {
     fireEvent.change(screen.getByLabelText(/Primer Apellido/i), { target: { value: 'Prado' } });
     fireEvent.change(screen.getByLabelText(/Fecha de Nacimiento/i), { target: { value: '1990-05-14' } });
     fireEvent.change(screen.getByLabelText(/EPS/i), { target: { value: 'Nueva EPS' } });
+    fireEvent.change(screen.getByLabelText(/Grupo Sanguíneo/i), { target: { value: 'O+' } });
   };
 
   it('valida los campos del contrato antes de llamar al servidor', async () => {
@@ -77,8 +78,10 @@ describe('PatientRegisterModal - alta de paciente y alergias', () => {
     expect(await screen.findByText(/El primer nombre es obligatorio/i)).toBeInTheDocument();
     expect(calls).toHaveLength(0);
     expect(Object.keys(validatePatientForm({
-      document_number: '', first_name: '', last_name: '', birth_date: '', eps_name: '', phone: '',
-    }))).toEqual(['document_number', 'first_name', 'last_name', 'birth_date', 'eps_name']);
+      document_number: '', first_name: '', last_name: '', birth_date: '', eps_name: '', blood_type: '', phone: '',
+    }))).toEqual(['document_number', 'first_name', 'last_name', 'birth_date', 'eps_name', 'blood_type']);
+    // DEF-79: el grupo sanguíneo no viene preseleccionado
+    expect(screen.getByLabelText(/Grupo Sanguíneo/i)).toHaveValue('');
   });
 
   it('crea el paciente y registra sus alergias con las llamadas del contrato', async () => {

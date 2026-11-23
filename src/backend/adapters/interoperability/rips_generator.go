@@ -11,7 +11,7 @@ import (
 
 // RIPSGenerator implementa ports.RIPSGeneratorPort para cumplimiento de la Resolucion 2275 de 2023 de MinSalud.
 type RIPSGenerator struct {
-	ipsNIT  string
+	ipsNIT       string
 	codPrestador string
 }
 
@@ -31,11 +31,11 @@ func NewRIPSGenerator(ipsNIT, codPrestador string) ports.RIPSGeneratorPort {
 
 // RIPSJSONEnvelope define la estructura base exigida por la plataforma ministerial de validacion.
 type RIPSJSONEnvelope struct {
-	NumDocumentoIdObligado string        `json:"numDocumentoIdObligado"`
-	NumFactura             string        `json:"numFactura"`
-	TipoNota               *string       `json:"tipoNota"`
-	NumNota                *string       `json:"numNota"`
-	Usuarios               []RIPSUser    `json:"usuarios"`
+	NumDocumentoIdObligado string     `json:"numDocumentoIdObligado"`
+	NumFactura             string     `json:"numFactura"`
+	TipoNota               *string    `json:"tipoNota"`
+	NumNota                *string    `json:"numNota"`
+	Usuarios               []RIPSUser `json:"usuarios"`
 }
 
 type RIPSUser struct {
@@ -57,18 +57,18 @@ type RIPSServices struct {
 }
 
 type RIPSConsulta struct {
-	CodPrestador            string  `json:"codPrestador"`
-	FechaInicioAtencion     string  `json:"fechaInicioAtencion"`
-	NumAutorizacion         *string `json:"numAutorizacion,omitempty"`
-	CodConsulta             string  `json:"codConsulta"` // Codigo CUPS
-	ModalidadGrupoServicio  string  `json:"modalidadGrupoServicio"`
-	GrupoServicios          string  `json:"grupoServicios"`
-	CodServicio             int     `json:"codServicio"`
+	CodPrestador             string  `json:"codPrestador"`
+	FechaInicioAtencion      string  `json:"fechaInicioAtencion"`
+	NumAutorizacion          *string `json:"numAutorizacion,omitempty"`
+	CodConsulta              string  `json:"codConsulta"` // Codigo CUPS
+	ModalidadGrupoServicio   string  `json:"modalidadGrupoServicio"`
+	GrupoServicios           string  `json:"grupoServicios"`
+	CodServicio              int     `json:"codServicio"`
 	FinalidadTecnologiaSalud string  `json:"finalidadTecnologiaSalud"`
-	CausaMotivoAtencion     string  `json:"causaMotivoAtencion"`
-	CodDiagnosticoPrincipal string  `json:"codDiagnosticoPrincipal"`
+	CausaMotivoAtencion      string  `json:"causaMotivoAtencion"`
+	CodDiagnosticoPrincipal  string  `json:"codDiagnosticoPrincipal"`
 	TipoDiagnosticoPrincipal string  `json:"tipoDiagnosticoPrincipal"`
-	VrServicio              float64 `json:"vrServicio"`
+	VrServicio               float64 `json:"vrServicio"`
 }
 
 func (r *RIPSGenerator) GenerateRIPSJSON(
@@ -88,17 +88,17 @@ func (r *RIPSGenerator) GenerateRIPSJSON(
 	}
 
 	consulta := RIPSConsulta{
-		CodPrestador:            r.codPrestador,
-		FechaInicioAtencion:     atencionDate,
-		CodConsulta:             "890201", // Consulta de primera vez por medicina general
-		ModalidadGrupoServicio:  "01",     // Intramural
-		GrupoServicios:          "01",     // Consulta externa / ambulatoria
-		CodServicio:             301,      // Medicina general
+		CodPrestador:             r.codPrestador,
+		FechaInicioAtencion:      atencionDate,
+		CodConsulta:              "890201", // Consulta de primera vez por medicina general
+		ModalidadGrupoServicio:   "01",     // Intramural
+		GrupoServicios:           "01",     // Consulta externa / ambulatoria
+		CodServicio:              301,      // Medicina general
 		FinalidadTecnologiaSalud: "10",     // Diagnostico
-		CausaMotivoAtencion:     "38",     // Enfermedad general
-		CodDiagnosticoPrincipal: record.CIE11Code,
-		TipoDiagnosticoPrincipal: "1",      // Impresion diagnostica / confirmado nuevo
-		VrServicio:              45000.00,
+		CausaMotivoAtencion:      "38",     // Enfermedad general
+		CodDiagnosticoPrincipal:  record.CIE11Code,
+		TipoDiagnosticoPrincipal: "1", // Impresion diagnostica / confirmado nuevo
+		VrServicio:               45000.00,
 	}
 
 	userObj := RIPSUser{

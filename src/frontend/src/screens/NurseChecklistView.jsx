@@ -34,7 +34,7 @@ export const NurseChecklistView = ({ user, patient, onSelectPatient, onNavigate 
   const [currentNoteText, setCurrentNoteText] = useState('');
   const [saveSuccessMessage, setSaveSuccessMessage] = useState('');
 
-  const nurseDisplayName = formatDoctorName(user?.full_name || user?.name || 'Enf. Elizabeth', 'ENFERMERO');
+  const nurseDisplayName = formatDoctorName(user?.full_name || user?.name || 'Personal de enfermería', 'ENFERMERO');
 
   const [syncError, setSyncError] = useState('');
 

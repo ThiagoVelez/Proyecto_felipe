@@ -22,7 +22,7 @@ describe('StaffRegisterModal - Registro y Gobernanza ReTHUS', () => {
     const { container } = render(<StaffRegisterModal isOpen={true} onClose={() => {}} />);
 
     // Rellenamos campos basicos excepto la tarjeta profesional
-    fireEvent.change(screen.getByPlaceholderText(/Ej: Dr. Santiago Vélez/i), {
+    fireEvent.change(screen.getByPlaceholderText(/Nombre y apellidos completos/i), {
       target: { value: 'Dr. Prueba Clínico' },
     });
     fireEvent.change(screen.getByPlaceholderText(/Ej: 1118234567/i), {
@@ -60,7 +60,7 @@ describe('Registro de personal - Acceso exclusivo desde el perfil del administra
     const { container } = render(<StaffRegisterModal isOpen={true} onClose={() => {}} />);
 
     fireEvent.change(screen.getByPlaceholderText(/Ej: RM-94821-VALLE/i), { target: { value: 'ENF-1' } });
-    fireEvent.change(screen.getByPlaceholderText(/Ej: Dr. Santiago Vélez/i), { target: { value: 'Enfermera Prueba' } });
+    fireEvent.change(screen.getByPlaceholderText(/Nombre y apellidos completos/i), { target: { value: 'Enfermera Prueba' } });
     fireEvent.change(screen.getByPlaceholderText(/Ej: 1118234567/i), { target: { value: '111999888' } });
     fireEvent.change(screen.getByPlaceholderText(/usuario@saludconecta.ips.gov.co/i), { target: { value: 'e@example.com' } });
     fireEvent.change(screen.getByPlaceholderText(/••••••••••••/i), { target: { value: 'ClaveSegura2026*' } });
@@ -217,7 +217,7 @@ describe('AdminDashboardScreen - Panel de Control y Separación RBAC', () => {
     expect(screen.getByText(/Total Personal/i)).toBeInTheDocument();
     expect(await screen.findByText('Dra. Ana Servidor')).toBeInTheDocument();
     expect(screen.getByText('Lic. Beto Pendiente')).toBeInTheDocument();
-    expect(screen.queryByText(/Santiago Vélez/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Médico Demo 01/i)).not.toBeInTheDocument();
     fetchSpy.mockRestore();
   });
 
@@ -334,18 +334,18 @@ describe('AdminDashboardScreen - Panel de Control y Separación RBAC', () => {
 describe('UserProfileModal - Perfil Asistencial Tipo Red Social con 5 Banners', () => {
   const mockUser = {
     id: 'usr-med-0002',
-    name: 'Dr. Santiago Vélez',
-    full_name: 'Dr. Santiago Vélez',
+    name: 'Dr. Médico Demo 01',
+    full_name: 'Dr. Médico Demo 01',
     role: 'MEDICO',
     professional_card: 'RM-94821-VALLE',
     specialty: 'Medicina de Urgencias',
     branch: 'Sede Cartago - Hospital Central (Nivel II)',
   };
 
-  it('renderiza la información del perfil del Dr. Santiago Vélez y los 5 banners', () => {
+  it('renderiza la información del perfil del Dr. Médico Demo 01 y los 5 banners', () => {
     render(<UserProfileModal isOpen={true} onClose={() => {}} user={mockUser} />);
 
-    expect(screen.getAllByText(/Dr. Santiago Vélez/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText(/Dr. Médico Demo 01/i).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/RM-94821-VALLE/i)).toBeInTheDocument();
     expect(screen.getByText(/ReTHUS Verificado/i)).toBeInTheDocument();
 
@@ -370,8 +370,8 @@ describe('UserProfileModal - Perfil Asistencial Tipo Red Social con 5 Banners', 
 describe('ProfileScreen - Pantalla Completa Desacoplada sin Ventana Flotante', () => {
   const mockUser = {
     id: 'usr-med-0002',
-    name: 'Dr. Santiago Vélez',
-    full_name: 'Dr. Santiago Vélez',
+    name: 'Dr. Médico Demo 01',
+    full_name: 'Dr. Médico Demo 01',
     role: 'MEDICO',
     professional_card: 'RM-94821-VALLE',
     specialty: 'Medicina de Urgencias',
