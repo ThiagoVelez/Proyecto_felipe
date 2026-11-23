@@ -404,3 +404,12 @@ func TestDEF86DocumentoDeCedulaNormalizado(t *testing.T) {
 		t.Fatalf("el documento leido de la cedula (con ceros) debe coincidir: %v", err)
 	}
 }
+
+// DEF-44: verificar un folio inexistente responde 404, no 500.
+func TestDEF44VerificarFolioInexistenteResponde404(t *testing.T) {
+	env := newCalidadEnv(t)
+	token := calidadToken(t, medicoSemillaID, "MEDICO")
+	if code, _ := peticionJSON(t, env, http.MethodGet, "/api/v1/clinical-records/no-existe/verify", "", token); code != http.StatusNotFound {
+		t.Fatalf("verificar un folio inexistente respondio %d", code)
+	}
+}

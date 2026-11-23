@@ -58,7 +58,11 @@ func main() {
 		})
 		os.Exit(1)
 	}
-	defer repos.Close()
+	defer func() {
+		if err := repos.Close(); err != nil {
+			log.Warn("Error cerrando la conexion de persistencia", map[string]interface{}{"error": err.Error()})
+		}
+	}()
 
 	if cfg.DBDriver == "memory" {
 		log.Warn("Persistencia EN MEMORIA activa: los datos clinicos se perderan al reiniciar. Uso exclusivo de desarrollo y pruebas")

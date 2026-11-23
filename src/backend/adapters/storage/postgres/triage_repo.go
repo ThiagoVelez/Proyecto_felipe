@@ -118,4 +118,3 @@ func (r *triageRepo) UpdateStatus(ctx context.Context, id string, status domain.
 	_, err := r.db.ExecContext(ctx, query, status, id)
 	return err
 }
-

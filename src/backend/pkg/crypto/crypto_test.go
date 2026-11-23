@@ -49,4 +49,3 @@ func TestJWTIssuanceAndValidation(t *testing.T) {
 		t.Fatal("Un token firmado con una clave distinta no debe ser aceptado")
 	}
 }
-

@@ -7,20 +7,17 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"saludconecta-backend/adapters/email"
-	"saludconecta-backend/adapters/pdf"
 	"saludconecta-backend/core/domain"
 	"saludconecta-backend/core/ports"
-	"saludconecta-backend/pkg/logger"
 )
 
 type treatmentService struct {
 	prescRepo   ports.PrescriptionV2Repository
 	patientRepo ports.PatientRepository
 	userRepo    ports.UserRepository
-	pdfGen      *pdf.Generator
-	emailSvc    *email.Service
-	log         *logger.Logger
+	pdfGen      ports.DocumentGenerator
+	emailSvc    ports.Notifier
+	log         ports.Logger
 }
 
 // NewTreatmentService crea el servicio de seguimiento de tratamiento y emision tripartita de recetas
@@ -28,9 +25,9 @@ func NewTreatmentService(
 	prescRepo ports.PrescriptionV2Repository,
 	patientRepo ports.PatientRepository,
 	userRepo ports.UserRepository,
-	pdfGen *pdf.Generator,
-	emailSvc *email.Service,
-	log *logger.Logger,
+	pdfGen ports.DocumentGenerator,
+	emailSvc ports.Notifier,
+	log ports.Logger,
 ) ports.TreatmentService {
 	return &treatmentService{
 		prescRepo:   prescRepo,

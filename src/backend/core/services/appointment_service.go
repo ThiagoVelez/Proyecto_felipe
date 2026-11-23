@@ -10,20 +10,17 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"saludconecta-backend/adapters/email"
-	"saludconecta-backend/adapters/pdf"
 	"saludconecta-backend/core/domain"
 	"saludconecta-backend/core/ports"
-	"saludconecta-backend/pkg/logger"
 )
 
 type appointmentService struct {
 	appRepo     ports.AppointmentRepository
 	patientRepo ports.PatientRepository
 	userRepo    ports.UserRepository
-	pdfGen      *pdf.Generator
-	emailSvc    *email.Service
-	log         *logger.Logger
+	pdfGen      ports.DocumentGenerator
+	emailSvc    ports.Notifier
+	log         ports.Logger
 }
 
 // NewAppointmentService crea el servicio de agendamiento y calendario con despacho asincrono de PDF y correo
@@ -31,9 +28,9 @@ func NewAppointmentService(
 	appRepo ports.AppointmentRepository,
 	patientRepo ports.PatientRepository,
 	userRepo ports.UserRepository,
-	pdfGen *pdf.Generator,
-	emailSvc *email.Service,
-	log *logger.Logger,
+	pdfGen ports.DocumentGenerator,
+	emailSvc ports.Notifier,
+	log ports.Logger,
 ) ports.AppointmentService {
 	return &appointmentService{
 		appRepo:     appRepo,

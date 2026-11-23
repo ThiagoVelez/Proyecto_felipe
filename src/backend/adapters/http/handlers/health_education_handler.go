@@ -179,4 +179,3 @@ func (h *HealthEducationHandler) DeletePost(c *fiber.Ctx) error {
 		"id":      id,
 	})
 }
-

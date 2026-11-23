@@ -353,3 +353,10 @@ func TestMySQLDisparadoresDeInmutabilidad(t *testing.T) {
 		t.Fatalf("el folio debe seguir integro: ok=%v err=%v", ok, err)
 	}
 }
+
+// DEF-38: contra MySQL, una receta que pide mas stock del disponible no queda guardada ni descuenta nada.
+func TestMySQLRecetaSinStockSeRevierteCompleta(t *testing.T) {
+	db := conexionMySQLPrueba(t)
+	probarRecetaSinStockSeRevierte(t, db, mysql.NewUserRepository(db), mysql.NewPatientRepository(db),
+		mysql.NewClinicalRecordRepository(db), mysql.NewPrescriptionRepository(db))
+}

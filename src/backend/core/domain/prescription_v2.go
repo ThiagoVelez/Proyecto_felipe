@@ -88,4 +88,3 @@ type DispenseRequestDTO struct {
 	PaymentMethod   string `json:"payment_method"`   // EPS_DIRECT, CASH, CREDIT_CARD, etc.
 	DispensedByID   string `json:"-"`
 }
-

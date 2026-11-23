@@ -230,4 +230,3 @@ func (h *PharmacyHandler) GetMetrics(c *fiber.Ctx) error {
 	}
 	return c.JSON(metrics)
 }
-

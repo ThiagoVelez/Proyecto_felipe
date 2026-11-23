@@ -136,4 +136,3 @@ func (s *healthEducationService) DeletePost(ctx context.Context, requester *doma
 	}
 	return s.repo.Delete(ctx, id)
 }
-

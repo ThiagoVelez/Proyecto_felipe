@@ -32,4 +32,3 @@ type InventoryItem struct {
 func (i *InventoryItem) IsLowStock() bool {
 	return i.StockQuantity <= i.MinStock
 }
-

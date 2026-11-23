@@ -1,6 +1,7 @@
 package mysql
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"time"
@@ -58,10 +59,11 @@ func NewConnection(cfg Config) (*sql.DB, error) {
 	db.SetConnMaxLifetime(lifetime)
 	db.SetConnMaxIdleTime(idleTime)
 
-	if err := db.Ping(); err != nil {
+	pingCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := db.PingContext(pingCtx); err != nil {
 		return nil, fmt.Errorf("error al verificar ping a mysql (%s:%s): %w", cfg.Host, cfg.Port, err)
 	}
 
 	return db, nil
 }
-

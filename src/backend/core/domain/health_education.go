@@ -10,7 +10,7 @@ var (
 	ErrInvalidPostTitle     = errors.New("el título de la publicación es obligatorio (mínimo 3 caracteres)")
 	ErrInvalidPostCategory  = errors.New("la categoría no pertenece al catálogo de concientización y salud")
 	ErrInvalidPostContent   = errors.New("el contenido de la publicación es obligatorio")
-	ErrVideoDurationTooLong  = errors.New("los videos subidos no pueden exceder 2 minutos (120 segundos) de duración")
+	ErrVideoDurationTooLong = errors.New("los videos subidos no pueden exceder 2 minutos (120 segundos) de duración")
 	ErrPostNotFound         = errors.New("publicación educativa no encontrada")
 )
 
@@ -18,12 +18,12 @@ var (
 type HealthPostCategory string
 
 const (
-	CategoryConsejos     HealthPostCategory = "CONSEJOS"     // Consejos de salud y bienestar
-	CategoryAyudas       HealthPostCategory = "AYUDAS"       // Guías y ayudas asistenciales
-	CategoryEnfermedades HealthPostCategory = "ENFERMEDADES" // Prevención y detección temprana de enfermedades
-	CategoryVacunas      HealthPostCategory = "VACUNAS"      // Esquema y jornadas de vacunación
+	CategoryConsejos     HealthPostCategory = "CONSEJOS"       // Consejos de salud y bienestar
+	CategoryAyudas       HealthPostCategory = "AYUDAS"         // Guías y ayudas asistenciales
+	CategoryEnfermedades HealthPostCategory = "ENFERMEDADES"   // Prevención y detección temprana de enfermedades
+	CategoryVacunas      HealthPostCategory = "VACUNAS"        // Esquema y jornadas de vacunación
 	CategoryEstiloDeVida HealthPostCategory = "ESTILO_DE_VIDA" // Nutrición, actividad física y calidad de vida
-	CategoryPrevencion   HealthPostCategory = "PREVENCION"   // Prevención en salud pública y autocuidado
+	CategoryPrevencion   HealthPostCategory = "PREVENCION"     // Prevención en salud pública y autocuidado
 )
 
 // IsValid valida si la categoría pertenece al catálogo permitido.
@@ -78,4 +78,3 @@ func (p *HealthEducationPost) Validate() error {
 	}
 	return nil
 }
-

@@ -9,14 +9,13 @@ import (
 	"github.com/google/uuid"
 	"saludconecta-backend/core/domain"
 	"saludconecta-backend/core/ports"
-	"saludconecta-backend/pkg/logger"
 )
 
 type pharmacyService struct {
 	inventoryRepo ports.InventoryRepository
 	prescRepo     ports.PrescriptionV2Repository
 	reportRepo    ports.PharmacyReportRepository
-	log           *logger.Logger
+	log           ports.Logger
 }
 
 // NewPharmacyService crea el servicio de farmacia, control de stock, alertas automáticas y dispensación atómica con escáner PDF417
@@ -24,7 +23,7 @@ func NewPharmacyService(
 	inventoryRepo ports.InventoryRepository,
 	prescRepo ports.PrescriptionV2Repository,
 	reportRepo ports.PharmacyReportRepository,
-	log *logger.Logger,
+	log ports.Logger,
 ) ports.PharmacyService {
 	return &pharmacyService{
 		inventoryRepo: inventoryRepo,

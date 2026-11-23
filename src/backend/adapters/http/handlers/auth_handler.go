@@ -91,7 +91,6 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 	})
 }
 
-
 // RefreshTokenRequest estructura el cuerpo para la renovacion del token de acceso.
 type RefreshTokenRequest struct {
 	RefreshToken string `json:"refresh_token"`
@@ -147,6 +146,7 @@ func (h *AuthHandler) Logout(c *fiber.Ctx) error {
 		"message": "Sesion cerrada exitosamente",
 	})
 }
+
 // userView arma la representacion publica de la cuenta autenticada.
 func userView(user *domain.User) fiber.Map {
 	return fiber.Map{
@@ -448,6 +448,8 @@ func (h *AuthHandler) SetupMFA(c *fiber.Ctx) error {
 	secret, err := h.authService.SetupMFA(c.Context(), userID, req.CurrentCode)
 	if err != nil {
 		switch {
+		case errors.Is(err, domain.ErrUserNotFound):
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "usuario no encontrado"})
 		case errors.Is(err, domain.ErrTooManyAttempts):
 			return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{"error": "Demasiados intentos fallidos; intente nuevamente en unos minutos"})
 		case errors.Is(err, domain.ErrCurrentCodeRequired):

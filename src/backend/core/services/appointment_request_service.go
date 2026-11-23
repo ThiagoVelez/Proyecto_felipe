@@ -18,17 +18,12 @@ import (
 
 	"saludconecta-backend/core/domain"
 	"saludconecta-backend/core/ports"
-	"saludconecta-backend/pkg/logger"
 )
 
 // AvailabilityWindow es el horizonte con el que se mide la carga de cada medico al asignar una solicitud.
 const AvailabilityWindow = 14 * 24 * time.Hour
 
-// requestMailer es lo unico que este servicio necesita del adaptador de correo.
-type requestMailer interface {
-	SendWithPDFAttachment(to, subject, body, pdfFilename string, pdfData []byte) error
-}
-
+// ports.Notifier es lo unico que este servicio necesita del adaptador de correo.
 type appointmentRequestService struct {
 	requests     ports.AppointmentRequestRepository
 	branches     ports.BranchRepository
@@ -36,8 +31,8 @@ type appointmentRequestService struct {
 	appointments ports.AppointmentRepository
 	patients     ports.PatientService
 	scheduler    ports.AppointmentService
-	mailer       requestMailer
-	log          *logger.Logger
+	mailer       ports.Notifier
+	log          ports.Logger
 	// mu serializa la asignacion y la atencion de solicitudes para que dos clics no agenden dos veces
 	mu sync.Mutex
 }
@@ -45,7 +40,7 @@ type appointmentRequestService struct {
 // NewAppointmentRequestService construye el servicio de solicitudes de primera cita del portal del paciente.
 func NewAppointmentRequestService(requests ports.AppointmentRequestRepository, branches ports.BranchRepository, users ports.UserRepository,
 	appointments ports.AppointmentRepository, patients ports.PatientService, scheduler ports.AppointmentService,
-	mailer requestMailer, log *logger.Logger) ports.AppointmentRequestService {
+	mailer ports.Notifier, log ports.Logger) ports.AppointmentRequestService {
 	return &appointmentRequestService{requests: requests, branches: branches, users: users, appointments: appointments,
 		patients: patients, scheduler: scheduler, mailer: mailer, log: log}
 }

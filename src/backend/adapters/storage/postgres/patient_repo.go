@@ -21,7 +21,7 @@ func NewPatientRepository(db *sql.DB) ports.PatientRepository {
 func (r *patientRepo) GetByID(ctx context.Context, id string) (*domain.Patient, error) {
 	query := `
 		SELECT id, document_type, document_number, first_name, second_name, last_name, second_last_name,
-		       birth_date, gender, blood_type, eps_name, affiliation_status, phone, is_rural_zone, created_at, updated_at
+		       birth_date, gender, blood_type, eps_name, affiliation_status, phone, COALESCE(email, ''), COALESCE(address, ''), is_rural_zone, created_at, updated_at
 		FROM patients
 		WHERE id = $1
 	`
@@ -30,7 +30,7 @@ func (r *patientRepo) GetByID(ctx context.Context, id string) (*domain.Patient, 
 	var p domain.Patient
 	err := row.Scan(
 		&p.ID, &p.DocumentType, &p.DocumentNumber, &p.FirstName, &p.SecondName, &p.LastName, &p.SecondLastName,
-		&p.BirthDate, &p.Gender, &p.BloodType, &p.EPSName, &p.AffiliationStatus, &p.Phone, &p.IsRuralZone, &p.CreatedAt, &p.UpdatedAt,
+		&p.BirthDate, &p.Gender, &p.BloodType, &p.EPSName, &p.AffiliationStatus, &p.Phone, &p.Email, &p.Address, &p.IsRuralZone, &p.CreatedAt, &p.UpdatedAt,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, domain.ErrPatientNotFound
@@ -50,7 +50,7 @@ func (r *patientRepo) GetByID(ctx context.Context, id string) (*domain.Patient, 
 func (r *patientRepo) GetByDocument(ctx context.Context, docType domain.DocumentType, docNumber string) (*domain.Patient, error) {
 	query := `
 		SELECT id, document_type, document_number, first_name, second_name, last_name, second_last_name,
-		       birth_date, gender, blood_type, eps_name, affiliation_status, phone, is_rural_zone, created_at, updated_at
+		       birth_date, gender, blood_type, eps_name, affiliation_status, phone, COALESCE(email, ''), COALESCE(address, ''), is_rural_zone, created_at, updated_at
 		FROM patients
 		WHERE document_type = $1 AND document_number = $2
 	`
@@ -59,7 +59,7 @@ func (r *patientRepo) GetByDocument(ctx context.Context, docType domain.Document
 	var p domain.Patient
 	err := row.Scan(
 		&p.ID, &p.DocumentType, &p.DocumentNumber, &p.FirstName, &p.SecondName, &p.LastName, &p.SecondLastName,
-		&p.BirthDate, &p.Gender, &p.BloodType, &p.EPSName, &p.AffiliationStatus, &p.Phone, &p.IsRuralZone, &p.CreatedAt, &p.UpdatedAt,
+		&p.BirthDate, &p.Gender, &p.BloodType, &p.EPSName, &p.AffiliationStatus, &p.Phone, &p.Email, &p.Address, &p.IsRuralZone, &p.CreatedAt, &p.UpdatedAt,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, domain.ErrPatientNotFound
@@ -80,8 +80,8 @@ func (r *patientRepo) Create(ctx context.Context, patient *domain.Patient) error
 	query := `
 		INSERT INTO patients (
 			id, document_type, document_number, first_name, second_name, last_name, second_last_name,
-			birth_date, gender, blood_type, eps_name, affiliation_status, phone, is_rural_zone
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+			birth_date, gender, blood_type, eps_name, affiliation_status, phone, is_rural_zone, email, address
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
 	`
 	_, err := r.db.ExecContext(ctx, query,
 		patient.ID,
@@ -98,6 +98,8 @@ func (r *patientRepo) Create(ctx context.Context, patient *domain.Patient) error
 		patient.AffiliationStatus,
 		patient.Phone,
 		patient.IsRuralZone,
+		patient.Email,
+		patient.Address,
 	)
 	return err
 }
@@ -108,7 +110,7 @@ func (r *patientRepo) List(ctx context.Context, limit, offset int) ([]domain.Pat
 	}
 	query := `
 		SELECT id, document_type, document_number, first_name, second_name, last_name, second_last_name,
-		       birth_date, gender, blood_type, eps_name, affiliation_status, phone, is_rural_zone, created_at, updated_at
+		       birth_date, gender, blood_type, eps_name, affiliation_status, phone, COALESCE(email, ''), COALESCE(address, ''), is_rural_zone, created_at, updated_at
 		FROM patients
 		ORDER BY created_at DESC
 		LIMIT $1 OFFSET $2
@@ -124,7 +126,7 @@ func (r *patientRepo) List(ctx context.Context, limit, offset int) ([]domain.Pat
 		var p domain.Patient
 		if err := rows.Scan(
 			&p.ID, &p.DocumentType, &p.DocumentNumber, &p.FirstName, &p.SecondName, &p.LastName, &p.SecondLastName,
-			&p.BirthDate, &p.Gender, &p.BloodType, &p.EPSName, &p.AffiliationStatus, &p.Phone, &p.IsRuralZone, &p.CreatedAt, &p.UpdatedAt,
+			&p.BirthDate, &p.Gender, &p.BloodType, &p.EPSName, &p.AffiliationStatus, &p.Phone, &p.Email, &p.Address, &p.IsRuralZone, &p.CreatedAt, &p.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -214,4 +216,3 @@ func (r *patientRepo) Delete(ctx context.Context, id string) error {
 	}
 	return tx.Commit()
 }
-

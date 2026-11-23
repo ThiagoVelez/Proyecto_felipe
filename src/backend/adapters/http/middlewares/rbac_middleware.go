@@ -33,4 +33,3 @@ func RequireRoles(allowedRoles ...string) fiber.Handler {
 		return c.Next()
 	}
 }
-

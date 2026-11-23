@@ -217,4 +217,3 @@ func (r *pharmacyReportRepository) GetMetrics(ctx context.Context) (map[string]i
 
 	return metrics, nil
 }
-

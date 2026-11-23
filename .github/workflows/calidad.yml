@@ -67,11 +67,15 @@ jobs:
         run: |
           (cd src/backend && go vet ./...)
           (cd tests/backend && go vet ./...)
-      - name: golangci-lint (hallazgos nuevos)
+      - name: gofmt (DEF-44)
+        run: |
+          sin_formato=$(gofmt -l src/backend tests/backend)
+          if [ -n "$sin_formato" ]; then echo "Archivos sin gofmt:"; echo "$sin_formato"; exit 1; fi
+      - name: golangci-lint (todo el codigo)
         run: |
           (cd src/backend && golangci-lint run --config ../../.golangci.yml ./...)
           (cd tests/backend && golangci-lint run --config ../../.golangci.yml ./...)
-      - name: staticcheck (informativo, linea base con SA4006 en DEF-44)
+      - name: staticcheck (informativo)
         continue-on-error: true
         working-directory: src/backend
         run: staticcheck ./... | tee ../../staticcheck.txt

@@ -338,4 +338,3 @@ func (r *prescriptionV2Repository) MarkAsDispensedTx(ctx context.Context, req do
 
 	return tx.Commit()
 }
-
