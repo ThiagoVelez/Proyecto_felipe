@@ -863,3 +863,366 @@ Todos los entregables de la **Entrega-s2** han sido versionados en la rama de tr
 git push origin prueba
 git push origin entrega-s2
 ```
+
+
+
+1.1. Lo que se encontró al auditar el proyecto actual
+Estado técnico verificado (Código, Pruebas y Defectos)
+Cierre de defectos (DEF-01 a DEF-98):
+Según 04-bitacora-defectos.md (cierre del 23 nov 2026), hay 97 defectos cerrados y 1 corregido parcialmente (DEF-44: golangci-lint quedó en 0 hallazgos en todo el código; se acepta como deuda planificada la complejidad ciclomática > 15 en 12 funciones).
+El archivo defectos-abiertos.txt está vacío (0 defectos abiertos con reproducción automatizada).
+Inventario real de pruebas automatizadas en el repositorio:
+Backend (tests/backend/ + src/backend/): 44 archivos *_test.go con 158 funciones Test* y 3 Benchmark* (tests/backend/: 39 archivos, 149 Test* + 3 Benchmark*, incluidas 9 pruebas con tag integration para MariaDB/MySQL y PostgreSQL; src/backend/: 5 archivos, 9 Test*).
+Frontend (tests/frontend/): 20 archivos .test.js(x) con 133 bloques it() + 3 bloques it.each() (147 ejecuciones de prueba en total sobre Vitest ^4.1.12, Vite ^6.4.6 y React 18.3.1).
+Módulos reales presentes en router.go y src/frontend/src/screens/:
+Autenticación dual JWT (15 min / 7 días con rotación), TOTP RFC 6238 en servidor y sesión independiente por pestaña (sessionStorage).
+8 Roles RBAC: ADMIN, MEDICO, ENFERMERO, ADMISION, AUDITOR, FARMACIA, LABORATORIO (Rol ID 7) y TI (Rol ID 8).
+Registro inicial controlado desde login (/api/v1/auth/setup-status, /register-ti con TI_SETUP_CODE, /register-branch-admin) y panel propio de TI (/api/v1/ti/*).
+Portal público del paciente (/solicitar-cita, /api/v1/public/branches, /api/v1/public/appointment-requests) con Haversine y asignación al médico más libre, y bandeja del médico (/api/v2/appointment-requests/*).
+Triaje Manchester, HCE con hash SHA-256 encadenado y notas aclaratorias, Kit Médico (EVA 0-10, notas anatómicas, Muro de Salud con límite de video <= 120s), Prescripción v1 y v2 con cruce de alergias por familia, Farmacia V2 con PDF417 y reportes de stock bajo (/api/v2/pharmacy/*), Laboratorio en servidor (/api/v2/lab-orders/*), Enfermería en servidor (/api/v2/nursing/*), Sedes dinámicas en BD (/api/v1/branches, /api/v1/admin/branches), RIPS JSON y FHIR R4.
+Hallazgos documentales que debes actualizar antes de subir a Git
+QA-actualizado.md quedó desactualizado: todavía reporta 14 suites / 105 pruebas y no incluye Laboratorio en BD, Enfermería en BD, Portal de Primera Cita, Rol Encargado de TI, Sedes en BD ni el cierre R3 de DEF-01 a DEF-98.
+docs/especificacion.md solo documenta hasta RF12 y RNF08; faltan RF13 a RF16 y los requerimientos de Entrega Final (RF17 a RF20).
+docs/plan-de-pruebas.md solo lista 12 casos TC-* + 11 TC-SEC-* y la RTM llega hasta RF12.
+README.md tiene 3 detalles menores por alinear:
+En la fila de RF16 (línea 532) todavía dice "almacenamiento persistente en localStorage" para notas de enfermería, cuando NurseChecklistView.jsx ya persiste en el servidor (/api/v2/nursing, tabla nursing_care).
+En la sección 1.24 (línea 2799) dice 135 de 135 pruebas en 18 archivos, mientras el repositorio actual ya suma 20 archivos y 147 casos (133 it + 14 casos it.each).
+En la tabla de auditoría (línea 3154) sigue diciendo 105 pruebas.
+1.2. Contenido listo para llenar los archivos de Git
+A. Bloque para actualizar docs/especificacion.md (Agregar RF13–RF20 y corregir RF01/RF16)
+markdown
+Código	Nombre del Requisito	Descripción Detallada	Prioridad MoSCoW
+RF13	Agendamiento y Calendario Médico	Vista mensual en consulta externa (DoctorAppointmentsView.jsx) con validacion de fechas pasadas, control de traslape horario de 20 minutos, propiedad de agenda por medico de sesion, generacion de PDF y envio asincrono SMTP en hora de Colombia (/api/v2/appointments).	Must Have
+RF14	Seguimiento de Tratamiento y Prescripcion Tripartita	Formulacion multiproducto (TreatmentFollowUpView.jsx) por concentracion exacta de inventario, liquidacion de cobertura (PBS 100%, Copago 15%, Particular), validacion previa de alergias por familia y despacho simultaneo a HCE, correo PDF y Farmacia (/api/v2/treatments/dispatch).	Must Have
+RF15	Farmacia V2, Lector PDF417 y Reportes de Stock Bajo	Buzon de recetas con lectura de cedula PDF417 normalizada (@zxing/library), validacion de vigencia/no vencimiento, dispensacion atomica ACID con proteccion contra doble despacho (HTTP 409), CRUD de inventario por concentracion y generacion autonoma de alertas de desabastecimiento (CRITICA, ALTA, MEDIA) visibles para Farmacia y Administracion (/api/v2/pharmacy/*).	Must Have
+RF16	Enfermeria Asistencial en Servidor (Resumen y Chequeo)	Resumen clinico (NurseSummaryView.jsx) con alergias reales consultadas al servidor (sin datos fabricados) y lista de chequeo/notas de turno persistidas en servidor (/api/v2/nursing, tabla nursing_care), firmadas con fecha/hora de Colombia y usuario autenticado.	Must Have
+RF17	Laboratorio Clinico y Ordenes Paraclinicas (Rol ID 7)	Prescripcion medica de examenes (DoctorLabOrdersView.jsx), bandeja de bacteriologia (LaboratoryScreen.jsx) con correlativo unico LAB-YYYY-XXX asignado por el servidor, guardado parcial, sellado ReTHUS inmutable (HTTP 409 post-cierre), impresion membretada (DoctorPrintLabResultsView.jsx) y despacho real por correo al paciente con copia al medico (/api/v2/lab-orders/*).	Must Have
+RF18	Portal Publico del Paciente y Solicitud de Primera Cita	Formulario publico sin sesion (/solicitar-cita) con geolocalizacion opcional y calculo Haversine de sede mas cercana, consentimiento obligatorio Ley 1581 de 2012, limite 5 req/min por IP, asignacion al medico activo con mayor disponibilidad, bandeja del medico (DoctorRequestsInbox.jsx) y agendamiento/rechazo con notificacion por correo (/api/v1/public/*, /api/v2/appointment-requests/*).	Should Have
+RF19	Encargado de TI (Rol ID 8) y Registro Inicial Controlado	Alta unica de Encargado de TI desde el login mediante TI_SETUP_CODE (HTTP 403/409 si falla o ya existe), solicitud de primer Administrador por sede (pendiente hasta aprobacion de TI), panel de monitoreo del sistema, gestion exclusiva de administradores y bitacora (TiLayout.jsx, /api/v1/ti/*).	Must Have
+RF20	Sedes Dinamicas en Servidor, Kit Medico 3D/EVA y UI Responsive	Catalogo de sedes en BD (/api/v1/branches, /api/v1/admin/branches) con bloqueo de eliminacion si tiene personal asignado (HTTP 409), notas anatomicas y escala EVA 0-10 integradas al folio HCE, muro de salud (videos <= 120s), sesion independiente por pestana (sessionStorage), History API y adaptacion responsive mobile-first.	Should Have
+B. Bloque para actualizar QA-actualizado.md y docs/plan-de-pruebas.md
+markdown
+Resumen Cuantitativo Verificado en el Repositorio (Corte 24 nov 2026)
+Backend Go (tests/backend/ + src/backend/):
+44 archivos *_test.go con 158 funciones Test* y 3 Benchmark*.
+Desglose: tests/backend/ (39 archivos, 149 Test*, 3 Benchmark*, incluyendo 9 pruebas integration contra MariaDB/MySQL y PostgreSQL) + src/backend/ (5 archivos, 9 Test*).
+Frontend React (tests/frontend/):
+20 archivos .test.js(x) con 147 casos ejecutables (133 it() + 14 casos parametrizados vía it.each()):
+AdminGovernance.test.jsx (23), AdminOrgChartAndBranches.test.jsx (6), AllergyAlertModal.test.jsx (5), AuthMfa.test.jsx (13), CedulaPdf417.test.js (3), ClinicalScreens.test.jsx (11), DoctorAppointmentsView.test.jsx (1), DoctorLayout.test.jsx (6), MedicalKit.test.jsx (9), NurseModules.test.jsx (3), PatientFlow.test.jsx (10), PatientRequests.test.jsx (11), PharmacyDashboard.test.jsx (2), ResilienceQuality.test.jsx (2), ServerBackedModules.test.jsx (6), SessionPerTab.test.js (3), TiSetup.test.jsx (11), totp.regression.test.js (3), totp.test.js (18), TreatmentFollowUpView.test.jsx (1).
+Bitácora de Defectos (docs/calidad/04-bitacora-defectos.md):
+97 defectos cerrados (DEF-01 a DEF-98, salvo DEF-44), 1 corregido parcialmente (DEF-44 — golangci-lint en 0 hallazgos, complejidad ciclomática > 15 en 12 funciones aceptada como deuda técnica planificada).
+docs/calidad/defectos-abiertos.txt: 0 defectos abiertos.
+Matriz de Trazabilidad Completa (RTM RF01–RF20 y RNF01–RNF08)
+Código	Requisito	Pruebas Backend Asociadas	Pruebas Frontend Asociadas
+RF01	Auth, JWT Dual, MFA TOTP, RBAC	auth_security_test.go, rbac_matrix_regression_test.go, crypto_test.go, refresh_token_tracker_test.go, calidad_defectos_abiertos_regression_test.go (DEF-49,50), calidad_defectos_corregidos_v2_regression_test.go (DEF-13,14,31)	AuthMfa.test.jsx, totp.test.js, totp.regression.test.js
+RF02	Triaje Manchester y BVA/EP	triage_test.go, triage_security_test.go, triaje_limites_regression_test.go, triaje_manchester_regression_test.go, quality_regression_test.go, clinical_record_service_test.go	ClinicalScreens.test.jsx
+RF03	HCE e Inmutabilidad Res. 1995	clinical_record_test.go, quality_regression_test.go, mysql_entrega_integration_test.go (triggers), postgres_integration_test.go	ClinicalScreens.test.jsx, ResilienceQuality.test.jsx
+RF04	Cadena Criptográfica SHA-256	clinical_chain_test.go, clinical_record_service_test.go, mysql_integration_test.go, calidad_defectos_abiertos_regression_test.go (DEF-29,30), calidad_defectos_corregidos_v2_regression_test.go (DEF-16,17)	ClinicalScreens.test.jsx
+RF05	Intercepción Alergias (< 150 ms)	prescription_test.go, prescription_security_test.go, prescripcion_paciente_regression_test.go, alergias_vigencia_regression_test.go, calidad_defectos_abiertos_regression_test.go (DEF-51,60)	ClinicalScreens.test.jsx, AllergyAlertModal.test.jsx
+RF06	Sincronización Offline Rural	sync_test.go, clinical_chain_test.go, calidad_defectos_corregidos_v2_regression_test.go (DEF-07,18)	— (Lógica core + PWA)
+RF07	Gobernanza ReTHUS	admin_governance_test.go, staff_register_routes_test.go	AdminGovernance.test.jsx
+RF08	Panel Admin y Bitácora Forense	admin_governance_test.go, auditoria_concurrencia_regression_test.go, calidad_r3_cierre_backend_test.go (DEF-71)	AdminGovernance.test.jsx, AdminOrgChartAndBranches.test.jsx
+RF09	Perfil Alto Contraste WCAG AAA	— (Validado por script def36-contraste-banners.mjs)	AdminGovernance.test.jsx, DoctorLayout.test.jsx
+RF10	Sidebar Colapsable y Sesión F5	auth_security_test.go	DoctorLayout.test.jsx, SessionPerTab.test.js, AuthMfa.test.jsx
+RF11	Admisión Pacientes y Alergias	patient_api_test.go, lab_nursing_branch_test.go, calidad_defectos_abiertos_regression_test.go (DEF-55,68)	PatientFlow.test.jsx
+RF12	Catálogo Farmacológico y Stock	prescription_security_test.go, catalogo_aliasing_regression_test.go, calidad_r3_cierre_backend_test.go (DEF-38)	TreatmentFollowUpView.test.jsx
+RF13	Citas Médicas y Calendario	appointment_test.go, calidad_revision_r3_regression_test.go (DEF-85,88), calidad_r3_cierre_backend_test.go (DEF-69), mysql_entrega_integration_test.go	DoctorAppointmentsView.test.jsx
+RF14	Seguimiento y Receta Tripartita	calidad_defectos_abiertos_regression_test.go (DEF-51,52), calidad_r3_cierre_backend_test.go (DEF-64), mysql_entrega_integration_test.go	TreatmentFollowUpView.test.jsx
+RF15	Farmacia V2, PDF417 y Stock	pharmacy_dispensation_test.go, inventory_repo_test.go, calidad_defectos_abiertos_regression_test.go (DEF-53,54,58,59), calidad_revision_r3_regression_test.go, calidad_r3_cierre_backend_test.go (DEF-86)	PharmacyDashboard.test.jsx, CedulaPdf417.test.js
+RF16	Enfermería en Servidor (HCE/Notas)	lab_nursing_branch_test.go, mysql_entrega_integration_test.go	NurseModules.test.jsx
+RF17	Laboratorio Clínico (Rol 7)	lab_nursing_branch_test.go, mysql_entrega_integration_test.go	ServerBackedModules.test.jsx
+RF18	Portal Paciente y Primera Cita	appointment_request_test.go, mysql_entrega_integration_test.go	PatientRequests.test.jsx
+RF19	Encargado de TI y Setup Login	ti_setup_test.go	TiSetup.test.jsx
+RF20	Sedes BD, Kit 3D/EVA y Muro	anatomical_notes_test.go, health_education_test.go, lab_nursing_branch_test.go, calidad_defectos_abiertos_regression_test.go (DEF-57,67,70,72), calidad_r3_cierre_backend_test.go (DEF-66)	MedicalKit.test.jsx, ServerBackedModules.test.jsx, AdminOrgChartAndBranches.test.jsx
+RNF01	Latencia p95 < 400 ms	rendimiento_regression_test.go, performance_benchmark_test.go	—
+RNF02	Auditoría y X-Correlation-ID	correlacion_id_regression_test.go, auditoria_concurrencia_regression_test.go, calidad_r3_cierre_backend_test.go (DEF-71)	AdminGovernance.test.jsx
+RNF03	Seguridad OWASP ASVS	auth_security_test.go, rbac_matrix_regression_test.go, calidad_r3_cierre_backend_test.go (DEF-15,62), calidad_defectos_abiertos_regression_test.go (DEF-61)	AuthMfa.test.jsx, totp.regression.test.js
+RNF04	Inmutabilidad Aplicación + BD	clinical_record_test.go, mysql_entrega_integration_test.go, postgres_integration_test.go	ResilienceQuality.test.jsx
+RNF05	Resiliencia Rural Offline	sync_test.go, clinical_chain_test.go	ResilienceQuality.test.jsx
+RNF06	Fail-Closed Secretos y BD	config_regression_test.go, calidad_r3_cierre_backend_test.go (DEF-10,32), calidad_revision_r3_regression_test.go (DEF-63)	—
+RNF07	Gestión de Secretos .env	auth_security_test.go, config_regression_test.go	—
+RNF08	Consistencia bajo Concurrencia	clinical_chain_test.go, prescription_security_test.go, catalogo_aliasing_regression_test.go, ti_setup_test.go, calidad_r3_cierre_backend_test.go (DEF-69, ParametrosDeRuta)	SessionPerTab.test.js
+C. Mensaje de Commit, Descripción del Pull Request y Comandos Git
+
+Mensaje de commit sugerido (Conventional Commits):
+
+text
+docs(qa): actualizar especificacion RF13-RF20, plan de pruebas y matriz RTM tras cierre R3
+
+Descripción para el Pull Request (compatible con PULL_REQUEST_TEMPLATE.md):
+
+markdown
+Resumen de cambios
+Se actualiza docs/especificacion.md incorporando RF13 a RF20 (citas, prescripción tripartita, farmacia V2/PDF417, enfermería en servidor, laboratorio Rol 7, portal de primera cita, encargado de TI Rol 8 y sedes en BD).
+Se actualiza docs/plan-de-pruebas.md y QA-actualizado.md con el inventario real de pruebas del repositorio:
+Backend Go: 44 archivos *_test.go (158 Test* + 3 Benchmark*, incluyendo 9 pruebas de integración MySQL/PostgreSQL).
+Frontend React/Vitest: 20 archivos de prueba (147 casos ejecutables: 133 it() + 14 casos it.each()).
+Bitácora de defectos (docs/calidad/04-bitacora-defectos.md): 97 cerrados, 1 parcial aceptado (DEF-44), 0 abiertos en defectos-abiertos.txt.
+Se alinea README.md (nota de enfermería en servidor /api/v2/nursing en lugar de localStorage, y conteo de pruebas frontend).
+Verificación antes del push
+ cd tests/backend && go test -race -count=1 ./...
+ cd src/backend && go test -race -count=1 ./...
+ cd src/frontend && npm ci && npx vitest run && npm run build
+
+Comandos para validar localmente y subir a Git (en tu máquina con Git, Go y Node):
+
+powershell
+# 1. Verificar pruebas Backend (con detector de carreras)
+cd src/backend
+go test -race -count=1 ./...
+cd ../../tests/backend
+go test -race -count=1 ./...
+# 2. Verificar pruebas y compilación Frontend
+cd ../../src/frontend
+npm ci
+npx vitest run
+npm run build
+# 3. Subir cambios al repositorio Git
+cd ../..
+git status
+git add docs/especificacion.md docs/plan-de-pruebas.md QA-actualizado.md README.md
+git commit -m "docs(qa): actualizar especificacion RF13-RF20, plan de pruebas y matriz RTM tras cierre R3"
+git push origin HEAD
+PARTE 2: BATERÍA DE PRUEBAS QA ULTRA DETALLADA (12 BLOQUES / 58 CASOS)
+
+Cada bloque combina verificación funcional (Caja Negra EP/BVA), seguridad (OWASP ASVS / RBAC / IDOR), integridad / concurrencia y UI / Responsive, indicando exactamente qué archivo automatizado lo cubre y qué validar manualmente o por API.
+
+Bloque 1: Autenticación, JWT Dual, MFA TOTP RFC 6238 y Sesión por Pestaña (RF01, RF10)
+ID	Título del Caso	Precondición / Actor	Pasos y Datos de Entrada	Resultado Esperado Exacto	Cobertura Automatizada
+QA-AUTH-01	Login con credenciales válidas sin MFA y rotación de Refresh Token	Usuario activo en BD (is_active=true, mfa_enabled=false)	1. POST /api/v1/auth/login con email, password y branch.
+2. Usar refresh_token en POST /api/v1/auth/refresh.
+3. Reintentar el refresh_token antiguo.	1. HTTP 200, entrega access_token (15m) y refresh_token (7d).
+2. Rotación emite nuevo par.
+3. Reuso del token viejo revoca la sesión (HTTP 401).	TestDualTokenLoginAndRefreshFlow, AuthMfa.test.jsx
+QA-AUTH-02	Desafío TOTP RFC 6238 en servidor y rechazo de código errado	Usuario con mfa_enabled=true	1. POST /api/v1/auth/login sin totp_code.
+2. Enviar totp_code: "000000".
+3. Enviar código TOTP vigente calculado con secreto real.	1. Respuesta indica mfa_required: true.
+2. HTTP 401 y limpia casillas en AuthScreen.jsx.
+3. HTTP 200 validado en servidor (nunca en cliente).	AuthMfa.test.jsx, totp.test.js, totp.regression.test.js
+QA-AUTH-03	Bloqueo por fuerza bruta en login y TOTP + IP real	Cuenta activa; proxy configurado en TRUSTED_PROXIES	1. Enviar 5 intentos fallidos consecutivos de contraseña o TOTP.
+2. Enviar intento 6 desde IP real y probar suplantar X-Real-IP desde IP no confiable.	1. Al 5.º fallo, cuenta bloqueada 15 min -> HTTP 429 Too Many Requests.
+2. X-Real-IP solo se respeta si proviene de TRUSTED_PROXIES (DEF-15).	TestLoginBruteForceLockout, TestTOTPBruteForceLockout, TestRateLimitUsesRealClientIPBehindProxy, TestDEF15ProxiesDeConfianzaPorDefectoSoloLoopback
+QA-AUTH-04	Revocación inmediata por suspensión y rol desde BD	Usuario autenticado con JWT vigente	1. ADMIN ejecuta PATCH /api/v1/admin/users/:id/status con is_active: false.
+2. El usuario llama GET /api/v1/auth/me o POST /api/v1/auth/refresh.
+3. Probar JWT manipulado con role: "ADMIN" de un usuario MEDICO.	1. Suspensión guardada.
+2. Token rechazado inmediatamente con HTTP 401 (DEF-13).
+3. Rutas admin responden 403 porque el rol se lee de BD (TestRoleComesFromStoreNotToken).	TestDeactivatedUserLosesAccessImmediately, TestRefreshTokenRevocationOnUserDeactivation, TestDEF13TokenDeUsuarioDesactivadoEsRechazado
+QA-AUTH-05	Reconfiguración MFA exige TOTP vigente y semilla protegida	Usuario con MFA activo vs. anónimo	1. Anónimo llama GET /api/v1/auth/mfa-seed.
+2. Usuario autenticado llama POST /api/v1/auth/mfa/setup sin current_code o con código falso.	1. HTTP 401 (DEF-50).
+2. HTTP 401 (DEF-14): no se desactiva ni sobreescribe el MFA vigente.	TestMFASetupRequiresCurrentCode, TestDEF50SemillaMFANoSeExponeSinAutenticacion, TestDEF14SetupMFANoDesactivaSegundoFactor
+QA-AUTH-06	Aislamiento de sesión por pestaña y recarga F5	Navegador con 3 pestañas	1. Pestaña A: login MEDICO.
+2. Pestaña B: login LABORATORIO.
+3. Pestaña C: login ENFERMERO.
+4. Pulsar F5 en las 3 pestañas y abrir pestaña nueva en blanco.	Cada pestaña conserva su propio perfil (sessionStorage, DEF-97); la pestaña nueva pide login; localStorage legado se migra una sola vez y se limpia.	SessionPerTab.test.js
+Bloque 2: Encargado de TI (Rol 8), Setup Inicial desde Login y Gobernanza ReTHUS (RF07, RF19)
+ID	Título del Caso	Precondición / Actor	Pasos y Datos de Entrada	Resultado Esperado Exacto	Cobertura Automatizada
+QA-TI-01	Registro único del Encargado de TI con TI_SETUP_CODE	BD sin TI, TI_SETUP_CODE configurado (>=12 chars)	1. Abrir login (GET /api/v1/auth/setup-status).
+2. Intentar POST /api/v1/auth/register-ti con código errado.
+3. Enviar código correcto.
+4. Lanzar 8 registros simultáneos.	1. Muestra botón "Registrar Encargado de TI".
+2. HTTP 403 (comparación tiempo constante).
+3. HTTP 201 + QR MFA; botón desaparece.
+4. Bajo setupMu, solo 1 crea TI; los otros 7 reciben HTTP 409.	ti_setup_test.go (10 tests), TiSetup.test.jsx
+QA-TI-02	Solicitud de Administrador de Sede pendiente y aprobación por TI	Sedes sin admin; TI autenticado	1. Desde login, enviar POST /api/v1/auth/register-branch-admin para sede sin admin.
+2. Intentar login con esa cuenta.
+3. Verificar setup-status.
+4. TI aprueba vía PATCH /api/v1/ti/admins/:id/status.	1. Cuenta nace pendiente (is_active=false).
+2. Login rechazado con "Cuenta inactiva o pendiente de aprobación".
+3. La sede sigue disponible hasta que TI apruebe.
+4. Tras aprobar, sede queda ocupada y admin inicia sesión.	TestRegistroAdministradorPorSedeQuedaPendienteDeAprobacion, TiSetup.test.jsx
+QA-TI-03	Aislamiento entre TI y ADMIN y protección de cuenta TI	TI y ADMIN activos	1. ADMIN intenta POST /api/v1/auth/register-admin o PATCH /api/v1/admin/users/:ti_id/status.
+2. TI intenta acceder a /api/v1/patients o /api/v1/clinical-records.	1. HTTP 403 (ErrProtectedAccount / RequireRoles("TI")).
+2. HTTP 403 (TI aislado de datos clínicos).	TestAdministradoresAdicionalesSoloLosRegistraTI, TestAdministradorNoPuedeSuspenderAlEncargadoDeTI, TestPanelTIRestringidoAlRolTI
+QA-GOV-01	Registro de personal asistencial ReTHUS inactivo por defecto	ADMIN autenticado	1. POST /api/v1/admin/users con rol MEDICO/ENFERMERO/LABORATORIO sin professional_card.
+2. Enviar con professional_card válida.
+3. Intentar login antes de activar.	1. Rechazo ErrMissingProfessionalCard (HTTP 422).
+2. Se crea con is_active: false.
+3. Login rechazado (403, sin revelar estado si clave falla - DEF-31).	admin_governance_test.go, staff_register_routes_test.go, AdminGovernance.test.jsx
+Bloque 3: Sedes Dinámicas, Organigrama y Bitácora Forense (RF08, RF20, RNF02)
+ID	Título del Caso	Precondición / Actor	Pasos y Datos de Entrada	Resultado Esperado Exacto	Cobertura Automatizada
+QA-ADM-01	CRUD de sedes en servidor y bloqueo por integridad referencial	ADMIN autenticado	1. POST /api/v1/admin/branches con nombre, dirección, latitud y longitud.
+2. Editar sede y eliminar sede recién creada.
+3. Intentar eliminar/renombrar sede con personal asignado.	1. Persiste en tabla branches y aparece en login/portal.
+2. No hay 404 intermitente en parámetros de ruta (Immutable: true, DEF-98).
+3. HTTP 409 explicando que tiene personal asignado.	TestSedesEnElServidorConCRUDDelAdministrador, TestParametrosDeRutaNoSeCorrompenEntrePeticiones, ServerBackedModules.test.jsx
+QA-ADM-02	Organigrama jerárquico y sincronización sin F5	ADMIN en AdminOrgChartView.jsx	1. Activar/suspender un médico o bacteriólogo en Gobernanza.
+2. Observar AdminOrgChartView (dep-medicos, dep-laboratorio, etc.).	La cúspide muestra al admin real (sin nombres ficticios, DEF-22) y el evento saludconecta_users_updated + polling cada 8s actualiza contadores sin F5.	AdminOrgChartAndBranches.test.jsx
+QA-ADM-03	Bitácora forense real, X-Correlation-ID y lecturas v2	ADMIN o TI + peticiones concurrentes	1. Enviar petición con X-Correlation-ID: "inyeccion-123".
+2. Realizar lectura en /api/v2/pharmacy/inbox o /api/v2/lab-orders.
+3. Consultar GET /api/v1/admin/audit-logs bajo 20 peticiones concurrentes.	1. El middleware descarta el header no-UUID y genera UUID v4 (DEF-41).
+2. Queda evento de lectura v2 auditado (DEF-71).
+3. Sin corrupción de strings reciclados de Fiber (DEF-28) ni error SQL timestamp vs created_at.	TestDEF41CorrelationIDSoloAceptaUUID, TestDEF28AuditoriaConservaDatosTrasFinalizarPeticion, TestDEF71LecturasV2QuedanAuditadas, AdminGovernance.test.jsx
+Bloque 4: Admisión de Pacientes y Antecedentes Alérgicos (RF11)
+ID	Título del Caso	Precondición / Actor	Pasos y Datos de Entrada	Resultado Esperado Exacto	Cobertura Automatizada
+QA-PAT-01	Alta de paciente con correo, dirección y grupo sanguíneo obligatorio	Rol ADMISION, ENFERMERO o MEDICO	1. Intentar crear paciente sin seleccionar grupo sanguíneo o con tipo inválido ("Z+").
+2. Enviar paciente completo con correo válido (net/mail) y dirección.
+3. Reenviar mismo documento.	1. Frontend no preselecciona "O+" por defecto (DEF-79); backend rechaza "Z+" con HTTP 422.
+2. HTTP 201 guardando correo, dirección y afiliación (DEF-96).
+3. Duplicado responde HTTP 409 Conflict.	patient_api_test.go, TestRegistroDePacienteGuardaCorreoYDireccion, PatientFlow.test.jsx
+QA-PAT-02	Actualización parcial de contacto y protección contra borrado físico	Paciente existente con alergias	1. PATCH /api/v1/patients/:id enviando solo phone.
+2. DELETE /api/v1/patients/:id.
+3. Consultar alergias y buscar paciente por documento exacto.	1. Conserva email y address previos (DEF-68).
+2. El borrado lógico preserva antecedentes alérgicos (DEF-55).
+3. Búsqueda en HCE exige coincidencia exacta, nunca parcial por nombre (DEF-78).	TestDEF68ActualizacionParcialConservaContacto, TestDEF55EliminarPacienteNoPierdeAntecedentesAlergicos, PatientFlow.test.jsx
+Bloque 5: Triaje Manchester — Partición de Equivalencia y Valores Límite (RF02)
+ID	Título del Caso	Variable / Técnica	Datos de Entrada	Resultado Esperado Exacto	Cobertura Automatizada
+QA-TRG-01	Escala de Coma de Glasgow (BVA/EP)	Glasgow 
+∈
+[
+3
+,
+15
+]
+∈[3,15]	Probar 2, 3, 8, 9, 12, 13, 15, 16 (con signos restantes estables).	2 y 16 -> HTTP 422 (ErrInvalidGlasgowScore).
+3..8 -> NIVEL_I.
+15 -> aceptado.	triage_test.go, triaje_limites_regression_test.go, ClinicalScreens.test.jsx
+QA-TRG-02	Frecuencia Cardíaca (FC) y TAS/SpO2	FC 
+∈
+[
+1
+,
+300
+]
+∈[1,300], SpO2 
+∈
+[
+0
+,
+100
+]
+∈[0,100], TAS 
+∈
+[
+1
+,
+300
+]
+∈[1,300]	FC: 0, 1, 39, 40, 72, 150, 151, 300, 301.
+SpO2: 82%, 85%, 95%.
+TAS: 65, 900.	FC=0, FC=301, TAS=900 -> HTTP 422 (ErrInvalidVitals).
+FC=1..39, 151..300, SpO2<85%, TAS<70 -> NIVEL_I.	triage_test.go, triage_security_test.go, TestDEF27FrecuenciaCardiacaLimiteSuperior
+QA-TRG-03	Discriminadores de Temperatura Corporal	Temp 
+∈
+[
+20.0
+,
+45.0
+]
+∘
+C
+∈[20.0,45.0]
+∘
+C	10.0, 27.5, 30.0, 33.0, 36.5, 37.5, 39.0, 40.5, 41.5, 100.0.	10.0/100.0 -> HTTP 422.
+27.5 -> NIVEL_I; 30.0 -> NIVEL_II (nunca V, DEF-09); 36.5 -> NIVEL_V; 41.5 -> NIVEL_I.	TestTriageTemperatureDiscriminators, TestDEF09HipotermiaSeveraNoEsNoUrgente
+QA-TRG-04	Integridad de clasificación y escalado	Regla de prioridad	1. Enviar manchester_level: "NIVEL_X".
+2. Enviar Glasgow 6 intentando forzar NIVEL_V.
+3. Enviar paciente estable escalado manualmente a NIVEL_II.	1. HTTP 422 (ErrInvalidManchesterLevel, DEF-08).
+2. Rechaza rebaja clínica (HTTP 422).
+3. Acepta escalado a mayor urgencia y fuerza estado inicial PENDIENTE.	TestTriageRejectsClientLevelOutsideCatalog, TestDEF08NivelManchesterFueraDelCatalogo, ClinicalScreens.test.jsx
+Bloque 6: HCE, Cadena SHA-256, Inmutabilidad y Sincronización Rural (RF03, RF04, RF06)
+ID	Título del Caso	Precondición / Actor	Pasos y Datos de Entrada	Resultado Esperado Exacto	Cobertura Automatizada
+QA-HCE-01	Ciclo de vida del folio, cierre del primer folio y precisión de closed_at	MEDICO autor del folio	1. Crear borrador (POST /api/v1/clinical-records).
+2. Cerrar primer folio del paciente en MySQL (POST /:id/close).
+3. Verificar hash (GET /:id/verify).	1. is_closed=false, record_hash="".
+2. Primer folio usa previous_hash génesis (69 chars, VARCHAR(128), DEF-93) y trunca closed_at a segundos (DEF-20).
+3. VerifyIntegrity() retorna true y comprueba enlace previo (DEF-30) sin colisiones por | (DEF-29).	clinical_record_test.go, clinical_chain_test.go, mysql_integration_test.go, calidad_defectos_abiertos_regression_test.go (DEF-29,30)
+QA-HCE-02	Inmutabilidad legal post-cierre, triggers SQL y propiedad (Anti-IDOR)	Folio cerrado en MySQL/PostgreSQL	1. Médico B intenta cerrar o aclarar folio del Médico A.
+2. Médico A intenta volver a cerrar o editar folio cerrado.
+3. Ejecutar UPDATE/DELETE directo en SQL sobre clinical_records y clinical_record_clarifications.
+4. Anexar nota aclaratoria válida.	1. HTTP 403 (ErrNotRecordOwner, DEF-17).
+2. HTTP 409 (ErrRecordAlreadyClosed); UI deshabilita campos (disabled/readonly).
+3. Triggers abortan en MySQL y PostgreSQL (DEF-01, DEF-25).
+4. Aclaración se guarda vinculada sin mutar el folio.	TestRecordObjectLevelAccess, TestMySQLDisparadoresDeInmutabilidad, TestPostgresTriajeContactoEInmutabilidad, ResilienceQuality.test.jsx
+QA-HCE-03	Cierres concurrentes sin bifurcación de cadena SHA-256	12 goroutines cerrando folios del mismo paciente	1. Lanzar 12 cierres simultáneos (go test -race).
+2. Intentar insertar en repo dos folios con mismo previous_hash.	1. Bloqueo por paciente (chain_lock.go) serializa cierres formando una cadena lineal única (DEF-16).
+2. Índice único rechaza bifurcación con ErrChainConflict.	TestConcurrentClosesKeepChainLinear, TestRepositoryRejectsForkedChainLink, TestDEF16CierreConcurrenteNoBifurcaCadena
+QA-HCE-04	Sincronización offline rural idempotente y autoría del servidor	MEDICO enviando POST /api/v1/sync/batch	1. Enviar lote con UUID v4 offline intentando falsificar doctor_id ajeno y previous_hash.
+2. Reenviar exactamente el mismo lote incluyendo un folio ya cerrado.	1. El servidor impone doctor_id del JWT y calcula previous_hash y record_hash reales (DEF-18).
+2. Reenvío es idempotente: no sobrescribe folios cerrados (DEF-07) ni aborta el lote en MySQL (DEF-19).	sync_test.go, TestSyncNeverRewritesClosedRecordsNorTrustsClient, TestDEF07SincronizacionNoSobrescribeFolioCerrado, TestDEF18SincronizacionUsaMedicoAutenticado
+QA-HCE-05	Interoperabilidad RIPS JSON y HL7 FHIR R4	MEDICO o AUDITOR	Consultar GET /api/v1/clinical-records/:id/rips y /fhir para folio existente y folio inexistente.	Folio existente retorna estructura JSON RIPS (Res. 2275) y Bundle FHIR R4; folio inexistente retorna HTTP 404 (DEF-44).	TestDEF44VerificarFolioInexistenteResponde404
+Bloque 7: Kit Informático Médico — Notas Anatómicas 3D, Escala EVA y Muro de Salud (RF20)
+ID	Título del Caso	Precondición / Actor	Pasos y Datos de Entrada	Resultado Esperado Exacto	Cobertura Automatizada
+QA-KIT-01	Notas anatómicas, validación EVA/coordenadas y restricción de rol/cierre	MEDICO, ENFERMERO, AUDITOR	1. ENFERMERO intenta POST nota anatómica.
+2. MEDICO envía pain_level: 11 o -1, o coordenadas fuera de rango.
+3. MEDICO intenta asociar nota a un folio de otro paciente u otro médico, o sobre folio cerrado.
+4. AUDITOR consulta GET /patients/:id/anatomical-notes.	1. HTTP 403 (ErrUnauthorizedRole).
+2. HTTP 422 (DEF-67, DEF-89; nunca convierte EVA inválida en 0).
+3. HTTP 403/409/422 (DEF-57, DEF-66: falla cerrado si no puede leer folio).
+4. AUDITOR consulta sin bloqueo (DEF-72); dolor y mapeo entran en el hash al sellar (DEF-66).	anatomical_notes_test.go, TestDEF57NotaAnatomicaCoincideConPacienteDelFolio, TestDEF66SelloIncluyeDolorYMapeo, TestDEF67EscalaEVAFueraDeRangoSeRechaza, TestDEF89NotaAnatomicaRechazaEVAFueraDeRango
+QA-KIT-02	Muro de salud: límite real de video 120s y solo lectura para enfermería	MEDICO y ENFERMERO	1. MEDICO intenta crear publicación con video > 120s o tipo no-video manipulando el campo de duración del cliente.
+2. ENFERMERO intenta crear/editar o MEDICO B intenta editar publicación de MEDICO A.	1. Servidor valida contenido y duración real <= 120s (DEF-87) -> HTTP 422.
+2. ENFERMERO ve muro en solo lectura sin botones de mutación (rol leído de sesión, DEF-80); MEDICO B recibe HTTP 403 (DEF-70).	health_education_test.go, TestDEF87MuroNoConfiaEnLaDuracionDeclaradaPorElCliente, TestDEF70PublicacionSoloLaEditaSuAutor, MedicalKit.test.jsx
+Bloque 8: Prescripción, Alergias por Familia y Seguimiento Tripartito (RF05, RF12, RF14)
+ID	Título del Caso	Precondición / Actor	Pasos y Datos de Entrada	Resultado Esperado Exacto	Cobertura Automatizada
+QA-RX-01	Intercepción de alergias cruzadas, tildes y anti-suplantación (patient_id)	Paciente A alérgico a Penicilina / ÁCIDO ACETILSALICÍLICO; Paciente B sin alergias	1. Prescribir Amoxicilina (familia Betalactámicos) al folio del Paciente A.
+2. Enviar patient_id de B con clinical_record_id de A (vía v1 y vía v2 /api/v2/treatments/dispatch).
+3. Prescribir Acetaminofén (Paracetamol).	1. Bloqueo en < 150 ms por familia farmacológica y normalización sin tildes/mayúsculas (DEF-06, DEF-60, DEF-51) -> HTTP 422/409, sin descontar stock.
+2. Rechazo HTTP 409/422 (DEF-05).
+3. Permitida y descuenta stock; UI muestra modal AllergyAlertModal con contraste AAA (DEF-90).	prescription_test.go, prescription_security_test.go, TestDEF05..., TestDEF06..., TestDEF51PrescripcionV2CruzaAlergias, TestDEF60AlergiaAFarmacoSeExtiendeASuFamilia, AllergyAlertModal.test.jsx
+QA-RX-02	Atomicidad receta-stock, cantidades negativas y concurrencia	Stock limitado (ej. 5 unidades)	1. Enviar receta v2 con quantity <= 0 o ítem inexistente.
+2. Recetar ítem 1 válido e ítem 2 sin stock suficiente.
+3. Lanzar prescripciones concurrentes sobre el último stock.	1. HTTP 422 (DEF-52).
+2. Transacción ACID revierte todo (DEF-38, probado en MySQL y PostgreSQL).
+3. Stock nunca queda negativo y sin data race (DEF-46).	TestDEF52RecetaV2RechazaCantidadNoPositiva, TestDEF38RecetaYDescuentoDeStockSonAtomicos, TestMySQLRecetaSinStockSeRevierteCompleta, TestPostgresRecetaSinStockSeRevierteCompleta, TestDEF46...
+QA-RX-03	Liquidación tripartita en TreatmentFollowUpView.jsx	Paciente con EPS y MEDICO	Seleccionar producto por concentración exacta (ej. Amoxicilina 500 mg), elegir cobertura (PBS 100%, Copago 15%, Particular + medio de pago) y despachar.	Genera código legible seguro de alta entropía (RX-..., sin búsqueda ambigua, DEF-64), persiste en HCE, envía correo y aparece en buzón de Farmacia.	TestDEF64CodigosDeRecetaYBusquedaAmbigua, TreatmentFollowUpView.test.jsx
+Bloque 9: Portal Público del Paciente y Calendario de Citas Médicas (RF13, RF18)
+ID	Título del Caso	Precondición / Actor	Pasos y Datos de Entrada	Resultado Esperado Exacto	Cobertura Automatizada
+QA-CIT-01	Solicitud pública de primera cita, geolocalización y rate limit	Usuario anónimo en /solicitar-cita	1. Consultar sedes públicas con/sin permiso de ubicación.
+2. Enviar formulario sin marcar consentimiento Ley 1581.
+3. Enviar solicitud válida y repetir > 5 veces en 1 min desde misma IP.	1. Con ubicación, ordena por Haversine y sugiere sede más cercana (excluye Brigada Rural).
+2. Bloqueado en cliente y servidor.
+3. Asigna al médico activo con menos carga (citas 14 días + pendientes), devuelve SOL-XXXXXX sin revelar médico; 6.ª petición da HTTP 429.	appointment_request_test.go (9 tests), PatientRequests.test.jsx (11 tests)
+QA-CIT-02	Bandeja de solicitudes, creación de paciente, rechazo y hora Colombia	MEDICO autenticado	1. Consultar GET /api/v2/appointment-requests como ENFERMERO.
+2. MEDICO agenda solicitud de paciente nuevo y luego intenta agendarla de nuevo o por otro médico.
+3. Probar rechazo sin motivo y con motivo.
+4. Verificar PDF y correo de cita (10:20 COT).	1. HTTP 403 (solo MEDICO).
+2. Crea paciente con correo/dirección (o asocia existente sin duplicar), agenda cita y decrementa contador; doble agendamiento falla.
+3. Rechazo exige motivo obligatorio.
+4. PDF y correo muestran 10:20 (hora Colombia -05:00, nunca 15:20 UTC, DEF-85, DEF-94).	appointment_request_test.go, TestDEF85CitaConservaLaHoraLocalDeColombia, PatientRequests.test.jsx
+QA-CIT-03	Calendario médico: retroactividad, solapamiento 20 min y concurrencia	MEDICO en /api/v2/appointments	1. Agendar cita en el pasado.
+2. Agendar a las 10:00 y luego otra a las 10:19 y 10:20.
+3. Lanzar dos peticiones simultáneas para el mismo bloque.
+4. Consultar agenda de otro médico.	1. HTTP 422 (ErrAppointmentInPast).
+2. 10:19 rechazada (traslape < 20 min); 10:20 aceptada.
+3. Solo 1 cita se agenda (DEF-69).
+4. Solo consulta su propia agenda (DEF-69).	appointment_test.go, TestR3CitaSolapamientoEnLosBordesDe20Minutos, TestDEF69CitasSimultaneasNoSeDuplican, TestDEF69AgendaSoloDelMedicoDeLaSesion, DoctorAppointmentsView.test.jsx
+Bloque 10: Farmacia V2, Lector PDF417, Vencimientos y Reportes de Stock (RF15)
+ID	Título del Caso	Precondición / Actor	Pasos y Datos de Entrada	Resultado Esperado Exacto	Cobertura Automatizada
+QA-FAR-01	Escáner cédula PDF417 y bloqueo de documento distinto	Receta pendiente en buzón; FARMACIA	1. Leer trama cruda PDF417 con múltiples secuencias numéricas y ceros/puntos/espacios.
+2. Intentar dispensar con documento diferente al de la receta (POST /api/v2/pharmacy/dispense).	1. Extrae posición fija de cédula colombiana y normaliza ceros/espacios (DEF-86); no prellena documento en UI (DEF-77).
+2. Rechazo por discrepancia de documento (DEF-53).	CedulaPdf417.test.js, TestDEF86DocumentoDeCedulaNormalizado, TestDEF53DispensacionExigeDocumentoDelPaciente, TestPharmacyDispensation_RejectsPatientDocumentMismatch
+QA-FAR-02	Protección contra vencidos, canceladas, reactivación y doble despacho	Lote vencido, receta cancelada y receta válida	1. Consultar inventario en MySQL (parseTime=true).
+2. Intentar dispensar medicamento con expiry_date vencida.
+3. Intentar dispensar receta CANCELLED o reenviar receta DISPENSED (concurrentemente).	1. Fechas reales leídas correctamente (nunca 0001-01-01).
+2. Rechazo de vencidos (DEF-54).
+3. Rechazo de canceladas (DEF-59) y bloqueo de doble dispensación/reactivación con HTTP 409 Conflict (DEF-58).	inventory_repo_test.go, pharmacy_dispensation_test.go, TestDEF54NoDispensaMedicamentoVencido, TestDEF58RecetaDispensadaNoSeReactiva, TestDEF59NoDispensaRecetaCancelada, TestR3DispensacionConcurrenteEntregaUnaSolaVez
+QA-FAR-03	Alertas autónomas de stock bajo (BVA) y flujo en Admin	min_stock = 20	Ajustar/dispensar dejando stock en 21, 20, 11, 10, 1, 0.	21 -> sin alerta;
+20 y 11 -> MEDIA;
+10 y 1 -> ALTA;
+0 -> CRITICA.
+Se refleja en banner de Farmacia, Copia de Reporte y tarjetas de ADMIN (Poner En Gestión, Reabastecer, RESUELTO).	PharmacyDashboard.test.jsx, TestMySQLFarmaciaV2ConvivenConRecetasV1
+Bloque 11: Laboratorio Clínico (Rol 7) y Enfermería en Servidor (RF16, RF17)
+ID	Título del Caso	Precondición / Actor	Pasos y Datos de Entrada	Resultado Esperado Exacto	Cobertura Automatizada
+QA-LAB-01	Flujo completo de orden paraclínica Médico -> Laboratorio -> Correo/PDF	MEDICO y LABORATORIO activos con ReTHUS	1. MEDICO crea orden (POST /api/v2/lab-orders).
+2. LABORATORIO guarda avance (PUT /:id/progress).
+3. LABORATORIO sella (POST /:id/seal).
+4. Intentar editar tras sellar.
+5. Despachar por correo (POST /:id/dispatch) con paciente sin correo y con correo.	1. Servidor genera ID único LAB-2026-XXX (sin duplicados concurrentes).
+2. Pasa a EN_PROCESO.
+3. Pasa a COMPLETADO con firma ReTHUS.
+4. HTTP 409 Conflict.
+5. Si no tiene correo, UI deja campo vacío (sin dummy); con correo envía al paciente y copia al médico solicitante.	lab_nursing_branch_test.go (3 tests lab), ServerBackedModules.test.jsx (4 tests), TestMySQLLaboratorioEnfermeriaYSedes
+QA-ENF-01	Orden médica, lista de chequeo y notas de turno en servidor	MEDICO y ENFERMERO en equipos distintos	1. MEDICO envía orden (PUT /api/v2/nursing/:patientId/order).
+2. ENFERMERO marca deberes (PUT /:patientId/duties) intentando enviar nombre/hora falsos.
+3. ENFERMERO agrega nota de evolución (POST /:patientId/notes).
+4. Probar falla de consulta de alergias del paciente.	1. Persistido en tabla nursing_care (visible en otro equipo/navegador sin localStorage).
+2. Servidor firma deber con usuario del JWT y hora Colombia.
+3. Notas son solo anexo (Res. 1995).
+4. Si falla API de alergias, advierte el error en lugar de decir "Sin alergias" (DEF-74).	TestEnfermeriaRecibeLaOrdenYRegistraDeberesYNotas, NurseModules.test.jsx (3 tests), TestMySQLLaboratorioEnfermeriaYSedes
+Bloque 12: Pruebas No Funcionales, Seguridad, Persistencia y Responsive (RNF01–RNF08)
+ID	Criterio / Norma	Qué Verificar	Resultado Esperado	Evidencia / Prueba
+QA-RNF-01	Rendimiento (RNF01)	Ejecutar go test -bench=Benchmark -benchmem ./tests/backend/ y TestRNF01LatenciaBajoConcurrencia	Intercepción de alergias < 150 ms; p95 bajo concurrencia < 400 ms.	rendimiento_regression_test.go, performance_benchmark_test.go
+QA-RNF-02	Fail-Closed Secretos y BD (RNF06, RNF07)	Arrancar con JWT_SECRET < 32 chars o valor de .env.example; arrancar con MySQL caído; arrancar PostgreSQL con ALLOW_POSTGRES_MEMORY_MODULES=false	Falla explícitamente al arrancar: nunca usa secreto de plantilla (DEF-63) ni conmuta silenciosamente a memoria (DEF-10). /health/ready reporta 503 si BD cae (DEF-32).	config_regression_test.go, TestDEF10PostgresNoArrancaEnModoMixtoSinAutorizacion, TestDEF32HealthReadyConsultaLaBaseDeDatos, TestDEF63...
+QA-RNF-03	Seguridad Archivos, Retención y Nginx (RNF03)	Intentar path traversal en PDF (../../etc/passwd); revisar retención de PDFs/correos y cabeceras nginx.conf	Path traversal bloqueado (DEF-61); retención aplica RETENCION_DOCUMENTOS_DIAS y enmascara correos en logs (DEF-62); CSP, HSTS y Permissions-Policy presentes (DEF-35); npm audit --omit=dev = 0.	TestDEF61PDFNoSaleDelDirectorioDeDocumentos, TestDEF62RetencionDeDocumentosYCorreoEnmascarado, calidad.yml
+QA-RNF-04	Matriz RBAC Completa	Ejecutar TestRBACMatrizRutasPorRol contra todas las rutas y los 8 roles	100% de combinaciones ruta × rol responden según política (ADMIN y TI aislados de rutas clínicas con 403).	rbac_matrix_regression_test.go
+QA-RNF-05	Responsive Mobile-First (390×844) y History API	Recorrer las 29 vistas de todos los roles + /solicitar-cita en viewport 390×844 y probar botones Atrás/Adelante del navegador
