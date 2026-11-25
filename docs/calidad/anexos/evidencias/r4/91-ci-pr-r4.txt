@@ -1,0 +1,28 @@
+# comando: gh run list --branch calidad/revision-r4 ; gh run view 45541170342 --log | grep (control de defectos, pruebas, cobertura, vitest)
+# fecha: 2026-11-25T03:41Z
+✓ calidad/revision-r4 calidad ThiagoVelez/Proyecto_felipe#14 · 45541170342
+JOBS
+✓ Backend - pruebas con -race y cobertura in 4m51s (ID 138959765921)
+✓ Frontend - lint, pruebas, build y auditoria in 43s (ID 138959766147)
+✓ Backend - control de defectos abiertos in 1m1s (ID 138959766219)
+✓ Backend - analisis estatico in 2m24s (ID 138959766250)
+X Process completed with exit code 1.
+X Process completed with exit code 3.
+X storage.NewRepositoryBundle calls sql.DB.Close, which eventually calls http.bodyLocked.Read
+X services.GenerateRandomRXCode calls rand.Int, which eventually calls http.bodyEOFSignal.Read
+ok  	saludconecta-tests	182.755s
+ok  	saludconecta-tests/herramientas/controldefectos	1.019s
+ok  	saludconecta-tests	33.209s	coverage: 73.5% of statements in saludconecta-backend/adapters/email, saludconecta-backend/adapters/http, saludconecta-backend/adapters/http/handlers, saludconecta-backend/adapters/http/middlewares, saludconecta-backend/adapters/interoperability, saludconecta-backend/adapters/pdf, saludconecta-backend/adapters/storage, saludconecta-backend/adapters/storage/catalog, saludconecta-backend/adapters/storage/memory, saludconecta-backend/cmd/api, saludconecta-backend/core/domain, saludconecta-backend/core/ports, saludconecta-backend/core/services, saludconecta-backend/pkg/config, saludconecta-backend/pkg/crypto, saludconecta-backend/pkg/logger, saludconecta-backend/pkg/retention
+ok  	saludconecta-tests/herramientas/controldefectos	0.004s	coverage: [no statements]
+^[[36;1mecho "Cobertura total: ${total} % (minimo ${COBERTURA_MINIMA_BACKEND} %)"^[[0m
+Cobertura total: 73.5 % (minimo 60 %)
+^[[2m Test Files ^[[22m ^[[1m^[[32m20 passed^[[39m^[[22m^[[90m (20)^[[39m
+| DEF-50 | TestDEF50R4SemillaMFASoloDelPropioUsuario | reproducido | falla como se espera |
+| DEF-72 | TestDEF72R4AdminNoAccedeARecetasNiDispensa | reproducido | falla como se espera |
+| DEF-99 | TestDEF99SolicitudPublicaNoAsignaCorreoAPacienteExistenteSinVerificarIdentidad | reproducido | falla como se espera |
+| DEF-100 | TestDEF100ConexionABaseDeDatosSolicitaTLS | reproducido | falla como se espera |
+| DEF-101 | TestDEF101EnvioSMTPFallidoNoRegistraCorreoEnClaro | reproducido | falla como se espera |
+| DEF-107 | TestDEF107CuentaPrivilegiadaExigeContrasenaDeDoceCaracteres | reproducido | falla como se espera |
+Defectos abiertos reproducidos como se espera: 6 de 6.
+
+## Nota: los 4 jobs terminan en verde. Las lineas «X Process completed with exit code 1/3» son los pasos informativos (continue-on-error) de gocyclo (21 funciones > 15, DEF-44) y govulncheck (GO-2026-6859, DEF-103). La cobertura de 73,5 % incluye las pruebas nuevas de R4 (en main, sin ellas, 72,7 %).
