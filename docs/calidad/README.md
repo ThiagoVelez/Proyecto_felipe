@@ -1,5 +1,16 @@
 # Paquete de aseguramiento de calidad: SaludConecta IPS v2.4
 
+<!-- cifras-r4 -->
+> **Cifras vigentes de la revisión R4 (24 nov 2026, base `6a51bb8`).** Fuente única: `anexos/cifras-r4.json`; coherencia comprobada con `anexos/verificar_cifras_r4.py`. Detalle en `informe-revision-r4.md`.
+>
+> - Verificación del cierre (DEF-01 a DEF-98): 67 verificados, 7 verificados parcialmente, 18 revisados sin prueba, 3 no verificables, 3 reabiertos (DEF-50, DEF-72, DEF-91). Reproducciones de R3 que hoy pasan: 22 de 22.
+> - Defectos registrados: 110. Nuevos de R4: 12 (0 críticos, 2 altos, 8 medios, 2 bajos). Abiertos: 16 (1 crítico, 3 altos, 9 medios, 3 bajos). Reproducciones de defectos abiertos: 6 de 6.
+> - Pruebas backend (pasan / fallan / omitidas): 154 / 0 / 0. Cobertura backend: 52,1 % con el comando de R3 y 72,7 % sin adaptadores MySQL/PostgreSQL. Vitest (pruebas / archivos): 147 / 20. Cobertura frontend: 61,02 %.
+> - Análisis estático: golangci-lint 0; staticcheck 0; gosec 0; gocyclo 21 funciones mayores de 15 (12 en src); govulncheck 1 alcanzable (GO-2026-6859); npm audit prod-dev 0-0; ESLint 0 / 128.
+> - Rendimiento: p95 3,45 ms; memoria 15,07 MB. OWASP ASVS L2 (muestra de 53): 34,0 % en R1 -> 45,3 %. Mutaciones detectadas: 4 de 7.
+> - Afirmaciones del README (V / P / NV / F): 19 / 19 / 1 / 5 en las 48 de R3 (4 retiradas); 30 / 26 / 8 / 14 en total. RTM: 11 de 24 requisitos sostenidos. Dictamen: **No conforme con ISO/IEC 25010:2023**.
+<!-- /cifras-r4 -->
+
 <!-- cifras-r3 -->
 > **Cifras vigentes de la revisión R3 (10 nov 2026).** Fuente única: `anexos/cifras-r3.json`; coherencia comprobada con `anexos/verificar_cifras_r3.py`. Detalle en `informe-revision-r3.md`.
 >
@@ -10,6 +21,8 @@
 > - Rendimiento: p95 1,38 ms HTTP real; 3,92 a 7,86 ms en proceso; memoria 11,5 a 16,3 MB.
 > - Afirmaciones publicadas: 48 evaluadas: 7 verificadas, 24 parciales, 2 no verificadas, 15 falsas. RTM: 5 de 21 requisitos se sostienen. Dictamen: **No conforme con ISO/IEC 25010:2023**.
 <!-- /cifras-r3 -->
+
+**Documentos de R4 (24 nov 2026, base `6a51bb8`):** [`informe-revision-r4.md`](informe-revision-r4.md) (informe principal; empezar por la sección 1), [`guia-estudio-r4.md`](guia-estudio-r4.md) (guía para la sustentación), [`anexos/verificacion-cierre-r4.md`](anexos/verificacion-cierre-r4.md) (H-R4-01, un renglón por defecto), [`anexos/cifras-r4.json`](anexos/cifras-r4.json) y [`anexos/verificar_cifras_r4.py`](anexos/verificar_cifras_r4.py), [`trello-publicacion-r4.md`](trello-publicacion-r4.md), [`anexos/evidencias/r4/`](anexos/evidencias/r4/) y las herramientas [`anexos/linea-base-r4.sh`](anexos/linea-base-r4.sh), [`anexos/verificar_cierre_r4.py`](anexos/verificar_cierre_r4.py), [`anexos/caja_negra_r4.py`](anexos/caja_negra_r4.py) y [`anexos/mutaciones_r4.py`](anexos/mutaciones_r4.py). Pruebas nuevas de Calidad: `tests/backend/calidad_r4_regression_test.go` (reproducciones de DEF-50, 72, 99, 100, 101 y 107, y regresión de Glasgow 8) y `tests/backend/calidad_r4_rbac_test.go` (matriz RBAC de rutas nuevas con TI y LABORATORIO).
 
 **Documentos de R3:** `informe-revision-r3.md` (informe principal), `mapa-ids-sec-def.md`, `anexos/diagnostico-r3.md`, `anexos/linea-base-r3.md`, `anexos/analisis-estatico-r3.md`, `anexos/cifras-r3.json`, `anexos/generar_bitacora_r3.py`, `anexos/verificar_cifras_r3.py`, `trello-publicacion-r3.md` y `anexos/evidencias/r3/`. Criterios de aceptación de R3: sección «Criterios de aceptación R3» al final de este archivo.
 

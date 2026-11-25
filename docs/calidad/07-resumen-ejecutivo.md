@@ -1,5 +1,16 @@
 # 07. Resumen ejecutivo: calidad de SaludConecta IPS v2.4
 
+<!-- cifras-r4 -->
+> **Cifras vigentes de la revisión R4 (24 nov 2026, base `6a51bb8`).** Fuente única: `anexos/cifras-r4.json`; coherencia comprobada con `anexos/verificar_cifras_r4.py`. Detalle en `informe-revision-r4.md`.
+>
+> - Verificación del cierre (DEF-01 a DEF-98): 67 verificados, 7 verificados parcialmente, 18 revisados sin prueba, 3 no verificables, 3 reabiertos (DEF-50, DEF-72, DEF-91). Reproducciones de R3 que hoy pasan: 22 de 22.
+> - Defectos registrados: 110. Nuevos de R4: 12 (0 críticos, 2 altos, 8 medios, 2 bajos). Abiertos: 16 (1 crítico, 3 altos, 9 medios, 3 bajos). Reproducciones de defectos abiertos: 6 de 6.
+> - Pruebas backend (pasan / fallan / omitidas): 154 / 0 / 0. Cobertura backend: 52,1 % con el comando de R3 y 72,7 % sin adaptadores MySQL/PostgreSQL. Vitest (pruebas / archivos): 147 / 20. Cobertura frontend: 61,02 %.
+> - Análisis estático: golangci-lint 0; staticcheck 0; gosec 0; gocyclo 21 funciones mayores de 15 (12 en src); govulncheck 1 alcanzable (GO-2026-6859); npm audit prod-dev 0-0; ESLint 0 / 128.
+> - Rendimiento: p95 3,45 ms; memoria 15,07 MB. OWASP ASVS L2 (muestra de 53): 34,0 % en R1 -> 45,3 %. Mutaciones detectadas: 4 de 7.
+> - Afirmaciones del README (V / P / NV / F): 19 / 19 / 1 / 5 en las 48 de R3 (4 retiradas); 30 / 26 / 8 / 14 en total. RTM: 11 de 24 requisitos sostenidos. Dictamen: **No conforme con ISO/IEC 25010:2023**.
+<!-- /cifras-r4 -->
+
 <!-- cifras-r3 -->
 > **Cifras vigentes de la revisión R3 (10 nov 2026).** Fuente única: `anexos/cifras-r3.json`; coherencia comprobada con `anexos/verificar_cifras_r3.py`. Detalle en `informe-revision-r3.md`.
 >
