@@ -26,3 +26,10 @@ Cobertura total: 73.5 % (minimo 60 %)
 Defectos abiertos reproducidos como se espera: 6 de 6.
 
 ## Nota: los 4 jobs terminan en verde. Las lineas «X Process completed with exit code 1/3» son los pasos informativos (continue-on-error) de gocyclo (21 funciones > 15, DEF-44) y govulncheck (GO-2026-6859, DEF-103). La cobertura de 73,5 % incluye las pruebas nuevas de R4 (en main, sin ellas, 72,7 %).
+
+## Runs del PR #14 (consulta del 2026-11-25T06:41Z, gh run list --branch calidad/revision-r4)
+- 45541789026 (calidad/revision-r4): success
+- 45541784687 (calidad/revision-r4): success
+- 45541209974 (calidad/revision-r4): success
+- 45541170342 (calidad/revision-r4): success
+- PR #14: borrador, abierto, sin fusionar; 4 jobs en SUCCESS en cada run.
