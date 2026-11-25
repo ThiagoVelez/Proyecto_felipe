@@ -1,0 +1,15 @@
+# comando: (cd tests/backend && go test -run '^$' -bench BenchmarkR4FiberImmutable -benchmem -count=3 .)
+# fecha: 2026-11-25T03:31Z
+goos: windows
+goarch: amd64
+pkg: saludconecta-tests
+cpu: AMD Ryzen 5 3500U with Radeon Vega Mobile Gfx  
+BenchmarkR4FiberImmutable/Immutable=false-8         	   65160	     18036 ns/op	    6679 B/op	      27 allocs/op
+BenchmarkR4FiberImmutable/Immutable=false-8         	   70869	     18518 ns/op	    6692 B/op	      27 allocs/op
+BenchmarkR4FiberImmutable/Immutable=false-8         	   67051	     18090 ns/op	    6693 B/op	      27 allocs/op
+BenchmarkR4FiberImmutable/Immutable=true-8          	   61948	     18262 ns/op	    6908 B/op	      33 allocs/op
+BenchmarkR4FiberImmutable/Immutable=true-8          	   64852	     18247 ns/op	    6904 B/op	      33 allocs/op
+BenchmarkR4FiberImmutable/Immutable=true-8          	   72453	     18707 ns/op	    6900 B/op	      33 allocs/op
+PASS
+ok  	saludconecta-tests	8.512s
+# codigo de salida: 0

@@ -1,0 +1,42 @@
+# comando: gh run view 45183473187 --repo ThiagoVelez/Proyecto_felipe --log | grep (lineas de resultado de go test -race, cobertura, control de defectos, vitest, eslint, npm audit)
+# fecha: 2026-11-25T03:04Z
+# run: push a main del merge del PR #13 (6a51bb8), conclusion success
+found 0 vulnerabilities
+✖ 128 problems (0 errors, 128 warnings)
+^[[2m Test Files ^[[22m ^[[1m^[[32m20 passed^[[39m^[[22m^[[90m (20)^[[39m
+Statements   : 60.99% ( 2640/4328 )
+Lines        : 62.76% ( 2454/3910 )
+found 0 vulnerabilities
+found 0 vulnerabilities
+This scan also found 2 vulnerabilities in packages you import and 25
+No hay defectos abiertos con reproduccion automatizada: las pruebas de los defectos cerrados se ejecutan como regresion permanente.
+	saludconecta-backend/adapters/email		coverage: 0.0% of statements
+	saludconecta-backend/adapters/http		coverage: 0.0% of statements
+	saludconecta-backend/adapters/http/handlers		coverage: 0.0% of statements
+	saludconecta-backend/adapters/http/middlewares		coverage: 0.0% of statements
+	saludconecta-backend/adapters/interoperability		coverage: 0.0% of statements
+	saludconecta-backend/adapters/pdf		coverage: 0.0% of statements
+	saludconecta-backend/adapters/storage		coverage: 0.0% of statements
+	saludconecta-backend/adapters/storage/catalog		coverage: 0.0% of statements
+	saludconecta-backend/adapters/storage/memory		coverage: 0.0% of statements
+ok  	saludconecta-backend/adapters/storage/mysql	1.021s	coverage: 1.4% of statements
+	saludconecta-backend/adapters/storage/postgres		coverage: 0.0% of statements
+	saludconecta-backend/cmd/api		coverage: 0.0% of statements
+	saludconecta-backend/core/domain		coverage: 0.0% of statements
+ok  	saludconecta-backend/core/services	1.057s	coverage: 1.8% of statements
+ok  	saludconecta-backend/pkg/config	1.009s	coverage: 37.5% of statements
+ok  	saludconecta-backend/pkg/crypto	8.787s	coverage: 20.0% of statements
+	saludconecta-backend/pkg/logger		coverage: 0.0% of statements
+	saludconecta-backend/pkg/retention		coverage: 0.0% of statements
+ok  	saludconecta-tests	184.445s
+ok  	saludconecta-tests/herramientas/controldefectos	1.014s
+ok  	saludconecta-tests	32.295s	coverage: 72.7% of statements in saludconecta-backend/adapters/email, saludconecta-backend/adapters/http, saludconecta-backend/adapters/http/handlers, saludconecta-back
+ok  	saludconecta-tests/herramientas/controldefectos	0.003s	coverage: [no statements]
+^[[36;1mecho "Cobertura total: ${total} % (minimo ${COBERTURA_MINIMA_BACKEND} %)"^[[0m
+Cobertura total: 72.7 % (minimo 60 %)
+## govulncheck en el mismo run (paso informativo, continue-on-error)
+Vulnerability #1: GO-2026-6859
+    Found in: net/http@go1.27.3
+    Fixed in: net/http@go1.27.4
+Your code is affected by 1 vulnerability from the Go standard library.
+## Nota: en el log, 'ok saludconecta-tests 184.445s' corresponde al paso 'go test -race -count=1 ./...' de tests/backend (CGO_ENABLED=1).

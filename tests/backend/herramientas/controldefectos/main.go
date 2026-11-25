@@ -258,7 +258,7 @@ func ejecutar(args []string, entrada io.Reader, salida io.Writer) int {
 	fs := flag.NewFlagSet("controldefectos", flag.ContinueOnError)
 	rutaLista := fs.String("lista", "../../docs/calidad/defectos-abiertos.txt", "lista de defectos abiertos")
 	rutaBitacora := fs.String("bitacora", "../../docs/calidad/04-bitacora-defectos.md", "bitacora de defectos")
-	rutaFuente := fs.String("fuente", "calidad_defectos_abiertos_regression_test.go,calidad_revision_r3_regression_test.go", "archivos (separados por coma) con las pruebas de defectos abiertos")
+	rutaFuente := fs.String("fuente", "calidad_defectos_abiertos_regression_test.go,calidad_revision_r3_regression_test.go,calidad_r4_regression_test.go", "archivos (separados por coma) con las pruebas de defectos abiertos")
 	conRace := fs.Bool("con-race", false, "la ejecucion se hizo con el detector -race")
 	soloRegex := fs.Bool("regex", false, "solo imprime la expresion para go test -run")
 	if err := fs.Parse(args); err != nil {
@@ -292,7 +292,8 @@ func ejecutar(args []string, entrada io.Reader, salida io.Writer) int {
 		fmt.Fprintln(salida, err)
 		return 2
 	}
-	// -fuente admite varios archivos separados por coma (R3 agrega calidad_revision_r3_regression_test.go).
+	// -fuente admite varios archivos separados por coma (R3 agrega calidad_revision_r3_regression_test.go y R4
+	// calidad_r4_regression_test.go).
 	fuente := map[string]string{}
 	for _, ruta := range strings.Split(*rutaFuente, ",") {
 		ff, err := abrir(strings.TrimSpace(ruta))

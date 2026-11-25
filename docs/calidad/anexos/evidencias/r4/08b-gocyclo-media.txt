@@ -1,0 +1,4 @@
+# comando: (cd . && gocyclo -avg -over 1000 src/backend)
+# fecha: 2026-11-25T02:43:39Z
+Average: 3.94
+# codigo de salida: 0

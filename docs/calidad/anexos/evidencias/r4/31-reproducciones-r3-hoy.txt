@@ -1,0 +1,28 @@
+# comando: git show origin/calidad/revision-r3:docs/calidad/defectos-abiertos.txt (22 entradas) cruzado con (cd tests/backend && go test -count=1 -json ./...) sobre origin/main 6a51bb8, y git grep de la definicion y de requireDefectoAbierto/t.Skip en origin/main
+# fecha: 2026-11-25T02:49Z
+| Defecto | Prueba | Existe en main (archivo) | Llama a requireDefectoAbierto o t.Skip | Resultado hoy | Cuerpo de la prueba cambiado desde R3 |
+|---|---|---|---|---|---|
+| DEF-29 | `TestDEF29HashSinColisionPorDelimitador` | tests/backend/calidad_defectos_abiertos_regression_test.go | no | pass | no (solo se quito requireDefectoAbierto) |
+| DEF-30 | `TestDEF30VerificacionValidaEnlaceConFolioAnterior` | tests/backend/calidad_defectos_abiertos_regression_test.go | no | pass | no (solo se quito requireDefectoAbierto) |
+| DEF-49 | `TestDEF49RegistroDeAdministradorRequiereAutenticacion` | tests/backend/calidad_defectos_abiertos_regression_test.go | no | pass | no (solo se quito requireDefectoAbierto) |
+| DEF-50 | `TestDEF50SemillaMFANoSeExponeSinAutenticacion` | tests/backend/calidad_defectos_abiertos_regression_test.go | no | pass | no (solo se quito requireDefectoAbierto) |
+| DEF-51 | `TestDEF51PrescripcionV2CruzaAlergias` | tests/backend/calidad_defectos_abiertos_regression_test.go | no | pass | no (solo se quito requireDefectoAbierto) |
+| DEF-52 | `TestDEF52RecetaV2RechazaCantidadNoPositiva` | tests/backend/calidad_defectos_abiertos_regression_test.go | no | pass | no (solo se quito requireDefectoAbierto) |
+| DEF-53 | `TestDEF53DispensacionExigeDocumentoDelPaciente` | tests/backend/calidad_defectos_abiertos_regression_test.go | no | pass | no (solo se quito requireDefectoAbierto) |
+| DEF-54 | `TestDEF54NoDispensaMedicamentoVencido` | tests/backend/calidad_defectos_abiertos_regression_test.go | no | pass | no (solo se quito requireDefectoAbierto) |
+| DEF-55 | `TestDEF55EliminarPacienteNoPierdeAntecedentesAlergicos` | tests/backend/calidad_defectos_abiertos_regression_test.go | no | pass | no (solo se quito requireDefectoAbierto) |
+| DEF-57 | `TestDEF57NotaAnatomicaCoincideConPacienteDelFolio` | tests/backend/calidad_defectos_abiertos_regression_test.go | no | pass | no (solo se quito requireDefectoAbierto) |
+| DEF-58 | `TestDEF58RecetaDispensadaNoSeReactiva` | tests/backend/calidad_defectos_abiertos_regression_test.go | no | pass | no (solo se quito requireDefectoAbierto) |
+| DEF-59 | `TestDEF59NoDispensaRecetaCancelada` | tests/backend/calidad_defectos_abiertos_regression_test.go | no | pass | si: lineas de R3 ausentes: `pharm := services.NewPharmacyService(memory.NewInventoryMemoryRepo(ds), repo, logger.New()` |
+| DEF-60 | `TestDEF60AlergiaAFarmacoSeExtiendeASuFamilia` | tests/backend/calidad_defectos_abiertos_regression_test.go | no | pass | no (solo se quito requireDefectoAbierto) |
+| DEF-61 | `TestDEF61PDFNoSaleDelDirectorioDeDocumentos` | tests/backend/calidad_defectos_abiertos_regression_test.go | no | pass | no (solo se quito requireDefectoAbierto) |
+| DEF-67 | `TestDEF67EscalaEVAFueraDeRangoSeRechaza` | tests/backend/calidad_defectos_abiertos_regression_test.go | no | pass | no (solo se quito requireDefectoAbierto) |
+| DEF-68 | `TestDEF68ActualizacionParcialConservaContacto` | tests/backend/calidad_defectos_abiertos_regression_test.go | no | pass | no (solo se quito requireDefectoAbierto) |
+| DEF-70 | `TestDEF70PublicacionSoloLaEditaSuAutor` | tests/backend/calidad_defectos_abiertos_regression_test.go | no | pass | no (solo se quito requireDefectoAbierto) |
+| DEF-72 | `TestDEF72AuditorConsultaNotasAnatomicasDelPaciente` | tests/backend/calidad_defectos_abiertos_regression_test.go | no | pass | no (solo se quito requireDefectoAbierto) |
+| DEF-85 | `TestDEF85CitaConservaLaHoraLocalDeColombia` | tests/backend/calidad_revision_r3_regression_test.go | no | pass | no (solo se quito requireDefectoAbierto) |
+| DEF-87 | `TestDEF87MuroNoConfiaEnLaDuracionDeclaradaPorElCliente` | tests/backend/calidad_revision_r3_regression_test.go | no | pass | no (solo se quito requireDefectoAbierto) |
+| DEF-88 | `TestDEF88CitaExigePacienteExistente` | tests/backend/calidad_revision_r3_regression_test.go | no | pass | no (solo se quito requireDefectoAbierto) |
+| DEF-89 | `TestDEF89NotaAnatomicaRechazaEVAFueraDeRango` | tests/backend/calidad_revision_r3_regression_test.go | no | pass | no (solo se quito requireDefectoAbierto) |
+
+Resumen: 22 de 22 existen, no se omiten y pasan.

@@ -1,0 +1,39 @@
+# comando: (cd src/backend && go build -o <tmp>/api-r4.exe ./cmd/api) && python -X utf8 docs/calidad/anexos/caja_negra_r4.py <tmp>/api-r4.exe 18480
+# fecha: 2026-11-25T02:57Z
+# entorno: DB_DRIVER=memory; JWT_SECRET, TI_SETUP_CODE y contrasenas generados al vuelo y no guardados; datos de pacientes sinteticos
+| Hipótesis | Caso | Esperado | Obtenido | Resultado |
+|---|---|---|---|---|
+| H-R4-18 | GET /health/ready (sin token) | 200 sin DSN ni versión | 200 claves=['persistence', 'status'] | OK |
+| H-R4-12 | register-ti con código equivocado | 403 | 403 | OK |
+| H-R4-13 | register-ti con role/role_id/mfa_secret manipulados | 201, rol TI, semilla propia | 201, rol=TI, semilla_impuesta=no | OK |
+| H-R4-12 | Segundo register-ti con el código correcto (un solo uso) | 409 | 409 | OK |
+| H-R4-12 | Login del Encargado de TI con TOTP | 200 | 200 | OK |
+| H-R4-13 | register-branch-admin anónimo con role=TI, role_id=9, is_active=true | 201, rol ADMIN, cuenta inactiva | 201, rol=ADMIN, activo=False | OK |
+| H-R4-13 | Login del administrador pendiente de aprobación | 401/403 | 403 | OK |
+| H-R4-13 | TI registra administrador y este inicia sesión con TOTP | 200 | 200 | OK |
+| H-R4-09 | Alta y activación de médico por el administrador; login | 200 | 200 | OK |
+| H-R4-09 | DEF-06/60: alergia «Penicilína» (tilde, familia) y receta de amoxicilina | 422 bloqueada | 422 | OK |
+| H-R4-09 | DEF-05: receta en el folio de A con patient_id de B | 4xx rechazada | 409 | OK |
+| H-R4-09 | DEF-09: triaje con 30,0 °C | 201 y nivel I o II | 201, nivel=NIVEL_II | OK |
+| H-R4-09 | DEF-07: lote de sincronización sobre folio cerrado | anamnesis sin cambios | cerrado=True, anamnesis=intacta | OK |
+| H-R4-15 | ADMIN GET /api/v1/patients/{pa} | 403 | 403 | OK |
+| H-R4-15 | ADMIN GET /api/v1/clinical-records/{folio} | 403 | 403 | OK |
+| H-R4-15 | ADMIN GET /api/v1/patients/{pa}/allergies | 403 | 403 | OK |
+| H-R4-15 | ADMIN GET /api/v2/treatments/x | 403 | 404 | FALLA |
+| H-R4-15 | ADMIN GET /api/v2/pharmacy/inbox | 403 | 200 | FALLA |
+| H-R4-15 | ADMIN GET /api/v2/lab-orders/ | 403 | 403 | OK |
+| H-R4-15 | ADMIN GET /api/v2/nursing/ | 403 | 403 | OK |
+| H-R4-15 | TI GET /api/v1/patients/{pa} | 403 | 403 | OK |
+| H-R4-15 | TI GET /api/v1/clinical-records/{folio} | 403 | 403 | OK |
+| H-R4-15 | TI GET /api/v1/patients/{pa}/allergies | 403 | 403 | OK |
+| H-R4-15 | TI GET /api/v2/treatments/x | 403 | 403 | OK |
+| H-R4-15 | TI GET /api/v2/pharmacy/inbox | 403 | 403 | OK |
+| H-R4-15 | TI GET /api/v2/lab-orders/ | 403 | 403 | OK |
+| H-R4-15 | TI GET /api/v2/nursing/ | 403 | 403 | OK |
+| H-R4-14 | Solicitud pública con el documento de B, otro nombre y otro correo | 201 (solo recibo) | 201 | OK |
+| H-R4-14 | DEF-99: el médico agenda (estado 200); correo de la ficha real de B | vacío (identidad no verificada) | correo del tercero | FALLA |
+| RNF01 | GET /api/v1/admin/users n=110 c=5 (token ADMIN) | p95 < 28,4 ms publicado | códigos={200: 110} p50=2.40 ms p95=3.45 ms p99=3.94 ms | OK |
+| RNF01 | Memoria del proceso (WorkingSet) tras la carga | < 18,2 MB publicado | 15,06640625 MB | OK |
+| H-R4-12 | El TI_SETUP_CODE no aparece en los registros del proceso | ausente | ausente | OK |
+
+Casos: 32; OK: 29; FALLA: 3

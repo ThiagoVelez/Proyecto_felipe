@@ -1,0 +1,4 @@
+# comando: (cd src/backend && go test -race -count=1 ./...)
+# fecha: 2026-11-25T02:46:17Z
+go: -race requires cgo; enable cgo by setting CGO_ENABLED=1
+# codigo de salida: 2

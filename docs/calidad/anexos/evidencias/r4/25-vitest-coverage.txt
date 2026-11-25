@@ -1,0 +1,25 @@
+# comando: (cd src/frontend && npx --no-install vitest run --coverage --coverage.reporter=text-summary)
+# fecha: 2026-11-25T02:48:05Z
+
+ RUN  v4.1.12 <repo>/src/frontend
+      Coverage enabled with v8
+
+Error: Not implemented: window.scrollTo
+    at module.exports (<repo>\src\frontend\node_modules\jsdom\lib\jsdom\browser\not-implemented.js:9:17)
+    at <repo>\src\frontend\node_modules\jsdom\lib\jsdom\browser\Window.js:960:7
+    at handleSubmit (<repo>/src/frontend/src/screens/PatientPortal.jsx:135:14) undefined
+
+ Test Files  20 passed (20)
+      Tests  147 passed (147)
+   Start at  21:48:09
+   Duration  40.09s (transform 14.75s, setup 27.35s, import 26.79s, tests 95.33s, environment 77.24s)
+
+ % Coverage report from v8
+
+=============================== Coverage summary ===============================
+Statements   : 61.02% ( 2641/4328 )
+Branches     : 51.88% ( 2088/4024 )
+Functions    : 51.35% ( 606/1180 )
+Lines        : 62.78% ( 2455/3910 )
+================================================================================
+# codigo de salida: 0

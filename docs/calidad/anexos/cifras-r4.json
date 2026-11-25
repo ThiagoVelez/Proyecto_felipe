@@ -1,0 +1,48 @@
+{
+ "revision": "R4",
+ "fecha": "2026-11-24",
+ "base": "6a51bb8",
+ "cierre": {
+  "defectos_verificados": 98,
+  "categorias": {
+   "Verificado": 67,
+   "Verificado parcialmente": 7,
+   "Revisado sin prueba": 18,
+   "No verificable": 3,
+   "Reabierto": 3
+  },
+  "reabiertos": ["DEF-50", "DEF-72", "DEF-91"],
+  "reproducciones_r3": "22 de 22",
+  "evidencia": "anexos/verificacion-cierre-r4.md; evidencias/r4/31-reproducciones-r3-hoy.txt"
+ },
+ "defectos": {
+  "registrados": 110,
+  "nuevos_r4": 12,
+  "nuevos_r4_por_severidad": {"Crítica": 0, "Alta": 2, "Media": 8, "Baja": 2},
+  "abiertos": 16,
+  "abiertos_por_severidad": {"Crítica": 1, "Alta": 3, "Media": 9, "Baja": 3},
+  "reproducciones_abiertas": "6 de 6",
+  "evidencia": "04-bitacora-defectos.md (tabla resumen); evidencias/r4/32-control-defectos-local.txt"
+ },
+ "medidas": {
+  "pruebas_backend": {"r1": "17 pasan / 12 omitidas", "r3": "91 / 0 / 22", "r4": "154 / 0 / 0", "evidencia": "evidencias/r4/12-go-test-tests.txt"},
+  "cobertura_backend": {"r1": "60,3 %", "r3": "68,9 %", "r4": "52,1 %", "r4_sin_adaptadores": "72,7 %", "evidencia": "evidencias/r4/13-cover-func-tests.txt, 13c-cover-func-sin-adaptadores.txt, 13d-cobertura-por-paquete.txt"},
+  "vitest": {"r1": "31", "r3": "108 / 15", "r4": "147 / 20", "evidencia": "evidencias/r4/24-vitest.txt"},
+  "cobertura_frontend": {"r3": "72,85 %", "r4": "61,02 %", "evidencia": "evidencias/r4/25-vitest-coverage.txt"},
+  "golangci_lint": {"r3": "62", "r4": "0", "evidencia": "evidencias/r4/05-golangci-lint-src.txt, 05b-golangci-lint-tests.txt"},
+  "staticcheck": {"r4": "0", "evidencia": "evidencias/r4/04-staticcheck.txt"},
+  "gosec": {"r4": "0", "evidencia": "evidencias/r4/06-gosec.txt"},
+  "gocyclo": {"r3": "16", "r4": "21", "r4_en_src": "12", "evidencia": "evidencias/r4/08-gocyclo.txt"},
+  "govulncheck": {"r3": "1", "r4": "1", "r4_id": "GO-2026-6859", "evidencia": "evidencias/r4/07-govulncheck.txt"},
+  "npm_audit": {"r3": "0-6", "r4": "0-0", "evidencia": "evidencias/r4/22-npm-audit-prod.txt, 22b-npm-audit-completo.txt"},
+  "eslint": {"r3": "0 / 89", "r4": "0 / 128", "evidencia": "evidencias/r4/23-eslint.txt"},
+  "p95_http": {"r3": "1,38 ms", "r4": "3,45 ms", "evidencia": "evidencias/r4/42-caja-negra.txt"},
+  "memoria": {"r3": "11,5-16,3 MB", "r4": "15,07 MB", "evidencia": "evidencias/r4/42-caja-negra.txt"},
+  "asvs": {"r1": "34,0 %", "r4": "45,3 %", "evidencia": "evidencias/r4/60-asvs-l2-muestra-53.md"},
+  "afirmaciones": {"r3": "7 / 24 / 2 / 15", "r4_comparables": "19 / 19 / 1 / 5", "r4_retiradas": "4", "r4_total": "30 / 26 / 8 / 14", "evidencia": "evidencias/r4/50-afirmaciones-readme.md"},
+  "rtm": {"r3": "5 de 21", "r4": "11 de 24", "evidencia": "evidencias/r4/51-rtm-verificacion.md"},
+  "mutaciones": {"r4": "4 de 7", "evidencia": "evidencias/r4/54-mutaciones.txt"},
+  "race": {"r4": "en verde en CI (run 45183473187)", "evidencia": "evidencias/r4/45-ci-main-race.txt"}
+ },
+ "dictamen": "No conforme con ISO/IEC 25010:2023"
+}

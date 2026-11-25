@@ -1,0 +1,15 @@
+# comando: git rev-parse <rama/tag> (tras git fetch --all --tags --prune)
+# fecha: 2026-11-25T02:40Z
+origin/main 6a51bb8025bd 2026-11-23 Merge pull request #13 from ThiagoVelez/claude/peaceful-pascal-5pqf5l
+origin/prueba 1c8ca3fdb4ec 2026-11-19 Merge pull request #12 from ThiagoVelez/claude/peaceful-pascal-5pqf5l
+origin/QA bad040b32094 2026-11-24 Revise README for RF13-RF20 updates and QA alignment
+origin/calidad/auditoria-iso25010 1644921b9c8d 2026-11-01 docs(calidad): incluir def-46 a def-48 y el estado de cada tarjeta en las tarjetas de trello
+origin/calidad/revision-r3 72d97e86c02f 2026-11-10 docs(calidad): unificar la redaccion de la revision r3 y retirar el registro de decisiones del repositorio
+origin/claude/peaceful-pascal-5pqf5l 337e31e70945 2026-11-23 Medir la cobertura unitaria sin los adaptadores MySQL y PostgreSQL
+tag entrega-s1 (local) fae2b9b036cb
+tag entrega-s2 (local) 16eb08fe618d
+tag entrega-final (local) 1799d7264f0c
+tag entrega-final-v2 (local) 1c8ca3fdb4ec
+tag entrega-final (remoto) e2740d19dba3 -> (tag ligero, apunta directamente a ese commit)
+Nota: el tag entrega-final local difiere del remoto; git fetch rechazo sobrescribirlo (would clobber existing tag). No se modifico.
+rama calidad/revision-r4 creada desde origin/main 6a51bb8025bd9376ba881867940de3632f3b6a66

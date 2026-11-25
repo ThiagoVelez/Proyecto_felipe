@@ -1,0 +1,4 @@
+# comando: python -X utf8 docs/calidad/anexos/verificar_cierre_r4.py <go-tests.json> <go-src.json> <vitest.json> <salida> (go test -count=1 -json ./... en tests/backend y src/backend sobre 6a51bb8; npx vitest run --reporter=json)
+# fecha: 2026-11-25T03:36Z
+{"Verificado": 67, "Revisado sin prueba": 18, "Verificado parcialmente": 7, "No verificable": 3, "Reabierto": 3}
+# tabla completa: docs/calidad/anexos/verificacion-cierre-r4.md

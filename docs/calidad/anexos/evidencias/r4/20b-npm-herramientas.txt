@@ -1,0 +1,10 @@
+# comando: (cd src/frontend && npm i --no-save --no-audit --no-fund eslint@9.17.0 @eslint/js@9.17.0 eslint-plugin-react@7.37.2 eslint-plugin-react-hooks@5.1.0 globals@15.14.0 @vitest/coverage-v8@4.1.12)
+# fecha: 2026-11-25T02:46:40Z
+npm warn deprecated eslint@9.17.0: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+
+added 186 packages in 19s
+npm warn install-scripts 1 package has install scripts not yet covered by allowScripts:
+npm warn install-scripts   esbuild@0.25.12 (postinstall: node install.js)
+npm warn install-scripts
+npm warn install-scripts Run `npm install-scripts ls` to review, or `npm install-scripts approve <pkg>` to allow.
+# codigo de salida: 0

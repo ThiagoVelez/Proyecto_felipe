@@ -1,0 +1,3 @@
+# comando: (cd src/backend && staticcheck ./...)
+# fecha: 2026-11-25T02:42:03Z
+# codigo de salida: 0

@@ -1,0 +1,8 @@
+# comando: (cd tests/backend && go vet ./... && golangci-lint run --config ../../.golangci.yml ./... && go test -count=1 ./...) con los archivos de R4 (calidad_r4_regression_test.go, calidad_r4_rbac_test.go, controldefectos)
+# fecha: 2026-11-25T03:03Z
+go vet: sin hallazgos
+0 issues.
+# golangci-lint codigo de salida: 0
+ok  	saludconecta-tests	40.928s
+ok  	saludconecta-tests/herramientas/controldefectos	0.028s
+# go test codigo de salida: 0

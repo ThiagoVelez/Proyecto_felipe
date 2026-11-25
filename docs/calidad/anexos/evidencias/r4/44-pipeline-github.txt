@@ -1,0 +1,26 @@
+# comando: gh run list --branch main --limit 10 ; gh run list --workflow calidad.yml --limit 30 ; gh pr view 12/13 --json ... ; gh api repos/ThiagoVelez/Proyecto_felipe/branches/main/protection
+# fecha: 2026-11-25T03:04Z
+## gh run list --branch main --limit 10
+completed	success	Merge pull request #13 from ThiagoVelez/claude/peaceful-pascal-5pqf5l	calidad	main	push	45183473187	4m51s	2026-11-23T13:23:40Z
+completed	success	Merge pull request #12 from ThiagoVelez/claude/peaceful-pascal-5pqf5l	calidad	main	push	44668090381	5m49s	2026-11-20T03:29:40Z
+## gh run list --branch claude/peaceful-pascal-5pqf5l --limit 25
+completed	success	Cierre de la revisión de calidad R3: corrección de todos los defectos abiertos	calidad	claude/peaceful-pascal-5pqf5l	pull_request	45176689231	4m49s	2026-11-23T12:41:26Z
+completed	success	Medir la cobertura unitaria sin los adaptadores MySQL y PostgreSQL	calidad	claude/peaceful-pascal-5pqf5l	push	45176677048	5m30s	2026-11-23T12:41:21Z
+completed	failure	Cierre de la revisión de calidad R3: corrección de todos los defectos abiertos	calidad	claude/peaceful-pascal-5pqf5l	pull_request	45175602170	5m58s	2026-11-23T12:34:33Z
+completed	failure	DEF-98: activar Immutable en Fiber para que los parámetros de ruta no…	calidad	claude/peaceful-pascal-5pqf5l	push	45175588021	4m46s	2026-11-23T12:34:27Z
+completed	failure	Cierre de la revisión de calidad R3: corrección de todos los defectos abiertos	calidad	claude/peaceful-pascal-5pqf5l	pull_request	45167192063	4m40s	2026-11-23T11:39:45Z
+completed	success	Incorporar las dos pruebas de regresión de la revisión R3 que no lleg…	calidad	claude/peaceful-pascal-5pqf5l	push	45167073434	5m43s	2026-11-23T11:38:55Z
+completed	success	Entrega Final v2: portal del paciente, laboratorio/enfermería/sedes en el servidor, CI y MySQL real	calidad	claude/peaceful-pascal-5pqf5l	pull_request	44667167730	4m42s	2026-11-20T03:21:30Z
+completed	success	Corregir hallazgos de golangci-lint v2.15.0 del pipeline	calidad	claude/peaceful-pascal-5pqf5l	push	44667162424	4m50s	2026-11-20T03:21:27Z
+completed	failure	Entrega Final v2: portal del paciente, laboratorio/enfermería/sedes en el servidor, CI y MySQL real	calidad	claude/peaceful-pascal-5pqf5l	pull_request	44666386693	4m48s	2026-11-20T03:14:46Z
+completed	failure	Documentación de la Entrega Final v2: RF01, diagramas, API y resultad…	calidad	claude/peaceful-pascal-5pqf5l	push	44666348268	5m50s	2026-11-20T03:14:24Z
+completed	failure	feat(servidor): laboratorio, enfermeria y sedes pasan del navegador a…	calidad	claude/peaceful-pascal-5pqf5l	push	44635866137	5m48s	2026-11-19T23:14:00Z
+completed	failure	fix(calidad): cerrar 22 defectos corregidos, incorporar el pipeline y…	calidad	claude/peaceful-pascal-5pqf5l	push	44634611824	4m38s	2026-11-19T23:05:41Z
+## PR #12
+{"checks":[{"conclusion":"SUCCESS","name":"Backend - analisis estatico"},{"conclusion":"SUCCESS","name":"Backend - analisis estatico"},{"conclusion":"SUCCESS","name":"Backend - pruebas con -race y cobertura"},{"conclusion":"SUCCESS","name":"Backend - pruebas con -race y cobertura"},{"conclusion":"SUCCESS","name":"Backend - control de defectos abiertos"},{"conclusion":"SUCCESS","name":"Backend - control de defectos abiertos"},{"conclusion":"SUCCESS","name":"Frontend - lint, pruebas, build y auditoria"},{"conclusion":"SUCCESS","name":"Frontend - lint, pruebas, build y auditoria"}],"head":"5bc2761","mergedAt":"2026-11-20T03:29:37Z","mergedBy":"ThiagoVelez","number":12,"state":"MERGED","title":"Entrega Final v2: portal del paciente, laboratorio/enfermería/sedes en el servidor, CI y MySQL real"}
+## PR #13
+{"checks":[{"conclusion":"SUCCESS","name":"Backend - analisis estatico"},{"conclusion":"SUCCESS","name":"Backend - analisis estatico"},{"conclusion":"SUCCESS","name":"Backend - pruebas con -race y cobertura"},{"conclusion":"SUCCESS","name":"Backend - pruebas con -race y cobertura"},{"conclusion":"SUCCESS","name":"Backend - control de defectos abiertos"},{"conclusion":"SUCCESS","name":"Backend - control de defectos abiertos"},{"conclusion":"SUCCESS","name":"Frontend - lint, pruebas, build y auditoria"},{"conclusion":"SUCCESS","name":"Frontend - lint, pruebas, build y auditoria"}],"head":"337e31e","mergedAt":"2026-11-23T13:23:37Z","mergedBy":"ThiagoVelez","number":13,"state":"MERGED","title":"Cierre de la revisión de calidad R3: corrección de todos los defectos abiertos"}
+## proteccion de main
+{"message":"Not Found","documentation_url":"https://docs.github.com/rest/branches/branch-protection#get-branch-protection","status":"404"}gh: Not Found (HTTP 404)
+## rama main (campo protected)
+{"protected":false}

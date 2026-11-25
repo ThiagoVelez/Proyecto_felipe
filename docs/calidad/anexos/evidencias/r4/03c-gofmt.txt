@@ -1,0 +1,4 @@
+# comando: git -c core.autocrlf=false archive origin/main src/backend tests/backend | tar -x -C <tmp> && (cd <tmp> && gofmt -l src/backend tests/backend). La copia de trabajo usa CRLF (core.autocrlf=true) y gofmt marcaria todos los archivos; el arbol exportado tiene LF como en CI.
+# fecha: 2026-11-25T03:00Z
+# archivos sin formato en origin/main: 0
+# archivos nuevos o modificados por R4 (LF) sin formato: 0

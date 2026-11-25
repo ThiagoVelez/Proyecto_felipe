@@ -1,0 +1,16 @@
+# comando: (cd src/frontend && npx --no-install vitest run)
+# fecha: 2026-11-25T02:47:27Z
+
+ RUN  v4.1.12 <repo>/src/frontend
+
+Error: Not implemented: window.scrollTo
+    at module.exports (<repo>\src\frontend\node_modules\jsdom\lib\jsdom\browser\not-implemented.js:9:17)
+    at <repo>\src\frontend\node_modules\jsdom\lib\jsdom\browser\Window.js:960:7
+    at handleSubmit (<repo>/src/frontend/src/screens/PatientPortal.jsx:135:14) undefined
+
+ Test Files  20 passed (20)
+      Tests  147 passed (147)
+   Start at  21:47:31
+   Duration  34.18s (transform 17.01s, setup 24.73s, import 28.19s, tests 68.14s, environment 80.37s)
+
+# codigo de salida: 0

@@ -1,0 +1,4 @@
+# comando: (cd src/frontend && npm audit --omit=dev)
+# fecha: 2026-11-25T02:47:14Z
+found 0 vulnerabilities
+# codigo de salida: 0

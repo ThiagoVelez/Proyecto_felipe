@@ -22,3 +22,13 @@
 # 87, 88 y 89) pasan sobre main, es decir, los defectos estan corregidos. Se cerraron en 04-bitacora-defectos.md y sus
 # pruebas se ejecutan siempre como regresion permanente (ya no llaman a requireDefectoAbierto). Con la lista vacia,
 # la herramienta controldefectos informa que no quedan defectos abiertos con reproduccion automatizada.
+
+# Revision R4 (24 nov 2026): se reabren DEF-50 (semilla TOTP de otra cuenta con cualquier sesion) y DEF-72 (ADMIN sigue con
+# acceso a recetas, bandeja de farmacia y dispensacion) y se
+# registran DEF-99, DEF-100, DEF-101 y DEF-107 con reproduccion automatizada (calidad_r4_regression_test.go).
+DEF-50 TestDEF50R4SemillaMFASoloDelPropioUsuario marcador
+DEF-72 TestDEF72R4AdminNoAccedeARecetasNiDispensa marcador
+DEF-99 TestDEF99SolicitudPublicaNoAsignaCorreoAPacienteExistenteSinVerificarIdentidad marcador
+DEF-100 TestDEF100ConexionABaseDeDatosSolicitaTLS marcador
+DEF-101 TestDEF101EnvioSMTPFallidoNoRegistraCorreoEnClaro marcador
+DEF-107 TestDEF107CuentaPrivilegiadaExigeContrasenaDeDoceCaracteres marcador
