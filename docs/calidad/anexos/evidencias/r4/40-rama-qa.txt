@@ -1,0 +1,24 @@
+# comando: git diff --stat origin/main origin/QA | tail -1 ; git merge-base origin/main origin/QA ; git log --oneline origin/main..origin/QA ; git log --oneline --format='%h %ad %an %s' --date=short origin/QA -3 ; git diff --stat $(git merge-base origin/main origin/QA) origin/QA
+# fecha: 2026-11-25T02:52Z
+## diff --stat main..QA (ultimas lineas)
+ tests/frontend/helpers/mockApi.js                  |   39 +-
+ tests/frontend/totp.regression.test.js             |   50 -
+ 428 files changed, 3012 insertions(+), 46977 deletions(-)
+## merge-base: 702f794 2026-11-04 QA
+## commits de QA que no estan en main
+bad040b 2026-11-24 santiago200596 Revise README for RF13-RF20 updates and QA alignment
+229311a 2026-11-10 santiago200596 pruebas
+## commits de main que no estan en QA: 69
+## cambios propios de QA desde la base comun
+ QA-actualizado.md | 160 ++++++++++++++++++++++++
+ README.md         | 363 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 523 insertions(+)
+
+## Simulacion de fusion sin tocar ramas: git merge-tree --write-tree --name-only origin/main origin/QA
+59960b9d5f9fa435859a1850bf4f32bc4e628992
+README.md
+
+Auto-merging README.md
+CONFLICT (content): Merge conflict in README.md
+## Tamano del README: main=3340 lineas; QA=1228 lineas; base comun=865 lineas
+## Conclusion: una fusion de tres vias solo trae QA-actualizado.md y el README; los ~47 000 borrados aparecen solo al comparar las puntas (git diff main QA) porque QA no tiene los 69 commits de main. El README queda en conflicto: resolverlo con la version de QA borraria las lineas que main agrego desde el 4 nov.

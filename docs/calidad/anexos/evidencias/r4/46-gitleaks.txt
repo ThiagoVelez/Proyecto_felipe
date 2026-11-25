@@ -1,0 +1,19 @@
+# comando: go install github.com/zricethezav/gitleaks/v8@latest (v8.30.1) ; gitleaks git --redact --no-banner --log-opts="--all" --report-format json . (valores redactados; aqui solo regla, archivo, commit y linea)
+# fecha: 2026-11-25T03:07Z
+# commits analizados: 205; hallazgos: 18
+| N | Regla | Archivo | Commits | Lineas |
+|---|---|---|---|---|
+| 5 | generic-api-key | tests/frontend/AuthMfa.test.jsx | 990ea41 | 105 133 133 151 151 |
+| 4 | generic-api-key | tests/frontend/totp.regression.test.js | 1b2a5de a8154d6 c226458 faf4204 | 6 6 6 6 |
+| 3 | generic-api-key | tests/backend/calidad_helpers_regression_test.go | 03ec031 609536f e569e2f | 24 18 18 |
+| 3 | generic-api-key | tests/frontend/totp.test.js | 990ea41 c41e07c | 15 28 21 |
+| 1 | generic-api-key | src/backend/.env.example | 990ea41 | 22 |
+| 1 | generic-api-key | .env.example | 990ea41 | 12 |
+| 1 | generic-api-key | docker-compose.yml | 4bb8b54 | 51 |
+
+## Clasificacion (revision manual con valores enmascarados)
+- tests/frontend/AuthMfa.test.jsx, totp.test.js, totp.regression.test.js: secretos TOTP y vectores de prueba de RFC 6238 (sinteticos). No son credenciales.
+- tests/backend/calidad_helpers_regression_test.go: calidadJWTSecret, secreto de prueba de Calidad (ya clasificado en R1, evidencias/80).
+- .env.example y src/backend/.env.example (990ea41): marcadores «defina_...»; el servidor los rechaza (DEF-63).
+- docker-compose.yml (4bb8b54, 29 oct 2026): JWT_SECRET literal historico de 52 caracteres. Sigue en el historial publico (borrarlo del codigo no lo borra de git), pero el valor exacto esta en knownInsecureSecrets (src/backend/pkg/config/config.go:16) y el servidor actual se niega a arrancar con el: no puede estar en uso con el codigo vigente.
+- Conclusion H-R4-28: sin secretos reales vigentes. Riesgo residual: cualquier copia desplegada con codigo anterior a DEF-12 usaria ese valor.

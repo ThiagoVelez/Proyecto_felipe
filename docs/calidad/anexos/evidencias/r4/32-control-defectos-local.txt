@@ -1,0 +1,13 @@
+# comando: (cd tests/backend && CALIDAD_DEFECTOS_ABIERTOS=1 go test -count=1 -json -run "$(go run ./herramientas/controldefectos -regex)" . | go run ./herramientas/controldefectos)
+# fecha: 2026-11-25T03:06Z
+# patron: ^(TestDEF50R4SemillaMFASoloDelPropioUsuario|TestDEF72R4AdminNoAccedeARecetasNiDispensa|TestDEF99SolicitudPublicaNoAsignaCorreoAPacienteExistenteSinVerificarIdentidad|TestDEF100ConexionABaseDeDatosSolicitaTLS|TestDEF101EnvioSMTPFallidoNoRegistraCorreoEnClaro|TestDEF107CuentaPrivilegiadaExigeContrasenaDeDoceCaracteres)$
+| Defecto | Prueba | Resultado | Detalle |
+|---|---|---|---|
+| DEF-50 | TestDEF50R4SemillaMFASoloDelPropioUsuario | reproducido | falla como se espera |
+| DEF-72 | TestDEF72R4AdminNoAccedeARecetasNiDispensa | reproducido | falla como se espera |
+| DEF-99 | TestDEF99SolicitudPublicaNoAsignaCorreoAPacienteExistenteSinVerificarIdentidad | reproducido | falla como se espera |
+| DEF-100 | TestDEF100ConexionABaseDeDatosSolicitaTLS | reproducido | falla como se espera |
+| DEF-101 | TestDEF101EnvioSMTPFallidoNoRegistraCorreoEnClaro | reproducido | falla como se espera |
+| DEF-107 | TestDEF107CuentaPrivilegiadaExigeContrasenaDeDoceCaracteres | reproducido | falla como se espera |
+Defectos abiertos reproducidos como se espera: 6 de 6.
+# codigo de salida: 0

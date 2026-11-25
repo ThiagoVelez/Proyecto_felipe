@@ -1,0 +1,15 @@
+# comando: python -X utf8 docs/calidad/anexos/mutaciones_r4.py (copia exportada de origin/main en un directorio temporal; el repositorio no se modifica)
+# fecha: 2026-11-25T03:17Z
+| Mutación | Requisito | Archivo | Cambio | Pruebas que fallan (tests/backend y src/backend) | Detectada |
+|---|---|---|---|---|---|
+| M1 | RF05/RNF02 Cruce de alergias (familia y tildes) | `src/backend/core/domain/allergy.go` | `if matchComponents(allergenParts, drugParts) {` -> `if false && matchComponents(allergenParts, drugParts) {` | `TestAllergyCrossCheckUsesRecordPatient`, `TestAllergyFamilyAndAccentMatching`, `TestDEF05PrescripcionRechazaPacienteDistintoAlFolio`, `TestDEF06CruceAlergiasReactividadCruzadaYTildes`, `TestDEF51PrescripcionV2CruzaAlergias`, `TestDEF60AlergiaAFarmacoSeExtiendeASuFamilia`, `TestH21AlergiaRegistradaSeAplicaDeInmediato`, `TestPrescriptionAllergyInterceptor`, `TestRNF01LatenciaBajoConcurrencia`, `TestRegression_CrossAllergyInterception` | Sí |
+| M2 | RF03 Triaje Manchester: hipotermia severa (< 32 °C) como Nivel II | `src/backend/core/domain/triage.go` | `(temp > 0 && (temp < 32.0 || temp >= 40.0))` -> `(temp > 0 && (temp < 20.0 || temp >= 40.0))` | `TestTriageTemperatureDiscriminators` | Sí |
+| M3 | RF03 Validación de Glasgow en [3, 15] | `src/backend/core/domain/triage.go` | `if t.GlasgowScore < 3 || t.GlasgowScore > 15 {` -> `if t.GlasgowScore < 0 || t.GlasgowScore > 15 {` | `TestH23LimitesGlasgowNoCubiertos`, `TestRegression_GlasgowBoundaryValidation` | Sí |
+| M4 | RF04 Inmutabilidad del folio cerrado en la sincronización (guardia del servicio) | `src/backend/core/services/sync_service.go` | `case err == nil && !existing.CanModify():` -> `case false && err == nil && !existing.CanModify():` | ninguna | **No** |
+| M5 | RF08 Cotejo del documento del paciente al dispensar | `src/backend/core/services/pharmacy_service.go` | `!= domain.NormalizeDocument(presc.PatientDocument)` -> `!= domain.NormalizeDocument(req.PatientDocument)` | ninguna | **No** |
+| M6 | RF03 Triaje Manchester: Glasgow 8 como Nivel I | `src/backend/core/domain/triage.go` | `if t.GlasgowScore <= 8 ||` -> `if t.GlasgowScore < 8 ||` | ninguna | **No** |
+| M7 | RF14 Cruce de alergias en la prescripción v2 | `src/backend/core/services/treatment_service.go` | `conflict != nil` -> `conflict != nil && false` | `TestDEF51PrescripcionV2CruzaAlergias` | Sí |
+
+Copia restaurada y en verde: tests=True, src=True
+# git status --short src (repositorio de trabajo, tras las mutaciones; debe estar vacio):
+# Nota: M4 y M5 sobreviven porque la misma barrera se repite en los adaptadores (memoria: memory_repos.go:451,587 y 1141; MySQL: clinical_record_repo con is_closed = FALSE y prescription_v2_repo.go MarkAsDispensedTx con NormalizeDocument). No hay perdida de proteccion, pero ninguna prueba aisla la capa de servicio.

@@ -1,0 +1,6 @@
+# comando: (cd tests/backend && go test -count=1 -coverpkg=saludconecta-backend/... -coverprofile=coverage-tests.out ./...)
+# fecha: 2026-11-25T02:44:06Z
+ok  	saludconecta-tests	36.785s	coverage: 52.1% of statements in saludconecta-backend/...
+ok  	saludconecta-tests/herramientas/controldefectos	0.034s	coverage: [no statements]
+# codigo de salida: 0
+# Pruebas de nivel superior en tests/backend (go test -count=1 -json ./...): {'pass': 154}

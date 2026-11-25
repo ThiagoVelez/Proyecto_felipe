@@ -1,0 +1,20 @@
+# comando: python cover_pkg.py tests/backend/coverage-tests.out (perfil del comando de R3: -coverpkg=saludconecta-backend/...). Columnas: paquete, sentencias, cubiertas, %
+# fecha: 2026-11-25T02:47Z
+saludconecta-backend/adapters/email	49	17	34.7%
+saludconecta-backend/adapters/http	187	177	94.7%
+saludconecta-backend/adapters/http/handlers	1051	633	60.2%
+saludconecta-backend/adapters/http/middlewares	91	78	85.7%
+saludconecta-backend/adapters/interoperability	38	4	10.5%
+saludconecta-backend/adapters/pdf	161	144	89.4%
+saludconecta-backend/adapters/storage	36	8	22.2%
+saludconecta-backend/adapters/storage/catalog	1	1	100.0%
+saludconecta-backend/adapters/storage/memory	886	678	76.5%
+saludconecta-backend/adapters/storage/mysql	1222	0	0.0%
+saludconecta-backend/adapters/storage/postgres	549	0	0.0%
+saludconecta-backend/core/domain	174	146	83.9%
+saludconecta-backend/core/services	1637	1257	76.8%
+saludconecta-backend/pkg/config	48	22	45.8%
+saludconecta-backend/pkg/crypto	80	70	87.5%
+saludconecta-backend/pkg/logger	26	12	46.2%
+saludconecta-backend/pkg/retention	20	15	75.0%
+TOTAL	6256	3262	52.1%

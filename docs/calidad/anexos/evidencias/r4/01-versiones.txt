@@ -1,0 +1,10 @@
+# comando: go version; node -v; npm -v; docker --version; gh --version; python --version; git --version
+# fecha: 2026-11-25T02:40Z
+go version go1.27.3 windows/amd64
+v24.21.0
+11.19.0
+/usr/bin/bash: line 1: docker: command not found
+gh version 2.103.3 (2026-10-26)
+Python 3.12.7
+git version 2.56.0.windows.4
+/usr/bin/bash: line 1: gcc: command not found

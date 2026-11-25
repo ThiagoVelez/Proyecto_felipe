@@ -1,0 +1,4 @@
+# comando: (cd src/backend && go build ./...)
+# fecha: 2026-11-25T02:41:36Z
+go: downloading github.com/andybalholm/brotli v1.2.7
+# codigo de salida: 0

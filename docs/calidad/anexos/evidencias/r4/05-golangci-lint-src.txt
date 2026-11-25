@@ -1,0 +1,4 @@
+# comando: (cd src/backend && golangci-lint run --config ../../.golangci.yml ./...)
+# fecha: 2026-11-25T02:42:17Z
+0 issues.
+# codigo de salida: 0

@@ -1,0 +1,59 @@
+# comando: git log --no-merges origin/calidad/revision-r3..origin/main --format='%h|%an|%s' ; conteo de commits que citan DEF-XX en asunto o cuerpo ; git log origin/calidad/revision-r3..origin/main --format=%B | grep -ci 'Co-Authored-By' ; grep -n -i 'inteligencia artificial\|asistid\|Claude\|IA' README.md
+# fecha: 2026-11-25T03:07Z
+commits sin merge desde calidad/revision-r3 hasta main: 36
+commits que citan algun DEF-XX (asunto o cuerpo): 11
+commits con trailer Co-Authored-By: 25
+## autores
+     25 Claude
+      1 Santiago
+     10 Santiago Velez
+## commits con prefijo Conventional Commits: 22
+## lista
+337e31e 2026-11-23 Claude | Medir la cobertura unitaria sin los adaptadores MySQL y PostgreSQL
+bb0c265 2026-11-23 Claude | DEF-98: activar Immutable en Fiber para que los parámetros de ruta no se corrompan
+de676bb 2026-11-23 Claude | Documentación y bitácora del cierre de la revisión R3
+26b4ec8 2026-11-23 Claude | Infraestructura, dependencias JS y pruebas de la revisión R3
+07da1c3 2026-11-23 Claude | Datos sintéticos en el fixture del médico de pruebas (DEF-43)
+1489e39 2026-11-23 Claude | Corregir los defectos de frontend abiertos de la revisión R3
+1e4c5b6 2026-11-23 Claude | Base de datos, dependencias y deuda estática de la revisión R3
+c3e4959 2026-11-23 Claude | Corregir los defectos de backend abiertos de la revisión R3
+c226458 2026-11-23 Claude | Incorporar las dos pruebas de regresión de la revisión R3 que no llegaron a main
+5bc2761 2026-11-20 Claude | Corregir hallazgos de golangci-lint v2.15.0 del pipeline
+69e4477 2026-11-20 Claude | Documentación de la Entrega Final v2: RF01, diagramas, API y resultados de pruebas
+82764c4 2026-11-20 Claude | Sesión por pestaña: recargar ya no cambia al último perfil iniciado
+37aa415 2026-11-19 Claude | Laboratorio, enfermería y sedes guardados en el servidor; registro de paciente con correo
+7aad5b9 2026-11-19 Claude | feat(servidor): laboratorio, enfermeria y sedes pasan del navegador al servidor (backend)
+1b531a7 2026-11-19 Claude | fix(calidad): cerrar 22 defectos corregidos, incorporar el pipeline y dejarlo en verde
+1872a7a 2026-11-19 Claude | fix(mysql): ampliar previous_hash para el hash genesis y probar contra MySQL real
+e0872c7 2026-11-19 Claude | feat(citas): portal del paciente y bandeja de solicitudes de primera cita
+4bb8450 2026-11-15 Claude | docs(readme): guia de inicio de sesion por rol en la Entrega Final
+febc05c 2026-11-15 Claude | feat(ti): codigo de instalacion para el Encargado de TI y aprobacion de administradores de sede
+584bc93 2026-11-15 Claude | feat(ti): rol Encargado de TI, registro inicial desde el login y panel de monitoreo
+6e7f8e8 2026-11-15 Claude | docs(readme): documentar en la Entrega Final el diseno para celular, el registro de administradores y las correcciones de laboratorio e inventario
+a342c06 2026-11-15 Claude | fix(farmacia): fechas de vencimiento del inventario y pruebas del registro de admin
+a00f744 2026-11-15 Claude | fix(ui): laboratorio e inventario de farmacia legibles en celular
+366a328 2026-11-15 Claude | fix(farmacia): encabezados y pestanas legibles en celular
+46ba8fc 2026-11-15 Claude | feat(ui): diseno responsive para celulares y registro de administradores solo desde el panel
+609536f 2026-11-10 Santiago Velez | fix(auditoria-r3): correccion integral de defectos criticos y altos identificados por juan jose sanchez
+e2740d1 2026-11-10 Santiago Velez | docs(qa): incorporar informe integral de calidad y pruebas actualizado
+aea446e 2026-11-10 Santiago | Update team roles in README
+1799d72 2026-11-10 Santiago Velez | fix(perfil): habilitar navegacion nativa del navegador y retirar boton redundante
+0438697 2026-11-10 Santiago Velez | fix(laboratorio-ui): sincronizacion global de pacientes, estandarizacion de botones y saneamiento de correos
+23f3f74 2026-11-10 Santiago Velez | feat: migracion a drawer lateral en laboratorio, despacho integrado de correo y modulo medico de impresion pdf
+d63682a 2026-11-10 Santiago Velez | docs: consolidacion de auditoria integral, testing y diagramas tecnicos de entrega final
+131323b 2026-11-10 Santiago Velez | feat: recetario medico de laboratorio con buzon, impresion fisica y envio por correo
+a3473dd 2026-11-10 Santiago Velez | docs: formalizar documentacion de entrega-final en rama prueba
+530c8d3 2026-11-10 Santiago Velez | fix: aislar perfiles y banners, corregir bitácora forense, optimizar organigrama y eliminar menú redundante en admin
+4340b67 2026-11-10 Santiago Velez | feat: incorporar rol laboratorio, dashboard farmacia para admin y sistema de reportes de stock bajo
+## Defectos cerrados en la bitacora (DEF-xx) sin ningun commit de este rango que los cite
+DEF-49 DEF-50 DEF-51 DEF-52 DEF-53 DEF-54 DEF-55 DEF-57 DEF-58 DEF-59 DEF-60 DEF-61 DEF-63 DEF-67 DEF-68 DEF-70 DEF-72 DEF-75 DEF-77 DEF-85 DEF-87 DEF-88 DEF-89 DEF-94 
+## README: declaracion de uso de IA
+13:**Herramientas y Modelos de Inteligencia Artificial (IA):** Google Antigravity con Gemini 3.8 Flash en High y Claude Code con Sonnet 5.5 en High
+28:- **Herramientas de Inteligencia Artificial (Pair Programming & QA):** Google Antigravity impulsado por **Gemini 3.8 Flash en High** y Claude Code impulsado por **Sonnet 5.5 en High**, empleados pa
+1943:| **Herramientas de Inteligencia Artificial** | Google Antigravity (Gemini 3.8 Flash en High) y Claude Code (Sonnet 5.5 en High) | Asistencia avanzada en arquitectura, pruebas y calidad          
+2153:#### 14.9.2. Herramientas de Inteligencia Artificial y Skills Especializadas Utilizadas
+2155:La presente auditoría técnica integral y el diseño de la batería de pruebas de profundidad fueron ejecutados mediante la convergencia de herramientas de Inteligencia Artificial de vanguardia 
+2157:1. **Herramientas de Inteligencia Artificial:**
+2159:   - **Claude Code (Motor Sonnet 5.5 en modo High):** Empleado para la revisión estática de código, auditoría forense de vulnerabilidades, verificación de tipado estricto en TypeScript/React
+## Trailers Co-Authored-By (correo omitido)
+     25 Co-Authored-By: Claude Opus 5.5 <correo>

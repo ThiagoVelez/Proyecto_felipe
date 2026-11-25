@@ -1,0 +1,6 @@
+# comando: lista y bitacora de origin/main: (cd tests/backend && go run ./herramientas/controldefectos -lista <lista-main> -bitacora <bitacora-main> -regex) y (CALIDAD_DEFECTOS_ABIERTOS=1 go test -count=1 -json -run '<patron>' . | go run ./herramientas/controldefectos -lista <lista-main> -bitacora <bitacora-main>)
+# fecha: 2026-11-25T03:02Z
+patron generado con la lista vacia de main: ^$
+pruebas ejecutadas por go test con ese patron: 0
+No hay defectos abiertos con reproduccion automatizada: las pruebas de los defectos cerrados se ejecutan como regresion permanente.
+# codigo de salida: 0

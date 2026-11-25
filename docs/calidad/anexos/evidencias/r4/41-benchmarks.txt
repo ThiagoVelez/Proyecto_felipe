@@ -1,0 +1,19 @@
+# comando: (cd tests/backend && go test -run '^$' -bench 'BenchmarkTriageCalculation|BenchmarkAllergyInterception|BenchmarkPrescriptionPipelineService' -benchmem -count=3 .)
+# fecha: 2026-11-25T02:52Z
+# equipo: windows/amd64, AMD Ryzen 5 3500U with Radeon Vega Mobile Gfx 
+goos: windows
+goarch: amd64
+pkg: saludconecta-tests
+cpu: AMD Ryzen 5 3500U with Radeon Vega Mobile Gfx  
+BenchmarkTriageCalculation-8             	74484123	        15.52 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTriageCalculation-8             	84181579	        15.82 ns/op	       0 B/op	       0 allocs/op
+BenchmarkTriageCalculation-8             	117407356	        12.99 ns/op	       0 B/op	       0 allocs/op
+BenchmarkAllergyInterception-8           	  171720	      5846 ns/op	     862 B/op	      49 allocs/op
+BenchmarkAllergyInterception-8           	  209445	      6464 ns/op	     862 B/op	      49 allocs/op
+BenchmarkAllergyInterception-8           	  180603	      5968 ns/op	     862 B/op	      49 allocs/op
+BenchmarkPrescriptionPipelineService-8   	  222885	      5967 ns/op	    1561 B/op	      34 allocs/op
+BenchmarkPrescriptionPipelineService-8   	  219393	      5790 ns/op	    1556 B/op	      34 allocs/op
+BenchmarkPrescriptionPipelineService-8   	  188736	      7097 ns/op	    1562 B/op	      34 allocs/op
+PASS
+ok  	saludconecta-tests	14.594s
+# codigo de salida: 0

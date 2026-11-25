@@ -1,0 +1,31 @@
+# comando: git grep -c '<patron>' <ref> -- src tests .golangci.yml ; git diff origin/calidad/revision-r3 origin/main -- src tests | grep -nE '^\+.*(//nolint|#nosec|eslint-disable)' ; git diff origin/calidad/revision-r3 origin/main -- .golangci.yml
+# fecha: 2026-11-25T02:45Z
+//nolint en calidad/revision-r3=1 en origin/main=2
+#nosec en calidad/revision-r3=0 en origin/main=2
+eslint-disable en calidad/revision-r3=0 en origin/main=1
+
+## Supresiones agregadas (con ubicacion)
+origin/main:src/backend/adapters/storage/mysql/seeder.go:103:	if _, err := db.ExecContext(context.Background(), fmt.Sprintf("ALTER TABLE clinical_records ADD UNIQUE KEY %s (patient_id, previous_hash)", chainIndexName)); err != nil { // #nosec G201 -- nombre de indice constante
+origin/main:src/backend/pkg/config/config.go:85:		data, err := os.ReadFile(p) // #nosec G304 -- rutas fijas del archivo .env local, no provienen del usuario
+origin/main:src/frontend/src/screens/ti/TiLayout.jsx:44:    // eslint-disable-next-line react-hooks/exhaustive-deps
+origin/main:tests/backend/calidad_helpers_regression_test.go:123://nolint:unused // se usa al registrar el proximo defecto abierto
+origin/main:tests/backend/herramientas/controldefectos/main.go:250:	f, err := os.Open(ruta) //nolint:gosec // ruta provista por el pipeline
+
+## Cambio en .golangci.yml
+diff --git a/.golangci.yml b/.golangci.yml
+index d796453..78a86b9 100644
+--- a/.golangci.yml
++++ b/.golangci.yml
+@@ -14,8 +14,11 @@ run:
+   timeout: 5m
+   tests: true
+ 
++# DEF-44 (cierre v2): la deuda historica quedo en 0 hallazgos, asi que se analiza todo el codigo y no solo lo
++# nuevo desde 6492f07.
+ issues:
+-  new-from-rev: 6492f07
++  max-issues-per-linter: 0
++  max-same-issues: 0
+ 
+ linters:
+   default: none

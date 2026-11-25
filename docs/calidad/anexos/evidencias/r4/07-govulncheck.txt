@@ -1,0 +1,20 @@
+# comando: (cd src/backend && govulncheck ./...)
+# fecha: 2026-11-25T02:43:17Z
+=== Symbol Results ===
+
+Vulnerability #1: GO-2026-6859
+    HTTP/1 server crash due to MaxBytesReader header race in net/http
+  More info: https://pkg.go.dev/vuln/GO-2026-6859
+  Standard library
+    Found in: net/http@go1.27.3
+    Fixed in: net/http@go1.27.4
+    Example traces found:
+      #1: core/services/appointment_service.go:152:21: services.GenerateRandomRXCode calls rand.Int, which eventually calls http.bodyEOFSignal.Read
+      #2: adapters/storage/factory.go:130:16: storage.NewRepositoryBundle calls sql.DB.Close, which eventually calls http.bodyLocked.Read
+
+Your code is affected by 1 vulnerability from the Go standard library.
+This scan also found 3 vulnerabilities in packages you import and 23
+vulnerabilities in modules you require, but your code doesn't appear to call
+these vulnerabilities.
+Use '-show verbose' for more details.
+# codigo de salida: 3
