@@ -11,6 +11,9 @@
 > - Afirmaciones publicadas: 48 evaluadas: 7 verificadas, 24 parciales, 2 no verificadas, 15 falsas. RTM: 5 de 21 requisitos se sostienen. Dictamen: **No conforme con ISO/IEC 25010:2023**.
 <!-- /cifras-r3 -->
 
+<!-- R4: revision del 24 nov 2026 -->
+> **Revisión R4 (24 nov 2026).** Base verificada: `origin/main` `6a51bb8`. Se verificó el cierre de DEF-01 a DEF-98 (`anexos/verificacion-cierre-r4.md`): se reabren DEF-50, DEF-72 y DEF-91 (bloques «Reapertura R4», con su historial de estados) y se registran DEF-99 a DEF-110 (fichas al final de la sección 3). Detalle en `informe-revision-r4.md`.
+
 <!-- v2: cierre de la revision R3, 23 nov 2026 -->
 > **Cierre de la revisión R3 (23 nov 2026).** Se trabajaron todos los defectos que seguían abiertos o reabiertos tras R3. Cada ficha tiene un bloque «Cierre v2» con la corrección y la prueba que la sostiene.
 >
@@ -124,7 +127,7 @@ El contenido de las columnas originales se transcribe sin cambios desde `docs/in
 | DEF-47 | Calcular un TOTP ajeno al secreto cuando Web Crypto no está disponible | Frontend | Alta | P2 | Cerrado (verificado en R3) |
 | DEF-48 | Mantener una prueba con timeout fijo de 1 s que falla bajo `-race` | Pruebas | Baja | P3 | Cerrado (corregido en v2 19 nov 2026: las pruebas usan app.Test(req, -1)) |
 | DEF-49 | Permitir el registro anónimo de administradores activos | Backend | Crítica | P1 | Cerrado (verificado por prueba automatizada, v2 19 nov 2026) |
-| DEF-50 | Exponer sin autenticación la semilla TOTP de cualquier cuenta | Backend / Frontend | Crítica | P1 | Cerrado (verificado por prueba automatizada, v2 19 nov 2026) |
+| DEF-50 | Exponer sin autenticación la semilla TOTP de cualquier cuenta | Backend / Frontend | Crítica | P1 | Reabierto en R4 (24 nov 2026): cualquier usuario autenticado obtiene la semilla TOTP de otra cuenta; historial: Cerrado v2 19 nov 2026 |
 | DEF-51 | Omitir el cruce de alergias en la prescripción v2, la única que la interfaz permite usar | Backend / Frontend | Crítica | P1 | Cerrado (verificado por prueba automatizada, v2 19 nov 2026) |
 | DEF-52 | Aceptar recetas v2 con cantidades negativas e ítems de inventario no verificados | Backend | Crítica | P1 | Cerrado (verificado por prueba automatizada, v2 19 nov 2026) |
 | DEF-53 | Dispensar sin verificar el documento del paciente | Backend | Crítica | P1 | Cerrado (verificado por prueba automatizada, v2 19 nov 2026) |
@@ -146,7 +149,7 @@ El contenido de las columnas originales se transcribe sin cambios desde `docs/in
 | DEF-69 | Agendar citas con condición de carrera y médico erróneo | Backend | Media | P3 | Cerrado (corregido y verificado, v2 23 nov 2026) |
 | DEF-70 | Permitir que un médico edite o borre publicaciones de otro | Backend | Media | P3 | Cerrado (verificado por prueba automatizada, v2 19 nov 2026) |
 | DEF-71 | Dejar sin auditar las lecturas de datos de pacientes en `/api/v2` | Backend | Media | P3 | Cerrado (corregido y verificado, v2 23 nov 2026) |
-| DEF-72 | Declarar roles inconsistentes en las rutas nuevas: AUDITOR bloqueado y ADMIN con acceso a recetas | Backend | Media | P3 | Cerrado (verificado por prueba automatizada, v2 19 nov 2026) |
+| DEF-72 | Declarar roles inconsistentes en las rutas nuevas: AUDITOR bloqueado y ADMIN con acceso a recetas | Backend | Media | P2 | Reabierto en R4 (24 nov 2026): ADMIN sigue con acceso a recetas, bandeja de farmacia y dispensación; historial: Cerrado v2 19 nov 2026 |
 | DEF-73 | Acumular identificadores de *refresh token* sin poda y perder sesiones al reiniciar | Backend | Baja | P4 | Cerrado (corregido y verificado, v2 23 nov 2026) |
 | DEF-74 | Fabricar órdenes, diagnósticos, alergias y grupo sanguíneo en las vistas de enfermería | Frontend | Crítica | P1 | Cerrado (corregido y verificado, v2 23 nov 2026) |
 | DEF-75 | Registrar la administración de medicación solo en el navegador | Frontend | Crítica | P1 | Cerrado (corregido y verificado, v2 23 nov 2026) |
@@ -165,7 +168,7 @@ El contenido de las columnas originales se transcribe sin cambios desde `docs/in
 | DEF-88 | Agendar citas para pacientes inexistentes | Backend | Media | P3 | Cerrado (verificado por prueba automatizada, v2 19 nov 2026) |
 | DEF-89 | Aceptar EVA y coordenadas fuera de rango en notas anatómicas | Backend | Media | P3 | Cerrado (verificado por prueba automatizada, v2 19 nov 2026) |
 | DEF-90 | Probar una copia del modal de alergias en lugar del componente real | Pruebas | Media | P2 | Cerrado (corregido y verificado, v2 23 nov 2026) |
-| DEF-91 | Publicar un dictamen «Aprobado 100 % conforme a ISO/IEC 25010» y una RTM al 100 % sin evidencia que los sostenga | Documentación | Alta | P1 | Cerrado (corregido, v2 23 nov 2026) |
+| DEF-91 | Publicar un dictamen «Aprobado 100 % conforme a ISO/IEC 25010» y una RTM al 100 % sin evidencia que los sostenga | Documentación | Alta | P1 | Reabierto en R4 (24 nov 2026): el README sigue publicando «Aprobado con distinción de excelencia (100 % de conformidad)»; historial: Cerrado v2 23 nov 2026 |
 | DEF-92 | Reutilizar los identificadores DEF-01 a DEF-04 y crear identificadores SEC-* paralelos con referencias a archivos inexistentes | Documentación | Media | P3 | Cerrado (corregido, v2 23 nov 2026) |
 | DEF-93 | Rechazar el cierre del primer folio de cada paciente en MySQL: el hash génesis (69 caracteres) no cabe en `previous_hash VARCHAR(64)` | Backend / Persistencia | Crítica | P1 | Cerrado (corregido y verificado contra MySQL real, v2 19 nov 2026) |
 | DEF-94 | Mostrar al paciente la hora UTC en el correo y el PDF de la cita (5 horas de diferencia) | Backend | Alta | P1 | Cerrado (corregido y verificado, v2 19 nov 2026) |
@@ -173,6 +176,18 @@ El contenido de las columnas originales se transcribe sin cambios desde `docs/in
 | DEF-96 | Descartar el correo, la dirección y la afiliación al registrar un paciente: los resultados de laboratorio no se podían enviar por correo | Backend / Frontend | Alta | P1 | Cerrado (corregido y verificado contra MySQL real, v2 20 nov 2026) |
 | DEF-97 | Cambiar al último perfil iniciado al recargar (F5) una pestaña cuando hay varias abiertas en el mismo navegador | Frontend / Sesión | Alta | P1 | Cerrado (corregido y verificado con Playwright, v2 20 nov 2026) |
 | DEF-98 | Corromper claves guardadas en memoria con parámetros de ruta de Fiber (vistas del búfer reutilizado): 404 intermitente al eliminar una sede editada | Backend | Media | P2 | Cerrado (corregido y verificado con -race, v2 23 nov 2026) |
+| DEF-99 | Asignar a un paciente existente el correo de una solicitud anónima del portal sin verificar su identidad | Backend | Alta | P1 | Nuevo (R4, 24 nov 2026) |
+| DEF-100 | Conectar a MySQL y PostgreSQL sin TLS | Backend / Infra | Alta | P2 | Nuevo (R4, 24 nov 2026) |
+| DEF-101 | Registrar en claro el correo del paciente cuando falla el envío SMTP | Backend | Baja | P3 | Nuevo (R4, 24 nov 2026) |
+| DEF-102 | Ejecutar las pruebas con MySQL y PostgreSQL reales solo a mano: ni la suite ni el pipeline las corren | Pruebas | Media | P2 | Nuevo (R4, 24 nov 2026) |
+| DEF-103 | Compilar la imagen de producción con Go 1.22 (sin soporte) y fijar en CI Go 1.27.3, con una vulnerabilidad alcanzable de la biblioteca estándar (GO-2026-6859) | Backend / CI | Media | P2 | Nuevo (R4, 24 nov 2026) |
+| DEF-104 | Registrar DEF-93 a DEF-98 sin ficha y citar en la bitácora pruebas con nombres que no existen | Documentación | Baja | P3 | Nuevo (R4, 24 nov 2026) |
+| DEF-105 | Publicar en `QA-actualizado.md` cifras de pruebas y rendimiento que no corresponden al código actual | Documentación / Pruebas | Media | P3 | Nuevo (R4, 24 nov 2026) |
+| DEF-106 | Mantener la rama `QA` 69 commits detrás de `main` con el README en conflicto | Configuración | Media | P2 | Nuevo (R4, 24 nov 2026) |
+| DEF-107 | Aceptar contraseñas cortas: 8 caracteres en cuentas privilegiadas creadas desde el login y 1 carácter en el alta de personal | Backend | Media | P2 | Nuevo (R4, 24 nov 2026) |
+| DEF-108 | Enviar resultados de laboratorio a cualquier correo que indique quien los despacha | Backend | Media | P2 | Nuevo (R4, 24 nov 2026) |
+| DEF-109 | Renovar la sesión sin límite absoluto y mantener vigente el token de acceso tras cerrar sesión | Backend | Media | P3 | Nuevo (R4, 24 nov 2026) |
+| DEF-110 | Dejar sin prueba la frontera Glasgow 8 del Nivel I de triaje: una mutación que la cambia no hace fallar ninguna prueba | Pruebas | Media | P2 | Nuevo (R4, 24 nov 2026); Calidad agregó `TestR4GlasgowOchoEsNivelI` |
 
 Los defectos DEF-46 a DEF-48 se detectaron en la primera ejecución del pipeline `calidad` sobre el PR (run `41361540450`, `anexos/evidencias/89-ci-run-41361540450.txt`).
 
@@ -1286,6 +1301,15 @@ Los defectos DEF-46 a DEF-48 se detectaron en la primera ejecución del pipeline
 | Acción propuesta | M-22: eliminar el endpoint y el autocompletado; la semilla solo se entrega en `/auth/mfa/setup` autenticado. |
 | Estado | Confirmado (reverificado en R3) |
 
+#### Reapertura R4 (24 nov 2026)
+
+| Campo | Contenido |
+|---|---|
+| Veredicto | **Reabierto en R4.** Historial de estados: Confirmado (R3, 10 nov) -> Cerrado (v2, 19 nov) -> Reabierto (R4, 24 nov). |
+| Evidencia | El cierre exigió sesión en `GET /api/v1/auth/mfa-seed`, pero el handler no compara el correo pedido con el usuario de la sesión (`adapters/http/handlers/auth_handler.go:417-436`, `core/services/auth_service.go:410-421`). Un ENFERMERO obtiene la semilla TOTP de un ADMIN: `TestDEF50R4SemillaMFASoloDelPropioUsuario` falla por el defecto (`anexos/evidencias/r4/32-control-defectos-local.txt`). La prueba citada en el cierre (`TestDEF50SemillaMFANoSeExponeSinAutenticacion`) solo cubría la petición sin token. |
+| Impacto | Con la contraseña de un administrador o del Encargado de TI y su semilla, cualquier cuenta de bajo privilegio anula el segundo factor. |
+| Acción propuesta | Entregar solo la semilla del usuario de la sesión (ignorar el parámetro `email`) o retirar el endpoint; rotar las semillas emitidas. Responsable sugerido: Santiago Vélez (Backend). |
+
 ### DEF-51. Omitir el cruce de alergias en la prescripción v2, la única que la interfaz permite usar
 
 | Campo | Contenido |
@@ -1730,6 +1754,15 @@ Los defectos DEF-46 a DEF-48 se detectaron en la primera ejecución del pipeline
 | Acción propuesta | M-39: matriz RBAC de diseño aprobada por el Arquitecto y verificada por la prueba de matriz. |
 | Estado | Confirmado (reverificado en R3) |
 
+#### Reapertura R4 (24 nov 2026)
+
+| Campo | Contenido |
+|---|---|
+| Veredicto | **Reabierto en R4.** Historial de estados: Confirmado (R3, 10 nov) -> Cerrado (v2, 19 nov) -> Reabierto (R4, 24 nov). |
+| Evidencia | El cierre corrigió solo la mitad de AUDITOR (`TestDEF72AuditorConsultaNotasAnatomicasDelPaciente` pasa). La mitad de ADMIN sigue igual: `router.go` mantiene ADMIN en `GET /api/v2/treatments/:id`, `GET /api/v2/pharmacy/inbox`, `GET /api/v2/pharmacy/prescriptions/lookup` y `POST /api/v2/pharmacy/dispense`. `TestDEF72R4AdminNoAccedeARecetasNiDispensa` falla por el defecto, y la caja negra contra el backend real da 200 en la bandeja de farmacia con token ADMIN (`anexos/evidencias/r4/42-caja-negra.txt`). |
+| Impacto | Un rol administrativo lee recetas con nombre, documento y medicamentos del paciente (dato sensible, Ley 1581) y puede dispensar. |
+| Acción propuesta | Retirar ADMIN de esas rutas o justificar por escrito la excepción en la matriz RBAC de diseño. Prioridad subida de P3 a P2. Responsable sugerido: Santiago Vélez (Backend/Arquitectura). |
+
 ### DEF-73. Acumular identificadores de *refresh token* sin poda y perder sesiones al reiniciar
 
 | Campo | Contenido |
@@ -2162,6 +2195,14 @@ Los defectos DEF-46 a DEF-48 se detectaron en la primera ejecución del pipeline
 |---|---|
 | **Cerrado (corregido, v2 23 nov 2026)** | RTM con RF01 a RF16 y pruebas por requisito; se retiró «Aprobado 100 % conforme» y la afirmación de cobertura del 100 %; `/health` ya no responde `iso_quality`; p95 sin origen marcado como no medido. |
 
+#### Reapertura R4 (24 nov 2026)
+
+| Campo | Contenido |
+|---|---|
+| Veredicto | **Reabierto en R4.** Historial de estados: Confirmado (R3, 10 nov) -> Cerrado (v2, 23 nov) -> Reabierto (R4, 24 nov). |
+| Evidencia | `README.md:2151` («Aprobado con Máxima Calificación (Conformidad 100%)») y `README.md:2367` («APROBADO CON DISTINCIÓN DE EXCELENCIA (100% DE CONFORMIDAD)»), sobre `origin/main` `6a51bb8`. La revisión R4 de afirmaciones (`anexos/evidencias/r4/50-afirmaciones-readme.md`) mantiene 5 afirmaciones falsas comparables con R3 y registra otras nuevas (PWA y modo sin conexión, umbrales de triaje distintos del código, función `CalculateTriageLevel` inexistente). |
+| Acción propuesta | Retirar los dictámenes «100 %» o enlazarlos al dictamen de Calidad vigente. El README es documento del equipo; Calidad no lo edita. Responsable sugerido: Santiago Vélez (documentación técnica). |
+
 ### DEF-92. Reutilizar los identificadores DEF-01 a DEF-04 y crear identificadores SEC-* paralelos con referencias a archivos inexistentes
 
 | Campo | Contenido |
@@ -2187,6 +2228,222 @@ Los defectos DEF-46 a DEF-48 se detectaron en la primera ejecución del pipeline
 | **Cerrado (corregido, v2 23 nov 2026)** | Registros de la sección 14.3 del README renombrados S2-01 a S2-04 con tabla de equivalencias; rutas y afirmaciones corregidas. |
 
 ---
+
+### DEF-99. Asignar a un paciente existente el correo de una solicitud anónima del portal sin verificar su identidad
+
+| Campo | Contenido |
+|---|---|
+| Registrado en | Revisión R4 (24 nov 2026) |
+| Módulo | Backend (portal del paciente) |
+| Requisito afectado | RNF03 (Ley 1581); solicitudes de primera cita |
+| Característica ISO 25010:2023 | Seguridad -> Confidencialidad, Autenticidad |
+| Tipo (IEEE 1044) | Lógica |
+| Severidad / Prioridad | Alta / P1. Expone a un tercero citas, recetas y resultados de laboratorio del paciente; no altera el tratamiento, por eso no es Crítica. |
+| Pasos para reproducir | 1. Existe un paciente sin correo. 2. Un anónimo envía `POST /api/v1/public/appointment-requests` con el documento de ese paciente, otro nombre, otra fecha de nacimiento y su propio correo. 3. El médico agenda la solicitud. |
+| Resultado esperado / obtenido | La ficha del paciente no cambia (o la solicitud se rechaza si la identidad no coincide) / La ficha real queda con el correo del solicitante y desde ahí se le envían la cita y los demás documentos. |
+| Evidencia | `core/services/appointment_request_service.go:229-246` (`patientFor` busca solo por documento y llama a `UpdateContact`). Caja negra: `anexos/evidencias/r4/42-caja-negra.txt` (correo del tercero en la ficha). Verificado. |
+| Reproducción | `TestDEF99SolicitudPublicaNoAsignaCorreoAPacienteExistenteSinVerificarIdentidad` (`tests/backend/calidad_r4_regression_test.go`; en `defectos-abiertos.txt`). |
+| Causa raíz | Se confía en el documento como única prueba de identidad en un formulario público. |
+| Acción propuesta | Comparar nombre y fecha de nacimiento antes de asociar; nunca escribir contacto desde el portal sin confirmación de admisión. Responsable sugerido: Santiago Vélez. |
+| Estado | Nuevo |
+
+### DEF-100. Conectar a MySQL y PostgreSQL sin TLS
+
+| Campo | Contenido |
+|---|---|
+| Registrado en | Revisión R4 (24 nov 2026) |
+| Módulo | Backend / Infra |
+| Requisito afectado | RNF03 (Ley 1581) |
+| Característica ISO 25010:2023 | Seguridad -> Confidencialidad |
+| Tipo (IEEE 1044) | Configuración |
+| Severidad / Prioridad | Alta / P2. El equipo declara trabajar con la base de datos en la nube (bitácora, cierre v2): la historia clínica viaja en claro por internet. |
+| Pasos para reproducir | Servidor falso que ofrece TLS; conectar con `mysql.NewConnection` y con `storage.NewRepositoryBundle` (driver postgres). |
+| Resultado esperado / obtenido | El cliente pide TLS / MySQL responde sin el indicador CLIENT_SSL y PostgreSQL inicia sin SSLRequest. |
+| Evidencia | `adapters/storage/mysql/connection.go:27` (DSN sin `tls`), `adapters/storage/factory.go:182` (`SSLMode: "disable"` fijo). Verificado. |
+| Reproducción | `TestDEF100ConexionABaseDeDatosSolicitaTLS` (`calidad_r4_regression_test.go`). |
+| Causa raíz | Configuración de laboratorio local llevada a un despliegue en la nube. |
+| Acción propuesta | Variable `DB_TLS` (por defecto `true` salvo `localhost`) con verificación de certificado. Responsable sugerido: Santiago Vélez. |
+| Estado | Nuevo |
+
+### DEF-101. Registrar en claro el correo del paciente cuando falla el envío SMTP
+
+| Campo | Contenido |
+|---|---|
+| Registrado en | Revisión R4 (24 nov 2026) |
+| Módulo | Backend |
+| Requisito afectado | RNF03 (Ley 1581) |
+| Característica ISO 25010:2023 | Seguridad -> Confidencialidad |
+| Tipo (IEEE 1044) | Datos |
+| Severidad / Prioridad | Baja / P3. Afecta registros internos; contradice el cierre de DEF-62. |
+| Pasos para reproducir | Configurar `SMTP_*` con un servidor inaccesible y enviar cualquier correo. |
+| Resultado esperado / obtenido | Correo enmascarado como en el envío exitoso / El aviso «Fallo en el envío SMTP» incluye el destinatario completo. Además, el nombre del archivo de la bandeja local contiene el correo. |
+| Evidencia | `adapters/email/smtp.go:122-125` (`"to": to`) y `:66` (nombre del archivo). Verificado. |
+| Reproducción | `TestDEF101EnvioSMTPFallidoNoRegistraCorreoEnClaro`. |
+| Causa raíz | El enmascaramiento de DEF-62 se aplicó solo a la rama de éxito. |
+| Acción propuesta | Usar `MaskEmail` en el aviso de fallo y un identificador en el nombre del archivo. Responsable sugerido: Santiago Vélez. |
+| Estado | Nuevo |
+
+### DEF-102. Ejecutar las pruebas con MySQL y PostgreSQL reales solo a mano: ni la suite ni el pipeline las corren
+
+| Campo | Contenido |
+|---|---|
+| Registrado en | Revisión R4 (24 nov 2026) |
+| Módulo | Pruebas |
+| Requisito afectado | RNF05, RNF07 |
+| Característica ISO 25010:2023 | Mantenibilidad -> Capacidad de prueba; Fiabilidad |
+| Tipo (IEEE 1044) | Proceso |
+| Severidad / Prioridad | Media / P2. Cinco cierres (DEF-25, 56, 65, 93 y 96) dependen solo de estas pruebas. |
+| Pasos para reproducir | Buscar `//go:build integration` en `tests/backend` y los pasos de `.github/workflows/calidad.yml`. |
+| Resultado esperado / obtenido | Un job con servicios MySQL y PostgreSQL ejecuta `go test -tags integration` / Ningún paso las ejecuta; los adaptadores MySQL (1 222 sentencias) y PostgreSQL (549) tienen 0 % de cobertura en la suite. |
+| Evidencia | `anexos/evidencias/r4/13d-cobertura-por-paquete.txt`; `mysql_integration_test.go`, `mysql_entrega_integration_test.go`, `postgres_integration_test.go`. Revisado y medido (cobertura). |
+| Reproducción | Sin prueba automatizada: es un defecto del pipeline. |
+| Causa raíz | Las pruebas se escribieron para correrlas a mano contra la base de datos en la nube. |
+| Acción propuesta | Job `integracion` con `services: mysql:8.0` y `postgres:16` y contraseñas generadas en el run. Responsable sugerido: Santiago Arcos (Pruebas). |
+| Estado | Nuevo |
+
+### DEF-103. Compilar la imagen de producción con Go 1.22 (sin soporte) y fijar en CI Go 1.27.3, con una vulnerabilidad alcanzable de la biblioteca estándar (GO-2026-6859)
+
+| Campo | Contenido |
+|---|---|
+| Registrado en | Revisión R4 (24 nov 2026) |
+| Módulo | Backend / CI |
+| Requisito afectado | RNF03 |
+| Característica ISO 25010:2023 | Seguridad; Mantenibilidad |
+| Tipo (IEEE 1044) | Configuración |
+| Severidad / Prioridad | Media / P2. El binario que se despliega no es el que se analiza. |
+| Pasos para reproducir | `govulncheck ./...` en `src/backend`; leer `src/backend/Dockerfile:7` y `GO_VERSION` de `calidad.yml`. |
+| Resultado esperado / obtenido | Misma versión de Go con soporte en CI y en la imagen, sin vulnerabilidades alcanzables / CI y local: Go 1.27.3 con GO-2026-6859 alcanzable (corregida en 1.27.4); la imagen compila con `golang:1.22-alpine`, rama sin soporte. govulncheck sobre Go 1.22: No medido (no se descargó esa versión). |
+| Evidencia | `anexos/evidencias/r4/07-govulncheck.txt` y `45-ci-main-race.txt` (el pipeline de `main` también lo reporta, en un paso informativo). Verificado. |
+| Reproducción | Sin prueba automatizada: govulncheck es la reproducción. |
+| Causa raíz | La versión de Go se declara en tres lugares sin sincronizar. |
+| Acción propuesta | Go 1.27.4 en CI y en el Dockerfile; govulncheck bloqueante. Responsable sugerido: Santiago Vélez. |
+| Estado | Nuevo |
+
+### DEF-104. Registrar DEF-93 a DEF-98 sin ficha y citar en la bitácora pruebas con nombres que no existen
+
+| Campo | Contenido |
+|---|---|
+| Registrado en | Revisión R4 (24 nov 2026) |
+| Módulo | Documentación |
+| Requisito afectado | Proceso de calidad (plan, sección 6) |
+| Característica ISO 25010:2023 | Mantenibilidad -> Analizabilidad |
+| Tipo (IEEE 1044) | Documentación |
+| Severidad / Prioridad | Baja / P3. |
+| Pasos para reproducir | Buscar `### DEF-93` a `### DEF-98` en esta bitácora; buscar `TestDEF12ResolveJWTSecret` en el código. |
+| Resultado esperado / obtenido | Cada defecto con ficha completa y evidencia ejecutable / DEF-93 a DEF-98 solo tienen fila de resumen (sin pasos, esperado/obtenido ni prueba); la ficha de DEF-12 cita una prueba que hoy se llama `TestDEF12ValidateJWTSecret`. |
+| Evidencia | `anexos/verificacion-cierre-r4.md`. Verificado. |
+| Reproducción | `verificar_cierre_r4.py` lo detecta («no existe», «La ficha no cita prueba ni commit»). |
+| Causa raíz | El cierre se documentó en la tabla resumen sin completar las fichas. |
+| Acción propuesta | Completar las fichas y actualizar los nombres. Responsable sugerido: Juan José Sánchez (Documentación de calidad). |
+| Estado | Nuevo |
+
+### DEF-105. Publicar en `QA-actualizado.md` cifras de pruebas y rendimiento que no corresponden al código actual
+
+| Campo | Contenido |
+|---|---|
+| Registrado en | Revisión R4 (24 nov 2026) |
+| Módulo | Documentación / Pruebas |
+| Requisito afectado | RNF01; plan de pruebas |
+| Característica ISO 25010:2023 | Adecuación funcional -> Corrección (de la documentación) |
+| Tipo (IEEE 1044) | Documentación |
+| Severidad / Prioridad | Media / P3. El documento se presenta como estado actual («100 % de conformidad»). |
+| Pasos para reproducir | `git show origin/QA:QA-actualizado.md` frente a `npx vitest run` y `go test -bench` sobre `main`. |
+| Resultado esperado / obtenido | Cifras medidas sobre el código vigente / Publica 14 suites y 105 pruebas, 5,55 ns/op y 3,23 µs/op; sobre `main` se miden 20 archivos y 147 pruebas, 12,99-15,82 ns/op y 5,85-6,46 µs/op. |
+| Evidencia | `anexos/evidencias/r4/24-vitest.txt`, `41-benchmarks.txt`, `40-rama-qa.txt`. Verificado. |
+| Reproducción | Sin prueba automatizada (documento). |
+| Causa raíz | El documento describe la Entrega-s2 y se publicó en una rama que no recibió los cambios posteriores. |
+| Acción propuesta | Fechar las cifras y su commit, o regenerarlas sobre `main`. No se editó el archivo (es de Pruebas). Responsable sugerido: Santiago Arcos. |
+| Estado | Nuevo |
+
+### DEF-106. Mantener la rama `QA` 69 commits detrás de `main` con el README en conflicto
+
+| Campo | Contenido |
+|---|---|
+| Registrado en | Revisión R4 (24 nov 2026) |
+| Módulo | Configuración |
+| Requisito afectado | Gestión de configuración |
+| Característica ISO 25010:2023 | Mantenibilidad |
+| Tipo (IEEE 1044) | Proceso |
+| Severidad / Prioridad | Media / P2. Ver «Decisiones tomadas» del informe R4: no se clasifica Alta porque una fusión de tres vías no borra archivos; el riesgo está en resolver el conflicto del README. |
+| Pasos para reproducir | `git diff --stat main origin/QA` y `git merge-tree --write-tree origin/main origin/QA`. |
+| Resultado esperado / obtenido | Rama de QA al día con `main` / Base común del 4 nov; el diff entre puntas muestra 46 977 líneas borradas; la fusión simulada deja `README.md` en conflicto (main 3 340 líneas, QA 1 228). |
+| Evidencia | `anexos/evidencias/r4/40-rama-qa.txt`. Verificado. |
+| Reproducción | Sin prueba automatizada. |
+| Causa raíz | La rama se usa para documentos de Pruebas y no se actualiza desde `main`. |
+| Acción propuesta | Rebase de `QA` sobre `main` o aplicar solo el cambio del README en un PR nuevo. Responsable sugerido: Santiago Arcos. |
+| Estado | Nuevo |
+
+### DEF-107. Aceptar contraseñas cortas: 8 caracteres en cuentas privilegiadas creadas desde el login y 1 carácter en el alta de personal
+
+| Campo | Contenido |
+|---|---|
+| Registrado en | Revisión R4 (24 nov 2026) |
+| Módulo | Backend |
+| Requisito afectado | RNF03 |
+| Característica ISO 25010:2023 | Seguridad -> Autenticidad |
+| Tipo (IEEE 1044) | Lógica |
+| Severidad / Prioridad | Media / P2. El MFA obligatorio en ADMIN y TI reduce el impacto. |
+| Pasos para reproducir | `POST /api/v1/auth/register-branch-admin` con contraseña de 8 caracteres; `POST /api/v1/admin/users` con contraseña de 1 carácter. |
+| Resultado esperado / obtenido | Mínimo de 12 caracteres, como exige `ADMIN_INITIAL_PASSWORD` y ASVS V2.1.1 / 201 en ambos casos. |
+| Evidencia | `adapters/http/handlers/auth_handler.go:205,289`; `core/services/bootstrap.go:21`. Verificado. |
+| Reproducción | `TestDEF107CuentaPrivilegiadaExigeContrasenaDeDoceCaracteres`. |
+| Causa raíz | Validación de contraseña repetida en cada handler, sin una política común. |
+| Acción propuesta | Una función de política única (12 caracteres mínimo, máximo razonable, lista de contraseñas comunes). Responsable sugerido: Santiago Vélez. |
+| Estado | Nuevo |
+
+### DEF-108. Enviar resultados de laboratorio a cualquier correo que indique quien los despacha
+
+| Campo | Contenido |
+|---|---|
+| Registrado en | Revisión R4 (24 nov 2026) |
+| Módulo | Backend |
+| Requisito afectado | RNF03 (Ley 1581) |
+| Característica ISO 25010:2023 | Seguridad -> Confidencialidad |
+| Tipo (IEEE 1044) | Lógica |
+| Severidad / Prioridad | Media / P2. Requiere un usuario LABORATORIO o MEDICO autenticado; un error de digitación basta para enviar resultados a un tercero. |
+| Pasos para reproducir | `POST /api/v2/lab-orders/:id/dispatch` con un correo distinto del registrado para el paciente. |
+| Resultado esperado / obtenido | Envío solo al correo de la ficha del paciente (o confirmación explícita y registro en auditoría) / Se envía al correo recibido en la petición, con los resultados en el cuerpo en texto plano. |
+| Evidencia | `core/services/lab_nursing_service.go:247-251,262-270`. Revisado (sin prueba automatizada). |
+| Reproducción | Sin prueba automatizada. |
+| Causa raíz | El formulario permite corregir el correo al despachar. |
+| Acción propuesta | Usar el correo de la ficha y auditar cualquier destinatario distinto. Responsable sugerido: Santiago Vélez. |
+| Estado | Nuevo |
+
+### DEF-109. Renovar la sesión sin límite absoluto y mantener vigente el token de acceso tras cerrar sesión
+
+| Campo | Contenido |
+|---|---|
+| Registrado en | Revisión R4 (24 nov 2026) |
+| Módulo | Backend |
+| Requisito afectado | RNF03 |
+| Característica ISO 25010:2023 | Seguridad -> Autenticidad |
+| Tipo (IEEE 1044) | Lógica |
+| Severidad / Prioridad | Media / P3. Regresión frente a R1 en ASVS 3.3.2. |
+| Pasos para reproducir | Renovar el token antes de que venza el de 7 días; cerrar sesión y usar el token de acceso. |
+| Resultado esperado / obtenido | Límite absoluto de sesión y token de acceso inválido tras el cierre / La renovación es deslizante sin tope y `GET /auth/me` responde 200 hasta 15 min después del cierre. |
+| Evidencia | `core/services/auth_service.go:213-219`; `anexos/evidencias/r4/61-sesion-xss-almacenamiento.md`. Revisado. |
+| Reproducción | Sin prueba automatizada. |
+| Causa raíz | Diseño de tokens sin estado para el token de acceso. |
+| Acción propuesta | Fecha de inicio de sesión en el token de renovación con tope (por ejemplo 12 h) y lista de revocación del `jti` de acceso al cerrar sesión. Responsable sugerido: Santiago Vélez. |
+| Estado | Nuevo |
+
+### DEF-110. Dejar sin prueba la frontera Glasgow 8 del Nivel I de triaje: una mutación que la cambia no hace fallar ninguna prueba
+
+| Campo | Contenido |
+|---|---|
+| Registrado en | Revisión R4 (24 nov 2026), mutación manual M6 de H-R4-21 |
+| Módulo | Pruebas |
+| Requisito afectado | RF03 (triaje Manchester) |
+| Característica ISO 25010:2023 | Mantenibilidad -> Capacidad de prueba; Seguridad operacional |
+| Tipo (IEEE 1044) | Proceso (cobertura de pruebas) |
+| Severidad / Prioridad | Media / P2. El código actual es correcto; el riesgo es que una regresión en una regla de seguridad del paciente pase desapercibida. |
+| Pasos para reproducir | En una copia, cambiar `if t.GlasgowScore <= 8 ||` por `< 8` en `core/domain/triage.go:120` y ejecutar las suites. |
+| Resultado esperado / obtenido | Alguna prueba falla / Ninguna falla: un paciente con Glasgow 8 bajaría de Nivel I a Nivel II sin aviso. |
+| Evidencia | `anexos/evidencias/r4/54-mutaciones.txt` (M6). Verificado. |
+| Reproducción | Calidad agregó `TestR4GlasgowOchoEsNivelI` (`calidad_r4_regression_test.go`), que hoy pasa y mata el mutante. |
+| Causa raíz | Las pruebas de triaje usan valores lejos de las fronteras (análisis de valores límite incompleto). |
+| Acción propuesta | Que Pruebas adopte la prueba y revise los demás límites de `SuggestManchesterPriority` (FC 40/150, SatO2 85/90, temperatura 28/32/40/41,5). Responsable sugerido: Santiago Arcos. |
+| Estado | Nuevo; prueba de regresión propuesta por Calidad |
 
 ## 4. Métricas de la bitácora
 
